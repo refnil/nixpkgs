@@ -1,34 +1,34 @@
-{ stdenv, fetchsvn, libxml2, gtk2, curl, pkgconfig } :
+a@{fetchsvn, libxml2, gtk, curl, pkgconfig, lib, ...} :  
+let 
+  fetchsvn = a.fetchsvn;
 
-let
-  version = "31801";
+  buildInputs = with a; [
+    libxml2 gtk curl pkgconfig
+  ];
 in
-stdenv.mkDerivation {
-  name = "gosmore-r${version}";
-  # the gosmore svn repository does not lock revision numbers of its externals
-  # so we explicitly disable them to avoid breaking the hash
-  # especially as the externals appear to be unused
+rec {
   src = fetchsvn {
     url = http://svn.openstreetmap.org/applications/rendering/gosmore;
-    sha256 = "0qsckpqx7i7f8gkqhkzdamr65250afk1rpnh3nbman35kdv3dsxi";
-    rev = "${version}";
-    ignoreExternals = true;
-  };
+    sha256 = "0ds61gl75rnzvm0hj9papl5sfcgdv4310df9ch7x9rifssfli9zm";
+    rev = "24178";
+  } + "/";
 
-  buildInputs = [ libxml2 gtk2 curl ];
+  inherit buildInputs;
+  configureFlags = [];
 
-  nativeBuildInputs = [ pkgconfig ];
+  /* doConfigure should be removed if not needed */
+  phaseNames = ["fixCurlIncludes" "doConfigure" "doMakeInstall"];
 
-  prePatch = ''
+  fixCurlIncludes = a.fullDepEntry ''
     sed -e '/curl.types.h/d' -i *.{c,h,hpp,cpp}
-  '';
+  '' ["minInit" "doUnpack"];
       
-  meta = with stdenv.lib; {
+  name = "gosmore-r21657";
+  meta = {
     description = "Open Street Map viewer";
-    homepage = http://sourceforge.net/projects/gosmore/;
-    maintainers = with maintainers; [
-      raskin
+    maintainers = [
+      a.lib.maintainers.raskin
     ];
-    platforms = platforms.linux;
+    platforms = a.lib.platforms.linux;
   };
 }

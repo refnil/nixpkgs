@@ -11,6 +11,5 @@ stdenv.mkDerivation rec {
   meta = {
     description = "A development framework for C providing high performance and highly flexible algorithms";
     homepage = http://www.atheme.org/projects/mowgli.shtml;
-    platforms = stdenv.lib.platforms.unix;
   };
 }

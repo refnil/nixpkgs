@@ -1,35 +1,19 @@
-{
-  kdeDerivation, kdeWrapper, fetchFromGitHub, lib,
-  extra-cmake-modules, kdoctools, kconfig, kinit, kjsembed,
-  taglib, exiv2, podofo
-}:
+{ stdenv, fetchurl, cmake, automoc4, kdelibs, taglib, exiv2, podofo, gettext, qt4, phonon }:
 
-let
-  pname = "krename";
-  version = "20161228";
-  unwrapped = kdeDerivation rec {
-    name = "${pname}-${version}";
+stdenv.mkDerivation rec {
+  name = "krename-4.0.9";
 
-    src = fetchFromGitHub {
-      owner  = "KDE";
-      repo   = "krename";
-      rev    = "4e55c2bef50898eb4a6485ce068379b166121895";
-      sha256 = "09yz3sxy2l6radfybkj2f7224ggf315vnvyksk0aq8f03gan6cbp";
-    };
-
-    meta = with lib; {
-      homepage = http://www.krename.net;
-      description = "A powerful batch renamer for KDE";
-      inherit (kconfig.meta) platforms;
-      maintainers = with maintainers; [ peterhoeg ];
-    };
-
-    buildInputs = [ taglib exiv2 podofo ];
-    nativeBuildInputs = [ extra-cmake-modules kdoctools ];
-    propagatedBuildInputs = [ kconfig kinit kjsembed ];
+  src = fetchurl {
+    url = "mirror://sourceforge/krename/${name}.tar.bz2";
+    sha256 = "11bdg5vdcs393n0aibhm3jh3wxlk5kz78jhkwf7cj9086qkg9wds";
   };
 
-in kdeWrapper {
-  inherit unwrapped;
-  targets = [ "bin/krename" ];
+  buildInputs = [ cmake automoc4 kdelibs taglib exiv2 podofo gettext qt4 phonon ];
+
+  meta = {
+    homepage = http://www.krename.net;
+    description = "KRename is a powerful batch renamer for KDE";
+    inherit (kdelibs.meta) platforms;
+    maintainers = [ stdenv.lib.maintainers.urkud ];
+  };
 }

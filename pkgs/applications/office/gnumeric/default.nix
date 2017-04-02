@@ -1,34 +1,31 @@
 { stdenv, fetchurl, pkgconfig, intltool, perl, perlXMLParser
-, goffice, gnome3, makeWrapper, gtk3, bison, pythonPackages
+, goffice, makeWrapper, gtk3, gnome_icon_theme
 }:
 
-let
-  inherit (pythonPackages) python pygobject3;
-in stdenv.mkDerivation rec {
-  name = "gnumeric-1.12.32";
+stdenv.mkDerivation rec {
+  name = "gnumeric-1.12.12";
 
   src = fetchurl {
     url = "mirror://gnome/sources/gnumeric/1.12/${name}.tar.xz";
-    sha256 = "a07bc83e2adaeb94bfa2c737c9a19d90381a19cb203dd7c4d5f7d6cfdbee6de8";
+    sha256 = "096i9x6b4i6x24vc4lsxx8fg2n2pjs2jb6x3bkg3ppa2c60w1jq0";
   };
+
+  preConfigure = ''sed -i 's/\(SUBDIRS.*\) doc/\1/' Makefile.in''; # fails when installing docs
 
   configureFlags = "--disable-component";
 
-  # ToDo: optional libgda, introspection?
+  # ToDo: optional libgda, python, introspection?
   buildInputs = [
-    pkgconfig intltool perl perlXMLParser bison
-    goffice gtk3 makeWrapper gnome3.defaultIconTheme
-    python pygobject3
+    pkgconfig intltool perl perlXMLParser
+    goffice gtk3 makeWrapper
   ];
-
-  enableParallelBuilding = true;
 
   preFixup = ''
     for f in "$out"/bin/gnumeric-*; do
       wrapProgram $f \
-        --prefix XDG_DATA_DIRS : "$XDG_ICON_DIRS:$GSETTINGS_SCHEMAS_PATH" \
-        ${stdenv.lib.optionalString (!stdenv.isDarwin) "--prefix GIO_EXTRA_MODULES : '${gnome3.dconf}/lib/gio/modules'"}
+        --prefix XDG_DATA_DIRS : "$XDG_ICON_DIRS:$GSETTINGS_SCHEMAS_PATH"
     done
+    rm $out/share/icons/hicolor/icon-theme.cache
   '';
 
   meta = with stdenv.lib; {

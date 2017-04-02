@@ -1,11 +1,12 @@
 {stdenv, xcodewrapper}:
 { name
 , src
-, sdkVersion ? "10.2"
+, sdkVersion ? "6.1"
 , target ? null
 , configuration ? null
 , scheme ? null
 , sdk ? null
+, arch ? null
 , xcodeFlags ? ""
 , release ? false
 , codeSignIdentity ? null
@@ -14,15 +15,9 @@
 , provisioningProfile ? null
 , generateIPA ? false
 , generateXCArchive ? false
-, enableWirelessDistribution ? false
-, installURL ? null
-, bundleId ? null
-, version ? null
-, title ? null
 }:
 
 assert release -> codeSignIdentity != null && certificateFile != null && certificatePassword != null && provisioningProfile != null;
-assert enableWirelessDistribution -> installURL != null && bundleId != null && version != null && title != null;
 
 let
   # Set some default values here
@@ -34,16 +29,18 @@ let
       if release then "Release" else "Debug"
     else configuration;
     
+  _arch = if arch == null
+    then
+      if release then "armv7" else "i386"
+    else arch;
+
   _sdk = if sdk == null
     then
       if release then "iphoneos" + sdkVersion else "iphonesimulator" + sdkVersion
     else sdk;
 
   # The following is to prevent repetition
-  deleteKeychain = ''
-    security default-keychain -s login.keychain
-    security delete-keychain $keychainName
-  '';
+  deleteKeychain = "security delete-keychain $keychainName";
 in
 stdenv.mkDerivation {
   name = stdenv.lib.replaceChars [" "] [""] name;
@@ -62,9 +59,6 @@ stdenv.mkDerivation {
         # Import the certificate into the keychain
         security import ${certificateFile} -k $keychainName -P "${certificatePassword}" -A 
 
-        # Grant the codesign utility permissions to read from the keychain
-        security set-key-partition-list -S apple-tool:,apple: -s -k "" $keychainName
-        
         # Determine provisioning ID
         PROVISIONING_PROFILE=$(grep UUID -A1 -a ${provisioningProfile} | grep -o "[-A-Za-z0-9]\{36\}")
 
@@ -80,7 +74,7 @@ stdenv.mkDerivation {
       ''}
 
     # Do the building
-    xcodebuild -target ${_target} -configuration ${_configuration} ${stdenv.lib.optionalString (scheme != null) "-scheme ${scheme}"} -sdk ${_sdk} TARGETED_DEVICE_FAMILY="1, 2" ONLY_ACTIVE_ARCH=NO CONFIGURATION_TEMP_DIR=$TMPDIR CONFIGURATION_BUILD_DIR=$out ${if generateXCArchive then "archive" else ""} ${xcodeFlags} ${if release then ''"CODE_SIGN_IDENTITY=${codeSignIdentity}" PROVISIONING_PROFILE=$PROVISIONING_PROFILE OTHER_CODE_SIGN_FLAGS="--keychain $HOME/Library/Keychains/$keychainName-db"'' else ""}
+    xcodebuild -target ${_target} -configuration ${_configuration} ${stdenv.lib.optionalString (scheme != null) "-scheme ${scheme}"} -sdk ${_sdk} -arch ${_arch} ONLY_ACTIVE_ARCH=NO CONFIGURATION_TEMP_DIR=$TMPDIR CONFIGURATION_BUILD_DIR=$out ${if generateXCArchive then "archive" else ""} ${xcodeFlags} ${if release then ''"CODE_SIGN_IDENTITY=${codeSignIdentity}" PROVISIONING_PROFILE=$PROVISIONING_PROFILE OTHER_CODE_SIGN_FLAGS="--keychain $HOME/Library/Keychains/$keychainName"'' else ""}
     
     ${stdenv.lib.optionalString release ''
       ${stdenv.lib.optionalString generateIPA ''
@@ -90,12 +84,6 @@ stdenv.mkDerivation {
         # Add IPA to Hydra build products
         mkdir -p $out/nix-support
         echo "file binary-dist \"$(echo $out/*.ipa)\"" > $out/nix-support/hydra-build-products
-        
-        ${stdenv.lib.optionalString enableWirelessDistribution ''
-          appname=$(basename $out/*.ipa .ipa)
-          sed -e "s|@INSTALL_URL@|${installURL}?bundleId=${bundleId}\&amp;version=${version}\&amp;title=$appname|" ${./install.html.template} > $out/$appname.html
-          echo "doc install \"$out/$appname.html\"" >> $out/nix-support/hydra-build-products
-        ''}
       ''}
       
       # Delete our temp keychain

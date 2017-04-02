@@ -24,7 +24,6 @@ stdenv.mkDerivation {
 
   meta = {
     homepage = http://chessdb.sourceforge.net/;
-    description = "A free chess database";
-    platforms = stdenv.lib.platforms.linux;
+    description = "ChessDB is a free chess database";
   };
 }

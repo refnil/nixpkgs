@@ -1,20 +1,16 @@
 { stdenv, fetchurl, pkgconfig, python, gst-plugins-base, orc
 , faacSupport ? false, faac ? null
 , faad2, libass, libkate, libmms
-, libmodplug, mpeg2dec, mpg123
+, libmodplug, mpeg2dec, mpg123 
 , openjpeg, libopus, librsvg
 , wildmidi, fluidsynth, libvdpau, wayland
-, libwebp, xvidcore, gnutls, mjpegtools
-, mesa, libintlOrEmpty
+, libwebp, xvidcore, gnutls
 }:
 
 assert faacSupport -> faac != null;
 
-let
-  inherit (stdenv.lib) optional optionalString;
-in
 stdenv.mkDerivation rec {
-  name = "gst-plugins-bad-1.10.4";
+  name = "gst-plugins-bad-1.2.4";
 
   meta = with stdenv.lib; {
     description = "Gstreamer Bad Plugins";
@@ -27,32 +23,22 @@ stdenv.mkDerivation rec {
     '';
     license     = licenses.lgpl2Plus;
     platforms   = platforms.linux;
+    maintainers = with maintainers; [ iyzsong ];
   };
 
   src = fetchurl {
     url = "${meta.homepage}/src/gst-plugins-bad/${name}.tar.xz";
-    sha256 = "0rk9rlzf2b0hjw5hwbadz53yh4ls7vm3w3cshsa3n8isdd8axp93";
+    sha256 = "1jifzrgr4y3566d2lq30fibcd4rb8z8vpqnr2gihbmymr4z16k4q";
   };
-
-  outputs = [ "out" "dev" ];
 
   nativeBuildInputs = [ pkgconfig python ];
 
   buildInputs = [
     gst-plugins-base orc
     faad2 libass libkate libmms
-    libmodplug mpeg2dec mpg123
+    libmodplug mpeg2dec mpg123 
     openjpeg libopus librsvg
-    fluidsynth libvdpau
-    libwebp xvidcore gnutls mesa
-    mjpegtools
-  ]
-    ++ libintlOrEmpty
-    ++ optional faacSupport faac
-    ++ optional stdenv.isLinux wayland
-    # wildmidi requires apple's OpenAL
-    # TODO: package apple's OpenAL, fix wildmidi, include on Darwin
-    ++ optional (!stdenv.isDarwin) wildmidi;
-
-  LDFLAGS = optionalString stdenv.isDarwin "-lintl";
+    wildmidi fluidsynth libvdpau wayland
+    libwebp xvidcore gnutls
+  ] ++ stdenv.lib.optional faacSupport faac;
 }

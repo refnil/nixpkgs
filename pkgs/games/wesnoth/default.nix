@@ -1,34 +1,24 @@
-{ stdenv, fetchurl, cmake, pkgconfig, SDL, SDL_image, SDL_mixer, SDL_net, SDL_ttf
-, pango, gettext, boost, freetype, libvorbis, fribidi, dbus, libpng, pcre
-, makeWrapper, enableTools ? false
-}:
+{ stdenv, fetchurl, cmake, SDL, SDL_image, SDL_mixer, SDL_net, SDL_ttf, pango
+, gettext, zlib, boost, freetype, libpng, pkgconfig, lua, dbus, fontconfig, libtool
+, fribidi, asciidoc }:
 
 stdenv.mkDerivation rec {
   pname = "wesnoth";
-  version = "1.12.6";
+  version = "1.10.7";
 
   name = "${pname}-${version}";
 
   src = fetchurl {
     url = "mirror://sourceforge/sourceforge/${pname}/${name}.tar.bz2";
-    sha256 = "0kifp6g1dsr16m6ngjq2hx19h851fqg326ps3krnhpyix963h3x5";
+    sha256 = "0gi5fzij48hmhhqxc370jxvxig5q3d70jiz56rjn8yx514s5lfwa";
   };
 
-  nativeBuildInputs = [ cmake pkgconfig makeWrapper ];
+  buildInputs = [ SDL SDL_image SDL_mixer SDL_net SDL_ttf pango gettext zlib boost fribidi
+                  cmake freetype libpng pkgconfig lua dbus fontconfig libtool ];
 
-  buildInputs = [ SDL SDL_image SDL_mixer SDL_net SDL_ttf pango gettext boost
-                  libvorbis fribidi dbus libpng pcre ];
-
-  cmakeFlags = [ "-DENABLE_TOOLS=${if enableTools then "ON" else "OFF"}" ];
+  cmakeFlags = [ "-DENABLE_STRICT_COMPILATION=FALSE" ]; # newer gcc problems http://gna.org/bugs/?21030
 
   enableParallelBuilding = true;
-
-  # Wesnoth doesn't support input frameworks and Unicode input breaks when they are enabled.
-  postInstall = ''
-    for i in $out/bin/*; do
-      wrapProgram "$i" --unset XMODIFIERS
-    done
-  '';
 
   meta = with stdenv.lib; {
     description = "The Battle for Wesnoth, a free, turn-based strategy game with a fantasy theme";
@@ -40,9 +30,9 @@ stdenv.mkDerivation rec {
       adventures.
     '';
 
-    homepage = "http://www.wesnoth.org/";
+    homepage = http://www.wesnoth.org/;
     license = licenses.gpl2;
-    maintainers = with maintainers; [ kkallio abbradar ];
+    maintainers = [ maintainers.kkallio ];
     platforms = platforms.linux;
   };
 }

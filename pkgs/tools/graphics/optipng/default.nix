@@ -5,11 +5,11 @@
 with stdenv.lib;
 
 stdenv.mkDerivation rec {
-  name = "optipng-0.7.6";
+  name = "optipng-0.7.4";
 
   src = fetchurl {
     url = "mirror://sourceforge/optipng/${name}.tar.gz";
-    sha256 = "105yk5qykvhiahzag67gm36s2kplxf6qn5hay02md0nkrcgn6w28";
+    sha256 = "1zrphbz17rhhfl1l95q5s979rrhifbwczl2xj1fdrnq5jid5s2sj";
   };
 
   buildInputs = [ libpng ];
@@ -30,10 +30,9 @@ stdenv.mkDerivation rec {
     '';
   };
 
-  meta = with stdenv.lib; {
+  meta = {
     homepage = http://optipng.sourceforge.net/;
     description = "A PNG optimizer";
-    license = licenses.zlib;
-    platforms = platforms.unix;
+    license = "bsd";
   };
 }

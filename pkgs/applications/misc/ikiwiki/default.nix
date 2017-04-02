@@ -23,7 +23,7 @@ assert mercurialSupport -> (mercurial != null);
 
 let
   name = "ikiwiki";
-  version = "3.20170111";
+  version = "3.20140227";
 
   lib = stdenv.lib;
 in
@@ -31,8 +31,8 @@ stdenv.mkDerivation {
   name = "${name}-${version}";
 
   src = fetchurl {
-    url = "mirror://debian/pool/main/i/ikiwiki/${name}_${version}.tar.xz";
-    sha256 = "00d7yzv426fvqbhvzyafddv7fa6b4j2647b0wi371wd5yjj9j3sz";
+    url = "http://ftp.de.debian.org/debian/pool/main/i/ikiwiki/${name}_${version}.tar.gz";
+    sha256 = "1bbpqs4c1la1yqcxcxj3xip3wadjnjq0wawv19j6d6baymm66cr3";
   };
 
   buildInputs = [ perl TextMarkdown URI HTMLParser HTMLScrubber HTMLTemplate
@@ -53,7 +53,7 @@ stdenv.mkDerivation {
     sed -i /ENV{PATH}/d ikiwiki.in
     # State the gcc dependency, and make the cgi use our wrapper
     sed -i -e 's@$0@"'$out/bin/ikiwiki'"@' \
-        -e "s@'cc'@'${stdenv.cc}/bin/gcc'@" IkiWiki/Wrapper.pm
+        -e "s@'cc'@'${stdenv.gcc}/bin/gcc'@" IkiWiki/Wrapper.pm
   '';
 
   configurePhase = "perl Makefile.PL PREFIX=$out";
@@ -66,7 +66,7 @@ stdenv.mkDerivation {
       ${lib.optionalString bazaarSupport ''--prefix PATH : ${bazaar}/bin \''}
       ${lib.optionalString cvsSupport ''--prefix PATH : ${cvs}/bin \''}
       ${lib.optionalString cvsSupport ''--prefix PATH : ${cvsps}/bin \''}
-      ${lib.optionalString subversionSupport ''--prefix PATH : ${subversion.out}/bin \''}
+      ${lib.optionalString subversionSupport ''--prefix PATH : ${subversion}/bin \''}
       ${lib.optionalString mercurialSupport ''--prefix PATH : ${mercurial}/bin \''}
       ${lib.concatMapStrings (x: "--prefix PATH : ${x}/bin ") extraUtils}
     done
@@ -86,6 +86,6 @@ stdenv.mkDerivation {
     license = stdenv.lib.licenses.gpl2Plus;
 
     platforms = stdenv.lib.platforms.linux;
-    maintainers = [ stdenv.lib.maintainers.peti ];
+    maintainers = [ stdenv.lib.maintainers.simons ];
   };
 }

@@ -1,20 +1,33 @@
-{ fetchurl, stdenv, autogen }:
+{ fetchurl, stdenv, autogen, texinfo }:
 
 stdenv.mkDerivation rec {
-  name = "complexity-${version}";
-  version = "1.10";
+  # FIXME: Currently fails to build.
+  name = "complexity-0.4";
 
   src = fetchurl {
     url = "mirror://gnu/complexity/${name}.tar.gz";
-    sha256 = "1vfns9xm7w0wrz12a3w15slrqnrfh6qxk15nv7qkj3irll3ff522";
+    sha256 = "0dmk2pm7vi95482hnbbp597640bsjw5gg57j8cpy87855cl69yr8";
   };
 
-  buildInputs = [ autogen ];
+  buildInputs =
+    [ autogen
+      texinfo  # XXX: shouldn't be needed, per GCS
+    ];
+
+  # Hack to work around build defect.
+  makeFlags = "MAKEINFOFLAGS=--no-validate";
 
   doCheck = true;
 
+  preBuild = ''
+    sed -i -e '/gets is a security/d' lib/stdio.in.h
+    sed -i '42 i\
+      #undef false\
+      #undef true' src/complexity.h
+  '';
+
   meta = {
-    description = "C code complexity measurement tool";
+    description = "GNU Complexity, C code complexity measurement tool";
 
     longDescription =
       '' GNU Complexity is a tool designed for analyzing the complexity of C
@@ -27,6 +40,6 @@ stdenv.mkDerivation rec {
     homepage = http://www.gnu.org/software/complexity/;
 
     platforms = stdenv.lib.platforms.gnu;
-    maintainers = [ ];
+    maintainers = [ stdenv.lib.maintainers.ludo ];
   };
 }

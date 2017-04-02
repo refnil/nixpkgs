@@ -37,4 +37,7 @@ in
   vm = vmConfig.system.build.vm;
 
   vmWithBootLoader = vmWithBootLoaderConfig.system.build.vm;
+
+  # The following are used by nixos-rebuild.
+  nixFallback = pkgs.nixUnstable;
 }

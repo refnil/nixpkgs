@@ -29,7 +29,9 @@ stdenv.mkDerivation rec {
     done
   '';
 
-  makeFlags = "PREFIX=$(out) CC=cc";
+  configurePhase = ''
+    sed -i "makefile" -"es|PREFIX[[:blank:]]*=.*$|PREFIX = $out|g"
+  '';
 
   doCheck = true;
   checkPhase = ''HOME="$TMPDIR" PATH="$PWD:$PATH" make test'';
@@ -41,7 +43,7 @@ stdenv.mkDerivation rec {
   '';
 
   meta = {
-    description = "Set of tools for counting physical Source Lines of Code (SLOC)";
+    description = "SLOCCount, a set of tools for counting physical Source Lines of Code (SLOC)";
 
     longDescription = ''
       This is the home page of "SLOCCount", a set of tools for

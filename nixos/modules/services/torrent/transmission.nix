@@ -9,25 +9,37 @@ let
   homeDir = "/var/lib/transmission";
   downloadDir = "${homeDir}/Downloads";
   incompleteDir = "${homeDir}/.incomplete";
-
   settingsDir = "${homeDir}/.config/transmission-daemon";
-  settingsFile = pkgs.writeText "settings.json" (builtins.toJSON fullSettings);
+  settingsFile = "${settingsDir}/settings.json";
 
   # Strings must be quoted, ints and bools must not (for settings.json).
   toOption = x:
     if x == true then "true"
     else if x == false then "false"
     else if isInt x then toString x
-    else toString ''"${x}"'';
+    else toString ''\"${x}\"'';
+
+  # All lines in settings.json end with a ',' (comma), except for the last
+  # line. This is standard JSON. But a comma can also appear *inside* some
+  # fields, notably the "rpc-whitelist" field. This is difficult to handle in
+  # sed so we simply ignore it and say that if you want to change the option at
+  # the last line of settings.json, you have to do it manually. At this time of
+  # writing, the last option is "utp-enable":true.
+  attrsToSedArgs = as:
+    concatStrings (concatLists (mapAttrsToList (name: value:
+      #map (x: '' -e 's=\(\"${name}\":\)[^,]*\(.*\)=\1 ${toOption x}\2=' '') # breaks if comma inside value field
+      map (x: '' -e 's=\(\"${name}\":\).*=\1 ${toOption x},=' '') # always append ',' (breaks last line in settings.json)
+        (if isList value then value else [value]))
+        as));
 
   # for users in group "transmission" to have access to torrents
-  fullSettings = { umask = 2; download-dir = downloadDir; incomplete-dir = incompleteDir; } // cfg.settings;
+  fullSettings = cfg.settings // { umask = 2; };
 in
 {
   options = {
     services.transmission = {
       enable = mkOption {
-        type = types.bool;
+        type = types.uniq types.bool;
         default = false;
         description = ''
           Whether or not to enable the headless Transmission BitTorrent daemon.
@@ -35,7 +47,7 @@ in
           Transmission daemon can be controlled via the RPC interface using
           transmission-remote or the WebUI (http://localhost:9091/ by default).
 
-          Torrents are downloaded to ${downloadDir} by default and are
+          Torrents are downloaded to ${homeDir}/Downloads/ by default and are
           accessible to users in the "transmission" group.
         '';
       };
@@ -61,12 +73,12 @@ in
           boolean values must not.
 
           See https://trac.transmissionbt.com/wiki/EditConfigFiles for
-          documentation.
+          documentation and/or look at ${settingsFile}.
         '';
       };
 
       port = mkOption {
-        type = types.int;
+        type = types.uniq types.int;
         default = 9091;
         description = "TCP port number to run the RPC/web interface.";
       };
@@ -76,14 +88,14 @@ in
   config = mkIf cfg.enable {
     systemd.services.transmission = {
       description = "Transmission BitTorrent Service";
-      after = [ "local-fs.target" "network.target" ] ++ optional apparmor "apparmor.service";
+      after = [ "network.target" ] ++ optional apparmor "apparmor.service";
       requires = mkIf apparmor [ "apparmor.service" ];
       wantedBy = [ "multi-user.target" ];
 
       # 1) Only the "transmission" user and group have access to torrents.
       # 2) Optionally update/force specific fields into the configuration file.
       serviceConfig.ExecStartPre = ''
-          ${pkgs.stdenv.shell} -c "mkdir -p ${homeDir} ${settingsDir} ${fullSettings.download-dir} ${fullSettings.incomplete-dir} && chmod 770 ${homeDir} ${settingsDir} ${fullSettings.download-dir} ${fullSettings.incomplete-dir} && rm -f ${settingsDir}/settings.json && cp -f ${settingsFile} ${settingsDir}/settings.json"
+          ${pkgs.stdenv.shell} -c "chmod 770 ${homeDir} && mkdir -p ${settingsDir} ${downloadDir} ${incompleteDir} && ${pkgs.transmission}/bin/transmission-daemon -d |& sed ${attrsToSedArgs fullSettings} > ${settingsFile}.tmp && mv ${settingsFile}.tmp ${settingsFile}"
       '';
       serviceConfig.ExecStart = "${pkgs.transmission}/bin/transmission-daemon -f --port ${toString config.services.transmission.port}";
       serviceConfig.ExecReload = "${pkgs.coreutils}/bin/kill -HUP $MAINPID";
@@ -113,27 +125,21 @@ in
           #include <abstractions/base>
           #include <abstractions/nameservice>
 
-          ${getLib pkgs.glibc}/lib/*.so                    mr,
-          ${getLib pkgs.libevent}/lib/libevent*.so*        mr,
-          ${getLib pkgs.curl}/lib/libcurl*.so*             mr,
-          ${getLib pkgs.openssl}/lib/libssl*.so*           mr,
-          ${getLib pkgs.openssl}/lib/libcrypto*.so*        mr,
-          ${getLib pkgs.zlib}/lib/libz*.so*                mr,
-          ${getLib pkgs.libssh2}/lib/libssh2*.so*          mr,
-          ${getLib pkgs.systemd}/lib/libsystemd*.so*       mr,
-          ${getLib pkgs.xz}/lib/liblzma*.so*               mr,
-          ${getLib pkgs.libgcrypt}/lib/libgcrypt*.so*      mr,
-          ${getLib pkgs.libgpgerror}/lib/libgpg-error*.so* mr,
-          ${getLib pkgs.nghttp2}/lib/libnghttp2*.so*       mr,
-          ${getLib pkgs.c-ares}/lib/libcares*.so*          mr,
-          ${getLib pkgs.libcap}/lib/libcap*.so*            mr,
-          ${getLib pkgs.attr}/lib/libattr*.so*             mr,
-          ${getLib pkgs.lz4}/lib/liblz4*.so*               mr,
+          ${pkgs.glibc}/lib/*.so               mr,
+          ${pkgs.libevent}/lib/libevent*.so*   mr,
+          ${pkgs.curl}/lib/libcurl*.so*        mr,
+          ${pkgs.openssl}/lib/libssl*.so*      mr,
+          ${pkgs.openssl}/lib/libcrypto*.so*   mr,
+          ${pkgs.zlib}/lib/libz*.so*           mr,
+          ${pkgs.libssh2}/lib/libssh2*.so*     mr,
+          ${pkgs.systemd}/lib/libsystemd*.so*  mr,
+          ${pkgs.xz}/lib/liblzma*.so*          mr,
+          ${pkgs.libgcrypt}/lib/libgcrypt*.so* mr,
+          ${pkgs.libgpgerror}/lib/libgpg-error*.so* mr,
 
           @{PROC}/sys/kernel/random/uuid   r,
           @{PROC}/sys/vm/overcommit_memory r,
 
-          ${pkgs.openssl.out}/etc/**                     r,
           ${pkgs.transmission}/share/transmission/** r,
 
           owner ${settingsDir}/** rw,

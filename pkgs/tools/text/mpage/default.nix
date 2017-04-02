@@ -12,7 +12,7 @@ stdenv.mkDerivation rec {
   '';
 
   meta = {
-    description = "Many-to-one page printing utility";
+    description = "Mpage, many-to-one page printing utility";
 
     longDescription = ''
       Mpage reads plain text files or PostScript documents and prints
@@ -24,6 +24,5 @@ stdenv.mkDerivation rec {
 
     license = "liberal";  # a non-copyleft license, see `Copyright' file
     homepage = http://www.mesa.nl/pub/mpage/;
-    platforms = stdenv.lib.platforms.linux;
   };
 }

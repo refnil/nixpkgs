@@ -280,12 +280,6 @@ do_overwrite_just_version () {
   set_var_value sha256 $CURRENT_HASH
 }
 
-minimize_overwrite() {
-  do_overwrite(){
-    do_overwrite_just_version
-  }
-}
-
 process_config () {
   CONFIG_DIR="$(directory_of "$1")"
   CONFIG_NAME="$(basename "$1")"
@@ -303,7 +297,9 @@ process_config () {
       exit 1;
     }
     [ -z "$(retrieve_meta fullRegenerate)" ] && eval "
-      minimize_overwrite
+      do_overwrite(){
+        do_overwrite_just_version
+      }
     "
   fi
   ensure_attribute_name

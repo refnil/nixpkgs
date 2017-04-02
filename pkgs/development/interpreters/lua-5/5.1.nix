@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, fetchpatch, readline }:
+{ stdenv, fetchurl, readline, makeWrapper }:
 
 let
   dsoPatch = fetchurl {
@@ -16,20 +16,14 @@ stdenv.mkDerivation rec {
     sha256 = "2640fc56a795f29d28ef15e13c34a47e223960b0240e8cb0a82d9b0738695333";
   };
 
-  buildInputs = [ readline ];
+  buildInputs = [ readline makeWrapper ];
 
-  patches = (if stdenv.isDarwin then [ ./5.1.darwin.patch ] else [ dsoPatch ])
-    ++ [(fetchpatch {
-      name = "CVE-2014-5461.patch";
-      url = "http://anonscm.debian.org/cgit/pkg-lua/lua5.1.git/plain/debian/patches/"
-        + "0004-Fix-stack-overflow-in-vararg-functions.patch?id=b75a2014db2ad65683521f7bb295bfa37b48b389";
-      sha256 = "05i5vh53d9i6dy11ibg9i9qpwz5hdm0s8bkx1d9cfcvy80cm4c7f";
-    })];
+  patches = if stdenv.isDarwin then [ ./5.1.darwin.patch ] else [ dsoPatch ];
 
   configurePhase =
     if stdenv.isDarwin
     then ''
-    makeFlagsArray=( INSTALL_TOP=$out INSTALL_MAN=$out/share/man/man1 PLAT=macosx CFLAGS="-DLUA_USE_LINUX -fno-common -O2" LDFLAGS="" CC="$CC" )
+    makeFlagsArray=( INSTALL_TOP=$out INSTALL_MAN=$out/share/man/man1 PLAT=macosx CFLAGS="-DLUA_USE_LINUX -fno-common -O2" LDFLAGS="" )
     installFlagsArray=( TO_BIN="lua luac" TO_LIB="liblua.5.1.5.dylib" INSTALL_DATA='cp -d' )
   '' else ''
     makeFlagsArray=( INSTALL_TOP=$out INSTALL_MAN=$out/share/man/man1 PLAT=linux CFLAGS="-DLUA_USE_LINUX -O2 -fPIC" LDFLAGS="-fPIC" )
@@ -41,6 +35,9 @@ stdenv.mkDerivation rec {
     sed <"etc/lua.pc" >"$out/lib/pkgconfig/lua.pc" -e "s|^prefix=.*|prefix=$out|"
     mv "doc/"*.{gif,png,css,html} "$out/share/doc/lua/"
     rmdir $out/{share,lib}/lua/5.1 $out/{share,lib}/lua
+    wrapProgram $out/bin/lua \
+      --set LUA_PATH  '"$HOME/.nix-profile/lib/lua/5.1/?.lua;$HOME/.nix-profile/share/lua/5.1/?.lua"' \
+      --set LUA_CPATH '"$HOME/.nix-profile/lib/lua/5.1/?.so;$HOME/.nix-profile/share/lua/5.1/?.so"'
   '';
 
   meta = {
@@ -55,6 +52,7 @@ stdenv.mkDerivation rec {
       for configuration, scripting, and rapid prototyping.
     '';
     license = stdenv.lib.licenses.mit;
-    hydraPlatforms = stdenv.lib.platforms.linux;
+    platforms = stdenv.lib.platforms.unix;
+    maintainers = [ stdenv.lib.maintainers.simons ];
   };
 }

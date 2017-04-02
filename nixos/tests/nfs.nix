@@ -1,4 +1,4 @@
-import ./make-test.nix ({ pkgs, version ? 4, ... }:
+import ./make-test.nix ({ version, ... }:
 
 let
 
@@ -6,9 +6,9 @@ let
     { config, pkgs, ... }:
     { fileSystems = pkgs.lib.mkVMOverride
         [ { mountPoint = "/data";
-            device = "server:/data";
+            device = "server:${if version == 4 then "/" else "/data"}";
             fsType = "nfs";
-            options = [ "vers=${toString version}" ];
+            options = "vers=${toString version}";
           }
         ];
       networking.firewall.enable = false; # FIXME: only open statd
@@ -18,9 +18,6 @@ in
 
 {
   name = "nfs";
-  meta = with pkgs.stdenv.lib.maintainers; {
-    maintainers = [ eelco chaoflow wkennington ];
-  };
 
   nodes =
     { client1 = client;
@@ -40,9 +37,8 @@ in
 
   testScript =
     ''
-      $server->waitForUnit("nfs-server");
-      $server->succeed("systemctl start network-online.target");
-      $server->waitForUnit("network-online.target");
+      $server->waitForUnit("nfsd");
+      $server->waitForUnit("network.target");
 
       startAll;
 
@@ -54,8 +50,8 @@ in
       $client2->succeed("echo bla > /data/bar");
       $server->succeed("test -e /data/bar");
 
-      # Test whether restarting ‘nfs-server’ works correctly.
-      $server->succeed("systemctl restart nfs-server");
+      # Test whether restarting ‘nfsd’ works correctly.
+      $server->succeed("systemctl restart nfsd");
       $client2->succeed("echo bla >> /data/bar"); # will take 90 seconds due to the NFS grace period
 
       # Test whether we can get a lock.
@@ -86,4 +82,5 @@ in
       my $duration = time - $t1;
       die "shutdown took too long ($duration seconds)" if $duration > 30;
     '';
+
 })

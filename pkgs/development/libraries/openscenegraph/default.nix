@@ -1,39 +1,61 @@
-{ stdenv, lib, fetchurl, cmake, pkgconfig, doxygen, unzip
-, freetype, libjpeg, jasper, libxml2, zlib, gdal, curl, libX11
-, cairo, poppler, librsvg, libpng, libtiff, libXrandr
-, xineLib, boost
-, withApps ? false
-, withSDL ? false, SDL
-, withQt4 ? false, qt4
-}:
+x@{builderDefsPackage
+  , cmake, giflib, libjpeg, libtiff, lib3ds, freetype, libpng
+  , coin3d, jasper, gdal, xproto, libX11, libXmu, freeglut, mesa
+  , doxygen, ffmpeg, xineLib, unzip, zlib, openal, libxml2
+  , curl, a52dec, faad2, gdk_pixbuf
+  , ...}:
+builderDefsPackage
+(a :
+let
+  helperArgNames = ["stdenv" "fetchurl" "builderDefsPackage"] ++
+    [];
 
-stdenv.mkDerivation rec {
-  name = "openscenegraph-${version}";
-  version = "3.2.3";
-
-  src = fetchurl {
-    url = "http://trac.openscenegraph.org/downloads/developer_releases/OpenSceneGraph-${version}.zip";
-    sha256 = "0gic1hy7fhs27ipbsa5862q120a9y4bx176nfaw2brcjp522zvb9";
+  buildInputs = map (n: builtins.getAttr n x)
+    (builtins.attrNames (builtins.removeAttrs x helperArgNames));
+  sourceInfo = rec {
+    baseName="OpenSceneGraph";
+    version="3.0.1";
+    name="${baseName}-${version}";
+    url="http://www.openscenegraph.org/downloads/stable_releases/${name}/source/${name}.zip";
+    hash="15l23mxv93mw6wkc90x52jhwxh7r3d7lahwdsv3jfnha9dbh648c";
+  };
+in
+rec {
+  src = a.fetchurl {
+    url = sourceInfo.url;
+    sha256 = sourceInfo.hash;
   };
 
-  nativeBuildInputs = [ pkgconfig cmake doxygen unzip ];
+  inherit (sourceInfo) name version;
+  inherit buildInputs;
 
-  buildInputs = [
-    freetype libjpeg jasper libxml2 zlib gdal curl libX11
-    cairo poppler librsvg libpng libtiff libXrandr boost
-    xineLib
-  ] ++ lib.optional withSDL SDL
-    ++ lib.optional withQt4 qt4;
+  /* doConfigure should be removed if not needed */
+  phaseNames = ["setVars" "addInputs" "doUnpack" "doPatch" "doCmake" "doMakeInstall"];
 
-  enableParallelBuilding = true;
+  patches = [ ./xine.patch ]; # http://forum.openscenegraph.org/viewtopic.php?t=9659
 
-  cmakeFlags = lib.optional (!withApps) "-DBUILD_OSG_APPLICATIONS=OFF";
+  cmakeFlags = [
+    "-D MATH_LIBRARY="
+  ];
 
-  meta = with stdenv.lib; {
+  setVars = a.noDepEntry ''
+    export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE -D__STDC_CONSTANT_MACROS=1"
+  '';
+
+  meta = {
     description = "A 3D graphics toolkit";
-    homepage = http://www.openscenegraph.org/;
-    maintainers = [ maintainers.raskin ];
-    platforms = platforms.linux;
+    maintainers = with a.lib.maintainers;
+    [
+      raskin
+    ];
+    platforms = with a.lib.platforms;
+      linux;
     license = "OpenSceneGraph Public License - free LGPL-based license";
   };
-}
+  passthru = {
+    updateInfo = {
+      downloadPage = "http://www.openscenegraph.org/projects/osg/wiki/Downloads";
+    };
+  };
+}) x
+

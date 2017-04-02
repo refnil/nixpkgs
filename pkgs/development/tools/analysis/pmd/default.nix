@@ -1,14 +1,12 @@
 {stdenv, fetchurl, unzip}:
 
-stdenv.mkDerivation rec {
-  name = "pmd-${version}";
-  version = "5.2.3";
-
-  buildInputs = [ unzip ];
+stdenv.mkDerivation {
+  name = "pmd-4.2.5";
+  buildInputs = [unzip] ;
 
   src = fetchurl {
-    url = "mirror://sourceforge/pmd/pmd-bin-${version}.zip";
-    sha256 = "03frkyiii7304qrcypdqcxqxjf5n3p59zjib0r802mbbx1nzcisn";
+    url = mirror://sourceforge/pmd/pmd-bin-4.2.5.zip ;
+    sha256 = "07cb18mv7rplksy3iw3rxyjaav4m7kcjqfhzv20ki73hfkqxa85c";
   };
 
   installPhase = ''
@@ -19,7 +17,6 @@ stdenv.mkDerivation rec {
   meta = {
     description = "Scans Java source code and looks for potential problems";
     homepage = http://pmd.sourceforge.net/;
-    platforms = stdenv.lib.platforms.unix;
   };
 }
 

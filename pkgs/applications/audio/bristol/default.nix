@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, alsaLib, libjack2, pkgconfig, libpulseaudio, xorg }:
+{ stdenv, fetchurl, alsaLib, jack2, pkgconfig, pulseaudio, xlibs }:
 
 stdenv.mkDerivation  rec {
   name = "bristol-${version}";
@@ -10,13 +10,9 @@ stdenv.mkDerivation  rec {
   };
 
   buildInputs = [
-    alsaLib libjack2 pkgconfig libpulseaudio xorg.libX11 xorg.libXext
-    xorg.xproto
+    alsaLib jack2 pkgconfig pulseaudio xlibs.libX11 xlibs.libXext
+    xlibs.xproto
   ];
-
-  patchPhase = "sed -i '41,43d' libbristolaudio/audioEngineJack.c"; # disable alsa/iatomic
-
-  configurePhase = "./configure --prefix=$out --enable-jack-default-audio --enable-jack-default-midi";
 
   preInstall = ''
     sed -e "s@\`which bristol\`@$out/bin/bristol@g" -i bin/startBristol

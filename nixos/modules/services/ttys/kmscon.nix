@@ -32,13 +32,6 @@ in {
         default = "";
         example = "font-size=14";
       };
-
-      extraOptions = mkOption {
-        description = "Extra flags to pass to kmscon.";
-        type = types.separatedString " ";
-        default = "";
-        example = "--term xterm-256color";
-      };
     };
   };
 
@@ -60,7 +53,7 @@ in {
       ConditionPathExists=/dev/tty0
 
       [Service]
-      ExecStart=${pkgs.kmscon}/bin/kmscon "--vt=%I" ${cfg.extraOptions} --seats=seat0 --no-switchvt --configdir ${configDir} --login -- ${pkgs.shadow}/bin/login -p
+      ExecStart=${pkgs.kmscon}/bin/kmscon "--vt=%I" --seats=seat0 --no-switchvt --configdir ${configDir} --login -- ${pkgs.shadow}/bin/login -p
       UtmpIdentifier=%I
       TTYPath=/dev/%I
       TTYReset=yes
@@ -76,7 +69,7 @@ in {
           ln -s ${config.systemd.units."kmsconvt@.service".unit}/kmsconvt@.service $out/autovt@.service
         '';
 
-    systemd.services.systemd-vconsole-setup.enable = false;
+    systemd.services.systemd-vconsole-setup.restartIfChanged = false;
 
     services.kmscon.extraConfig = mkIf cfg.hwRender ''
       drm

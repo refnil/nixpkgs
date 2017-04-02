@@ -1,6 +1,6 @@
 { stdenv, fetchurl
 , yacc, flex
-, sysfsutils, kmod, udev
+, sysfsutils, module_init_tools, udev
 , firmware # Special pcmcia cards.
 , config   # Special hardware (map memory & port & irq)
 , lib      # used to generate postInstall script.
@@ -8,18 +8,18 @@
 
 # FIXME: should add an option to choose between hotplug and udev.
 stdenv.mkDerivation rec {
-  name = "pcmciautils-017";
+  name = "pcmciautils-015";
 
   src = fetchurl {
-    url = "https://kernel.org/pub/linux/utils/kernel/pcmcia/${name}.tar.gz";
-    sha256 = "5d8e2efad8a7f692129610603da232f2144851753d8d49a70eeb8eb1be6f6bc3";
+    url = "http://kernel.org/pub/linux/utils/kernel/pcmcia/${name}.tar.bz2";
+    sha256 = "4847485c412b47e3d88fa83ef811229e0e7941217303bc8449c30a3dc2128b6e";
   };
 
-  buildInputs = [udev yacc sysfsutils kmod flex];
+  buildInputs = [udev yacc sysfsutils module_init_tools flex];
 
   patchPhase = ''
     sed -i "
-      s,/sbin/modprobe,${kmod}&,;
+      s,/sbin/modprobe,${module_init_tools}&,;
       s,/lib/udev/,$out/sbin/,;
     " udev/* # fix-color */
     sed -i "
@@ -44,13 +44,12 @@ stdenv.mkDerivation rec {
     '') firmware;
 
   meta = {
-    homepage = https://www.kernel.org/pub/linux/utils/kernel/pcmcia/;
+    homepage = http://kernel.org/pub/linux/utils/kernel/pcmcia/pcmcia.html;
     longDescription = "
       PCMCIAutils contains the initialization tools necessary to allow
       the PCMCIA subsystem to behave (almost) as every other
       hotpluggable bus system.
     ";
     license = stdenv.lib.licenses.gpl2;
-    platforms = stdenv.lib.platforms.linux;
   };
 }

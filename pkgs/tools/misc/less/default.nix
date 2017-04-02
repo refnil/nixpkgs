@@ -1,22 +1,22 @@
-{ stdenv, fetchurl, ncurses, lessSecure ? false }:
+{ stdenv, fetchurl, ncurses }:
 
 stdenv.mkDerivation rec {
-  name = "less-481";
+  name = "less-462";
 
   src = fetchurl {
-    url = "http://www.greenwoodsoftware.com/less/${name}.tar.gz";
-    sha256 = "19fxj0h10y5bhr3a1xa7kqvnwl44db3sdypz8jxl1q79yln8z8rz";
+    url = http://www.greenwoodsoftware.com/less/less-462.tar.gz;
+    sha256 = "1kv5izyrkds8lkkzd46c9gxsnjgxbr7w4ficzma95dprcn92m97a";
   };
 
-  configureFlags = [ "--sysconfdir=/etc" ] # Look for ‘sysless’ in /etc.
-    ++ stdenv.lib.optional lessSecure [ "--with-secure" ];
+  # Look for ‘sysless’ in /etc.
+  configureFlags = "--sysconfdir=/etc";
 
   buildInputs = [ ncurses ];
 
   meta = {
     homepage = http://www.greenwoodsoftware.com/less/;
     description = "A more advanced file pager than ‘more’";
-    platforms = stdenv.lib.platforms.unix;
+    platforms = stdenv.lib.platforms.linux ++ stdenv.lib.platforms.darwin;
     maintainers = [ stdenv.lib.maintainers.eelco ];
   };
 }

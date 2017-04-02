@@ -6,22 +6,24 @@ let
 
   inherit (pkgs) ntp;
 
-  cfg = config.services.ntp;
-
   stateDir = "/var/lib/ntp";
 
   ntpUser = "ntp";
 
   configFile = pkgs.writeText "ntp.conf" ''
-    driftfile ${stateDir}/ntp.drift
+    # Keep the drift file in ${stateDir}/ntp.drift.  However, since we
+    # chroot to ${stateDir}, we have to specify it as /ntp.drift.
+    driftfile /ntp.drift
 
+    restrict default kod nomodify notrap nopeer noquery
+    restrict -6 default kod nomodify notrap nopeer noquery
     restrict 127.0.0.1
     restrict -6 ::1
 
-    ${toString (map (server: "server " + server + " iburst\n") cfg.servers)}
+    ${toString (map (server: "server " + server + " iburst\n") config.services.ntp.servers)}
   '';
 
-  ntpFlags = "-c ${configFile} -u ${ntpUser}:nogroup ${toString cfg.extraFlags}";
+  ntpFlags = "-c ${configFile} -u ${ntpUser}:nogroup -i ${stateDir}";
 
 in
 
@@ -34,7 +36,7 @@ in
     services.ntp = {
 
       enable = mkOption {
-        default = false;
+        default = !config.boot.isContainer;
         description = ''
           Whether to synchronise your machine's time using the NTP
           protocol.
@@ -42,16 +44,14 @@ in
       };
 
       servers = mkOption {
-        default = config.networking.timeServers;
+        default = [
+          "0.pool.ntp.org"
+          "1.pool.ntp.org"
+          "2.pool.ntp.org"
+        ];
         description = ''
           The set of NTP servers from which to synchronise.
         '';
-      };
-
-      extraFlags = mkOption {
-        type = types.listOf types.str;
-        description = "Extra flags passed to the ntpd command.";
-        default = [];
       };
 
     };
@@ -63,9 +63,8 @@ in
 
   config = mkIf config.services.ntp.enable {
 
-    # Make tools such as ntpq available in the system path.
+    # Make tools such as ntpq available in the system path
     environment.systemPackages = [ pkgs.ntp ];
-    services.timesyncd.enable = mkForce false;
 
     users.extraUsers = singleton
       { name = ntpUser;
@@ -74,12 +73,13 @@ in
         home = stateDir;
       };
 
-    systemd.services.ntpd =
+    jobs.ntpd =
       { description = "NTP Daemon";
 
-        wantedBy = [ "multi-user.target" ];
-        wants = [ "time-sync.target" ];
-        before = [ "time-sync.target" ];
+        wantedBy = [ "ip-up.target" ];
+        partOf = [ "ip-up.target" ];
+
+        path = [ ntp ];
 
         preStart =
           ''
@@ -87,10 +87,7 @@ in
             chown ${ntpUser} ${stateDir}
           '';
 
-        serviceConfig = {
-          ExecStart = "@${ntp}/bin/ntpd ntpd -g ${ntpFlags}";
-          Type = "forking";
-        };
+        exec = "ntpd -g -n ${ntpFlags}";
       };
 
   };

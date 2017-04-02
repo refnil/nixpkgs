@@ -43,7 +43,7 @@ stdenv.mkDerivation {
     homepage = http://www.gnu.org/software/make/;
 
     license = stdenv.lib.licenses.gpl3Plus;
-    maintainers = [ ];
+    maintainers = [ stdenv.lib.maintainers.ludo ];
     platforms = stdenv.lib.platforms.all;
   };
 }

@@ -17,8 +17,4 @@ stdenv.mkDerivation {
   buildInputs = [zlib libpng gd geoip db]; 
 
   configureFlags = "--enable-dns --enable-geoip --disable-static --enable-shared";
-
-  meta = {
-    platforms = stdenv.lib.platforms.unix;
-  };
 }

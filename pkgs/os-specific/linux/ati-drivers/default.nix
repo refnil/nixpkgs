@@ -1,18 +1,9 @@
-{ stdenv, lib, fetchurl, kernel ? null, which
-, xorg, makeWrapper, glibc, patchelf, unzip
-, fontconfig, freetype, mesa # for fgl_glxgears
-, # Whether to build the libraries only (i.e. not the kernel module or
-  # driver utils). Used to support 32-bit binaries on 64-bit
-  # Linux.
-  libsOnly ? false
+{ stdenv, fetchurl, kernel, xlibs, which, imake
+, mesa # for fgl_glxgears
+, libXxf86vm, xf86vidmodeproto # for fglrx_gamma
+, xorg, makeWrapper, glibc, patchelf
+, unzip
 }:
-
-assert (!libsOnly) -> kernel != null;
-
-with stdenv.lib;
-
-# This derivation requires a maximum of gcc49, Linux kernel 4.1 and xorg.xserver 1.17
-# and will not build or run using versions newer
 
 # If you want to use a different Xorg version probably
 # DIR_DEPENDING_ON_XORG_VERSION in builder.sh has to be adopted (?)
@@ -22,119 +13,77 @@ with stdenv.lib;
 # See http://thread.gmane.org/gmane.linux.distributions.nixos/4145 for a
 # workaround (TODO)
 
-# The gentoo ebuild contains much more "magic" and is usually a great resource to
-# find patches XD
+# The gentoo ebuild contains much more magic and is usually a great resource to
+# find patches :)
 
 # http://wiki.cchtml.com/index.php/Main_Page
 
+# There is one issue left:
 # /usr/lib/dri/fglrx_dri.so must point to /run/opengl-driver/lib/fglrx_dri.so
-# This is done in the builder script.
 
-stdenv.mkDerivation rec {
+# You eventually have to blacklist radeon module (?)
 
-  version = "15.12";
-  pname = "ati-drivers";
-  build = "15.302";
+assert stdenv.system == "x86_64-linux";
 
-  linuxonly =
-    if stdenv.system == "i686-linux" then
-      true
-    else if stdenv.system == "x86_64-linux" then
-      true
-    else throw "ati-drivers are Linux only. Sorry. The build was stopped.";
-
-  name = pname + "-" + version + (optionalString (!libsOnly) "-${kernelDir.version}");
+stdenv.mkDerivation {
+  name = "ati-drivers-13.12-${kernel.version}";
 
   builder = ./builder.sh;
-  gcc = stdenv.cc.cc;
-  libXinerama = xorg.libXinerama;
-  libXrandr = xorg.libXrandr;
-  libXrender = xorg.libXrender;
-  libXxf86vm = xorg.libXxf86vm;
-  xf86vidmodeproto = xorg.xf86vidmodeproto;
-  libSM = xorg.libSM;
-  libICE = xorg.libICE;
-  libfreetype = freetype;
-  libfontconfig = fontconfig;
-  libStdCxx = stdenv.cc.cc.lib;
+
+  inherit libXxf86vm xf86vidmodeproto;
+  gcc = stdenv.gcc.gcc;
 
   src = fetchurl {
-    url =
-    "https://www2.ati.com/drivers/linux/radeon-crimson-15.12-15.302-151217a-297685e.zip";
-    sha256 = "0n0ynqmjkjp5dl5q07as7ps3rlyyn63hq4mlwgd7c7v82ky2skvh";
-    curlOpts = "--referer http://support.amd.com/en-us/download/desktop?os=Linux+x86_64";
+    url = http://www2.ati.com/drivers/linux/amd-catalyst-13.12-linux-x86.x86_64.zip;
+    sha256 = "1c3fn328340by4qn99dgfj8c2q34fxdb2alcak0vnyc6bw7l5sms";
+    curlOpts = "--referer http://support.amd.com/en-us/download/desktop?os=Linux%20x86_64";
   };
 
-  hardeningDisable = [ "pic" "format" ];
-
-  patchPhaseSamples = "patch -p2 < ${./patches/patch-samples.patch}";
-  patches = [
-    ./patches/15.12-xstate-fp.patch
-    ./patches/15.9-kcl_str.patch
-    ./patches/15.9-mtrr.patch
-    ./patches/15.9-preempt.patch
-    ./patches/15.9-sep_printf.patch ]
-  ++ optionals ( kernel != null &&
-                 (lib.versionAtLeast kernel.version "4.6") )
-               [ ./patches/kernel-4.6-get_user_pages.patch
-                 ./patches/kernel-4.6-page_cache_release-put_page.patch ]
-  ++ optionals ( kernel != null &&
-                 (lib.versionAtLeast kernel.version "4.7") )
-               [ ./patches/4.7-arch-cpu_has_pge-v2.patch ]
-  ++ optionals ( kernel != null &&
-                 (lib.versionAtLeast kernel.version "4.9") )
-               [ ./patches/4.9-get_user_pages.patch ];
+  # most patches are taken from gentoo
+  patchPhase = "patch -p1 < ${./gentoo-patches.patch}";
+  patchPhaseSamples = "patch -p2 < ${./patch-samples.patch}";
 
   buildInputs =
-    [ xorg.libXrender xorg.libXext xorg.libX11 xorg.libXinerama xorg.libSM
-      xorg.libXrandr xorg.libXxf86vm xorg.xf86vidmodeproto xorg.imake xorg.libICE
+    [ xlibs.libXext xlibs.libX11 xlibs.libXinerama
+      xlibs.libXrandr which imake makeWrapper
       patchelf
       unzip
       mesa
-      fontconfig
-      freetype
-      makeWrapper
-      which
     ];
 
-  inherit libsOnly;
+  kernel = kernel.dev;
 
-  kernelDir = if libsOnly then null else kernel.dev;
+  inherit glibc /* glibc only used for setting interpreter */;
 
-  # glibc only used for setting the binaries interpreter
-  glibcDir = glibc.out;
-
-  # outputs TODO: probably many fixes are needed;
-  LD_LIBRARY_PATH = makeLibraryPath
-    [ xorg.libXrender xorg.libXext xorg.libX11 xorg.libXinerama xorg.libSM
-      xorg.libXrandr xorg.libXxf86vm xorg.xf86vidmodeproto xorg.imake xorg.libICE
-      mesa
-      fontconfig
-      freetype
-      stdenv.cc.cc
+  LD_LIBRARY_PATH = stdenv.lib.concatStringsSep ":"
+    [ "${xorg.libXrandr}/lib"
+      "${xorg.libXrender}/lib"
+      "${xorg.libXext}/lib"
+      "${xorg.libX11}/lib"
+      "${xorg.libXinerama}/lib"
     ];
 
   # without this some applications like blender don't start, but they start
   # with nvidia. This causes them to be symlinked to $out/lib so that they
   # appear in /run/opengl-driver/lib which get's added to LD_LIBRARY_PATH
+  extraDRIlibs = [ xorg.libXext ];
 
-  extraDRIlibs = [ xorg.libXrandr.out xorg.libXrender.out xorg.libXext.out
-                   xorg.libX11.out xorg.libXinerama.out xorg.libSM.out
-                   xorg.libICE.out ];
-
-  inherit mesa; # only required to build the examples
-
-  enableParallelBuilding = true;
+  inherit mesa; # only required to build examples
 
   meta = with stdenv.lib; {
-    description = "ATI Catalyst display drivers";
+    description = "ATI drivers";
     homepage = http://support.amd.com/us/gpudownload/Pages/index.aspx;
     license = licenses.unfree;
-    maintainers = with maintainers; [ marcweber offline jgeerds jerith666 ];
-    platforms = platforms.linux;
+    maintainers = with maintainers; [marcweber offline];
+    platforms = [ "x86_64-linux" ];
     hydraPlatforms = [];
-    # Copied from the nvidia default.nix to prevent a store collision.
-    priority = 4;
   };
+
+  # moved assertions here because the name is evaluated when the NixOS manual is generated
+  # Don't make that fail - fail lazily when a users tries to build this derivation only
+  dummy =
+    # assert xorg.xorgserver.name == "xorg-server-1.7.5";
+    assert stdenv.system == "x86_64-linux"; # i686-linux should work as well - however I didn't test it.
+    null;
 
 }

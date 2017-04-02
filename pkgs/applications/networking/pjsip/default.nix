@@ -1,15 +1,14 @@
-{ stdenv, fetchurl, openssl, libsamplerate, alsaLib }:
+{stdenv, fetchurl, openssl, libsamplerate}:
 
 stdenv.mkDerivation rec {
-  name = "pjsip-${version}";
-  version = "2.5.5";
+  name = "pjsip-2.1";
 
   src = fetchurl {
-    url = "http://www.pjsip.org/release/${version}/pjproject-${version}.tar.bz2";
-    sha256 = "ab39207b761d3485199cd881410afeb2d171dff7c2bf75e8caae91c6dca508f3";
+    url = http://www.pjsip.org/release/2.1/pjproject-2.1.tar.bz2;
+    md5 = "310eb63638dac93095f6a1fc8ee1f578";
   };
 
-  buildInputs = [ openssl libsamplerate alsaLib ];
+  buildInputs = [ openssl libsamplerate ];
 
   postInstall = ''
     mkdir -p $out/bin
@@ -22,7 +21,7 @@ stdenv.mkDerivation rec {
   dontPatchELF = true;
 
   meta = {
-    description = "A multimedia communication library written in C, implementing standard based protocols such as SIP, SDP, RTP, STUN, TURN, and ICE";
+    description = "SIP stack and media stack for presence, im, and multimedia communication";
     homepage = http://pjsip.org/;
     license = stdenv.lib.licenses.gpl2Plus;
     maintainers = with stdenv.lib.maintainers; [viric];

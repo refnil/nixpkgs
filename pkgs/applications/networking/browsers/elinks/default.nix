@@ -1,5 +1,5 @@
-{ stdenv, fetchurl, perl, ncurses, xlibsWrapper, bzip2, zlib, openssl
-, spidermonkey_1_8_5, gpm
+{ stdenv, fetchurl, perl, ncurses, x11, bzip2, zlib, openssl
+, spidermonkey, gpm
 , enableGuile ? false, guile ? null   # Incompatible licenses, LGPLv3 - GPLv2
 , enablePython ? false, python ? null
 }:
@@ -17,7 +17,7 @@ stdenv.mkDerivation rec {
 
   patches = [ ./gc-init.patch ];
 
-  buildInputs = [ perl ncurses xlibsWrapper bzip2 zlib openssl spidermonkey_1_8_5 gpm ]
+  buildInputs = [ perl ncurses x11 bzip2 zlib openssl spidermonkey gpm ]
     ++ stdenv.lib.optional enableGuile guile
     ++ stdenv.lib.optional enablePython python;
 
@@ -25,8 +25,8 @@ stdenv.mkDerivation rec {
     ''
       --enable-finger --enable-html-highlight
       --with-perl --enable-gopher --enable-cgi --enable-bittorrent
-      --with-spidermonkey=${spidermonkey_1_8_5}
-      --enable-nntp --with-openssl=${openssl.dev}
+      --with-spidermonkey=${spidermonkey}
+      --enable-nntp --with-openssl=${openssl}
     '' + stdenv.lib.optionalString enableGuile " --with-guile"
     + stdenv.lib.optionalString enablePython " --with-python";
 
@@ -44,6 +44,5 @@ stdenv.mkDerivation rec {
     description = "Full-featured text-mode web browser";
     homepage = http://elinks.or.cz;
     license = stdenv.lib.licenses.gpl2;
-    platforms = stdenv.lib.platforms.linux;
   };
 }

@@ -11,18 +11,11 @@ stdenv.mkDerivation rec {
     sha256 = "1nkid1n2l3rrlmq5qrf5yy06grrkwjh3yxl5g0w58w0pih8allci";
   };
 
-  outputs = [ "out" "dev" ];
-
   buildInputs = [ perl bison flex pkgconfig ];
   propagatedBuildInputs = [ glib libxml2 ] ++ libintlOrEmpty;
 
   patchPhase = ''
     sed -i -e 's/^   /\t/' docs/gst/Makefile.in docs/libs/Makefile.in docs/plugins/Makefile.in
-  ''
-  + stdenv.lib.optionalString stdenv.isDarwin ''
-    # Applying this patch manually to avoid a rebuild on Linux. Feel free to refactor later
-    # See https://trac.macports.org/ticket/40783 for explanation of patch
-    patch -p1 < ${./darwin.patch}
   '';
 
   configureFlags = ''
@@ -41,7 +34,7 @@ stdenv.mkDerivation rec {
   meta = {
     homepage = http://gstreamer.freedesktop.org;
 
-    description = "Library for constructing graphs of media-handling components";
+    description = "GStreamer, a library for constructing graphs of media-handling components";
 
     longDescription = ''
       GStreamer is a library for constructing graphs of media-handling
@@ -56,6 +49,5 @@ stdenv.mkDerivation rec {
     '';
 
     license = stdenv.lib.licenses.lgpl2Plus;
-    platforms = stdenv.lib.platforms.unix;
   };
 }

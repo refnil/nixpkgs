@@ -8,8 +8,4 @@ stdenv.mkDerivation rec {
   };
   patches = [ ./fix-ftbfs-gcc4.7.diff ];
   buildInputs = [ cmake openssl ];
-
-  meta = {
-    platforms = stdenv.lib.platforms.unix;
-  };
 }

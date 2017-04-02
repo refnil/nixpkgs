@@ -1,63 +1,39 @@
-{ stdenv, fetchFromGitHub, fetchpatch, lib
-, autoconf, automake, gnum4, libtool, perl, gnulib, uthash, pkgconfig, gettext
-, python, freetype, zlib, glib, libungif, libpng, libjpeg, libtiff, libxml2, pango
-, withGTK ? false, gtk2
-, withPython ? true
-, Carbon ? null, Cocoa ? null
+{ stdenv, fetchurl, gettext, freetype, zlib
+, libungif, libpng, libjpeg, libtiff, libxml2
+, withX11 ? false
+, libX11 ? null, lib, xproto ? null, libXt ? null
 }:
 
-stdenv.mkDerivation rec {
+let 
+  version = "20110222";
   name = "fontforge-${version}";
-  version = "20160404";
+in
 
-  src = fetchFromGitHub {
-    owner = "fontforge";
-    repo = "fontforge";
-    rev = version;
-    sha256 = "15nacq84n9gvlzp3slpmfrrbh57kfb6lbdlc46i7aqgci4qv6fg0";
+stdenv.mkDerivation {
+  inherit name;
+  
+  src = fetchurl {
+    url = "mirror://sourceforge/fontforge/fontforge_full-${version}.tar.bz2";
+    sha256 = "0gj342iyd2qmza523r84m65fm7bymcfd4lbllywbfjzq4s0838lg";
   };
-
-  patches = [(fetchpatch {
-    name = "use-system-uthash.patch";
-    url = "http://pkgs.fedoraproject.org/cgit/fontforge.git/plain/"
-      + "fontforge-20140813-use-system-uthash.patch?id=8bdf933";
-    sha256 = "0n8i62qv2ygfii535rzp09vvjx4qf9zp5qq7qirrbzm1l9gykcjy";
-  })];
-  patchFlags = "-p0";
-
-  buildInputs = [
-    autoconf automake gnum4 libtool perl pkgconfig gettext uthash
-    python freetype zlib glib libungif libpng libjpeg libtiff libxml2
-  ]
-    ++ lib.optionals withGTK [ gtk2 pango ]
-    ++ lib.optionals stdenv.isDarwin [ Carbon Cocoa ];
-
-  configureFlags =
-    lib.optionals (!withPython) [ "--disable-python-scripting" "--disable-python-extension" ]
-    ++ lib.optional withGTK "--enable-gtk2-use"
-    ++ lib.optional (!withGTK) "--without-x";
-
-  # work-around: git isn't really used, but configuration fails without it
+    
+  configureFlags = lib.optionalString withX11 "--with-gui=gdraw";
+  
   preConfigure = ''
-    export GIT="$(type -P true)"
-    cp -r "${gnulib}" ./gnulib
-    chmod +w -R ./gnulib
-    ./bootstrap --skip-git --gnulib-srcdir=./gnulib
+    unpackFile ${freetype.src}
+    freetypeSrcPath=$(echo `pwd`/freetype-*)
+    configureFlags="$configureFlags --with-freetype-src=$freetypeSrcPath"
+    
+    substituteInPlace configure \
+      --replace /usr/include /no-such-path \
+      --replace /usr/lib /no-such-path \
+      --replace /usr/local /no-such-path \
+
+
+    export NIX_LDFLAGS="$NIX_LDFLAGS -lz"
   '';
 
-  postInstall =
-    # get rid of the runtime dependency on python
-    lib.optionalString (!withPython) ''
-      rm -r "$out/share/fontforge/python"
-    '';
-
-  enableParallelBuilding = true;
-
-  meta = {
-    description = "A font editor";
-    homepage = http://fontforge.github.io;
-    platforms = stdenv.lib.platforms.all;
-    license = stdenv.lib.licenses.bsd3;
-  };
+  buildInputs =
+    [ gettext freetype zlib libungif libpng libjpeg libtiff libxml2 ]
+    ++ lib.optionals withX11 [ libX11 xproto libXt ];
 }
-

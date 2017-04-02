@@ -1,30 +1,31 @@
 # TODO add plugins having various licenses, see http://www.vamp-plugins.org/download.html
 
-{ stdenv, fetchurl, alsaLib, bzip2, fftw, libjack2, libX11, liblo
+{ stdenv, fetchurl, alsaLib, bzip2, fftw, jack2, libX11, liblo
 , libmad, libogg, librdf, librdf_raptor, librdf_rasqal, libsamplerate
-, libsndfile, pkgconfig, libpulseaudio, makeQtWrapper, qtbase, redland
-, qmakeHook, rubberband, serd, sord, vampSDK, fftwFloat
+, libsndfile, pkgconfig, pulseaudio, qt5, redland
+, rubberband, serd, sord, vampSDK
 }:
 
 stdenv.mkDerivation rec {
   name = "sonic-visualiser-${version}";
-  version = "2.4.1";
+  version = "2.3";
 
   src = fetchurl {
-    url = "http://code.soundsoftware.ac.uk/attachments/download/1185/${name}.tar.gz";
-    sha256 = "06nlha70kgrby16nyhngrv5q846xagnxdinv608v7ga7vpywwmyb";
+
+    url = "http://code.soundsoftware.ac.uk/attachments/download/918/${name}.tar.gz";
+    sha256 = "1f06w2rin4r2mbi00bg3nmqdi2xdy9vq4jcmfanxzj3ld66ik40c";
   };
 
   buildInputs =
-    [ libsndfile qtbase qmakeHook fftw fftwFloat bzip2 librdf rubberband
+    [ libsndfile qt5 fftw /* should be fftw3f ??*/ bzip2 librdf rubberband
       libsamplerate vampSDK alsaLib librdf_raptor librdf_rasqal redland
       serd
       sord
       pkgconfig
       # optional
-      libjack2
+      jack2
       # portaudio
-      libpulseaudio
+      pulseaudio
       libmad
       libogg # ?
       # fishsound
@@ -32,19 +33,17 @@ stdenv.mkDerivation rec {
       libX11
     ];
 
-  nativeBuildInputs = [ makeQtWrapper qmakeHook ];
-
-  configurePhase = ''
+  buildPhase = ''
     for i in sonic-visualiser svapp svcore svgui;
-      do cd $i && qmake PREFIX=$out && cd ..;
+      do cd $i && qmake -makefile PREFIX=$out && cd ..;
     done
+    make
   '';
 
   installPhase = ''
     mkdir -p $out/{bin,share/sonic-visualiser}
     cp sonic-visualiser $out/bin/
     cp -r samples $out/share/sonic-visualiser/
-    wrapQtProgram "$out/bin/sonic-visualiser"
   '';
 
   meta = with stdenv.lib; {
@@ -53,6 +52,5 @@ stdenv.mkDerivation rec {
     license = licenses.gpl2Plus;
     maintainers = [ maintainers.goibhniu maintainers.marcweber ];
     platforms = platforms.linux;
-    broken = true;
   };
 }

@@ -1,27 +1,20 @@
-{ stdenv, fetchurl, pkgconfig, djvulibre, poppler, fontconfig, libjpeg }:
+{stdenv, fetchurl, pkgconfig, djvulibre, poppler, fontconfig, libjpeg }:
 
 stdenv.mkDerivation rec {
-  version = "0.9.5";
+  version = "0.7.17";
   name = "pdf2djvu-${version}";
 
   src = fetchurl {
-    url = "https://github.com/jwilk/pdf2djvu/releases/download/${version}/${name}.tar.xz";
-    sha256 = "0fr8b44rsqll2m6qnh9id1lfc980k7rj3aq975mwba4y57rwnlnc";
+    url = "http://pdf2djvu.googlecode.com/files/pdf2djvu_${version}.tar.gz";
+    sha256 = "1nplcabb8526bs5707k9212pi000wnskq3c9hbq9acgmdlnnwvgy";
   };
 
-  nativeBuildInputs = [ pkgconfig ];
+  buildInputs = [ pkgconfig djvulibre poppler fontconfig libjpeg ];
 
-  buildInputs = [ djvulibre poppler fontconfig libjpeg ];
-
-  preConfigure = ''
-    sed -i 's#\$djvulibre_bin_path#${djvulibre.bin}/bin#g' configure
-  '';
-
-  meta = with stdenv.lib; {
+  meta = {
     description = "Creates djvu files from PDF files";
     homepage = http://code.google.com/p/pdf2djvu/;
-    license = licenses.gpl2;
-    maintainers = with maintainers; [ pSub ];
+    license = stdenv.lib.licenses.gpl2;
     inherit version;
   };
 }

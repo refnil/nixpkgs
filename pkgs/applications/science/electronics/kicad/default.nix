@@ -1,38 +1,21 @@
-{ stdenv, fetchurl, fetchbzr, cmake, mesa, wxGTK, zlib, libX11, gettext, glew, cairo, openssl, boost, pkgconfig, doxygen }:
+{ stdenv, fetchurl, fetchbzr, cmake, mesa, wxGTK, zlib, libX11, gettext }:
 
 stdenv.mkDerivation rec {
-  name = "kicad-${series}";
-  series = "4.0";
-  version = "4.0.2";
+  name = "kicad-20131025";
 
-  srcs = [
-    (fetchurl {
-      url = "https://code.launchpad.net/kicad/${series}/${version}/+download/kicad-${version}.tar.xz";
-      sha256 = "1fcf91fmxj6ha3mm6gzdb0px50j58m80p8wrncm8ca9shj36kbif";
-    })
+  src = fetchbzr {
+    url = "https://code.launchpad.net/~kicad-stable-committers/kicad/stable";
+    rev = 4024;
+    sha256 = "1sv1l2zpbn6439ccz50p05hvqg6j551aqra551wck9h3929ghly5";
+  };
 
-    (fetchurl {
-      url = "http://downloads.kicad-pcb.org/libraries/kicad-library-${version}.tar.gz";
-      sha256 = "1xk9sxxb3d42chdysqmvizrjcbm0467q7nsq5cahq3j1hci49m6l";
-    })
+  srcLibrary = fetchbzr {
+    url = "http://bazaar.launchpad.net/~kicad-lib-committers/kicad/library";
+    rev = 293;
+    sha256 = "1wn9a4nhqyjzzfkq6xm7ag8n5n10xy7gkq6i7yry7wxini7pzv1i";
+  };
 
-    (fetchurl {
-      url = "http://downloads.kicad-pcb.org/libraries/kicad-footprints-${version}.tar.gz";
-      sha256 = "0vrzykgxx423iwgz6186bi8724kmbi5wfl92gfwb3r6mqammgwpg";
-    })
-  ];
-
-  sourceRoot = "kicad-${version}";
-
-  cmakeFlags = ''
-    -DKICAD_SKIP_BOOST=ON
-    -DKICAD_BUILD_VERSION=${version}
-    -DKICAD_REPO_NAME=stable
-  '';
-
-  enableParallelBuilding = true; # often fails on Hydra: fatal error: pcb_plot_params_lexer.h: No such file or directory
-
-  buildInputs = [ cmake mesa wxGTK zlib libX11 gettext glew cairo openssl boost pkgconfig doxygen ];
+  cmakeFlags = "-DKICAD_STABLE_VERSION=ON";
 
   # They say they only support installs to /usr or /usr/local,
   # so we have to handle this.
@@ -40,25 +23,16 @@ stdenv.mkDerivation rec {
     sed -i -e 's,/usr/local/kicad,'$out,g common/gestfich.cpp
   '';
 
-  postUnpack = ''
-    pushd $(pwd)
-  '';
+  #enableParallelBuilding = true; # often fails on Hydra: fatal error: pcb_plot_params_lexer.h: No such file or directory
+
+  buildInputs = [ cmake mesa wxGTK zlib libX11 gettext ];
 
   postInstall = ''
-    popd
-
-    pushd kicad-library-*
-    cmake -DCMAKE_INSTALL_PREFIX=$out
-    make $MAKE_FLAGS
+    mkdir library
+    cd library
+    cmake -DCMAKE_INSTALL_PREFIX=$out $srcLibrary
     make install
-    popd
-
-    pushd kicad-footprints-*
-    mkdir -p $out/share/kicad/modules
-    cp -R *.pretty $out/share/kicad/modules/
-    popd
   '';
-
 
   meta = {
     description = "Free Software EDA Suite";

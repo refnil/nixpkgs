@@ -12,8 +12,6 @@ stdenv.mkDerivation {
     sed -i -e '/INSTALL/s/-[og] [^ ]*//g' Makefile modules/Makefile
   '';
 
-  patches = [ ./eintr.patch ];
-
   configureFlags = "VLOCK_GROUP=root ROOT_GROUP=root";
 
   buildInputs = [ pam ];

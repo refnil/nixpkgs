@@ -1,35 +1,45 @@
-{ stdenv, fetchurl, sbcl }:
+a :  
+let 
+  fetchurl = a.fetchurl;
 
-stdenv.mkDerivation rec {
-  name = "acl2-${version}";
-  version = "v6-5";
-
+  version = a.lib.attrByPath ["version"] "v3-5" a; 
+  buildInputs = with a; [
+    sbcl
+  ];
+in
+rec {
   src = fetchurl {
     url = "http://www.cs.utexas.edu/users/moore/acl2/${version}/distrib/acl2.tar.gz";
-    sha256 = "19kfclgpdyms016s06pjf3icj3mx9jlcj8vfgpbx2ac4ls0ir36g";
+    sha256 = "0zmh1njpp7n7azcyjlygr0h0k51d18s1jkj0dr1jn2bh7mpysajk";
     name = "acl2-${version}.tar.gz";
   };
 
-  buildInputs = [ sbcl ];
+  inherit buildInputs;
+  configureFlags = [];
 
-  phases = "unpackPhase installPhase";
+  /* doConfigure should be removed if not needed */
+  phaseNames = ["doDeploy" "doBuild"];
+  
+  makeFlags = ["LISP='${a.sbcl}/bin/sbcl'"];
 
   installSuffix = "acl2";
-
-  installPhase = ''
-    mkdir -p $out/share/${installSuffix}
-    cp -R . $out/share/${installSuffix}
+  doDeploy = (a.simplyShare installSuffix);
+  doBuild = a.fullDepEntry (''
     cd $out/share/${installSuffix}
-    make 'LISP=${sbcl}/bin/sbcl --dynamic-space-size 2000'
-    make 'LISP=${sbcl}/bin/sbcl --dynamic-space-size 2000' regression
-    make LISP=${sbcl}/bin/sbcl TAGS
-    mkdir -p $out/bin
-    cp saved_acl2 $out/bin/acl2
-  '';
-
+    make LISP=${a.sbcl}/bin/sbcl
+    make LISP=${a.sbcl}/bin/sbcl regression
+    mkdir -p "$out/bin"
+    cp saved_acl2 "$out/bin/acl2"
+  '') ["doDeploy" "addInputs" "defEnsureDir"];
+      
+  name = "acl2-" + version;
   meta = {
     description = "An interpreter and a prover for a Lisp dialect";
-    maintainers = with stdenv.lib.maintainers; [ raskin ];
-    platforms = stdenv.lib.platforms.linux;
+    maintainers = with a.lib.maintainers; 
+    [
+      raskin
+    ];
+    platforms = with a.lib.platforms;
+      linux;
   };
 }

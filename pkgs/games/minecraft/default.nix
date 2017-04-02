@@ -1,25 +1,8 @@
-{ stdenv, fetchurl, makeDesktopItem
-, jre, libX11, libXext, libXcursor, libXrandr, libXxf86vm
-, openjdk
-, mesa, openal
-, useAlsa ? false, alsaOss ? null }:
-with stdenv.lib;
+{stdenv, fetchurl, jre, libX11, libXext, libXcursor, libXrandr, libXxf86vm
+, mesa, openal, alsaOss }:
 
-assert useAlsa -> alsaOss != null;
-
-let
-  desktopItem = makeDesktopItem {
-    name = "minecraft";
-    exec = "minecraft";
-    icon = "minecraft";
-    comment = "A sandbox-building game";
-    desktopName = "Minecraft";
-    genericName = "minecraft";
-    categories = "Game;";
-  };
-
-in stdenv.mkDerivation {
-  name = "minecraft-2015.07.24";
+stdenv.mkDerivation {
+  name = "minecraft-2013.07.01";
 
   src = fetchurl {
     url = "https://s3.amazonaws.com/Minecraft.Download/launcher/Minecraft.jar";
@@ -36,24 +19,18 @@ in stdenv.mkDerivation {
     cat > $out/bin/minecraft << EOF
     #!${stdenv.shell}
 
-    export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:${makeLibraryPath [ libX11 libXext libXcursor libXrandr libXxf86vm mesa openal ]}
-    ${if useAlsa then "${alsaOss}/bin/aoss" else "" } \
-      ${jre}/bin/java -jar $out/minecraft.jar
+    # wrapper for minecraft
+    export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:${jre}/lib/${jre.architecture}/:${libX11}/lib/:${libXext}/lib/:${libXcursor}/lib/:${libXrandr}/lib/:${libXxf86vm}/lib/:${mesa}/lib/:${openal}/lib/
+    ${alsaOss}/bin/aoss ${jre}/bin/java -jar $out/minecraft.jar
     EOF
 
     chmod +x $out/bin/minecraft
-
-    mkdir -p $out/share/applications
-    ln -s ${desktopItem}/share/applications/* $out/share/applications/
-
-    ${openjdk}/bin/jar xf $out/minecraft.jar favicon.png
-    install -D favicon.png $out/share/icons/hicolor/32x32/apps/minecraft.png
   '';
 
   meta = {
       description = "A sandbox-building game";
       homepage = http://www.minecraft.net;
-      maintainers = with stdenv.lib.maintainers; [ cpages ryantm ];
-      license = stdenv.lib.licenses.unfreeRedistributable;
+      maintainers = [ stdenv.lib.maintainers.page ];
+      license = "unfree-redistributable";
   };
 }

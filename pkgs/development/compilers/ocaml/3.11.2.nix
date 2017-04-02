@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, ncurses, xlibsWrapper }:
+{ stdenv, fetchurl, ncurses, x11 }:
 
 let
    useX11 = stdenv.isi686 || stdenv.isx86_64;
@@ -8,8 +8,7 @@ in
 
 stdenv.mkDerivation rec {
   
-  name = "ocaml-${version}";
-  version = "3.11.2";
+  name = "ocaml-3.11.2";
   
   src = fetchurl {
     url = "http://caml.inria.fr/pub/distrib/ocaml-3.11/${name}.tar.bz2";
@@ -28,9 +27,9 @@ stdenv.mkDerivation rec {
     ];
 
   prefixKey = "-prefix ";
-  configureFlags = ["-no-tk"] ++ optionals useX11 [ "-x11lib" xlibsWrapper ];
+  configureFlags = ["-no-tk"] ++ optionals useX11 [ "-x11lib" x11 ];
   buildFlags = "world" + optionalString useNativeCompilers " bootstrap world.opt";
-  buildInputs = [ncurses] ++ optionals useX11 [ xlibsWrapper ];
+  buildInputs = [ncurses] ++ optionals useX11 [ x11 ];
   installTargets = "install" + optionalString useNativeCompilers " installopt";
   prePatch = ''
     CAT=$(type -tp cat)
@@ -38,17 +37,14 @@ stdenv.mkDerivation rec {
     patch -p0 < ${./mips64.patch}
   '';
   postBuild = ''
-    mkdir -p $out/include
+    ensureDir $out/include
     ln -sv $out/lib/ocaml/caml $out/include/caml
   '';
 
-  meta = with stdenv.lib; {
+  meta = {
     homepage = http://caml.inria.fr/ocaml;
-    license = with licenses; [
-      qpl /* compiler */
-      lgpl2 /* library */
-    ];
-    description = "Most popular variant of the Caml language";
+    license = [ "QPL" /* compiler */ "LGPLv2" /* library */ ];
+    description = "Objective Caml, the most popular variant of the Caml language";
 
     longDescription =
       '' Objective Caml is the most popular variant of the Caml language.
@@ -69,7 +65,7 @@ stdenv.mkDerivation rec {
          documentation generator (ocamldoc).
        '';
 
-    platforms = with platforms; linux ++ darwin;
+    platforms = stdenv.lib.platforms.linux ++ stdenv.lib.platforms.darwin;
   };
 
 }

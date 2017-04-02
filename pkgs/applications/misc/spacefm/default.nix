@@ -1,48 +1,30 @@
-{ pkgs, fetchFromGitHub, stdenv, gtk3, udev, desktop_file_utils
-, shared_mime_info, intltool, pkgconfig, wrapGAppsHook, ffmpegthumbnailer
-, jmtpfs, ifuseSupport ? false, ifuse ? null, lsof, udisks, hicolor_icon_theme, adwaita-icon-theme }:
+{ pkgs, fetchurl, stdenv, gtk3, udev, desktop_file_utils, shared_mime_info
+, intltool, pkgconfig, makeWrapper
+}:
 
-stdenv.mkDerivation rec {
+let
+  version = "0.9.4";
+
+in stdenv.mkDerivation rec {
   name = "spacefm-${version}";
-  version = "1.0.5";
 
-  src = fetchFromGitHub {
-    owner = "IgnorantGuru";
-    repo = "spacefm";
-    rev = "${version}";
-    sha256 = "06askkrwls09d1x382zjrmnvcm0ghfgz4cms2qbhdkazfyy0ff65";
+  src = fetchurl {
+    url = "https://github.com/IgnorantGuru/spacefm/blob/pkg/${version}/${name}.tar.xz?raw=true";
+    sha256 = "0marwa031jk24q8hy90dr7yw6rv5hn1shar404zpb1k57v4nr23m";
   };
 
-  configureFlags = [
-    "--with-bash-path=${pkgs.bash}/bin/bash"
-  ];
+  buildInputs = [ gtk3 udev desktop_file_utils shared_mime_info intltool pkgconfig makeWrapper ];
 
-  preConfigure = ''
-    configureFlags="$configureFlags --sysconfdir=$out/etc"
+  preFixup = ''
+    wrapProgram "$out/bin/spacefm" \
+      --prefix XDG_DATA_DIRS : "$GSETTINGS_SCHEMAS_PATH"
   '';
 
-  postInstall = ''
-    rm -f $out/etc/spacefm/spacefm.conf
-    ln -s /etc/spacefm/spacefm.conf $out/etc/spacefm/spacefm.conf 
-  '';
-
-  buildInputs = [
-    gtk3 udev desktop_file_utils shared_mime_info intltool pkgconfig
-    wrapGAppsHook ffmpegthumbnailer jmtpfs lsof udisks
-  ] ++ (if ifuseSupport then [ ifuse ] else []);
-  # Introduced because ifuse doesn't build due to CVEs in libplist
-  # Revert when libplist builds again…
-
-  meta = with stdenv.lib;  {
-    description = "A multi-panel tabbed file manager";
-    longDescription = ''
-      Multi-panel tabbed file and desktop manager for Linux
-      with built-in VFS, udev- or HAL-based device manager,
-      customizable menu system, and bash integration
-    '';
-    homepage = http://ignorantguru.github.io/spacefm/;
-    platforms = platforms.linux;
-    license = licenses.gpl3Plus;
-    maintainers = with maintainers; [ jagajaga obadz ];
+  meta = {
+    description = "Multi-panel tabbed file and desktop manager for Linux with built-in VFS, udev- or HAL-based device manager, customizable menu system, and bash integration.";
+    platforms = pkgs.lib.platforms.linux;
+    license = pkgs.lib.licenses.gpl3;
   };
+
 }
+

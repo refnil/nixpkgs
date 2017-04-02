@@ -1,43 +1,27 @@
-{ fetchgit, stdenv, zlib, bzip2, docbook2x, pcre, curl, libxml2, libevent, perl
-, pkgconfig, protobuf, tokyocabinet, tokyotyrant, opencv, autoconf, automake
-, libtool, seeks_confDir ? ""
+{ fetchurl, stdenv, zlib, docbook2x, pcre, curl, libxml2, libevent, perl
+, pkgconfig, protobuf, tokyocabinet, tokyotyrant, opencv
 }:
 
+let version = "0.4.1"; in
 stdenv.mkDerivation {
-  name = "seeks-0.4.1";
+  name = "seeks-${version}";
 
-  src = fetchgit {
-    url = "git://github.com/beniz/seeks.git";
-    rev = "1168b3a2f3111c3fca31dd961135194c3e8df5fd";
-    sha256 = "18s2pxal9a2aayv63hc19vnkx5a5y9rhbipdpvkinbni5283iiar";
+  src = fetchurl {
+    url = "mirror://sourceforge/seeks/hippy/seeks-${version}.tar.gz";
+    sha256 = "1ppbbjw1zffxxhyvy64xwsff9xlw9wigqb7qwq5iw5mhbblz545q";
   };
 
   buildInputs =
-    [ zlib bzip2 docbook2x pcre curl libxml2 libevent perl pkgconfig
-      protobuf tokyocabinet tokyotyrant opencv autoconf automake libtool
+    [ zlib docbook2x pcre curl libxml2 libevent perl pkgconfig
+      protobuf tokyocabinet tokyotyrant opencv
     ];
 
   configureFlags =
     [ # Enable the built-in web server providing a web search interface.
+      # See <http://www.seeks-project.info/wiki/index.php/Seeks_On_Web>.
       "--enable-httpserv-plugin=yes"
-      "--with-libevent=${libevent.dev}"
+      "--with-libevent=${libevent}"
     ];
-
-  preConfigure = ''
-    ./autogen.sh
-  '';
-
-  postInstall = stdenv.lib.optionalString (seeks_confDir != "") ''
-    ln -svf ${seeks_confDir}/config $out/etc/seeks/config
-    ln -svf ${seeks_confDir}/cf-config $out/etc/seeks/cf-config
-    ln -svf ${seeks_confDir}/httpserv-config $out/etc/seeks/httpserv-config
-    ln -svf ${seeks_confDir}/img-websearch-config $out/etc/seeks/img-websearch-config
-    ln -svf ${seeks_confDir}/lsh-config $out/etc/seeks/lsh-config
-    ln -svf ${seeks_confDir}/query-capture-config $out/etc/seeks/query-capture-config
-    ln -svf ${seeks_confDir}/udb-service-config $out/etc/seeks/udb-service-config
-    ln -svf ${seeks_confDir}/uri-capture-config $out/etc/seeks/uri-capture-config
-    ln -svf ${seeks_confDir}/websearch-config $out/etc/seeks/websearch-config
-  '';
 
   # FIXME: Test suite needs <https://code.google.com/p/googletest/>.
   doCheck = false;
@@ -60,9 +44,8 @@ stdenv.mkDerivation {
 
     homepage = http://www.seeks-project.info/;
 
-    maintainers = [
-      stdenv.lib.maintainers.matejc
-    ];
+    maintainers = [ stdenv.lib.maintainers.ludo ];
     platforms = stdenv.lib.platforms.gnu;  # arbitrary choice
+    hydraPlatforms = [];
   };
 }

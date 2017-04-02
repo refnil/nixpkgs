@@ -1,5 +1,5 @@
 { stdenv, fetchgit, cmake, pkgconfig, boost, gnuradio, rtl-sdr, uhd
-, makeWrapper, hackrf
+, makeWrapper
 , pythonSupport ? true, python, swig
 }:
 
@@ -7,16 +7,16 @@ assert pythonSupport -> python != null && swig != null;
 
 stdenv.mkDerivation rec {
   name = "gnuradio-osmosdr-${version}";
-  version = "0.1.4";
+  version = "0.1.0";
 
   src = fetchgit {
     url = "git://git.osmocom.org/gr-osmosdr";
     rev = "refs/tags/v${version}";
-    sha256 = "0vyzr4fhkblf2v3d7m0ch5hws4c493jw3ydl4y6b2dfbfzchhsz8";
+    sha256 = "112zfvnr6fjvhdc06ihi2sb0dp441qy7jq8rvr81nbyv3r8jspj4";
   };
 
   buildInputs = [
-    cmake pkgconfig boost gnuradio rtl-sdr uhd makeWrapper hackrf
+    cmake pkgconfig boost gnuradio rtl-sdr uhd makeWrapper
   ] ++ stdenv.lib.optionals pythonSupport [ python swig ];
 
   postInstall = ''
@@ -30,6 +30,6 @@ stdenv.mkDerivation rec {
     homepage = http://sdr.osmocom.org/trac/wiki/GrOsmoSDR;
     license = licenses.gpl3Plus;
     platforms = platforms.linux;
-    maintainers = with maintainers; [ bjornfor the-kenny ];
+    maintainers = [ maintainers.bjornfor ];
   };
 }

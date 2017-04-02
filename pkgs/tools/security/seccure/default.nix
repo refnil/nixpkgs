@@ -1,15 +1,14 @@
-{ stdenv, fetchurl, libgcrypt }:
+{stdenv, fetchurl, libgcrypt}:
 
 stdenv.mkDerivation rec {
-  name = "seccure-${version}";
-  version = "0.5";
+  name = "seccure-0.4";
   
   src = fetchurl {
     url = "http://point-at-infinity.org/seccure/${name}.tar.gz";
-    sha256 = "0nwnk3hfhgvf5xr0xipbh6smfnya22wphc5rj0vgi5d0zr5cwrk5";
+    sha256 = "33d690a7034ee349bce4911a8b7c73e6e3cd13a140f429e9e628d5cd5a3bb955";
   };
 
-  buildInputs = [ libgcrypt ];
+  buildInputs = [libgcrypt];
   
   preConfigure = ''
     sed -e s@/usr/@$out/@g -i Makefile
@@ -20,6 +19,5 @@ stdenv.mkDerivation rec {
   meta = {
     homepage = http://point-at-infinity.org/seccure/;
     description = "Zero-configuration elliptic curve cryptography utility";
-    platforms = stdenv.lib.platforms.unix;
   };
 }

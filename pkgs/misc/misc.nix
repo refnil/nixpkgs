@@ -16,7 +16,7 @@ in
       packageOverrides = {
 	rubyCollection = collection {
 	  name = "ruby";
-	  list = let l = rubyPackages; in
+	  list = let l = rubyLibs; in
 	    [ pkgs.ruby l.chronic l.sup ];
 	};
       }

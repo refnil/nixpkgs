@@ -19,6 +19,10 @@ in
         default = "";
         description = "monit.conf content";
       };
+      startOn = mkOption {
+        default = "started network-interfaces";
+        description = "What Monit supposes to be already present";
+      };
     };
   };
 
@@ -35,17 +39,14 @@ in
       }
     ];
 
-    systemd.services.monit = {
-      description = "Pro-active monitoring utility for unix systems";
-      after = [ "network.target" ];
-      wantedBy = [ "multi-user.target" ];
-      serviceConfig = {
-        ExecStart = "${pkgs.monit}/bin/monit -I -c /etc/monit.conf";
-        ExecStop = "${pkgs.monit}/bin/monit -c /etc/monit.conf quit";
-        ExecReload = "${pkgs.monit}/bin/monit -c /etc/monit.conf reload";
-        KillMode = "process";
-        Restart = "always";
-      };
+    jobs.monit = {
+      description = "Monit system watcher";
+
+      startOn = config.services.monit.startOn;
+
+      exec = "${pkgs.monit}/bin/monit -I -c /etc/monit.conf";
+
+      respawn = true;
     };
   };
 }

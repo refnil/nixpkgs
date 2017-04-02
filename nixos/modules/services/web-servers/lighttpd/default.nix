@@ -8,53 +8,12 @@ let
 
   cfg = config.services.lighttpd;
 
-  # List of known lighttpd modules, ordered by how the lighttpd documentation
-  # recommends them being imported:
-  # http://redmine.lighttpd.net/projects/1/wiki/Server_modulesDetails
-  #
-  # Some modules are always imported and should not appear in the config:
-  # disallowedModules = [ "mod_indexfile" "mod_dirlisting" "mod_staticfile" ];
-  #
-  # Get full module list: "ls -1 $lighttpd/lib/*.so"
-  allKnownModules = [
-    "mod_rewrite"
-    "mod_redirect"
-    "mod_alias"
-    "mod_access"
-    "mod_auth"
-    "mod_status"
-    "mod_simple_vhost"
-    "mod_evhost"
-    "mod_userdir"
-    "mod_secdownload"
-    "mod_fastcgi"
-    "mod_proxy"
-    "mod_cgi"
-    "mod_ssi"
-    "mod_compress"
-    "mod_usertrack"
-    "mod_expire"
-    "mod_rrdtool"
-    "mod_accesslog"
-    # Remaining list of modules, order assumed to be unimportant.
-    "mod_cml"
-    "mod_dirlisting"
-    "mod_evasive"
-    "mod_extforward"
-    "mod_flv_streaming"
-    "mod_magnet"
-    "mod_mysql_vhost"
-    "mod_scgi"
-    "mod_setenv"
-    "mod_trigger_b4_dl"
-    "mod_webdav"
-  ];
-
-  maybeModuleString = moduleName:
-    if elem moduleName cfg.enableModules then ''"${moduleName}"'' else "";
-
-  modulesIncludeString = concatStringsSep ",\n"
-    (filter (x: x != "") (map maybeModuleString allKnownModules));
+  needModRedirect = cfg.gitweb.enable;
+  needModAlias = cfg.cgit.enable or cfg.gitweb.enable;
+  needModSetenv = cfg.cgit.enable or cfg.gitweb.enable;
+  needModCgi = cfg.cgit.enable or cfg.gitweb.enable;
+  needModStatus = cfg.mod_status;
+  needModUserdir = cfg.mod_userdir;
 
   configFile = if cfg.configText != "" then
     pkgs.writeText "lighttpd.conf" ''
@@ -79,7 +38,13 @@ let
       # been loaded already. So if two services were to put the same module in
       # server.modules += (), that would break the lighttpd configuration.
       server.modules = (
-          ${modulesIncludeString}
+          ${optionalString needModRedirect ''"mod_redirect",''}
+          ${optionalString needModAlias ''"mod_alias",''}
+          ${optionalString needModSetenv ''"mod_setenv",''}
+          ${optionalString needModCgi ''"mod_cgi",''}
+          ${optionalString needModStatus ''"mod_status",''}
+          ${optionalString needModUserdir ''"mod_userdir",''}
+          "mod_accesslog"
       )
 
       # Logging (logs end up in systemd journal)
@@ -121,7 +86,7 @@ in
 
       enable = mkOption {
         default = false;
-        type = types.bool;
+        type = types.uniq types.bool;
         description = ''
           Enable the lighttpd web server.
         '';
@@ -129,7 +94,7 @@ in
 
       port = mkOption {
         default = 80;
-        type = types.int;
+        type = types.uniq types.int;
         description = ''
           TCP port number for lighttpd to bind to.
         '';
@@ -145,29 +110,16 @@ in
 
       mod_userdir = mkOption {
         default = false;
-        type = types.bool;
+        type = types.uniq types.bool;
         description = ''
           If true, requests in the form /~user/page.html are rewritten to take
           the file public_html/page.html from the home directory of the user.
         '';
       };
 
-      enableModules = mkOption {
-        type = types.listOf types.str;
-        default = [ ];
-        example = [ "mod_cgi" "mod_status" ];
-        description = ''
-          List of lighttpd modules to enable. Sub-services take care of
-          enabling modules as needed, so this option is mainly for when you
-          want to add custom stuff to
-          <option>services.lighttpd.extraConfig</option> that depends on a
-          certain module.
-        '';
-      };
-
       mod_status = mkOption {
         default = false;
-        type = types.bool;
+        type = types.uniq types.bool;
         description = ''
           Show server status overview at /server-status, statistics at
           /server-statistics and list of loaded modules at /server-config.
@@ -200,30 +152,16 @@ in
 
   config = mkIf cfg.enable {
 
-    assertions = [
-      { assertion = all (x: elem x allKnownModules) cfg.enableModules;
-        message = ''
-          One (or more) modules in services.lighttpd.enableModules are
-          unrecognized.
-
-          Known modules: ${toString allKnownModules}
-
-          services.lighttpd.enableModules: ${toString cfg.enableModules}
-        '';
-      }
-    ];
-
-    services.lighttpd.enableModules = mkMerge
-      [ (mkIf cfg.mod_status [ "mod_status" ])
-        (mkIf cfg.mod_userdir [ "mod_userdir" ])
-        # always load mod_accesslog so that we can log to the journal
-        [ "mod_accesslog" ]
-      ];
-
     systemd.services.lighttpd = {
       description = "Lighttpd Web Server";
       after = [ "network.target" ];
       wantedBy = [ "multi-user.target" ];
+      preStart = ''
+        ${if cfg.cgit.enable then ''
+          mkdir -p /var/cache/cgit
+          chown lighttpd:lighttpd /var/cache/cgit
+        '' else ""}
+      '';
       serviceConfig.ExecStart = "${pkgs.lighttpd}/sbin/lighttpd -D -f ${configFile}";
       # SIGINT => graceful shutdown
       serviceConfig.KillSignal = "SIGINT";

@@ -1,30 +1,23 @@
-{ stdenv, fetchurl, cmake, libuuid, gnutls }:
+{ stdenv, fetchurl, cmake, libuuid }:
 
 stdenv.mkDerivation rec {
   name = "taskwarrior-${version}";
-  version = "2.5.1";
+  version = "2.3.0";
 
   enableParallelBuilding = true;
 
   src = fetchurl {
     url = "http://www.taskwarrior.org/download/task-${version}.tar.gz";
-    sha256 = "059a9yc58wcicc6xxsjh1ph7k2yrag0spsahp1wqmsq6h7jwwyyq";
+    sha256 = "0wxcfq0n96vmcbwrlk2x377k8cc5k4i64ca6p02y74g6168ji6ib";
   };
 
-  patches = [ ./0001-bash-completion-quote-pattern-argument-to-grep.patch ];
+  nativeBuildInputs = [ cmake libuuid ];
 
-  nativeBuildInputs = [ cmake libuuid gnutls ];
-
-  postInstall = ''
-    mkdir -p "$out/etc/bash_completion.d"
-    ln -s "../../share/doc/task/scripts/bash/task.sh" "$out/etc/bash_completion.d/"
-  '';
-
-  meta = with stdenv.lib; {
-    description = "Highly flexible command-line tool to manage TODO lists";
+  meta = {
+    description = "GTD (getting things done) implementation";
     homepage = http://taskwarrior.org;
-    license = licenses.mit;
-    maintainers = with maintainers; [ marcweber jgeerds ];
-    platforms = platforms.linux ++ platforms.darwin;
+    license = stdenv.lib.licenses.mit;
+    maintainers = [stdenv.lib.maintainers.marcweber];
+    platforms = stdenv.lib.platforms.linux;
   };
 }

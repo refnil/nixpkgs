@@ -1,30 +1,30 @@
 { fetchurl, stdenv, python, gnupg }:
 
-let version = "2.0.11"; in
+let version = "2.0.9"; in
 stdenv.mkDerivation {
   name = "pius-${version}";
   namePrefix = "";
 
   src = fetchurl {
     url = "mirror://sourceforge/pgpius/pius/${version}/pius-${version}.tar.bz2";
-    sha256 = "0pdbyqz6k0bm182cz81ss7yckmpms5qhrrw0wcr4a1srzcjyzf5f";
+    sha256 = "1g1jly3wl4ks6h8ydkygyl2c4i7v3z91rg42005m6vm70y1d8b3d";
   };
 
   buildInputs = [ python ];
 
-  patchPhase = ''
-    sed -i "pius" -e's|/usr/bin/gpg|${gnupg}/bin/gpg2|g'
-  '';
+  patchPhase =
+    '' sed -i "pius" -e's|/usr/bin/gpg|${gnupg}/bin/gpg2|g'
+    '';
 
-  dontBuild = true;
+  buildPhase = "true";
 
-  installPhase = ''
-    mkdir -p "$out/bin"
-    cp -v pius "$out/bin"
+  installPhase =
+    '' mkdir -p "$out/bin"
+       cp -v pius "$out/bin"
 
-    mkdir -p "$out/doc/pius-${version}"
-    cp -v README "$out/doc/pius-${version}"
-  '';
+       mkdir -p "$out/doc/pius-${version}"
+       cp -v README "$out/doc/pius-${version}"
+    '';
 
   meta = {
     homepage = http://www.phildev.net/pius/;
@@ -41,6 +41,6 @@ stdenv.mkDerivation {
     license = stdenv.lib.licenses.gpl2;
 
     platforms = stdenv.lib.platforms.gnu;
-    maintainers = with stdenv.lib.maintainers; [ fuuzetsu ];
+    maintainers = [ ];
   };
 }

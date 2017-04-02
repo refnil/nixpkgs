@@ -1,24 +1,36 @@
-{ stdenv, fetchurl, cmake, pkgconfig, qt }:
+{ stdenv, fetchurl, which, qt4 }:
 
 stdenv.mkDerivation rec {
-  name = "qca-${version}";
-  version = "2.1.3";
-
+  name = "qca-2.0.3";
+  
   src = fetchurl {
-    url = "http://download.kde.org/stable/qca/${version}/src/qca-${version}.tar.xz";
-    sha256 = "0lz3n652z208daxypdcxiybl0a9fnn6ida0q7fh5f42269mdhgq0";
+    url = "http://delta.affinix.com/download/qca/2.0/${name}.tar.bz2";
+    sha256 = "0pw9fkjga8vxj465wswxmssxs4wj6zpxxi6kzkf4z5chyf4hr8ld";
   };
+  
+  buildInputs = [ qt4 ];
+  
+  nativeBuildInputs = [ which ];
 
-  nativeBuildInputs = [ cmake pkgconfig ];
-  buildInputs = [ qt ];
+  preBuild =
+    ''
+      sed -i include/QtCrypto/qca_publickey.h -e '/EMSA3_Raw/a,\
+              EMSA3_SHA224,     ///< SHA224, with EMSA3 (ie PKCS#1 Version 1.5) encoding\
+              EMSA3_SHA256,     ///< SHA256, with EMSA3 (ie PKCS#1 Version 1.5) encoding\
+              EMSA3_SHA384,     ///< SHA384, with EMSA3 (ie PKCS#1 Version 1.5) encoding\
+              EMSA3_SHA512      ///< SHA512, with EMSA3 (ie PKCS#1 Version 1.5) encoding'
+    '';
+
+  patches = [ ./gcc47.patch ];
+
+  configureFlags = "--no-separate-debug-info";
 
   enableParallelBuilding = true;
-
+  
   meta = with stdenv.lib; {
     description = "Qt Cryptographic Architecture";
     license = "LGPL";
     homepage = http://delta.affinix.com/qca;
-    maintainers = [ maintainers.sander ];
-    platforms = platforms.linux;
+    maintainers = [ maintainers.sander maintainers.urkud ];
   };
 }

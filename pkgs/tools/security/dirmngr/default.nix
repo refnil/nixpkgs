@@ -1,14 +1,11 @@
-{ stdenv, fetchurl, libgpgerror, libgcrypt, libassuan, libksba, pth, openldap }:
+{ stdenv, fetchurl, libgpgerror, libgcrypt, libassuan, libksba, openldap }:
 
 stdenv.mkDerivation rec {
-  name = "dirmngr-1.1.1";
+  name = "dirmngr-1.0.3";
   src = fetchurl {
-    url = "mirror://gnupg/dirmngr/${name}.tar.bz2";
-    sha256 = "1zz6m87ca55nq5f59hzm6qs48d37h93il881y7d0rf2d6660na6j";
+    url = "mirror://gnupg/${name}.tar.bz2";
+    sha256 = "03f54582caxgwjdv1b71azyk612a738ckgk2k05bmg466r1cw8jd";
   };
-  buildInputs = [ libgpgerror libgcrypt libassuan libksba pth openldap ];
 
-  meta = {
-    platforms = stdenv.lib.platforms.linux;
-  };
+  buildInputs = [ libgpgerror libgcrypt libassuan libksba openldap ];
 }

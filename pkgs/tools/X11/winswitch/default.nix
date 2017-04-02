@@ -1,8 +1,8 @@
-{ stdenv, fetchurl, pythonPackages
+{ stdenv, fetchurl, buildPythonPackage, pythonPackages
 , which, xpra, xmodmap }:
 
 let
-  base = pythonPackages.buildPythonApplication rec {
+  base = buildPythonPackage rec {
     name = "winswitch-${version}";
     namePrefix = "";
     version = "0.12.16";
@@ -37,7 +37,7 @@ let
 
     doCheck = false;
 
-    meta.platforms = stdenv.lib.platforms.linux;
+    meta.platforms = stdenv.lib.platforms.mesaPlatforms;
   };
 in stdenv.lib.overrideDerivation base (b: {
   postFixup = b.postFixup + ''

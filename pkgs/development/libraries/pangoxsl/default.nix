@@ -4,7 +4,7 @@ stdenv.mkDerivation {
   name = "pangoxsl-1.6.0.3";
   src = fetchurl {
     url = mirror://sourceforge/pangopdf/pangoxsl-1.6.0.3.tar.gz;
-    sha256 = "1wcd553nf4nwkrfrh765cyzwj9bsg7zpkndg2hjs8mhwgx04lm8n";
+    md5 = "c98bad47ffa7de2e946a8e35d45e071c";
   };
 
   buildInputs = [
@@ -12,8 +12,4 @@ stdenv.mkDerivation {
     glib
     pango
   ];
-
-  meta = {
-    platforms = stdenv.lib.platforms.unix;
-  };
 }

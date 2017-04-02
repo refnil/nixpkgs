@@ -1,27 +1,20 @@
-{ stdenv, fetchurl, pkgconfig, libmp3splt }:
+{ fetchurl, stdenv, libmp3splt, pkgconfig }:
 
 stdenv.mkDerivation rec {
-  pname = "mp3splt";
-  version = "2.6.2";
-  name = "${pname}-${version}";
-
+  name = "mp3splt-2.6.1";
 
   src = fetchurl {
-    url = "mirror://sourceforge/${pname}/${name}.tar.gz";
-    sha256 = "1aiv20gypb6r84qabz8gblk8vi42cg3x333vk2pi3fyqvl82phry";
+    url = "http://prdownloads.sourceforge.net/mp3splt/${name}.tar.gz";
+    sha256 = "783a903fafbcf47f06673136a78b78d32a8e616a6ae06b79b459a32090dd14f7";
   };
 
-  configureFlags = [ "--enable-oggsplt-symlink" "--enable-flacsplt-symlink" ];
-  nativeBuildInputs = [ pkgconfig ];
-  buildInputs = [ libmp3splt ];
+  buildInputs = [ libmp3splt pkgconfig ];
 
-  outputs = [ "out" "man" ];
-
-  meta = with stdenv.lib; {
-    description = "Utility to split mp3, ogg vorbis and FLAC files without decoding";
+  meta = {
+    description = "utility to split mp3, ogg vorbis and FLAC files without decoding";
     homepage = http://sourceforge.net/projects/mp3splt/;
-    license = licenses.gpl2;
-    maintainers = [ maintainers.bosu ];
-    platforms = platforms.unix;
+    license = "GPLv2";
+    maintainers = [ stdenv.lib.maintainers.bosu ];
+    platforms = stdenv.lib.platforms.unix;
   };
 }

@@ -7,6 +7,12 @@ with lib;
 
 let
 
+  extraManpages = pkgs.runCommand "extra-manpages" { buildInputs = [ pkgs.help2man ]; }
+    ''
+      mkdir -p $out/share/man/man1
+      help2man ${pkgs.gnutar}/bin/tar > $out/share/man/man1/tar.1
+    '';
+
   requiredPackages =
     [ config.nix.package
       pkgs.acl
@@ -17,6 +23,7 @@ let
       pkgs.cpio
       pkgs.curl
       pkgs.diffutils
+      pkgs.eject # HAL depends on it anyway
       pkgs.findutils
       pkgs.gawk
       pkgs.glibc # for ldd, getent
@@ -28,18 +35,22 @@ let
       pkgs.xz
       pkgs.less
       pkgs.libcap
+      pkgs.man
       pkgs.nano
       pkgs.ncurses
       pkgs.netcat
-      config.programs.ssh.package
+      pkgs.openssh
+      pkgs.pciutils
       pkgs.perl
       pkgs.procps
       pkgs.rsync
       pkgs.strace
+      pkgs.sysvtools
       pkgs.su
       pkgs.time
+      pkgs.usbutils
       pkgs.utillinux
-      pkgs.which # 88K size
+      extraManpages
     ];
 
 in
@@ -50,9 +61,9 @@ in
     environment = {
 
       systemPackages = mkOption {
-        type = types.listOf types.package;
+        type = types.listOf types.path;
         default = [];
-        example = literalExample "[ pkgs.firefox pkgs.thunderbird ]";
+        example = "[ pkgs.icecat3 pkgs.thunderbird ]";
         description = ''
           The set of packages that appear in
           /run/current-system/sw.  These packages are
@@ -70,16 +81,8 @@ in
         # to work.
         default = [];
         example = ["/"];
-        description = "List of directories to be symlinked in <filename>/run/current-system/sw</filename>.";
+        description = "List of directories to be symlinked in `/run/current-system/sw'.";
       };
-
-      extraOutputsToInstall = mkOption {
-        type = types.listOf types.str;
-        default = [ ];
-        example = [ "doc" "info" "devdoc" ];
-        description = "List of additional package outputs to be symlinked into <filename>/run/current-system/sw</filename>.";
-      };
-
     };
 
     system = {
@@ -102,35 +105,27 @@ in
     environment.pathsToLink =
       [ "/bin"
         "/etc/xdg"
-        "/etc/gtk-2.0"
-        "/etc/gtk-3.0"
-        "/lib" # FIXME: remove and update debug-info.nix
+        "/info"
+        "/lib"
+        "/man"
         "/sbin"
-        "/share/applications"
-        "/share/desktop-directories"
-        "/share/doc"
         "/share/emacs"
-        "/share/icons"
-        "/share/menus"
-        "/share/mime"
-        "/share/nano"
-        "/share/org"
-        "/share/terminfo"
-        "/share/themes"
         "/share/vim-plugins"
-        "/share/vulkan"
+        "/share/org"
+        "/share/info"
+        "/share/terminfo"
+        "/share/man"
       ];
 
     system.path = pkgs.buildEnv {
       name = "system-path";
       paths = config.environment.systemPackages;
-      inherit (config.environment) pathsToLink extraOutputsToInstall;
+      inherit (config.environment) pathsToLink;
       ignoreCollisions = true;
       # !!! Hacky, should modularise.
-      # outputs TODO: note that the tools will often not be linked by default
       postBuild =
         ''
-          if [ -x $out/bin/update-mime-database -a -w $out/share/mime ]; then
+          if [ -x $out/bin/update-mime-database -a -w $out/share/mime/packages ]; then
               XDG_DATA_DIRS=$out/share $out/bin/update-mime-database -V $out/share/mime > /dev/null
           fi
 
@@ -144,13 +139,6 @@ in
 
           if [ -x $out/bin/update-desktop-database -a -w $out/share/applications ]; then
               $out/bin/update-desktop-database $out/share/applications
-          fi
-
-          if [ -x $out/bin/install-info -a -w $out/share/info ]; then
-            shopt -s nullglob
-            for i in $out/share/info/*.info $out/share/info/*.info.gz; do
-                $out/bin/install-info $i $out/share/info/dir
-            done
           fi
         '';
     };

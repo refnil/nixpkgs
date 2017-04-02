@@ -1,16 +1,9 @@
 { stdenv, fetchurl }:
 
-stdenv.mkDerivation rec {
+stdenv.mkDerivation {
   name = "sbagen-1.4.4";
 
-  src = fetchurl {
-    url = "http://uazu.net/sbagen/${name}.tgz";
-    sha256 = "0w62yk1b0hq79kl0angma897yqa8p1ww0dwydf3zlwav333prkd2";
-  };
-
-  postPatch = ''
-    patchShebangs ./mk
-  '';
+  buildPhases = "buildPhase installPhase";
 
   buildPhase = "./mk";
 
@@ -21,10 +14,14 @@ stdenv.mkDerivation rec {
     cp --target-directory=$out/share/sbagen/doc README.txt SBAGEN.txt theory{,2}.txt {wave,holosync,focus,TODO}.txt
   '';
 
-  meta = {
+  src = fetchurl {
+    url = http://uazu.net/sbagen/sbagen-1.4.4.tgz;
+    sha256 = "0w62yk1b0hq79kl0angma897yqa8p1ww0dwydf3zlwav333prkd2";
+  };
+
+  meta = { 
     description = "Binaural sound generator";
     homepage = http://uazu.net/sbagen;
     license = "GPL";
-    platforms = [ "i686-linux" ];
   };
 }

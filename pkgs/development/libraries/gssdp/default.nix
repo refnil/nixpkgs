@@ -1,22 +1,19 @@
-{ stdenv, fetchurl, pkgconfig, libsoup, glib }:
+{stdenv, fetchurl, pkgconfig, libsoup, glib, libxml2}:
 
-stdenv.mkDerivation rec {
-  name = "gssdp-${version}";
-  version = "1.0.1";
+stdenv.mkDerivation {
+  name = "gssdp-0.12.2.1";
 
   src = fetchurl {
-    url = "mirror://gnome/sources/gssdp/1.0/${name}.tar.xz";
-    sha256 = "1qfj4gir1qf6v86z70ryzmjb75ns30q6zi5p89vhd3621gs6f7b0";
+    url = mirror://gnome/sources/gssdp/0.14/gssdp-0.14.6.tar.xz;
+    sha256 = "1kgakr0rpdpm7nkp4ycka12nndga16wmzim79v1nbcc0j2wxxkws";
   };
 
-  nativeBuildInputs = [ pkgconfig ];
-  buildInputs = [ libsoup ];
-  propagatedBuildInputs = [ glib ];
+  buildInputs = [pkgconfig libsoup glib libxml2];
 
-  meta = with stdenv.lib; {
+  meta = {
     description = "GObject-based API for handling resource discovery and announcement over SSDP";
     homepage = http://www.gupnp.org/;
-    license = licenses.lgpl2;
-    platforms = platforms.all;
+    license = stdenv.lib.licenses.lgpl2;
+    platforms = stdenv.lib.platforms.all;
   };
 }

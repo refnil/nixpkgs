@@ -1,12 +1,11 @@
 { stdenv, fetchhg, autoconf, sqlite }:
 
-stdenv.mkDerivation rec {
-  name = "vcprompt-${version}";
-  version = "1.2.1";
+stdenv.mkDerivation {
+  name = "vcprompt";
 
   src = fetchhg {
     url = "http://hg.gerg.ca/vcprompt/";
-    rev = version;
+    rev = "1.2.1";
     sha256 = "03xqvp6bfl98bpacrw4n82qv9cw6a4fxci802s3vrygas989v1kj";
   };
 

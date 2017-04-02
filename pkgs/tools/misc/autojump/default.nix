@@ -1,7 +1,7 @@
 { fetchurl, stdenv, python, bash }:
 
-let
-  version = "22.5.0";
+let 
+  version = "21.6.9";
 in
   stdenv.mkDerivation rec {
     name = "autojump-${version}";
@@ -9,26 +9,23 @@ in
     src = fetchurl {
       url = "http://github.com/joelthelion/autojump/archive/release-v${version}.tar.gz";
       name = "autojump-${version}.tar.gz";
-      sha256 = "00ai0j37ka3557a8m7ig44dby7v01pckwi8gl479vz5b5pw1z8cd";
+      sha256 = "0js6jp9l83zxhd9bn8hjn4yf8gydnldrlmafgvlg3rd4i1v82649";
     };
 
     buildInputs = [ python bash ];
     dontBuild = true;
 
     installPhase = ''
-      python ./install.py -d $out -p ""
+      # don't check shell support (we're running with bash anyway)
+      sed -i -e 150,153d install.sh
+
+      bash ./install.sh -d $out -p ""
       chmod +x $out/etc/profile.d/*
 
       mkdir -p "$out/etc/bash_completion.d"
-      cp -v $out/share/autojump/autojump.bash "$out/etc/bash_completion.d"
+      cp -v $out/etc/profile.d/autojump.bash "$out/etc/bash_completion.d"
 
-      cat <<SCRIPT > $out/bin/autojump-share
-      #!/bin/sh
-      # Run this script to find the autojump shared folder where all the shell
-      # integration scripts are living.
-      echo $out/share/autojump
-      SCRIPT
-      chmod +x $out/bin/autojump-share
+      # FIXME: What's the right place for `autojump.zsh'?
     '';
 
     meta = {
@@ -45,7 +42,7 @@ in
         works by maintaining a database of the directories you use the
         most from the command line.  The jstat command shows you the
         current contents of the database.  You need to work a little
-        bit before the database becomes usable.  Once your database
+        bit before the database becomes useable.  Once your database
         is reasonably complete, you can “jump” to a directory by
         typing "j dirspec", where dirspec is a few characters of the
         directory you want to jump to.  It will jump to the most used
@@ -56,6 +53,6 @@ in
       homepage = http://wiki.github.com/joelthelion/autojump;
       license = stdenv.lib.licenses.gpl3;
       platforms = stdenv.lib.platforms.all;
-      maintainers = [ stdenv.lib.maintainers.domenkozar ];
+      maintainers = [ stdenv.lib.maintainers.iElectric ];
     };
   }

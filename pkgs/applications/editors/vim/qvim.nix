@@ -1,24 +1,22 @@
-args@{ fetchgit, stdenv, ncurses, pkgconfig, gettext
-, composableDerivation, lib, config, python, perl, tcl, ruby, qt4
-, libX11, libXext, libSM, libXpm, libXt, libXaw, libXau, libXmu
-, libICE, ... }: with args;
+args@{...}: with args;
 
-let tag = "20140827";
-    sha256 = "0ncgbcm23z25naicxqkblz0mcl1zar2qwgi37y5ar8q8884w9ml2";
-in
 
 let inherit (args.composableDerivation) composableDerivation edf; in
 composableDerivation {
+  # use gccApple to compile on darwin
+  mkDerivation = ( if stdenv.isDarwin
+                   then stdenvAdapters.overrideGCC stdenv gccApple
+                   else stdenv ).mkDerivation;
 } (fix: {
 
-    name = "qvim-7.4." + tag;
+    name = "qvim-7.4";
 
     enableParallelBuilding = true; # test this
 
     src = fetchgit {
       url = https://bitbucket.org/equalsraf/vim-qt.git ;
-      rev = "refs/tags/package-" + tag;
-      inherit sha256;
+      rev = "4160bfd5c1380e899d2f426b494fc4f1cf6ae85e";
+      sha256 = "1qa3xl1b9gqw66p71h53l7ibs4y3zfyj553jss70ybxaxchbhi5b";
     };
 
     # FIXME: adopt Darwin fixes from vim/default.nix, then chage meta.platforms.linux
@@ -121,8 +119,7 @@ composableDerivation {
   meta = with stdenv.lib; {
     description = "The most popular clone of the VI editor (Qt GUI fork)";
     homepage    = https://bitbucket.org/equalsraf/vim-qt/wiki/Home;
-    license = licenses.vim;
-    maintainers = with maintainers; [ smironov ttuegel ];
+    maintainers = with maintainers; [ smironov ];
     platforms   = platforms.linux;
   };
 })

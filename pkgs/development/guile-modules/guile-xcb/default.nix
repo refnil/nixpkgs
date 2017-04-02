@@ -8,6 +8,7 @@ stdenv.mkDerivation {
     homepage    = "http://www.markwitmer.com/guile-xcb/guile-xcb.html";
     license     = licenses.gpl3Plus;
     platforms   = platforms.linux;
+    maintainers = with maintainers; [ iyzsong ];
   };
 
   src = fetchurl {

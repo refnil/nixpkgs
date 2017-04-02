@@ -1,31 +1,31 @@
-{ stdenv, fetchurl, perl, ghcWithPackages }:
-
-let ghc = ghcWithPackages (hpkgs: with hpkgs; [
-            binary zlib utf8-string readline fgl regex-compat HsSyck random
-          ]);
-in
+{ stdenv, fetchurl, perl, ghc, binary, zlib, utf8String, readline, fgl,
+  regexCompat, HsSyck, random }:
 
 stdenv.mkDerivation rec {
   name = "jhc-${version}";
-  version = "0.8.2";
+  version = "0.8.1";
 
   src = fetchurl {
-    url    = "http://repetae.net/dist/${name}.tar.gz";
-    sha256 = "0lrgg698mx6xlrqcylba9z4g1f053chrzc92ri881dmb1knf83bz";
+    url = "http://repetae.net/dist/${name}.tar.gz";
+    sha256 = "11fya5ggk6q4vcm3kwjacfaaqvkammih25saqwlr1g40bcikbnf2";
   };
 
-  buildInputs = [ perl ghc ];
-
-  preConfigure = ''
-    configureFlagsArray+=("CC=cc")
-    configureFlagsArray+=("--with-hsc2hs=${ghc}/bin/hsc2hs --cc=cc")
+  patchPhase = ''
+    substituteInPlace ./src/Util/Interact.hs \
+      --replace USE_NOLINE USE_READLINE
   '';
+
+  buildInputs =
+    [ perl ghc binary zlib utf8String
+      readline fgl regexCompat HsSyck random
+    ];
 
   meta = {
     description = "Whole-program, globally optimizing Haskell compiler";
     homepage = "http://repetae.net/computer/jhc/";
     license = stdenv.lib.licenses.bsd3;
-    platforms = ["x86_64-linux"]; # 32 bit builds are broken
-    maintainers = with stdenv.lib.maintainers; [ aforemny thoughtpolice ];
+    platforms = stdenv.lib.platforms.linux;
+    maintainers = with stdenv.lib.maintainers;
+      [ aforemny simons thoughtpolice ];
   };
 }

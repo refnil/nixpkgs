@@ -1,54 +1,45 @@
-{ stdenv, fetchurl, fetchgit, which, autoconf, automake, flex, yacc,
-  kernel, glibc, ncurses, perl, kerberos }:
+{ stdenv, fetchurl, which, autoconf, automake, flex, yacc,
+  kernel, glibc, ncurses, perl, krb5 }:
 
-stdenv.mkDerivation rec {
-  name = "openafs-${version}-${kernel.version}";
-  version = "1.6.20";
+assert stdenv.isLinux;
+
+stdenv.mkDerivation {
+  name = "openafs-1.6.6-${kernel.version}";
 
   src = fetchurl {
-    url = "http://www.openafs.org/dl/openafs/${version}/openafs-${version}-src.tar.bz2";
-    sha256 = "0qar94k9x9dkws4clrnlw789q1ha9qjk06356s86hh78qwywc1ki";
+    url = http://www.openafs.org/dl/openafs/1.6.6/openafs-1.6.6-src.tar.bz2;
+    sha256 = "0xfa64hvz0avp89zgz8ksmp24s6ns0z3103m4mspshhhdlikypk3";
   };
 
-  nativeBuildInputs = [ autoconf automake flex yacc perl which ];
-
-  buildInputs = [ ncurses ];
-
-  hardeningDisable = [ "pic" ];
+  buildInputs = [ autoconf automake flex yacc ncurses perl which ];
 
   preConfigure = ''
-    ln -s "${kernel.dev}/lib/modules/"*/build $TMP/linux
+    ln -s ${kernel.dev}/lib/modules/*/build $TMP/linux
 
     patchShebangs .
     for i in `grep -l -R '/usr/\(include\|src\)' .`; do
       echo "Patch /usr/include and /usr/src in $i"
       substituteInPlace $i \
-        --replace "/usr/include" "${glibc.dev}/include" \
+        --replace "/usr/include" "${glibc}/include" \
         --replace "/usr/src" "$TMP"
     done
 
     ./regen.sh
 
-    ${stdenv.lib.optionalString (kerberos != null)
-      "export KRB5_CONFIG=${kerberos}/bin/krb5-config"}
+    export KRB5_CONFIG=${krb5}/bin/krb5-config
 
     configureFlagsArray=(
       "--with-linux-kernel-build=$TMP/linux"
-      ${stdenv.lib.optionalString (kerberos != null) "--with-krb5"}
+      "--with-krb5"
       "--sysconfdir=/etc/static"
-      "--disable-linux-d_splice-alias-extra-iput"
     )
   '';
 
-  meta = with stdenv.lib; {
+  meta = {
     description = "Open AFS client";
-    homepage = https://www.openafs.org;
-    license = licenses.ipl10;
-    platforms = platforms.linux;
-    maintainers = [ maintainers.z77z ];
-    broken =
-      (builtins.compareVersions kernel.version  "3.18" == -1) ||
-      (builtins.compareVersions kernel.version "4.4" != -1) ||
-      (kernel.features.grsecurity or false);
+    homepage = http://www.openafs.org;
+    license = stdenv.lib.licenses.ipl10;
+    platforms = stdenv.lib.platforms.linux;
+    maintainers = stdenv.lib.maintainers.z77z;
   };
 }

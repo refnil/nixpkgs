@@ -9,10 +9,9 @@ stdenv.mkDerivation {
 
   buildInputs = [ lzo ];
 
-  meta = with stdenv.lib; {
+  meta = {
     homepage = http://www.lzop.org;
     description = "Fast file compressor";
-    license = licenses.gpl2;
-    platforms = platforms.unix;
+    license = "GPL";
   };
 }

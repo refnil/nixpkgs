@@ -1,6 +1,6 @@
-{stdenv, fetchurl, python2Packages, librsync, gnused }:
+{stdenv, fetchurl, python, librsync, gnused }:
 
-python2Packages.buildPythonApplication {
+stdenv.mkDerivation {
   name = "rdiff-backup-1.3.3";
 
   src = fetchurl {
@@ -8,17 +8,19 @@ python2Packages.buildPythonApplication {
     sha256 = "01hcwf5rgqi303fa4kdjkbpa7n8mvvh7h9gpgh2b23nz73k0q0zf";
   };
 
-  patches = [ ./fix-librsync-rs_default_strong_len.patch ];
+  phases = "unpackPhase installPhase";
+  installPhase = ''
+    python ./setup.py install --prefix=$out
+    sed -i $out/bin/rdiff-backup -e \
+      "/import sys/ asys.path += [ \"$out/lib/python2.7/site-packages/\" ]"
+  '';
 
-  buildInputs = [ librsync gnused ];
-
-  doCheck = false;
+  buildInputs = [ python librsync gnused ];
 
   meta = {
-    description = "Backup system trying to combine best a mirror and an incremental backup system";
+    description = "backup system trying to combine best a mirror and an incremental backup system";
     homepage = http://rdiff-backup.nongnu.org/;
     license = stdenv.lib.licenses.gpl2;
-    platforms = stdenv.lib.platforms.all;
     maintainers = with stdenv.lib.maintainers; [ the-kenny ];
   };
 }

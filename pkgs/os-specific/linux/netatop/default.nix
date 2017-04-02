@@ -1,20 +1,14 @@
 { stdenv, fetchurl, kernel, zlib }:
 
-let
-  version = "1.0";
-in
-
 stdenv.mkDerivation {
-  name = "netatop-${kernel.version}-${version}";
+  name = "netatop-${kernel.version}-0.3";
 
   src = fetchurl {
-    url = "http://www.atoptool.nl/download/netatop-${version}.tar.gz";
-    sha256 = "1l7xs3hnfbk6h5gdrw1ikfa0fvfpb5vd447xhwfllvicblqyip8b";
+    url = http://www.atoptool.nl/download/netatop-0.3.tar.gz;
+    sha256 = "0rk873nb1hgfnz040plmv6rm9mcm813n0clfjs53fsqbn8y1lhvv";
   };
 
   buildInputs = [ zlib ];
-
-  hardeningDisable = [ "pic" ];
 
   preConfigure = ''
     patchShebangs mkversion
@@ -28,10 +22,10 @@ stdenv.mkDerivation {
   '';
 
   preInstall = ''
-    mkdir -p $out/bin $out/sbin $out/share/man/man{4,8}
-    mkdir -p $out/lib/modules/${kernel.modDirVersion}/extra
+    ensureDir $out/bin $out/sbin $out/share/man/man{4,8}
+    ensureDir $out/lib/modules/${kernel.modDirVersion}/extra
   '';
-
+      
   meta = {
     description = "Network monitoring module for atop";
     homepage = http://www.atoptool.nl/downloadnetatop.php;

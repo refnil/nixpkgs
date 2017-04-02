@@ -15,7 +15,10 @@ in
 
     services.xserver.windowManager.compiz = {
 
-      enable = mkEnableOption "compiz";
+      enable = mkOption {
+        default = false;
+        description = "Enable the Compiz window manager.";
+      };
 
       renderingFlag = mkOption {
         default = "";

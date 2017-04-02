@@ -1,38 +1,24 @@
-{ stdenv, fetchurl, emacs, texlive, ghostscript }:
+{ stdenv, fetchurl, emacs, texLive }:
  
-let auctex = stdenv.mkDerivation ( rec {
-  version = "11.90";
-  name = "${pname}-${version}";
-
-  # Make this a valid tex(live-new) package;
-  # the pkgs attribute is provided with a hack below.
+stdenv.mkDerivation ( rec {
   pname = "auctex";
-  tlType = "run";
-
-
-  outputs = [ "out" "tex" ];
-
-  src = fetchurl {
-    url = "mirror://gnu/${pname}/${name}.tar.gz";
-    sha256 = "13zimbyar3159arrcklmnmjxjvibrjpkac6d53mfv03pwpc2y8rw";
-  };
-
-  buildInputs = [ emacs texlive.combined.scheme-basic ghostscript ];
-
-  preConfigure = ''
-    mkdir -p "$tex"
-  '';
-
-  configureFlags = [
-    "--with-lispdir=\${out}/share/emacs/site-lisp"
-    "--with-texmf-dir=\${tex}"
-  ];
+  version = "11.87";
+  name = "${pname}-${version}";
 
   meta = {
     description = "Extensible package for writing and formatting TeX files in GNU Emacs and XEmacs";
     homepage = http://www.gnu.org/software/auctex;
-    platforms = stdenv.lib.platforms.unix;
   };
-});
 
-in auctex // { pkgs = [ auctex.tex ]; }
+  src = fetchurl {
+    url = "mirror://gnu/${pname}/${name}.tar.gz";
+    sha256 = "1wjwpmvhpj8q0zd78lj7vyzqhx4rbdhkflslylkzgnw5wllp5mb3";
+  };
+
+  buildInputs = [ emacs texLive ];
+
+  configureFlags = [
+    "--with-lispdir=\${out}/share/emacs/site-lisp"
+    "--disable-preview"
+  ];
+})

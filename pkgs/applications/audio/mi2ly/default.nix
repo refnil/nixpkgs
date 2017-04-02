@@ -21,8 +21,6 @@ stdenv.mkDerivation {
 
   sourceRoot=".";
 
-  hardeningDisable = [ "format" ];
-
   buildPhase = "./cc";
   installPhase = ''
     mkdir -p "$out"/{bin,share/doc/mi2ly}

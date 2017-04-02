@@ -1,27 +1,29 @@
-{ stdenv, fetchFromGitHub, libtoxcore, pidgin, autoreconfHook, libsodium }:
+{ stdenv, fetchurl, libtoxcore, pidgin, autoconf, automake, libtool, libsodium } :
 
+let
+  version = "17a3fd9199";
+  date = "20131012";
+in
 stdenv.mkDerivation rec {
-  name = "tox-prpl-${version}";
-  version = "0.5.1";
+  name = "tox-prpl-${date}-${version}";
 
-  src = fetchFromGitHub {
-    owner  = "jin-eld";
-    repo   = "tox-prpl";
-    rev    = "v${version}";
-    sha256 = "0ms367l2f7x83k407c93bmhpyc820f1css61fh2gx4jq13cxqq3p";
+  src = fetchurl {
+    url = "https://github.com/jin-eld/tox-prpl/tarball/${version}";
+    name = "${name}.tar.gz";
+    sha256 = "0sz5wkyfwmhaj652xpsxq4p252cmmfa1vy6mp3jfyn145c758v9n";
   };
 
   NIX_LDFLAGS = "-lssp -lsodium";
 
+  preConfigure = "autoreconf -vfi";
+
   postInstall = "mv $out/lib/purple-2 $out/lib/pidgin";
 
-  buildInputs = [ libtoxcore pidgin libsodium ];
-  nativeBuildInputs = [ autoreconfHook ];
+  buildInputs = [ libtoxcore pidgin autoconf automake libtool libsodium ];
 
-  meta = with stdenv.lib; {
+  meta = {
     homepage = http://tox.dhs.org/;
     description = "Tox plugin for Pidgin / libpurple";
-    license = licenses.gpl3;
-    platforms = platforms.linux;
+    license = stdenv.lib.licenses.gpl3;
   };
 }

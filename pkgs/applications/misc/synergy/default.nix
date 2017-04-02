@@ -1,47 +1,38 @@
-{ stdenv, fetchFromGitHub, cmake, xlibsWrapper, libX11, libXi, libXtst, libXrandr
-, xinput, curl, openssl, unzip }:
+{ stdenv, fetchurl, cmake, x11, libX11, libXi, libXtst, libXrandr, xinput, curl
+, cryptopp ? null, unzip }:
+
+assert stdenv.isLinux -> cryptopp != null;
 
 with stdenv.lib;
 
 stdenv.mkDerivation rec {
-  name = "synergy-${version}";
-  version = "1.7.6";
+  name = "synergy-1.4.17";
 
-  src = fetchFromGitHub {
-    owner = "symless";
-    repo = "synergy";
-    rev = "v${version}-stable";
-    sha256 = "1bjksvdr74mc3xh11z4fd6qlhgklny51q5r6gqg1bhnvn9dzyrxw";
+  src = fetchurl {
+    url = "http://fossfiles.com/synergy/${name}-r2055-Source.tar.gz";
+    sha256 = "1mwaapvq9vsm0rdpq99fyzcw6wbp83rg6cylcqcgjjd21c6y9iwm";
   };
 
-  postPatch = ''
+  patches = optional stdenv.isLinux ./cryptopp.patch;
+
+  postPatch = (if stdenv.isLinux then ''
+    sed -i -e '/HAVE_X11_EXTENSIONS_XRANDR_H/c \
+      set(HAVE_X11_EXTENSIONS_XRANDR_H true)' CMakeLists.txt
+  '' else ''
+    ${unzip}/bin/unzip -d ext/cryptopp562 ext/cryptopp562.zip
+  '') + ''
     ${unzip}/bin/unzip -d ext/gmock-1.6.0 ext/gmock-1.6.0.zip
     ${unzip}/bin/unzip -d ext/gtest-1.6.0 ext/gtest-1.6.0.zip
-  ''
-    # We have XRRNotifyEvent (libXrandr), but with the upstream CMakeLists.txt
-    # it's not able to find it (it's trying to search the store path of libX11
-    # instead) and we don't get XRandR support, even though the CMake output
-    # _seems_ to say so:
-    #
-    #   Looking for XRRQueryExtension in Xrandr - found
-    #
-    # The relevant part however is:
-    #
-    #   Looking for XRRNotifyEvent - not found
-    #
-    # So let's force it:
-  + optionalString stdenv.isLinux ''
-    sed -i -e '/HAVE_X11_EXTENSIONS_XRANDR_H/c \
-      set(HAVE_X11_EXTENSIONS_XRANDR_H true)
-    ' CMakeLists.txt
   '';
 
-  buildInputs = [
-    cmake xlibsWrapper libX11 libXi libXtst libXrandr xinput curl openssl
-  ];
+  buildInputs = [ cmake x11 libX11 libXi libXtst libXrandr xinput curl ]
+             ++ optional stdenv.isLinux cryptopp;
+
+  # At this moment make install doesn't work for synergy
+  # http://synergy-foss.org/spit/issues/details/3317/
 
   installPhase = ''
-    mkdir -p $out/bin
+    ensureDir $out/bin
     cp ../bin/synergyc $out/bin
     cp ../bin/synergys $out/bin
     cp ../bin/synergyd $out/bin
@@ -51,8 +42,8 @@ stdenv.mkDerivation rec {
   checkPhase = "../bin/unittests";
 
   meta = {
-    description = "Share one mouse and keyboard between multiple computers";
-    homepage = "http://synergy-project.org/";
+    description = "Tool to share the mouse keyboard and the clipboard between computers";
+    homepage = http://synergy-foss.org;
     license = licenses.gpl2;
     maintainers = [ maintainers.aszlig ];
     platforms = platforms.all;

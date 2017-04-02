@@ -1,4 +1,4 @@
-import ./make-test.nix ({ pkgs, ...} : 
+import ./make-test.nix (
 
 let
 
@@ -33,9 +33,6 @@ in
 
 {
   name = "subversion";
-  meta = with pkgs.stdenv.lib.maintainers; {
-    maintainers = [ eelco chaoflow ];
-  };
 
   nodes =
     { webserver =

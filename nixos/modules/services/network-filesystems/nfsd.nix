@@ -20,7 +20,6 @@ in
 
       server = {
         enable = mkOption {
-          type = types.bool;
           default = false;
           description = ''
             Whether to enable the kernel's NFS server.
@@ -28,7 +27,6 @@ in
         };
 
         exports = mkOption {
-          type = types.lines;
           default = "";
           description = ''
             Contents of the /etc/exports file.  See
@@ -38,7 +36,6 @@ in
         };
 
         hostName = mkOption {
-          type = types.nullOr types.str;
           default = null;
           description = ''
             Hostname or address on which NFS requests will be accepted.
@@ -49,7 +46,6 @@ in
         };
 
         nproc = mkOption {
-          type = types.int;
           default = 8;
           description = ''
             Number of NFS server threads.  Defaults to the recommended value of 8.
@@ -57,41 +53,9 @@ in
         };
 
         createMountPoints = mkOption {
-          type = types.bool;
           default = false;
           description = "Whether to create the mount points in the exports file at startup time.";
         };
-
-        mountdPort = mkOption {
-          type = types.nullOr types.int;
-          default = null;
-          example = 4002;
-          description = ''
-            Use fixed port for rpc.mountd, useful if server is behind firewall.
-          '';
-        };
-
-        lockdPort = mkOption {
-          type = types.nullOr types.int;
-          default = null;
-          example = 4001;
-          description = ''
-            Use a fixed port for the NFS lock manager kernel module
-            (<literal>lockd/nlockmgr</literal>).  This is useful if the
-            NFS server is behind a firewall.
-          '';
-        };
-
-        statdPort = mkOption {
-          type = types.nullOr types.int;
-          default = null;
-          example = 4000;
-          description = ''
-            Use a fixed port for <command>rpc.statd</command>. This is
-            useful if the NFS server is behind a firewall.
-          '';
-        };
-
       };
 
     };
@@ -103,47 +67,60 @@ in
 
   config = mkIf cfg.enable {
 
-    services.nfs.extraConfig = ''
-      [nfsd]
-      threads=${toString cfg.nproc}
-      ${optionalString (cfg.hostName != null) "host=${cfg.hostName}"}
-
-      [mountd]
-      ${optionalString (cfg.mountdPort != null) "port=${toString cfg.mountdPort}"}
-
-      [statd]
-      ${optionalString (cfg.statdPort != null) "port=${toString cfg.statdPort}"}
-
-      [lockd]
-      ${optionalString (cfg.lockdPort != null) ''
-        port=${toString cfg.lockdPort}
-        udp-port=${toString cfg.lockdPort}
-      ''}
-    '';
-
     services.rpcbind.enable = true;
 
     boot.supportedFilesystems = [ "nfs" ]; # needed for statd and idmapd
 
-    environment.etc.exports.source = exports;
+    environment.systemPackages = [ pkgs.nfsUtils ];
 
-    systemd.services.nfs-server =
-      { enable = true;
-        wantedBy = [ "multi-user.target" ];
-
-        preStart =
-          ''
-            mkdir -p /var/lib/nfs/v4recovery
-          '';
+    environment.etc = singleton
+      { source = exports;
+        target = "exports";
       };
 
-    systemd.services.nfs-mountd =
-      { enable = true;
-        restartTriggers = [ exports ];
+    boot.kernelModules = [ "nfsd" ];
+
+    systemd.services.nfsd =
+      { description = "NFS Server";
+
+        wantedBy = [ "multi-user.target" ];
+
+        requires = [ "rpcbind.service" "mountd.service" ];
+        after = [ "rpcbind.service" "mountd.service" "idmapd.service" ];
+        before = [ "statd.service" ];
+
+        path = [ pkgs.nfsUtils ];
+
+        script =
+          ''
+            # Create a state directory required by NFSv4.
+            mkdir -p /var/lib/nfs/v4recovery
+
+            rpc.nfsd \
+              ${if cfg.hostName != null then "-H ${cfg.hostName}" else ""} \
+              ${builtins.toString cfg.nproc}
+          '';
+
+        postStop = "rpc.nfsd 0";
+
+        serviceConfig.Type = "oneshot";
+        serviceConfig.RemainAfterExit = true;
+      };
+
+    systemd.services.mountd =
+      { description = "NFSv3 Mount Daemon";
+
+        requires = [ "rpcbind.service" ];
+        after = [ "rpcbind.service" ];
+
+        path = [ pkgs.nfsUtils pkgs.sysvtools pkgs.utillinux ];
 
         preStart =
           ''
             mkdir -p /var/lib/nfs
+            touch /var/lib/nfs/rmtab
+
+            mountpoint -q /proc/fs/nfsd || mount -t nfsd none /proc/fs/nfsd
 
             ${optionalString cfg.createMountPoints
               ''
@@ -154,7 +131,15 @@ in
                 | xargs -d '\n' mkdir -p
               ''
             }
+
+            exportfs -rav
           '';
+
+        restartTriggers = [ exports ];
+
+        serviceConfig.Type = "forking";
+        serviceConfig.ExecStart = "@${pkgs.nfsUtils}/sbin/rpc.mountd rpc.mountd";
+        serviceConfig.Restart = "always";
       };
 
   };

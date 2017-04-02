@@ -1,21 +1,22 @@
-{ stdenv, fetchurl, flex }:
+{ stdenv, fetchurl }:
 
 stdenv.mkDerivation rec {
   name = "libsepol-${version}";
-  version = "2.4";
-  se_release = "20150202";
-  se_url = "https://raw.githubusercontent.com/wiki/SELinuxProject/selinux/files/releases";
+  version = "2.2";
+  se_release = "20131030";
+  se_url = "${meta.homepage}/releases";
 
   src = fetchurl {
     url = "${se_url}/${se_release}/libsepol-${version}.tar.gz";
-    sha256 = "0ncnwhpc1gx4hrrb822fqkwy5h75zzngsrfkd5mlqh1jk7aib419";
+    sha256 = "03zw6clp00cmi49x8iq8svhrp91jrcw0093zpnyhan190rqb593p";
   };
 
-  nativeBuildInputs = [ flex ];
+  preBuild = '' makeFlags="$makeFlags PREFIX=$out DESTDIR=$out" '';
 
-  preBuild = ''
-    makeFlagsArray+=("PREFIX=$out")
-    makeFlagsArray+=("DESTDIR=$out")
+  # TODO: Figure out why the build incorrectly links libsepol.so
+  postInstall = ''
+    rm $out/lib/libsepol.so
+    ln -s libsepol.so.1 $out/lib/libsepol.so
   '';
 
   passthru = { inherit se_release se_url; };

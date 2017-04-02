@@ -50,13 +50,15 @@ in
       gid = config.ids.gids.spamd;
     };
 
-    systemd.services.spamd = {
+    jobs.spamd = {
       description = "Spam Assassin Server";
 
       wantedBy = [ "multi-user.target" ];
       after = [ "network.target" ];
 
-      script = "${pkgs.spamassassin}/bin/spamd ${optionalString cfg.debug "-D"} --username=spamd --groupname=spamd --nouser-config --virtual-config-dir=/var/lib/spamassassin/user-%u --allow-tell --pidfile=/var/run/spamd.pid";
+      exec = "${pkgs.spamassassin}/bin/spamd ${optionalString cfg.debug "-D"} --username=spamd --groupname=spamd --nouser-config --virtual-config-dir=/var/lib/spamassassin/user-%u --allow-tell --pidfile=/var/run/spamd.pid";
     };
+
   };
+
 }

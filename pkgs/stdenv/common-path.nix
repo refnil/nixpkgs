@@ -7,9 +7,9 @@
   pkgs.gawk
   pkgs.gnutar
   pkgs.gzip
-  pkgs.bzip2.bin
+  pkgs.bzip2
   pkgs.gnumake
   pkgs.bash
   pkgs.patch
-  pkgs.xz.bin
+  pkgs.xz
 ]

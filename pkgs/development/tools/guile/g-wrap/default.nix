@@ -1,15 +1,17 @@
-{ fetchurl, stdenv, guile, libffi, pkgconfig, glib, guile_lib }:
+{ fetchurl, stdenv, guile, libffi, pkgconfig, glib
+, guile_lib }:
 
 stdenv.mkDerivation rec {
-  name = "g-wrap-1.9.15";
+  name = "g-wrap-1.9.13";
   src = fetchurl {
     url = "mirror://savannah/g-wrap/${name}.tar.gz";
-    sha256 = "0ak0bha37dfpj9kmyw1r8fj8nva639aw5xr66wr5gd3l1rqf5xhg";
+    sha256 = "0fc874zlwzjahyliqnva1zfsv0chlx4cvfhwchij9n2d3kmsss9v";
   };
 
   # Note: Glib support is optional, but it's quite useful (e.g., it's
   # used by Guile-GNOME).
-  buildInputs = [ guile pkgconfig glib guile_lib ];
+  buildInputs = [ guile pkgconfig glib ]
+    ++ stdenv.lib.optional doCheck guile_lib;
 
   propagatedBuildInputs = [ libffi ];
 
@@ -24,7 +26,6 @@ stdenv.mkDerivation rec {
     '';
     homepage = http://www.nongnu.org/g-wrap/;
     license = stdenv.lib.licenses.lgpl2Plus;
-    maintainers = [ stdenv.lib.maintainers.taktoa ];
-    platforms = stdenv.lib.platforms.linux;
+    maintainers = [ stdenv.lib.maintainers.ludo ];
   };
 }

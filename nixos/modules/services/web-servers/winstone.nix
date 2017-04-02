@@ -30,8 +30,7 @@ let
 
       javaPackage = mkOption {
         type = types.package;
-        default = pkgs.jre;
-        defaultText = "pkgs.jre";
+        default = pkgs.openjre;
         description = ''
           Which Java derivation to use for running Winstone.
         '';
@@ -113,7 +112,8 @@ in {
   options = {
     services.winstone = mkOption {
       default = {};
-      type = with types; attrsOf (submodule winstoneOpts);
+      type = types.attrsOf types.optionSet;
+      options = [ winstoneOpts ];
       description = ''
         Defines independent Winstone services, each serving one WAR-file.
       '';

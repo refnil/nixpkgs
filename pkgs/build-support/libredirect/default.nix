@@ -11,8 +11,4 @@ stdenv.mkDerivation {
     '';
 
   installPhase = "mkdir -p $out/lib; cp libredirect.so $out/lib";
-
-  meta = {
-    platforms = stdenv.lib.platforms.linux;
-  };
 }

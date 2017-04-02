@@ -1,10 +1,10 @@
 {stdenv, fetchurl, ncurses, glib, gettext, readline, pkgconfig }:
 
 stdenv.mkDerivation rec {
-  name = "pal-0.4.3";
+  name = "pal-0.4.2";
   src = fetchurl {
     url = "mirror://sourceforge/palcal/${name}.tgz";
-    sha256 = "072mahxvd7lcvrayl32y589w4v3vh7bmlcnhiksjylknpsvhqiyf";
+    sha256 = "1601nsspxscm7bp9g9bkia0ij0mx2lpskl2fqhs5r0smp92121nx";
   };
 
   patchPhase = ''
@@ -12,11 +12,11 @@ stdenv.mkDerivation rec {
     sed -i -e 's,/etc/pal\.conf,'$out/etc/pal.conf, src/input.c
   '';
 
-  makeFlags = "prefix=$(out)";
+  preBuild = ''
+    export makeFlags="prefix=$out"
+  '';
 
   buildInputs = [ glib gettext readline pkgconfig ];
-
-  hardeningDisable = [ "format" ];
 
   meta = {
     homepage = http://palcal.sourceforge.net/;

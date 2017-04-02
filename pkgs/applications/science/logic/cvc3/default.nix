@@ -1,27 +1,48 @@
-{ stdenv, fetchurl, flex, bison, gmp, perl }:
+x@{builderDefsPackage
+  , flex, bison, gmp, perl
+  , ...}:
+builderDefsPackage
+(a :  
+let 
+  helperArgNames = ["stdenv" "fetchurl" "builderDefsPackage"] ++ 
+    ["gmp"];
 
-stdenv.mkDerivation rec {
-    name = "cvc3-${version}";
-    version = "2.4.1";
+  buildInputs = (map (n: builtins.getAttr n x)
+    (builtins.attrNames (builtins.removeAttrs x helperArgNames)))
+    ++ [(a.lib.overrideDerivation x.gmp (y: {dontDisableStatic=true;}))];
+  sourceInfo = rec {
+    baseName="cvc3";
+    version="2.4.1";
+    name="${baseName}-${version}";
+    url="http://www.cs.nyu.edu/acsys/cvc3/releases/${version}/${name}.tar.gz";
+    hash="1xxcwhz3y6djrycw8sm6xz83wb4hb12rd1n0skvc7fng0rh1snym";
+  };
+in
+rec {
+  src = a.fetchurl {
+    url = sourceInfo.url;
+    sha256 = sourceInfo.hash;
+  };
 
-    src = fetchurl {
-      url = "http://www.cs.nyu.edu/acsys/cvc3/releases/${version}/${name}.tar.gz";
-      sha256 = "1xxcwhz3y6djrycw8sm6xz83wb4hb12rd1n0skvc7fng0rh1snym";
-    };
+  inherit (sourceInfo) name version;
+  inherit buildInputs;
 
-  buildInputs = [ gmp flex bison perl ];
-
-  preConfigure = ''
+  /* doConfigure should be removed if not needed */
+  phaseNames = ["fixPaths" "doConfigure" "doMakeInstall"];
+  fixPaths = a.fullDepEntry (''
     sed -e "s@ /bin/bash@bash@g" -i Makefile.std
     find . -exec sed -e "s@/usr/bin/perl@${perl}/bin/perl@g" -i '{}' ';'
-  '';
-
-  meta = with stdenv.lib; {
+  '') ["minInit" "doUnpack"];
+      
+  meta = {
     description = "A prover for satisfiability modulo theory (SMT)";
-    maintainers = with maintainers;
-      [ raskin ];
-    platforms = platforms.linux;
-    license = licenses.free;
+    maintainers = with a.lib.maintainers;
+    [
+      raskin
+    ];
+    platforms = with a.lib.platforms;
+      linux;
+    license = "free-noncopyleft";
     homepage = "http://www.cs.nyu.edu/acsys/cvc3/index.html";
   };
   passthru = {
@@ -29,4 +50,5 @@ stdenv.mkDerivation rec {
       downloadPage = "http://www.cs.nyu.edu/acsys/cvc3/download.html";
     };
   };
-}
+}) x
+

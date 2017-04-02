@@ -2,19 +2,15 @@
 
 let
   pkgname = "ipmitool";
-  version = "1.8.17";
+  version = "1.8.13";
 in
 stdenv.mkDerivation {
   name = "${pkgname}-${version}";
 
   src = fetchurl {
     url = "mirror://sourceforge/${pkgname}/${pkgname}-${version}.tar.gz";
-    sha256 = "0qcrz1d1dbjg46n3fj6viglzcxlf2q15xa7bx9w1hm2hq1r3jzbi";
+    sha256 = "0drkfa1spqh1vlzrx7jwm3cw1qar46a9xvqsgycn92ylgsr395n1";
   };
-
-  patchPhase = stdenv.lib.optionalString stdenv.isDarwin ''
-    substituteInPlace src/plugins/ipmi_intf.c --replace "s6_addr16" "s6_addr"
-  '';
 
   buildInputs = [ openssl ];
 
@@ -30,8 +26,10 @@ stdenv.mkDerivation {
 
   meta = {
     description = ''Command-line interface to IPMI-enabled devices'';
-    license = stdenv.lib.licenses.bsd3;
-    homepage = http://ipmitool.sourceforge.net;
+    license = "BSD";
+    homepage = "http://ipmitool.sourceforge.net";
+
     platforms = stdenv.lib.platforms.unix;
+    maintainers = [ stdenv.lib.maintainers.simons ];
   };
 }

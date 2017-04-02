@@ -1,42 +1,36 @@
-{ stdenv, fetchurl, pkgconfig, intltool, xorg, gtk, libxfce4util, xfconf
-, libglade, libstartup_notification, hicolor_icon_theme
-, withGtk3 ? false, gtk3
-}:
-let
-  p_name  = "libxfce4ui";
-  ver_maj = "4.12";
-  ver_min = "1";
-  inherit (stdenv.lib) optional;
-in
+{ stdenv, fetchurl, pkgconfig, intltool, gtk, libxfce4util, xfconf
+, libglade, libstartup_notification }:
+
 stdenv.mkDerivation rec {
-  name = "${p_name}-${ver_maj}.${ver_min}";
+  p_name  = "libxfce4ui";
+  ver_maj = "4.10";
+  ver_min = "0";
 
   src = fetchurl {
     url = "mirror://xfce/src/xfce/${p_name}/${ver_maj}/${name}.tar.bz2";
-    sha256 = "3d619811bfbe7478bb984c16543d980cadd08586365a7bc25e59e3ca6384ff43";
+    sha256 = "1qm31s6568cz4c8rl9fsfq0xmf7pldxm0ki62gx1cpybihlgmfd2";
   };
+  name = "${p_name}-${ver_maj}.${ver_min}";
 
-  outputs = [ "out" "dev" "devdoc" ];
-
-  nativeBuildInputs = [ pkgconfig intltool ];
+  #TODO: gladeui
+  # Install into our own prefix instead.
+  preConfigure =
+    ''
+      configureFlags="--with-libglade-module-path=$out/lib/libglade/2.0"
+    '';
 
   buildInputs =
-    [ gtk libxfce4util xfconf libglade
-      libstartup_notification hicolor_icon_theme
-    ] ++ optional withGtk3 gtk3;
+    [ pkgconfig intltool gtk libxfce4util xfconf libglade
+      libstartup_notification
+    ];
 
-  propagatedBuildInputs = [ xorg.libICE xorg.libSM ];
-
-  #TODO: glade?
-  configureFlags = optional withGtk3 "--enable-gtk3";
+  preFixup = "rm $out/share/icons/hicolor/icon-theme.cache";
 
   enableParallelBuilding = true;
 
-  meta = with stdenv.lib; {
+  meta = {
     homepage = http://www.xfce.org/;
     description = "Basic GUI library for Xfce";
-    license = licenses.lgpl2Plus;
-    platforms = platforms.linux;
+    license = stdenv.lib.licenses.lgpl2Plus;
   };
 }
-

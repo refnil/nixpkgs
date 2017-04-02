@@ -9,19 +9,16 @@ with lib;
   options = {
 
     services.tftpd.enable = mkOption {
-      type = types.bool;
       default = false;
       description = ''
-        Whether to enable tftpd, a Trivial File Transfer Protocol server.
-        The server will be run as an xinetd service.
+        Whether to enable the anonymous FTP user.
       '';
     };
 
     services.tftpd.path = mkOption {
-      type = types.path;
-      default = "/srv/tftp";
+      default = "/home/tftp";
       description = ''
-        Where the tftp server files are stored.
+        Where the tftp server files are stored
       '';
     };
 

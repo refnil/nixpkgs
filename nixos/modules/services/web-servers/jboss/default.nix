@@ -25,7 +25,7 @@ in
 
       enable = mkOption {
         default = false;
-        description = "Whether to enable JBoss. WARNING : this package is outdated and is known to have vulnerabilities.";
+        description = "Whether to enable jboss";
       };
 
       tempDir = mkOption {
@@ -71,10 +71,13 @@ in
   ###### implementation
 
   config = mkIf config.services.jboss.enable {
-    systemd.services.jboss = {
-      description = "JBoss server";
-      script = "${jbossService}/bin/control start";
-      wantedBy = [ "multi-user.target" ];
-    };
+
+    jobs.jboss =
+      { description = "JBoss server";
+
+        exec = "${jbossService}/bin/control start";
+      };
+
   };
+
 }

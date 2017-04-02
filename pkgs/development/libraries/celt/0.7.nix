@@ -1,10 +1,47 @@
-{ callPackage, fetchurl, ... } @ args:
+x@{builderDefsPackage
+  , ...}:
+builderDefsPackage
+(a :  
+let 
+  helperArgNames = ["stdenv" "fetchurl" "builderDefsPackage"] ++ 
+    [];
 
-callPackage ./generic.nix (args // rec{
-  version = "0.7.1";
-
-  src = fetchurl {
-    url = "http://downloads.xiph.org/releases/celt/celt-${version}.tar.gz";
-    sha256 = "0rihjgzrqcprsv8a1pmiglwik7xqbs2yw3fwd6gb28chnpgy5w4k";
+  buildInputs = map (n: builtins.getAttr n x)
+    (builtins.attrNames (builtins.removeAttrs x helperArgNames));
+  sourceInfo = rec {
+    baseName="celt";
+    version="0.7.1";
+    name="${baseName}-${version}";
+    url="http://downloads.xiph.org/releases/${baseName}/${name}.tar.gz";
+    hash="93f0e2dfb59021b19e69dc0dee855eb89f19397db1dea0d0d6f9329cff933066";
   };
-})
+in
+rec {
+  src = a.fetchurl {
+    url = sourceInfo.url;
+    sha256 = sourceInfo.hash;
+  };
+
+  inherit (sourceInfo) name version;
+  inherit buildInputs;
+
+  /* doConfigure should be removed if not needed */
+  phaseNames = ["doConfigure" "doMakeInstall"];
+      
+  meta = {
+    description = "CELT - low-delay audio codec";
+    maintainers = with a.lib.maintainers;
+    [
+      raskin
+    ];
+    platforms = with a.lib.platforms;
+      linux;
+    license = "free";
+  };
+  passthru = {
+    updateInfo = {
+      downloadPage = "http://www.celt-codec.org/downloads/";
+    };
+  };
+}) x
+

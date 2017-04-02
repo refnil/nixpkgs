@@ -13,7 +13,7 @@ stdenv.mkDerivation rec {
   buildInputs = [ openssl pcre ];
 
   installPhase = ''
-    mkdir -p $out/bin
+    ensureDir $out/bin
     cp vanitygen $out/bin
     cp keyconv $out/bin/vanitygen-keyconv
   '';

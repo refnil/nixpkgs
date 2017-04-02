@@ -1,15 +1,13 @@
 { stdenv, fetchurl, unzip, ruby, openssl, makeWrapper }:
 
 stdenv.mkDerivation rec {
-  name = "ec2-ami-tools-${version}";
-
-  version = "1.5.7";
+  name = "ec2-ami-tools-1.4.0.9";
 
   buildInputs = [ unzip makeWrapper ];
 
   src = fetchurl {
-    url = "http://s3.amazonaws.com/ec2-downloads/${name}.zip";
-    sha256 = "17xj7xmdbcwdbzalhfs6yyiwa64978mk3li39l949qfjjgrxjias";
+    url = "http://tarballs.nixos.org/${name}.zip";
+    sha256 = "0icpjr2ipch3f6cf4rg9x5z2y9k6a4rd85npsmw3a1ambs3dwxlq";
   };
 
   # Amazon EC2 requires that disk images are writable.  If they're
@@ -29,16 +27,16 @@ stdenv.mkDerivation rec {
       for i in $out/bin/*; do
           wrapProgram $i \
             --set EC2_HOME $out \
-            --prefix PATH : ${stdenv.lib.makeBinPath [ ruby openssl ]}
+            --prefix PATH : ${ruby}/bin:${openssl}/bin
       done
 
       sed -i 's|/bin/bash|${stdenv.shell}|' $out/lib/ec2/platform/base/pipeline.rb
     '';  # */
 
   meta = {
-    homepage = https://aws.amazon.com/developertools/Amazon-EC2/368;
+    homepage = http://developer.amazonwebservices.com/connect/entry.jspa?externalID=368&categoryID=88;
     description = "Command-line tools to create and manage Amazon EC2 virtual machine images";
-    license = stdenv.lib.licenses.amazonsl;
+    license = "unfree-redistributable"; # Amazon || (Ruby GPL-2)
   };
 
 }

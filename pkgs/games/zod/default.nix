@@ -1,5 +1,5 @@
-{ fetchurl, stdenv, unrar, unzip, SDL, SDL_image, SDL_ttf, SDL_mixer
-, libmysql, makeWrapper }:
+{ fetchurl, stdenv, unrar, unzip, SDL, SDL_image, SDL_ttf, SDL_mixer,
+  mysql, makeWrapper }:
 
 stdenv.mkDerivation rec {
   name = "zod-engine-2011-03-18";
@@ -22,10 +22,10 @@ stdenv.mkDerivation rec {
     sourceRoot=`pwd`/src
   '';
 
-  buildInputs = [ unrar unzip SDL SDL_image SDL_ttf SDL_mixer libmysql
+  buildInputs = [ unrar unzip SDL SDL_image SDL_ttf SDL_mixer mysql
     makeWrapper ];
 
-  NIX_LDFLAGS="-L${stdenv.lib.getLib libmysql}/lib/mysql";
+  NIX_LDFLAGS="-L${mysql}/lib/mysql";
 
   installPhase = ''
     mkdir -p $out/bin $out/share/zod

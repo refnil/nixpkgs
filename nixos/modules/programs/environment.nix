@@ -17,9 +17,18 @@ in
   config = {
 
     environment.variables =
-      { NIXPKGS_CONFIG = "/etc/nix/nixpkgs-config.nix";
+      { LOCATE_PATH = "/var/cache/locatedb";
+        NIXPKGS_CONFIG = "/etc/nix/nixpkgs-config.nix";
         PAGER = mkDefault "less -R";
         EDITOR = mkDefault "nano";
+      };
+
+    environment.sessionVariables =
+      { NIX_PATH =
+          [ "/nix/var/nix/profiles/per-user/root/channels/nixos"
+            "nixpkgs=/etc/nixos/nixpkgs"
+            "nixos-config=/etc/nixos/configuration.nix"
+          ];
       };
 
     environment.profiles =
@@ -28,23 +37,26 @@ in
         "/run/current-system/sw"
       ];
 
-    # TODO: move most of these elsewhere
-    environment.profileRelativeEnvVars =
-      { PATH = [ "/bin" "/sbin" "/lib/kde4/libexec" ];
-        INFOPATH = [ "/info" "/share/info" ];
-        PKG_CONFIG_PATH = [ "/lib/pkgconfig" ];
-        TERMINFO_DIRS = [ "/share/terminfo" ];
-        PERL5LIB = [ "/lib/perl5/site_perl" ];
-        KDEDIRS = [ "" ];
-        STRIGI_PLUGIN_PATH = [ "/lib/strigi/" ];
-        QT_PLUGIN_PATH = [ "/lib/qt4/plugins" "/lib/kde4/plugins" ];
-        QTWEBKIT_PLUGIN_PATH = [ "/lib/mozilla/plugins/" ];
-        GTK_PATH = [ "/lib/gtk-2.0" "/lib/gtk-3.0" ];
-        XDG_CONFIG_DIRS = [ "/etc/xdg" ];
-        XDG_DATA_DIRS = [ "/share" ];
-        MOZ_PLUGIN_PATH = [ "/lib/mozilla/plugins" ];
-        LIBEXEC_PATH = [ "/lib/libexec" ];
-      };
+    # !!! fix environment.profileVariables definition and then move
+    # most of these elsewhere
+    environment.profileVariables = (i:
+      { PATH = [ "${i}/bin" "${i}/sbin" "${i}/lib/kde4/libexec" ];
+        MANPATH = [ "${i}/man" "${i}/share/man" ];
+        INFOPATH = [ "${i}/info" "${i}/share/info" ];
+        PKG_CONFIG_PATH = [ "${i}/lib/pkgconfig" ];
+        TERMINFO_DIRS = [ "${i}/share/terminfo" ];
+        PERL5LIB = [ "${i}/lib/perl5/site_perl" ];
+        ALSA_PLUGIN_DIRS = [ "${i}/lib/alsa-lib" ];
+        GST_PLUGIN_SYSTEM_PATH = [ "${i}/lib/gstreamer-0.10" ];
+        KDEDIRS = [ "${i}" ];
+        STRIGI_PLUGIN_PATH = [ "${i}/lib/strigi/" ];
+        QT_PLUGIN_PATH = [ "${i}/lib/qt4/plugins" "${i}/lib/kde4/plugins" ];
+        QTWEBKIT_PLUGIN_PATH = [ "${i}/lib/mozilla/plugins/" ];
+        GTK_PATH = [ "${i}/lib/gtk-2.0" ];
+        XDG_CONFIG_DIRS = [ "${i}/etc/xdg" ];
+        XDG_DATA_DIRS = [ "${i}/share" ];
+        MOZ_PLUGIN_PATH = [ "${i}/lib/mozilla/plugins" ];
+      });
 
     environment.extraInit =
       ''

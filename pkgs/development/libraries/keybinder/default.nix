@@ -1,10 +1,8 @@
-{ stdenv, fetchurl, autoconf, automake, libtool, pkgconfig, gnome3
-, gtk_doc, gtk2, python2Packages, lua, libX11, libXext, libXrender, gobjectIntrospection
+{ stdenv, fetchurl, autoconf, automake, libtool, pkgconfig, gnome3, pygobject3, pygtk
+, gtk_doc, gtk2, python, pygobject, lua, libX11, libXext, libXrender, gobjectIntrospection
 }:
 
-let
-  inherit (python2Packages) python pygobject3 pygtk;
-in stdenv.mkDerivation rec {
+stdenv.mkDerivation rec {
   name = "keybinder-${version}";
   version = "0.3.0";
 
@@ -39,7 +37,7 @@ in stdenv.mkDerivation rec {
     '';
     homepage = https://github.com/engla/keybinder/;
     license = licenses.gpl2Plus;
-    platforms = platforms.linux;
+    platform = platforms.linux;
     maintainers = [ maintainers.bjornfor ];
   };
 }

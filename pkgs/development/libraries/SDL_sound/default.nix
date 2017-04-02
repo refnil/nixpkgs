@@ -1,8 +1,7 @@
-{ stdenv, fetchurl, SDL, libvorbis, flac, libmikmod }:
+{stdenv, fetchurl, SDL, libvorbis, flac, libmikmod}:
 
 stdenv.mkDerivation rec {
-  name = "SDL_sound-${version}";
-  version = "1.0.3";
+  name = "SDL_sound-1.0.3";
 
   src = fetchurl {
     url = "http://icculus.org/SDL_sound/downloads/${name}.tar.gz";
@@ -11,10 +10,9 @@ stdenv.mkDerivation rec {
 
   buildInputs = [ SDL libvorbis flac libmikmod ];
 
-  meta = with stdenv.lib; {
+  postInstall = "ln -s $out/include/SDL/SDL_sound.h $out/include/";
+
+  meta = {
     description = "SDL sound library";
-    platforms = platforms.linux;
-    license = licenses.lgpl21;
-    homepage = "https://www.icculus.org/SDL_sound/";
   };
 }

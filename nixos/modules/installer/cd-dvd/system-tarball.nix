@@ -15,12 +15,11 @@ in
 {
   options = {
     tarball.contents = mkOption {
-      example = literalExample ''
+      example =
         [ { source = pkgs.memtest86 + "/memtest.bin";
             target = "boot/memtest.bin";
           }
-        ]
-      '';
+        ];
       description = ''
         This option lists files to be copied to fixed locations in the
         generated ISO image.
@@ -28,7 +27,7 @@ in
     };
 
     tarball.storeContents = mkOption {
-      example = literalExample "[ pkgs.stdenv ]";
+      example = [pkgs.stdenv];
       description = ''
         This option lists additional derivations to be included in the
         Nix store in the generated ISO image.
@@ -43,7 +42,7 @@ in
     # so that we don't need to know its device.
     fileSystems = [ ];
 
-    # boot.initrd.availableKernelModules = [ "mvsdio" "reiserfs" "ext3" "ext4" ];
+    # boot.initrd.availableKernelModules = [ "mvsdio" "mmc_block" "reiserfs" "ext3" "ext4" ];
 
     # boot.initrd.kernelModules = [ "rtc_mv" ];
 
@@ -78,14 +77,14 @@ in
         # After booting, register the contents of the Nix store on the
         # CD in the Nix database in the tmpfs.
         if [ -f /nix-path-registration ]; then
-          ${config.nix.package.out}/bin/nix-store --load-db < /nix-path-registration &&
+          ${config.nix.package}/bin/nix-store --load-db < /nix-path-registration &&
           rm /nix-path-registration
         fi
 
         # nixos-rebuild also requires a "system" profile and an
         # /etc/NIXOS tag.
         touch /etc/NIXOS
-        ${config.nix.package.out}/bin/nix-env -p /nix/var/nix/profiles/system --set /run/current-system
+        ${config.nix.package}/bin/nix-env -p /nix/var/nix/profiles/system --set /run/current-system
       '';
 
   };

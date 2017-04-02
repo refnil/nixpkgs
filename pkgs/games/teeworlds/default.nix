@@ -1,24 +1,19 @@
-{ fetchurl, stdenv, makeWrapper, python, alsaLib
-, libX11, mesa_glu, SDL, lua5, zlib, bam, freetype
-}:
+{ fetchurl, stdenv, python, alsaLib, libX11, mesa, SDL, lua5, zlib, bam }:
 
 stdenv.mkDerivation rec {
-  name = "teeworlds-0.6.4";
+  name = "teeworlds-0.6.1";
 
   src = fetchurl {
-    url = "https://downloads.teeworlds.com/teeworlds-0.6.4-src.tar.gz";
-    sha256 = "1qlqzp4wqh1vnip081lbsjnx5jj5m5y4msrcm8glbd80pfgd2qf2";
+    url = "http://www.teeworlds.com/files/${name}-source.tar.gz";
+    sha256 = "025rcz59mdqksja4akn888c8avj9j28rk86vw7w1licdp67x8a33";
   };
 
-  # we always want to use system libs instead of these
-  postPatch = "rm -r other/{freetype,sdl}/{include,lib32,lib64}";
+  # Note: Teeworlds requires Python 2.x to compile.  Python 3.0 will
+  # not work.
+  buildInputs = [ python alsaLib libX11 mesa SDL lua5 zlib bam ];
 
-  buildInputs = [
-    python makeWrapper alsaLib libX11 mesa_glu SDL lua5 zlib bam freetype
-  ];
-
-  buildPhase = ''
-    bam -a -v release
+  configurePhase = ''
+    bam release
   '';
 
   installPhase = ''
@@ -42,8 +37,12 @@ stdenv.mkDerivation rec {
     # that they can access the graphics and sounds.
     for program in $executables
     do
-      wrapProgram $out/bin/$program \
-        --run "cd $out/share/${name}"
+      mv -v "$out/bin/$program" "$out/bin/.wrapped-$program"
+      cat > "$out/bin/$program" <<EOF
+#!/bin/sh
+cd "$out/share/${name}" && exec "$out/bin/.wrapped-$program" "\$@"
+EOF
+      chmod -v +x "$out/bin/$program"
     done
 
     # Copy the documentation.
@@ -52,7 +51,7 @@ stdenv.mkDerivation rec {
   '';
 
   meta = {
-    description = "Retro multiplayer shooter game";
+    description = "Teeworlds, a retro multiplayer shooter game";
 
     longDescription = ''
       Teeworlds is a free online multiplayer game, available for all

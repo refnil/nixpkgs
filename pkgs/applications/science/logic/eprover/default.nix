@@ -1,29 +1,44 @@
-{ stdenv, fetchurl, which }:
-stdenv.mkDerivation rec {
-  name = "eprover-${version}";
-  version = "1.9.1";
+{ stdenv, fetchurl, which, texLive }:
+let
+  s = # Generated upstream information
+  rec {
+    baseName="eprover";
+    version="1.8";
+    name="${baseName}-${version}";
+    hash="0bl4dr7k6simwdvdyxhnjkiz4nm5y0nr8bfhc34zk0360i9m6sk3";
+    url="http://www4.in.tum.de/~schulz/WORK/E_DOWNLOAD/V_1.8/E.tgz";
+    sha256="0bl4dr7k6simwdvdyxhnjkiz4nm5y0nr8bfhc34zk0360i9m6sk3";
+  };
+in
+stdenv.mkDerivation {
+  inherit (s) name;
 
   src = fetchurl {
-    url = "http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_${version}/E.tgz";
-    sha256 = "1vi977mdfqnj04m590aw4896nqzlc4c5rqadjzk86z1zvj7mqnqw";
+    name = "E-${s.version}.tar.gz";
+    inherit (s) url sha256;
   };
 
-  buildInputs = [ which ];
+  buildInputs = [which texLive];
 
-  preConfigure = ''
-    sed -e 's/ *CC *= gcc$//' -i Makefile.vars
+  preConfigure = "sed -e 's@^EXECPATH\\s.*@EXECPATH = '\$out'/bin@' -i Makefile.vars";
+
+  buildPhase = "make install";
+
+  # HOME=. allows to build missing TeX formats
+  installPhase = ''
+    mkdir -p $out/bin
+    make install
+    HOME=. make documentation
+    mkdir -p $out/share/doc
+    cp -r DOC $out/share/doc/EProver
+    echo eproof -xAuto --tstp-in --tstp-out '"$@"' > $out/bin/eproof-tptp
+    chmod a+x $out/bin/eproof-tptp
   '';
-  configureFlags = "--exec-prefix=$(out) --man-prefix=$(out)/share/man";
 
-  postInstall = ''
-    sed -e s,EXECPATH=.\*,EXECPATH=$out/bin, -i $out/bin/eproof{,_ram}
-  '';
-
-  meta = with stdenv.lib; {
-    description = "Automated theorem prover for full first-order logic with equality";
-    homepage = http://www.eprover.org/;
-    license = licenses.gpl2;
-    maintainers = with maintainers; [ raskin gebner ];
-    platforms = platforms.all;
+  meta = {
+    inherit (s) version;
+    description = "E automated theorem prover";
+    maintainers = [stdenv.lib.maintainers.raskin];
+    platforms = stdenv.lib.platforms.all;
   };
 }

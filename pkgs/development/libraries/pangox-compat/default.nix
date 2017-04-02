@@ -15,6 +15,5 @@ stdenv.mkDerivation rec {
 
     homepage = http://www.pango.org/;
     license = stdenv.lib.licenses.lgpl2Plus;
-    platforms = stdenv.lib.platforms.unix;
   };
 }

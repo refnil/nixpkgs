@@ -2,18 +2,15 @@
 
 stdenv.mkDerivation rec {
   name = "abc-verifier-${version}";
-  version = "20160818";
+  version = "140509"; # YYMMDD
 
   src = fetchhg {
     url    = "https://bitbucket.org/alanmi/abc";
-    rev    = "a2e5bc66a68a72ccd267949e5c9973dd18f8932a";
-    sha256 = "09yvhj53af91nc54gmy7cbp7yljfcyj68a87494r5xvdfnsj11gy";
+    rev    = "03e221443d71e49e56cbc37f1907ee3b0ff3e7c9";
+    sha256 = "0ahrqg718y7xpv939f6x8w1kqh7wsja4pw8hca7j67j0qjdgb4lm";
   };
 
   buildInputs = [ readline ];
-  preBuild = ''
-    export buildFlags="CC=$CC CXX=$CXX LD=$CXX"
-  '';
   enableParallelBuilding = true;
   installPhase = ''
     mkdir -p $out/bin
@@ -21,7 +18,7 @@ stdenv.mkDerivation rec {
   '';
 
   meta = {
-    description = "A tool for squential logic synthesis and ormal verification";
+    description = "Sequential Logic Synthesis and Formal Verification";
     homepage    = "www.eecs.berkeley.edu/~alanmi/abc/abc.htm";
     license     = stdenv.lib.licenses.mit;
     platforms   = stdenv.lib.platforms.unix;

@@ -1,16 +1,13 @@
-{ lib, stdenv, fetchsvn, pkgconfig, libjpeg, libpng, flex, zlib, perl, libxml2
-, makeWrapper, libtiff
-, enableX11 ? false, libX11 }:
+{ stdenv, fetchsvn, pkgconfig, libjpeg, libpng, flex, zlib, perl, libxml2, makeWrapper, libX11, libtiff }:
 
-stdenv.mkDerivation rec {
-  # Determine version and revision from:
-  # https://sourceforge.net/p/netpbm/code/HEAD/log/?path=/advanced
-  name = "netpbm-10.77.02";
+let rev = 1742; in
+stdenv.mkDerivation {
+  name = "netpbm-advanced-${toString rev}";
 
   src = fetchsvn {
-    url = "svn://svn.code.sf.net/p/netpbm/code/advanced";
-    rev = 2883;
-    sha256 = "1lxa5gasmqrwgihkk8ij7vb9kgdw3d5mp25kydkrf6x4wibg1w5f";
+    url = https://netpbm.svn.sourceforge.net/svnroot/netpbm/advanced;
+    inherit rev;
+    sha256 = "0csx6g0ci66nx1a6z0a9dkpfp66mdvcpp5r7g6zrx4jp18r9hzb2";
   };
 
   postPatch = /* CVE-2005-2471, from Arch */ ''
@@ -18,22 +15,15 @@ stdenv.mkDerivation rec {
       --replace '"-DSAFER"' '"-DPARANOIDSAFER"'
   '';
 
-  buildInputs =
-    [ pkgconfig flex zlib perl libpng libjpeg libxml2 makeWrapper libtiff ]
-    ++ lib.optional enableX11 libX11;
+  NIX_CFLAGS_COMPILE = "-fPIC"; # Gentoo adds this on every platform
+
+  buildInputs = [ pkgconfig flex zlib perl libpng libjpeg libxml2 makeWrapper libX11 libtiff ];
 
   configurePhase = ''
     cp config.mk.in config.mk
-    echo "STATICLIB_TOO = n" >> config.mk
     substituteInPlace "config.mk" \
-        --replace "TIFFLIB = NONE" "TIFFLIB = ${libtiff.out}/lib/libtiff.so" \
-        --replace "TIFFHDR_DIR =" "TIFFHDR_DIR = ${libtiff.dev}/include" \
-        --replace "JPEGLIB = NONE" "JPEGLIB = ${libjpeg.out}/lib/libjpeg.so" \
-        --replace "JPEGHDR_DIR =" "JPEGHDR_DIR = ${libjpeg.dev}/include"
-   '' + stdenv.lib.optionalString stdenv.isDarwin ''
-    echo "LDSHLIB=-dynamiclib -install_name $out/lib/libnetpbm.\$(MAJ).dylib" >> config.mk
-    echo "NETPBMLIBTYPE = dylib" >> config.mk
-    echo "NETPBMLIBSUFFIX = dylib" >> config.mk
+        --replace "TIFFLIB = NONE" "TIFFLIB = ${libtiff}/lib/libtiff.so" \
+        --replace "TIFFHDR_DIR =" "TIFFHDR_DIR = ${libtiff}/include"
   '';
 
   preBuild = ''
@@ -45,15 +35,24 @@ stdenv.mkDerivation rec {
     touch lib/standardppmdfont.c
   '';
 
-  enableParallelBuilding = false;
+  enableParallelBuilding = true;
 
   installPhase = ''
-    make package pkgdir=$out
-
-    rm -rf $out/link $out/*_template $out/{pkginfo,README,VERSION} $out/man/web
-
-    mkdir -p $out/share/netpbm
-    mv $out/misc $out/share/netpbm/
+    make package pkgdir=$PWD/netpbmpkg
+    # Pass answers to the script questions
+    ./installnetpbm << EOF
+    $PWD/netpbmpkg
+    $out
+    Y
+    $out/bin
+    $out/lib
+    N
+    $out/lib
+    $out/lib
+    $out/include
+    $out/man
+    N
+    EOF
 
     # wrap any scripts that expect other programs in the package to be in their PATH
     for prog in ppmquant; do
@@ -65,6 +64,6 @@ stdenv.mkDerivation rec {
     homepage = http://netpbm.sourceforge.net/;
     description = "Toolkit for manipulation of graphic images";
     license = "GPL,free";
-    platforms = with stdenv.lib.platforms; linux ++ darwin;
+    platforms = stdenv.lib.platforms.linux;
   };
 }

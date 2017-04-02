@@ -12,10 +12,11 @@ stdenv.mkDerivation rec {
   };
 
   meta = with stdenv.lib; {
-    description = "A bundle of NPAPI headers by Mozilla";
+    description = "NPAPI-SDK is a bundle of NPAPI headers by Mozilla";
 
     homepage = https://code.google.com/p/npapi-sdk/;
     license = licenses.bsd3;
+    maintainers = with maintainers; [ wizeman ];
     platforms = platforms.linux;
   };
 }

@@ -1,24 +1,19 @@
-{ stdenv, fetchFromGitHub, makeWrapper
-, SDL, ffmpeg, frei0r, libjack2, libdv, libsamplerate
-, libvorbis, libxml2, movit, pkgconfig, sox
-, gtk2
+{ stdenv, fetchurl, SDL, frei0r, jack2, libav, libdv, libsamplerate
+, libvorbis, libxml2, makeWrapper, movit, pkgconfig, qt, sox
 }:
 
 stdenv.mkDerivation rec {
   name = "mlt-${version}";
-  version = "6.2.0";
+  version = "0.9.2";
 
-  src = fetchFromGitHub {
-    owner = "mltframework";
-    repo = "mlt";
-    rev = "v${version}";
-    sha256 = "17jwz1lf9ilaxvgvhg7z86dhcsk95m4wlszy4gn7wab2ns5zhdm7";
+  src = fetchurl {
+    url = "https://github.com/mltframework/mlt/archive/v${version}.tar.gz";
+    sha256 = "0vk1i2yrny6dbip4aha25ibgv4m2rdhpxmz6a74q9wz1cgzbb766";
   };
 
   buildInputs = [
-    SDL ffmpeg frei0r libjack2 libdv libsamplerate libvorbis libxml2
-    makeWrapper movit pkgconfig sox
-    gtk2
+    SDL frei0r jack2 libav libdv libsamplerate libvorbis libxml2
+    makeWrapper movit pkgconfig qt sox
   ];
 
   # Mostly taken from:
@@ -32,18 +27,13 @@ stdenv.mkDerivation rec {
 
   postInstall = ''
     wrapProgram $out/bin/melt --prefix FREI0R_PATH : ${frei0r}/lib/frei0r-1
-
-    # Remove an unnecessary reference to movit.dev.
-    s=${movit.dev}/include
-    t=$(for ((i = 0; i < ''${#s}; i++)); do echo -n X; done)
-    sed -i $out/lib/mlt/libmltopengl.so -e "s|$s|$t|g"
   '';
 
   meta = with stdenv.lib; {
     description = "Open source multimedia framework, designed for television broadcasting";
     homepage = http://www.mltframework.org/;
     license = licenses.gpl3;
-    maintainers = [ maintainers.tohl ];
+    maintainers = [ maintainers.goibhniu ];
     platforms = platforms.linux;
   };
 }

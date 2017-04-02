@@ -1,38 +1,18 @@
-{ stdenv, fetchurl
-, pkgconfig, libtool
-, libX11, libXt, libXpm }:
+{ stdenv, fetchurl, libX11, libXt }:
 
-stdenv.mkDerivation rec {
-  name = "rxvt-${version}";
-  version = "2.7.10";
+stdenv.mkDerivation {
+  name = "rxvt-2.6.4";
 
   src = fetchurl {
-    url = "mirror://sourceforge/rxvt/${name}.tar.gz";
-    sha256 = "0jfl71gz3k7zh3kxdb8lxi06kajjnx7bq1rxjgk680l209jxask1";
+    url = mirror://sourceforge/rxvt/rxvt-2.6.4.tar.gz;
+    sha256 = "0hi29whjv8v11nkjbq1i6ms411v6csykghmlpkmayfjn9nxr02xg";
   };
 
-  buildInputs = [ pkgconfig libtool libX11 libXt libXpm ];
+  buildInputs = [ libX11 libXt ];
 
-  configurePhase = ''
-    LIBTOOL=${libtool}/bin/libtool ./configure --prefix=$out --enable-everything --enable-smart-resize --enable-256-color
-  '';
-
-  meta = with stdenv.lib; {
-    homepage = http://rxvt.sourceforge.net/;
+  meta = { 
     description = "Colour vt102 terminal emulator with less features and lower memory consumption";
-    longDescription = ''
-      rxvt (acronym for our extended virtual terminal) is a terminal
-      emulator for the X Window System, originally written by Rob Nation
-      as an extended version of the older xvt terminal by John Bovey of
-      University of Kent. Mark Olesen extensively modified it later and
-      took over maintenance for several years.
-
-      rxvt is intended to be a slimmed-down alternate for xterm,
-      omitting some of its little-used features, like Tektronix 4014
-      emulation and toolkit-style configurability.
-    '';
-    maintainers = with maintainers; [ AndersonTorres ];
-    license = licenses.gpl2;
-    platforms = platforms.linux;
+    homepage = http://www.rxvt.org/;
+    license = "GPL";
   };
 }

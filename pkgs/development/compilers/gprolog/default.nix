@@ -11,8 +11,6 @@ stdenv.mkDerivation rec {
     sha256 = "13miyas47bmijmadm68cbvb21n4s156gjafz7kfx9brk9djfkh0q";
   };
 
-  hardeningDisable = stdenv.lib.optional stdenv.isi686 "pic";
-
   patchPhase = ''
     sed -i -e "s|/tmp/make.log|$TMPDIR/make.log|g" src/Pl2Wam/check_boot
   '';
@@ -62,7 +60,7 @@ stdenv.mkDerivation rec {
       declarativity of logic programming.
     '';
 
-    maintainers = [ stdenv.lib.maintainers.peti ];
+    maintainers = [ stdenv.lib.maintainers.simons ];
     platforms = stdenv.lib.platforms.gnu;
   };
 }

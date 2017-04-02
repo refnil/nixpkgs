@@ -1,27 +1,31 @@
-{ stdenv, fetchgit, cmake, qtbase, qttools }:
+{ stdenv, fetchurl, qt, cmake }:
 
 stdenv.mkDerivation rec {
-  name = "speedcrunch-${version}";
-  version = "0.12.0";
+  name = "speedcrunch-0.11-alpha";
 
-  src = fetchgit {
-    # the tagging is not standard, so you probably need to check this when updating
-    rev = "refs/tags/release-${version}";
-    url = "https://bitbucket.org/heldercorreia/speedcrunch";
-    sha256 = "0vh7cd1915bjqzkdp3sk25ngy8cq624mkh8c53c5bnzk357kb0fk";
+  src = fetchurl {
+    url = "http://speedcrunch.googlecode.com/files/${name}.tar.gz";
+    sha256 = "c6d6328e0c018cd8b98a0e86fb6c49fedbab5dcc831b47fbbc1537730ff80882";
   };
 
-  buildInputs = [ qtbase qttools ];
+  patches = [./speedcrunch-0.11-alpha-dso_linking.patch];
 
-  nativeBuildInputs = [ cmake ];
+  buildInputs = [cmake qt];
+
+  dontUseCmakeBuildDir = true;
+
+  cmakeDir = "../src";
 
   preConfigure = ''
-    cd src
+    mkdir -p build
+    cd build
   '';
 
-  meta = with stdenv.lib; {
-    homepage    = http://speedcrunch.org;
-    license     = licenses.gpl2Plus;
+  buildFlags = "VERBOSE=1";
+
+  meta = {
+    homepage    = "http://speedcrunch.digitalfanatics.org";
+    license     = "GPLv2+";
     description = "A fast power user calculator";
     longDescription = ''
       SpeedCrunch is a fast, high precision and powerful desktop calculator.
@@ -29,8 +33,6 @@ stdenv.mkDerivation rec {
       precisions, unlimited variable storage, intelligent automatic completion
       full keyboard-friendly and more than 15 built-in math function.
     '';
-    maintainers = with maintainers; [ gebner ];
-    platforms = platforms.all;
-    broken = builtins.compareVersions qtbase.version "5.8.0" >= 0;
   };
+
 }

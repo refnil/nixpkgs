@@ -1,9 +1,7 @@
-{ stdenv, fetchurl, libnice, pkgconfig, python2Packages, gstreamer, gst-plugins-base
-, gst-python, gupnp_igd }:
+{ stdenv, fetchurl, libnice, pkgconfig, python, gstreamer, gst_plugins_base
+, pygobject, gst_python, gupnp_igd }:
 
-let
-  inherit (python2Packages) python pygobject2;
-in stdenv.mkDerivation rec {
+stdenv.mkDerivation rec {
   name = "farsight2-0.0.31";
   
   src = fetchurl {
@@ -11,15 +9,14 @@ in stdenv.mkDerivation rec {
     sha256 = "16qz4x14rdycm4nrn5wx6k2y22fzrazsbmihrxdwafx9cyf23kjm";
   };
 
-  buildInputs = [ libnice python pygobject2 gst-python gupnp_igd ];
+  buildInputs = [ libnice python pygobject gst_python gupnp_igd ];
 
   nativeBuildInputs = [ pkgconfig ];
 
-  propagatedBuildInputs = [ gstreamer gst-plugins-base ];
+  propagatedBuildInputs = [ gstreamer gst_plugins_base ];
 
   meta = {
     homepage = http://farsight.freedesktop.org/wiki/;
     description = "Audio/Video Communications Framework";
-    platforms = stdenv.lib.platforms.linux;
   };
 }

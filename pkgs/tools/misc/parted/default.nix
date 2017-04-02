@@ -1,26 +1,20 @@
-{ stdenv, fetchurl, devicemapper, libuuid, gettext, readline, perl, python2
+{ stdenv, fetchurl, devicemapper, libuuid, gettext, readline
 , utillinux, check, enableStatic ? false, hurd ? null }:
 
 stdenv.mkDerivation rec {
-  name = "parted-3.2";
+  name = "parted-3.1";
 
   src = fetchurl {
     url = "mirror://gnu/parted/${name}.tar.xz";
-    sha256 = "1r3qpg3bhz37mgvp9chsaa3k0csby3vayfvz8ggsqz194af5i2w5";
+    sha256 = "05fa4m1bky9d13hqv91jlnngzlyn7y4rnnyq6d86w0dg3vww372y";
   };
-
-  patches = stdenv.lib.optional doCheck ./gpt-unicode-test-fix.patch;
-
-  postPatch = stdenv.lib.optionalString doCheck ''
-    patchShebangs tests
-  '';
 
   buildInputs = [ libuuid ]
     ++ stdenv.lib.optional (readline != null) readline
     ++ stdenv.lib.optional (gettext != null) gettext
     ++ stdenv.lib.optional (devicemapper != null) devicemapper
     ++ stdenv.lib.optional (hurd != null) hurd
-    ++ stdenv.lib.optionals doCheck [ check perl python2 ];
+    ++ stdenv.lib.optional doCheck check;
 
   configureFlags =
        (if (readline != null)
@@ -29,8 +23,6 @@ stdenv.mkDerivation rec {
     ++ stdenv.lib.optional (devicemapper == null) "--disable-device-mapper"
     ++ stdenv.lib.optional enableStatic "--enable-static";
 
-  # Tests were previously failing due to Hydra running builds as uid 0.
-  # That should hopefully be fixed now.
   doCheck = true;
 
   preCheck =
@@ -39,7 +31,7 @@ stdenv.mkDerivation rec {
       "export PATH=\"${utillinux}/sbin:$PATH\"";
 
   meta = {
-    description = "Create, destroy, resize, check, and copy partitions";
+    description = "GNU Parted, a tool to create, destroy, resize, check, and copy partitions";
 
     longDescription = ''
       GNU Parted is an industrial-strength package for creating, destroying,
@@ -56,6 +48,7 @@ stdenv.mkDerivation rec {
 
     maintainers = [
       # Add your name here!
+      stdenv.lib.maintainers.ludo
     ];
 
     # GNU Parted requires libuuid, which is part of util-linux-ng.

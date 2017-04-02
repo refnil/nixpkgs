@@ -1,18 +1,16 @@
 { stdenv, fetchurl, perl, gettext, LocaleGettext, makeWrapper }:
 
 stdenv.mkDerivation rec {
-  name = "help2man-1.47.4";
+  name = "help2man-1.44.1";
 
   src = fetchurl {
     url = "mirror://gnu/help2man/${name}.tar.xz";
-    sha256 = "0lvp4306f5nq08f3snffs5pp1zwv8l35z6f5g0dds51zs6bzdv6l";
+    sha256 = "1yyyfw9zrfdvslnv91bnhyqmazwx243wmkc9wdaz888rfx36ipi2";
   };
 
   buildInputs = [ makeWrapper perl gettext LocaleGettext ];
 
   doCheck = false;                                # target `check' is missing
-
-  patches = if stdenv.isCygwin then [ ./1.40.4-cygwin-nls.patch ] else null;
 
   postInstall =
     '' wrapProgram "$out/bin/help2man" \
@@ -20,8 +18,8 @@ stdenv.mkDerivation rec {
     '';
 
 
-  meta = with stdenv.lib; {
-    description = "Generate man pages from `--help' output";
+  meta = {
+    description = "GNU help2man generates man pages from `--help' output";
 
     longDescription =
       '' help2man produces simple manual pages from the ‘--help’ and
@@ -30,8 +28,8 @@ stdenv.mkDerivation rec {
 
     homepage = http://www.gnu.org/software/help2man/;
 
-    license = licenses.gpl3Plus;
-    platforms = platforms.all;
-    maintainers = with maintainers; [ pSub ];
+    license = stdenv.lib.licenses.gpl3Plus;
+    platforms = stdenv.lib.platforms.gnu;         # arbitrary choice
+    maintainers = [ stdenv.lib.maintainers.ludo ];
   };
 }

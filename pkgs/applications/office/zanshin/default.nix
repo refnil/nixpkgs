@@ -1,21 +1,18 @@
-{ stdenv, fetchurl, automoc4, cmake, perl, pkgconfig
-, kdelibs4, kdepimlibs, boost, baloo }:
+{ stdenv, fetchurl, kdelibs, kdepimlibs, boost }:
 
 stdenv.mkDerivation rec {
-  name = "zanshin-0.3.1";
+  name = "zanshin-0.2.1";
 
   src = fetchurl {
     url = "http://files.kde.org/zanshin/${name}.tar.bz2";
-    sha256 = "1ck2ncz8i816d6d1gcsdrh6agd2zri24swgz3bhn8vzbk4215yzl";
+    sha256 = "155k72vk7kw0p0x9dhlky6q017kanzcbwvp4dpf1hcbr1dsr55fx";
   };
 
-  nativeBuildInputs = [ automoc4 cmake perl pkgconfig ];
-
-  buildInputs = [ kdelibs4 kdepimlibs boost baloo ];
+  buildInputs = [ kdelibs kdepimlibs boost ];
 
   meta = {
     description = "GTD for KDE";
-    maintainers = [ ];
-    inherit (kdelibs4.meta) platforms;
+    maintainers = [ stdenv.lib.maintainers.urkud ];
+    inherit (kdelibs.meta) platforms;
   };
 }

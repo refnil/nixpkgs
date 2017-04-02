@@ -13,10 +13,6 @@ stdenv.mkDerivation {
   preConfigure = ''
     sed -i "s|/usr/|$out/|" Makefile 
   '';
-
-  preBuild = ''
-    makeFlagsArray=("CC=$CC" "REGEXDEFS=-DHAVE_REGEX_H -DPOSIX_REGEX" "LDFLAGS=")
-  '';
   
   postInstall = ''
     ln -s $out/games/fortune $out/bin/fortune
@@ -24,6 +20,5 @@ stdenv.mkDerivation {
 
   meta = {
     description = "A program that displays a pseudorandom message from a database of quotations";
-    platforms = stdenv.lib.platforms.unix;
   };
 }

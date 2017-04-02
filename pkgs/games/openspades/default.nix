@@ -1,46 +1,34 @@
-{ stdenv, lib, fetchurl, fetchFromGitHub, cmake, unzip, zip, file
-, curl, glew , mesa_noglu, SDL2, SDL2_image, zlib, freetype, imagemagick
-, openal , opusfile, libogg
-}:
+{ stdenv, fetchurl, cmake, curl, glew, makeWrapper, mesa, SDL2,
+  SDL2_image, unzip, wget, zlib, withOpenal ? true, openal ? null }:
+
+assert withOpenal -> openal != null;
 
 stdenv.mkDerivation rec {
   name = "openspades-${version}";
-  version = "0.1.1b";
-  devPakVersion = "33";
+  version = "0.0.12";
 
-  src = fetchFromGitHub {
-    owner = "yvt";
-    repo = "openspades";
-    rev = "v${version}";
-    sha256 = "1xk3il5ykxg68hvwb42kpspcxppdib7y3ysaxb8anmmcsk1m3drn";
+  src = fetchurl {
+    url = "https://github.com/yvt/openspades/archive/v${version}.tar.gz";
+    sha256 = "1aa848cck8qrp67ha9vrkzm3k24r2aiv1v4dxla6pi22rw98yxzm";
   };
 
-  nativeBuildInputs = [ cmake imagemagick unzip zip file ];
+  nativeBuildInputs = 
+    with stdenv.lib;
+    [ cmake curl glew makeWrapper mesa SDL2 SDL2_image unzip wget zlib ]
+    ++ optional withOpenal openal;
 
-  buildInputs = [
-    freetype SDL2 SDL2_image mesa_noglu zlib curl glew opusfile openal libogg
-  ];
+  cmakeFlags = [ "-DCMAKE_BUILD_TYPE=Release" "-DOPENSPADES_INSTALL_BINARY=bin" ];
 
-  cmakeFlags = [
-    "-DOPENSPADES_INSTALL_BINARY=bin"
-  ];
-
-  devPak = fetchurl {
-    url = "https://github.com/yvt/openspades-paks/releases/download/r${devPakVersion}/OpenSpadesDevPackage-r${devPakVersion}.zip";
-    sha256 = "1bd2fyn7mlxa3xnsvzj08xjzw02baimqvmnix07blfhb78rdq9q9";
-  };
-
-  postPatch = ''
-    sed -i 's,^wget .*,cp $devPak "$PAK_NAME",' Resources/downloadpak.sh
-    patchShebangs Resources
-  '';
-
-  enableParallelBuilding = true;
-
-  NIX_CFLAGS_LINK = [ "-lopenal" ];
+  # OpenAL is loaded dynamicly
+  postInstall = 
+    if withOpenal then ''
+      wrapProgram "$out/bin/openspades" \
+        --prefix LD_LIBRARY_PATH : "${openal}/lib"
+    '' 
+    else null;
 
   meta = with stdenv.lib; {
-    description = "A compatible client of Ace of Spades 0.75";
+    description = "OpenSpades is a compatible client of Ace of Spades 0.75";
     homepage    = "https://github.com/yvt/openspades/";
     license     = licenses.gpl3;
     platforms   = platforms.linux;

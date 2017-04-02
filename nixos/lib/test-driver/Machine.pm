@@ -9,7 +9,6 @@ use FileHandle;
 use Cwd;
 use File::Basename;
 use File::Path qw(make_path);
-use File::Slurp;
 
 
 my $showGraphics = defined $ENV{'DISPLAY'};
@@ -21,7 +20,7 @@ sub new {
     my ($class, $args) = @_;
 
     my $startCommand = $args->{startCommand};
-
+    
     my $name = $args->{name};
     if (!$name) {
         $startCommand =~ /run-(.*)-vm$/ if defined $startCommand;
@@ -34,15 +33,13 @@ sub new {
             "qemu-kvm -m 384 " .
             "-net nic,model=virtio \$QEMU_OPTS ";
         my $iface = $args->{hdaInterface} || "virtio";
-        $startCommand .= "-drive file=" . Cwd::abs_path($args->{hda}) . ",if=$iface,werror=report "
+        $startCommand .= "-drive file=" . Cwd::abs_path($args->{hda}) . ",if=$iface,boot=on,werror=report "
             if defined $args->{hda};
         $startCommand .= "-cdrom $args->{cdrom} "
             if defined $args->{cdrom};
-        $startCommand .= "-device piix3-usb-uhci -drive id=usbdisk,file=$args->{usb},if=none,readonly -device usb-storage,drive=usbdisk "
-            if defined $args->{usb};
-        $startCommand .= "-bios $args->{bios} "
-            if defined $args->{bios};
         $startCommand .= $args->{qemuFlags} || "";
+    } else {
+        $startCommand = Cwd::abs_path $startCommand;
     }
 
     my $tmpDir = $ENV{'TMPDIR'} || "/tmp";
@@ -169,7 +166,7 @@ sub start {
 
     eval {
         local $SIG{CHLD} = sub { die "QEMU died prematurely\n"; };
-
+        
         # Wait until QEMU connects to the monitor.
         accept($self->{monitor}, $monitorS) or die;
 
@@ -180,11 +177,11 @@ sub start {
         $self->{socket}->autoflush(1);
     };
     die "$@" if $@;
-
+    
     $self->waitForMonitorPrompt;
 
     $self->log("QEMU running (pid $pid)");
-
+    
     $self->{pid} = $pid;
     $self->{booted} = 1;
 }
@@ -239,7 +236,7 @@ sub connect {
         alarm 300;
         readline $self->{socket} or die "the VM quit before connecting\n";
         alarm 0;
-
+        
         $self->log("connected to guest root shell");
         $self->{connected} = 1;
 
@@ -268,7 +265,7 @@ sub isUp {
 
 sub execute_ {
     my ($self, $command) = @_;
-
+    
     $self->connect;
 
     print { $self->{socket} } ("( $command ); echo '|!=EOF' \$?\n");
@@ -381,19 +378,6 @@ sub waitForUnit {
             my $info = $self->getUnitInfo($unit);
             my $state = $info->{ActiveState};
             die "unit ‘$unit’ reached state ‘$state’\n" if $state eq "failed";
-            if ($state eq "inactive") {
-                # If there are no pending jobs, then assume this unit
-                # will never reach active state.
-                my ($status, $jobs) = $self->execute("systemctl list-jobs --full 2>&1");
-                if ($jobs =~ /No jobs/) {  # FIXME: fragile
-                    # Handle the case where the unit may have started
-                    # between the previous getUnitInfo() and
-                    # list-jobs.
-                    my $info2 = $self->getUnitInfo($unit);
-                    die "unit ‘$unit’ is inactive and there are no pending jobs\n"
-                        if $info2->{ActiveState} eq $state;
-                }
-            }
             return 1 if $state eq "active";
         };
     });
@@ -464,7 +448,7 @@ sub shutdown {
 sub crash {
     my ($self) = @_;
     return unless $self->{booted};
-
+    
     $self->log("forced crash");
 
     $self->sendMonitorCommand("quit");
@@ -498,73 +482,10 @@ sub screenshot {
     my $name = basename($filename);
     $self->nest("making screenshot ‘$name’", sub {
         $self->sendMonitorCommand("screendump $tmp");
-        system("pnmtopng $tmp > ${filename}") == 0
+        system("convert $tmp ${filename}") == 0
             or die "cannot convert screenshot";
         unlink $tmp;
     }, { image => $name } );
-}
-
-# Get the text of TTY<n>
-sub getTTYText {
-    my ($self, $tty) = @_;
-
-    my ($status, $out) = $self->execute("fold -w\$(stty -F /dev/tty${tty} size | awk '{print \$2}') /dev/vcs${tty}");
-    return $out;
-}
-
-# Wait until TTY<n>'s text matches a particular regular expression
-sub waitUntilTTYMatches {
-    my ($self, $tty, $regexp) = @_;
-
-    $self->nest("waiting for $regexp to appear on tty $tty", sub {
-        retry sub {
-            return 1 if $self->getTTYText($tty) =~ /$regexp/;
-        }
-    });
-}
-
-# Debugging: Dump the contents of the TTY<n>
-sub dumpTTYContents {
-    my ($self, $tty) = @_;
-
-    $self->execute("fold -w 80 /dev/vcs${tty} | systemd-cat");
-}
-
-# Take a screenshot and return the result as text using optical character
-# recognition.
-sub getScreenText {
-    my ($self) = @_;
-
-    system("command -v tesseract &> /dev/null") == 0
-        or die "getScreenText used but enableOCR is false";
-
-    my $text;
-    $self->nest("performing optical character recognition", sub {
-        my $tmpbase = Cwd::abs_path(".")."/ocr";
-        my $tmpin = $tmpbase."in.ppm";
-        my $tmpout = "$tmpbase.ppm";
-
-        $self->sendMonitorCommand("screendump $tmpin");
-        system("ppmtopgm $tmpin | pamscale 4 -filter=lanczos > $tmpout") == 0
-            or die "cannot scale screenshot";
-        unlink $tmpin;
-        system("tesseract $tmpout $tmpbase") == 0 or die "OCR failed";
-        unlink $tmpout;
-        $text = read_file("$tmpbase.txt");
-        unlink "$tmpbase.txt";
-    });
-    return $text;
-}
-
-
-# Wait until a specific regexp matches the textual contents of the screen.
-sub waitForText {
-    my ($self, $regexp) = @_;
-    $self->nest("waiting for $regexp to appear on the screen", sub {
-        retry sub {
-            return 1 if $self->getScreenText =~ /$regexp/;
-        }
-    });
 }
 
 
@@ -576,7 +497,7 @@ sub waitForX {
         retry sub {
             my ($status, $out) = $self->execute("journalctl -b SYSLOG_IDENTIFIER=systemd | grep 'session opened'");
             return 0 if $status != 0;
-            ($status, $out) = $self->execute("[ -e /tmp/.X11-unix/X0 ]");
+            ($status, $out) = $self->execute("xwininfo -root > /dev/null 2>&1");
             return 1 if $status == 0;
         }
     });
@@ -607,42 +528,15 @@ sub waitForWindow {
 sub copyFileFromHost {
     my ($self, $from, $to) = @_;
     my $s = `cat $from` or die;
-    $s =~ s/'/'\\''/g;
-    $self->mustSucceed("echo '$s' > $to");
+    $self->mustSucceed("echo '$s' > $to"); # !!! escaping
 }
-
-
-my %charToKey = (
-    '!' => "shift-0x02",
-    '@' => "shift-0x03",
-    '#' => "shift-0x04",
-    '$' => "shift-0x05",
-    '%' => "shift-0x06",
-    '^' => "shift-0x07",
-    '&' => "shift-0x08",
-    '*' => "shift-0x09",
-    '(' => "shift-0x0A",
-    ')' => "shift-0x0B",
-    '-' => "0x0C", '_' => "shift-0x0C",
-    '=' => "0x0D", '+' => "shift-0x0D",
-    '[' => "0x1A", '{' => "shift-0x1A",
-    ']' => "0x1B", '}' => "shift-0x1B",
-    ';' => "0x27", ':' => "shift-0x27",
-   '\'' => "0x28", '"' => "shift-0x28",
-    '`' => "0x29", '~' => "shift-0x29",
-   '\\' => "0x2B", '|' => "shift-0x2B",
-    ',' => "0x33", '<' => "shift-0x33",
-    '.' => "0x34", '>' => "shift-0x34",
-    '/' => "0x35", '?' => "shift-0x35",
-    ' ' => "spc",
-   "\n" => "ret",
-);
 
 
 sub sendKeys {
     my ($self, @keys) = @_;
     foreach my $key (@keys) {
-        $key = $charToKey{$key} if exists $charToKey{$key};
+        $key = "spc" if $key eq " ";
+        $key = "ret" if $key eq "\n";
         $self->sendMonitorCommand("sendkey $key");
     }
 }

@@ -1,20 +1,19 @@
 { stdenv, fetchurl, bash, autoconf, automake, libtool, pkgconfig, libcangjie
-, sqlite, python, cython
+, sqlite, python3, cython3
 }:
 
 stdenv.mkDerivation rec {
-  name = "${python.libPrefix}-pycangjie-${version}";
-  version = "1.3_rev_${rev}";
-  rev = "361bb413203fd43bab624d98edf6f7d20ce6bfd3";
+  name = "pycangjie-${version}";
+  version = "1.0";
 
   src = fetchurl {
     name = "${name}.tar.gz";
-    url = "https://github.com/Cangjians/pycangjie/archive/${rev}.tar.gz";
-    sha256 = "12yi09nyffmn4va7lzk4irw349qzlbxgsnb89dh15cnw0xmrin05";
+    url = "https://github.com/Cangjians/pycangjie/archive/v${version}.tar.gz";
+    sha256 = "1wx0m0chcpgxhj6cdxrwyi8hq05xlbap1ifs0wzb6nkglir0sb4j";
   };
 
   buildInputs = [
-    autoconf automake libtool pkgconfig libcangjie sqlite python cython
+    autoconf automake libtool pkgconfig libcangjie sqlite python3 cython3
   ];
 
   preConfigure = ''

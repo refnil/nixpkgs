@@ -54,8 +54,4 @@ stdenv.mkDerivation {
     mkdir -p $out/bin
     cp tools/{envcrc,mkimage} $out/bin
   '';
-
-  meta = {
-    platforms = [ "armv5tel-linux" ];
-  };
 }

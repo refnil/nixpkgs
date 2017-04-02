@@ -3,11 +3,11 @@ let
   s = # Generated upstream information
   rec {
     baseName="libodfgen";
-    version="0.1.6";
+    version="0.1.1";
     name="${baseName}-${version}";
-    hash="1sdr42f0bigip14zhs51m0zdwwzzl1mwmk882l4khpph8jmi1ch3";
-    url="mirror://sourceforge/project/libwpd/libodfgen/libodfgen-0.1.6/libodfgen-0.1.6.tar.xz";
-    sha256="1sdr42f0bigip14zhs51m0zdwwzzl1mwmk882l4khpph8jmi1ch3";
+    hash="1p335m2l19c7glsss30rrm5dxfcyajk9fvj7rsclgn0kmb4y48cm";
+    url="mirror://sourceforge/project/libwpd/libodfgen/libodfgen-0.1.1/libodfgen-0.1.1.tar.xz";
+    sha256="1p335m2l19c7glsss30rrm5dxfcyajk9fvj7rsclgn0kmb4y48cm";
   };
   buildInputs = [
     boost pkgconfig cppunit zlib libwpg libwpd librevenge

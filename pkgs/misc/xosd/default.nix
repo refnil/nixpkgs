@@ -1,21 +1,19 @@
 { stdenv, fetchurl, libX11, libXext, libXt, xextproto, xproto }:
 
 stdenv.mkDerivation rec {
-  name = "xosd-${version}";
-  version = "2.2.14";
+  pname = "xosd";
+  version = "2.2.12";
+
+  name = "${pname}-${version}";
 
   src = fetchurl {
-    url = "mirror://sourceforge/libxosd/${name}.tar.gz";
-    sha256 = "025m7ha89q29swkc7s38knnbn8ysl24g2h5s7imfxflm91psj7sg";
+    url = "http://ignavus.net/${name}.tar.gz";
+    sha256 = "7d4ae8e1a6dbd7743af3b1cdc85144e2de26abe6daec25f4bd74bf311774df08";
   };
 
   buildInputs = [ libX11 libXext libXt xextproto xproto ];
 
-  meta = with stdenv.lib; {
-    description = "Displays text on your screen";
-    homepage = http://sourceforge.net/projects/libxosd;
-    license = licenses.gpl2;
-    platforms = platforms.linux;
-    maintainers = with maintainers; [ pSub ];
+  meta = {
+    description = "XOSD displays text on your screen";
   };
 }

@@ -18,7 +18,6 @@ stdenv.mkDerivation {
 
   meta = {
     description = "Phonetic font for TeX";
-    platforms = stdenv.lib.platforms.unix;
   };
 }
 

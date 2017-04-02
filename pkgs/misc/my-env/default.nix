@@ -41,7 +41,7 @@
       # this is the example we will be using
       nixEnv = complicatedMyEnv {
         name = "nix";
-        buildInputs = [ libtool stdenv perl curl bzip2 openssl db5 autoconf automake zlib ];
+        buildInputs = [ libtool stdenv perl curl bzip2 openssl db45 autoconf automake zlib ];
       };
     };
   }
@@ -58,7 +58,7 @@
 
 { mkDerivation, substituteAll, pkgs }:
     { stdenv ? pkgs.stdenv, name, buildInputs ? []
-    , propagatedBuildInputs ? [], gcc ? stdenv.cc, cTags ? [], extraCmds ? ""
+    , propagatedBuildInputs ? [], gcc ? stdenv.gcc, cTags ? [], extraCmds ? ""
     , cleanupCmds ? "", shell ? "${pkgs.bashInteractive}/bin/bash --norc"}:
 
 mkDerivation {
@@ -72,23 +72,21 @@ mkDerivation {
   phases = [ "buildPhase" "fixupPhase" ];
   setupNew = substituteAll {
     src = ../../stdenv/generic/setup.sh;
+    initialPath= (import ../../stdenv/common-path.nix) { inherit pkgs; };
     inherit gcc;
   };
 
-  buildPhase = let
-    initialPath = import ../../stdenv/common-path.nix { inherit pkgs; };
-  in ''
+  buildPhase = ''
     set -x
     mkdir -p "$out/dev-envs" "$out/nix-support" "$out/bin"
     s="$out/nix-support/setup-new-modified"
+    cp "$setupNew" "$s"
     # shut some warning up.., do not use set -e
     sed -e 's@set -e@@' \
         -e 's@assertEnvExists\s\+NIX_STORE@:@' \
         -e 's@trap.*@@' \
-        -e '1i initialPath="${toString initialPath}"' \
-        "$setupNew" > "$s"
+        -i "$s"
     cat >> "$out/dev-envs/''${name/env-/}" << EOF
-      defaultNativeBuildInputs="$defaultNativeBuildInputs"
       nativeBuildInputs="$nativeBuildInputs"
       propagatedBuildInputs="$propagatedBuildInputs2"
       # the setup-new script wants to write some data to a temp file.. so just let it do that and tidy up afterwards
@@ -133,7 +131,7 @@ mkDerivation {
         echo "\$tmp/script";
         source "\$tmp/script";
       fi
-      ${pkgs.coreutils}/bin/rm -fr "\$tmp"
+      rm -fr "\$tmp"
       ${extraCmds}
 
       nix_cleanup() {
@@ -142,7 +140,7 @@ mkDerivation {
       }
 
       export PATH
-      echo $name loaded >&2
+      echo $name loaded
 
       trap nix_cleanup EXIT
     EOF

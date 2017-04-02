@@ -1,22 +1,28 @@
-{ stdenv, fetchurl }:
+x@{stdenv, fetchurl, builderDefsPackage, ...}:
+builderDefsPackage
+(a :  
+let 
+  s = import ./src-for-default.nix;
+  helperArgNames = ["stdenv" "fetchurl" "builderDefsPackage"] ++ [];
+  buildInputs = map (n: builtins.getAttr n x)
+    (builtins.attrNames (builtins.removeAttrs x helperArgNames));
+in
+rec {
+  src = a.fetchUrlFromSrcInfo s;
 
-stdenv.mkDerivation rec {
-  name    = "gambit-${version}";
-  version = "4.8.5";
-  devver  = "4_8_5";
+  inherit (s) name;
+  inherit buildInputs;
+  configureFlags = ["--enable-shared"];
 
-  src = fetchurl {
-    url    = "http://www.iro.umontreal.ca/~gambit/download/gambit/v4.8/source/gambit-v${devver}-devel.tgz";
-    sha256 = "02b5bm06k2qr0lvdwwsl0ygxs7n8410rrkq95picn4s02kxszqnq";
-  };
-
-  configureFlags = [ "--enable-shared" "--enable-single-host" ];
-
+  /* doConfigure should be removed if not needed */
+  phaseNames = ["doConfigure" "doMakeInstall"];
+      
   meta = {
-    description = "Optimizing Scheme to C compiler";
-    homepage    = "http://gambitscheme.org";
-    license     = stdenv.lib.licenses.lgpl2;
-    platforms   = stdenv.lib.platforms.linux;
-    maintainers = with stdenv.lib.maintainers; [ thoughtpolice raskin ];
+    description = "Gambit Scheme to C compiler";
+    maintainers = [
+      a.lib.maintainers.raskin
+    ];
+    platforms = with a.lib.platforms;
+      linux ++ freebsd;
   };
-}
+}) x

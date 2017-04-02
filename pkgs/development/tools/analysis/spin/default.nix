@@ -1,43 +1,25 @@
-{ stdenv, lib, fetchurl, makeWrapper, yacc, gcc
-, withISpin ? true, tk, swarm, graphviz }:
+{stdenv, fetchurl, yacc }:
 
-let
-  binPath = stdenv.lib.makeBinPath [ gcc ];
-  ibinPath = stdenv.lib.makeBinPath [ gcc tk swarm graphviz tk ];
-
-in stdenv.mkDerivation rec {
+stdenv.mkDerivation rec {
+  version = "6.3.2";
   name = "spin-${version}";
-  version = "6.4.5";
-  url-version = stdenv.lib.replaceChars ["."] [""] version;
 
   src = fetchurl {
-    # The homepage is behind CloudFlare anti-DDoS protection, which blocks cURL.
-    # Dropbox mirror from developers:
-    # https://www.dropbox.com/sh/fgzipzp4wpo3qc1/AADZPqS4aoR-pjNF6OQXRLQHa
-    url = "https://www.dropbox.com/sh/fgzipzp4wpo3qc1/AAANRpxsSyWC7iHZB-XgBwJFa/spin645.tar.gz?raw=1";
-    sha256 = "0x8qnwm2xa8f176c52mzpvnfzglxs6xgig7bcgvrvkb3xf114224";
+    url = http://spinroot.com/spin/Src/spin632.tar.gz;
+    curlOpts = "--user-agent 'Mozilla/5.0'";
+    sha256 = "1llsv1mnwr99hvsm052i3wwpa3dm5j12s5p10hizi6i9hlp00b5y";
   };
 
-  nativeBuildInputs = [ makeWrapper ];
   buildInputs = [ yacc ];
 
   sourceRoot = "Spin/Src${version}";
 
-  installPhase = ''
-    install -Dm755 spin $out/bin/spin
-    wrapProgram $out/bin/spin \
-      --prefix PATH : ${binPath}
-  '' + lib.optionalString withISpin ''
-    install -Dm755 ../iSpin/ispin.tcl $out/bin/ispin
-    wrapProgram $out/bin/ispin \
-      --prefix PATH ':' "$out/bin:${ibinPath}"
-  '';
+  installPhase = "install -D spin $out/bin/spin";
 
-  meta = with stdenv.lib; {
+  meta = {
     description = "Formal verification tool for distributed software systems";
     homepage = http://spinroot.com/;
-    license = licenses.free;
-    platforms = platforms.linux;
-    maintainers = with maintainers; [ mornfall pSub ];
+    license = "free";
+    maintainers = stdenv.lib.maintainers.mornfall;
   };
 }

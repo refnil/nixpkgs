@@ -1,35 +1,45 @@
-{ stdenv, cmake, fetchurl, perl, python, flex, bison, qt4, CoreServices, libiconv }:
+{ stdenv, fetchurl, perl, python, flex, bison, qt4 }:
 
-stdenv.mkDerivation rec {
-
-  name = "doxygen-1.8.11";
+let
+  name = "doxygen-1.8.6";
+in
+stdenv.mkDerivation {
+  inherit name;
 
   src = fetchurl {
     url = "ftp://ftp.stack.nl/pub/users/dimitri/${name}.src.tar.gz";
-    sha256 = "0ja02pm3fpfhc5dkry00kq8mn141cqvdqqpmms373ncbwi38pl35";
+    sha256 = "0pskjlkbj76m9ka7zi66yj8ffjcv821izv3qxqyyphf0y0jqcwba";
   };
 
-  nativeBuildInputs = [ cmake ];
+  patches = [ ./tmake.patch ];
 
   buildInputs =
     [ perl python flex bison ]
-    ++ stdenv.lib.optional (qt4 != null) qt4
-    ++ stdenv.lib.optional stdenv.isSunOS libiconv
-    ++ stdenv.lib.optionals stdenv.isDarwin [ CoreServices libiconv ];
+    ++ stdenv.lib.optional (qt4 != null) qt4;
 
-  cmakeFlags =
-    [ "-DICONV_INCLUDE_DIR=${libiconv}/include" ] ++
-    stdenv.lib.optional (qt4 != null) "-Dbuild_wizard=YES";
+  prefixKey = "--prefix ";
 
-  NIX_CFLAGS_COMPILE =
-    stdenv.lib.optional stdenv.isDarwin "-mmacosx-version-min=10.9";
+  configureFlags =
+    [ "--dot dot" ]
+    ++ stdenv.lib.optional (qt4 != null) "--with-doxywizard";
+
+  preConfigure =
+    ''
+      patchShebangs .
+    '' + stdenv.lib.optionalString (qt4 != null)
+    ''
+      echo "using QTDIR=${qt4}..."
+      export QTDIR=${qt4}
+    '';
+
+  makeFlags = "MAN1DIR=share/man/man1";
 
   enableParallelBuilding = true;
 
   meta = {
     license = stdenv.lib.licenses.gpl2Plus;
     homepage = "http://doxygen.org/";
-    description = "Source code documentation generator tool";
+    description = "Doxygen, a source code documentation generator tool";
 
     longDescription = ''
       Doxygen is a documentation system for C++, C, Java, Objective-C,
@@ -39,6 +49,7 @@ stdenv.mkDerivation rec {
       manual (in LaTeX) from a set of documented source files.
     '';
 
+    maintainers = [stdenv.lib.maintainers.simons];
     platforms = if qt4 != null then stdenv.lib.platforms.linux else stdenv.lib.platforms.unix;
   };
 }

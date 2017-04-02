@@ -1,27 +1,26 @@
-{ stdenv, fetchurl, bzip2 }:
+{stdenv, fetchurl, bzip2}:
 
-let major = "1.1";
-    version = "${major}.13";
+let name = "pbzip2";
+    version = "1.0.5";
 in
-stdenv.mkDerivation rec {
-  name = "pbzip2-${version}";
+stdenv.mkDerivation {
+  name = name + "-" + version;
 
   src = fetchurl {
-    url = "https://launchpad.net/pbzip2/${major}/${version}/+download/${name}.tar.gz";
-    sha256 = "1rnvgcdixjzbrmcr1nv9b6ccrjfrhryaj7jwz28yxxv6lam3xlcg";
+    url = "http://compression.ca/${name}/${name}-${version}.tar.gz";
+    sha256 = "0vc9r6b2djhpwslavi2ykv6lk8pwf4lqb107lmapw2q8d658qpa1";
   };
 
   buildInputs = [ bzip2 ];
+  installPhase = ''
+      make install PREFIX=$out
+  '';
 
-  preBuild = "substituteInPlace Makefile --replace g++ c++";
-
-  installFlags = "PREFIX=$(out)";
-
-  meta = with stdenv.lib; {
+  meta = {
     homepage = http://compression.ca/pbzip2/;
     description = "A parallel implementation of bzip2 for multi-core machines";
-    license = licenses.bsd2;
-    maintainers = with maintainers; [viric];
-    platforms = platforms.unix;
+    license = "free";
+    maintainers = with stdenv.lib.maintainers; [viric];
+    platforms = with stdenv.lib.platforms; linux;
   };
 }

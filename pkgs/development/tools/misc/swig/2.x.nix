@@ -1,29 +1,14 @@
-{ lib, stdenv, fetchFromGitHub, autoconf, automake, libtool, bison, pcre }:
+{ stdenv, fetchurl, pcre }:
 
 stdenv.mkDerivation rec {
-  name = "swig-${version}";
-  version = "2.0.12";
+  name = "swig-2.0.11";
 
-  src = fetchFromGitHub {
-    owner = "swig";
-    repo = "swig";
-    rev = "rel-${version}";
-    sha256 = "0khm9gh5pczfcihr0pbicaicc4v9kjm5ip2alvkhmbb3ga6njkcm";
+  src = fetchurl {
+    url = "mirror://sourceforge/swig/${name}.tar.gz";
+    sha256 = "0kj21b6syp62vx68r1j6azv9033kng68pxm1k79pm4skkzr0ny33";
   };
 
-  nativeBuildInputs = [ autoconf automake libtool bison ];
   buildInputs = [ pcre ];
-
-  configureFlags = "--without-tcl";
-
-  postPatch = ''
-    # Disable ccache documentation as it need yodl
-    sed -i '/man1/d' CCache/Makefile.in
-  '';
-
-  preConfigure = ''
-    ./autogen.sh
-  '';
 
   meta = {
     description = "SWIG, an interface compiler that connects C/C++ code to higher-level languages";
@@ -43,8 +28,8 @@ stdenv.mkDerivation rec {
     # Licensing is a mess: http://www.swig.org/Release/LICENSE .
     license = "BSD-style";
 
-    platforms = lib.platforms.linux ++ lib.platforms.darwin;
+    platforms = stdenv.lib.platforms.linux;
 
-    maintainers = [ ];
+    maintainers = with stdenv.lib.maintainers; [ urkud ];
   };
 }

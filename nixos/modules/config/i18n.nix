@@ -41,33 +41,14 @@ in
         '';
       };
 
-      consolePackages = mkOption {
-        type = types.listOf types.package;
-        default = with pkgs.kbdKeymaps; [ dvp neo ];
-        defaultText = ''with pkgs.kbdKeymaps; [ dvp neo ]'';
-        description = ''
-          List of additional packages that provide console fonts, keymaps and
-          other resources.
-        '';
-      };
-
       consoleFont = mkOption {
         type = types.str;
-        default = "Lat2-Terminus16";
+        default = "lat9w-16";
         example = "LatArCyrHeb-16";
         description = ''
           The font used for the virtual consoles.  Leave empty to use
           whatever the <command>setfont</command> program considers the
           default font.
-        '';
-      };
-
-      consoleUseXkbConfig = mkOption {
-        type = types.bool;
-        default = false;
-        description = ''
-          If set, configure the console keymap from the xserver keyboard
-          settings.
         '';
       };
 
@@ -84,23 +65,6 @@ in
         '';
       };
 
-      consoleColors = mkOption {
-        type = types.listOf types.str;
-        default = [];
-        example = [
-          "002b36" "dc322f" "859900" "b58900"
-          "268bd2" "d33682" "2aa198" "eee8d5"
-          "002b36" "cb4b16" "586e75" "657b83"
-          "839496" "6c71c4" "93a1a1" "fdf6e3"
-        ];
-        description = ''
-          The 16 colors palette used by the virtual consoles.
-          Leave empty to use the default colors.
-          Colors must be in hexadecimal format and listed in
-          order from color 0 to color 15.
-        '';
-      };
-
     };
 
   };
@@ -110,24 +74,14 @@ in
 
   config = {
 
-    i18n.consoleKeyMap = with config.services.xserver;
-      mkIf config.i18n.consoleUseXkbConfig
-        (pkgs.runCommand "xkb-console-keymap" { preferLocalBuild = true; } ''
-          '${pkgs.ckbcomp}/bin/ckbcomp' -model '${xkbModel}' -layout '${layout}' \
-            -option '${xkbOptions}' -variant '${xkbVariant}' > "$out"
-        '');
-
-    environment.systemPackages =
-      optional (config.i18n.supportedLocales != []) glibcLocales;
+    environment.systemPackages = [ glibcLocales ];
 
     environment.sessionVariables =
       { LANG = config.i18n.defaultLocale;
         LOCALE_ARCHIVE = "/run/current-system/sw/lib/locale/locale-archive";
       };
 
-    systemd.globalEnvironment = mkIf (config.i18n.supportedLocales != []) {
-      LOCALE_ARCHIVE = "${glibcLocales}/lib/locale/locale-archive";
-    };
+    systemd.globalEnvironment.LOCALE_ARCHIVE = "${glibcLocales}/lib/locale/locale-archive";
 
     # ‘/etc/locale.conf’ is used by systemd.
     environment.etc = singleton

@@ -1,10 +1,8 @@
-{ stdenv, fetchurl, python, pkgconfig, gtk2, pygobject2, pycairo
-, buildPythonPackage, libglade ? null, isPy3k }:
+{ stdenv, fetchurl, python, pkgconfig, gtk, pygobject, pycairo
+, buildPythonPackage, libglade ? null }:
 
 buildPythonPackage rec {
   name = "pygtk-2.24.0";
-
-  disabled = isPy3k;
 
   src = fetchurl {
     url = "mirror://gnome/sources/pygtk/2.24/${name}.tar.bz2";
@@ -14,13 +12,11 @@ buildPythonPackage rec {
   buildInputs = [ pkgconfig ]
     ++ stdenv.lib.optional (libglade != null) libglade;
 
-  propagatedBuildInputs = [ gtk2 pygobject2 pycairo ];
+  propagatedBuildInputs = [ gtk pygobject pycairo ];
 
   configurePhase = "configurePhase";
 
   buildPhase = "buildPhase";
-
-  NIX_CFLAGS_COMPILE = stdenv.lib.optionalString stdenv.isDarwin "-ObjC";
 
   installPhase = "installPhase";
 
@@ -45,8 +41,8 @@ buildPythonPackage rec {
 
   postInstall = ''
     rm $out/bin/pygtk-codegen-2.0
-    ln -s ${pygobject2}/bin/pygobject-codegen-2.0  $out/bin/pygtk-codegen-2.0
-    ln -s ${pygobject2}/lib/${python.libPrefix}/site-packages/pygobject-${pygobject2.version}.pth \
+    ln -s ${pygobject}/bin/pygobject-codegen-2.0  $out/bin/pygtk-codegen-2.0
+    ln -s ${pygobject}/lib/${python.libPrefix}/site-packages/${pygobject.name}.pth \
                   $out/lib/${python.libPrefix}/site-packages/${name}.pth
   '';
 }

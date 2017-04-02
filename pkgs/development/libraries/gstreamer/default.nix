@@ -1,9 +1,7 @@
-{ callPackage, libva-full }:
+{ callPackage }:
 
 rec {
   gstreamer = callPackage ./core { };
-
-  gstreamermm = callPackage ./gstreamermm { };
 
   gst-plugins-base = callPackage ./base { inherit gstreamer; };
 
@@ -15,18 +13,9 @@ rec {
 
   gst-libav = callPackage ./libav { inherit gst-plugins-base; };
 
+  gst-python = callPackage ./python { inherit gst-plugins-base gstreamer; };
+
   gnonlin = callPackage ./gnonlin { inherit gst-plugins-base; };
 
-  # TODO: gnonlin is deprecated in gst-editing-services, better switch to nle
-  # (Non Linear Engine).
   gst-editing-services = callPackage ./ges { inherit gnonlin; };
-
-  gst-vaapi = callPackage ./vaapi {
-    inherit gst-plugins-base gstreamer gst-plugins-bad;
-    libva = libva-full; # looks also for libva-{x11,wayland}
-  };
-
-  gst-validate = callPackage ./validate { inherit gst-plugins-base; };
-
-  # note: gst-python is in ./python/default.nix - called under pythonPackages
 }

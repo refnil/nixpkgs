@@ -1,27 +1,22 @@
-{ stdenv, fetchurl, perl, expat, xlibsWrapper, freetype }:
+{ stdenv, fetchurl, perl, expat, x11, freetype }:
 
-# !!! assert freetype == xorg.freetype
+# !!! assert freetype == xlibs.freetype
 
-stdenv.mkDerivation rec {
+stdenv.mkDerivation {
   name = "zoom-1.1.5";
   
   src = fetchurl {
-    url = "http://www.logicalshift.co.uk/unix/zoom/${name}.tar.gz";
+    url = http://www.logicalshift.co.uk/unix/zoom/zoom-1.1.5.tar.gz;
     sha256 = "1g6van7f7sg3zfcz80mncnnbccyg2hnm0hq4x558vpsm0lf7z5pj";
   };
   
-  buildInputs = [ perl expat xlibsWrapper freetype ];
+  buildInputs = [ perl expat x11 freetype ];
   
-  NIX_CFLAGS_COMPILE = [
-    # Zoom doesn't add the right directory in the include path.
-    "-I" (freetype + "/include/freetype2")
-
-    # for gcc5; c11 inline semantics breaks the build
-    "-fgnu89-inline"
-  ];
+  # Zoom doesn't add the right directory in the include path.
+  CFLAGS = [ "-I" (freetype + "/include/freetype2") ];
 
   meta = with stdenv.lib; {
-    description = "Player for Z-Code, TADS and HUGO stories or games";
+    description = "Player for Z-Code, TADS and HUGO stories or games, usually text adventures ('interactive fiction')";
     longDescription = ''
       Zoom is a player for Z-Code, TADS and HUGO stories or games. These are
       usually text adventures ('interactive fiction'), and were first created

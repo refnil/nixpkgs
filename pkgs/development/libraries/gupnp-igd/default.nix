@@ -1,22 +1,21 @@
-{ stdenv, fetchurl, pkgconfig, glib, gupnp }:
+{ stdenv, fetchurl, pkgconfig, glib, gupnp, python, pygobject }:
  
 stdenv.mkDerivation rec {
-  name = "gupnp-igd-${version}";
-  majorVersion = "0.2";
-  version = "${majorVersion}.4";
+  name = "gupnp-igd-0.2.1";
 
   src = fetchurl {
-    url = "mirror://gnome/sources/gupnp-igd/${majorVersion}/${name}.tar.xz";
-    sha256 = "38c4a6d7718d17eac17df95a3a8c337677eda77e58978129ad3182d769c38e44";
+    url = https://launchpad.net/ubuntu/+archive/primary/+files/gupnp-igd_0.2.1.orig.tar.gz;
+    sha256 = "18ia8l24hbylz3dnbg2jf848bmbx0hjkq4fkwzzfn57z021f0fh2";
   };
 
+  propagatedBuildInputs = [ gupnp ];
+
+  buildInputs = [ glib python pygobject ];
+
   nativeBuildInputs = [ pkgconfig ];
-  propagatedBuildInputs = [ glib gupnp ];
 
   meta = {
     homepage = http://www.gupnp.org/;
-    license = stdenv.lib.licenses.lgpl21;
-    platforms = stdenv.lib.platforms.linux;
   };
 }
 

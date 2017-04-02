@@ -1,51 +1,33 @@
-{ stdenv, fetchurl, pkgconfig, perl
-, http2Support ? true, nghttp2
-, idnSupport ? false, libidn ? null
-, ldapSupport ? false, openldap ? null
+{ stdenv, fetchurl
 , zlibSupport ? false, zlib ? null
 , sslSupport ? false, openssl ? null
-, gnutlsSupport ? false, gnutls ? null
 , scpSupport ? false, libssh2 ? null
 , gssSupport ? false, gss ? null
 , c-aresSupport ? false, c-ares ? null
+, linkStatic ? false
 }:
 
-assert http2Support -> nghttp2 != null;
-assert idnSupport -> libidn != null;
-assert ldapSupport -> openldap != null;
 assert zlibSupport -> zlib != null;
 assert sslSupport -> openssl != null;
-assert !(gnutlsSupport && sslSupport);
-assert gnutlsSupport -> gnutls != null;
 assert scpSupport -> libssh2 != null;
 assert c-aresSupport -> c-ares != null;
 
 stdenv.mkDerivation rec {
-  name = "curl-7.53.1";
+  name = "curl-7.36.0";
 
   src = fetchurl {
     url = "http://curl.haxx.se/download/${name}.tar.bz2";
-    sha256 = "1s1hyndva0yp62xy96pcp4anzrvw6cl0abjajim17sbmdp00fwhw";
+    sha256 = "1kfgygvmxgaakxl2f3h3jlar23n6xmvg03ybm36pqsydkfw85ghz";
   };
-
-  outputs = [ "bin" "dev" "out" "man" "devdoc" ];
-
-  enableParallelBuilding = true;
-
-  nativeBuildInputs = [ pkgconfig perl ];
 
   # Zlib and OpenSSL must be propagated because `libcurl.la' contains
   # "-lz -lssl", which aren't necessary direct build inputs of
   # applications that use Curl.
   propagatedBuildInputs = with stdenv.lib;
-    optional http2Support nghttp2 ++
-    optional idnSupport libidn ++
-    optional ldapSupport openldap ++
     optional zlibSupport zlib ++
     optional gssSupport gss ++
     optional c-aresSupport c-ares ++
     optional sslSupport openssl ++
-    optional gnutlsSupport gnutls ++
     optional scpSupport libssh2;
 
   # for the second line see http://curl.haxx.se/mail/tracker-2014-03/0087.html
@@ -55,38 +37,34 @@ stdenv.mkDerivation rec {
   '';
 
   configureFlags = [
-      "--with-ca-fallback"
-      "--disable-manual"
-      ( if sslSupport then "--with-ssl=${openssl.dev}" else "--without-ssl" )
-      ( if gnutlsSupport then "--with-gnutls=${gnutls.dev}" else "--without-gnutls" )
-      ( if scpSupport then "--with-libssh2=${libssh2.dev}" else "--without-libssh2" )
-      ( if ldapSupport then "--enable-ldap" else "--disable-ldap" )
-      ( if ldapSupport then "--enable-ldaps" else "--disable-ldaps" )
-      ( if idnSupport then "--with-libidn=${libidn.dev}" else "--without-libidn" )
+      ( if sslSupport then "--with-ssl=${openssl}" else "--without-ssl" )
+      ( if scpSupport then "--with-libssh2=${libssh2}" else "--without-libssh2" )
     ]
     ++ stdenv.lib.optional c-aresSupport "--enable-ares=${c-ares}"
-    ++ stdenv.lib.optional gssSupport "--with-gssapi=${gss}";
+    ++ stdenv.lib.optional gssSupport "--with-gssapi=${gss}"
+    ++ stdenv.lib.optionals linkStatic [ "--enable-static" "--disable-shared" ]
+  ;
 
+  dontDisableStatic = linkStatic;
+
+  CFLAGS = if stdenv ? isDietLibC then "-DHAVE_INET_NTOA_R_2_ARGS=1" else "";
+  LDFLAGS = if linkStatic then "-static" else "";
   CXX = "g++";
   CXXCPP = "g++ -E";
 
-  postInstall = ''
-    moveToOutput bin/curl-config "$dev"
-    sed '/^dependency_libs/s|${libssh2.dev}|${libssh2.out}|' -i "$out"/lib/*.la
-  '' + stdenv.lib.optionalString gnutlsSupport ''
-    ln $out/lib/libcurl.so $out/lib/libcurl-gnutls.so
-    ln $out/lib/libcurl.so $out/lib/libcurl-gnutls.so.4
-    ln $out/lib/libcurl.so $out/lib/libcurl-gnutls.so.4.4.0
-  '';
+  # libtool hack to get a static binary. Notice that to 'configure' I passed
+  # other LDFLAGS, because it doesn't use libtool for linking in the tests.
+  makeFlags = if linkStatic then "LDFLAGS=-all-static" else "";
 
   crossAttrs = {
     # We should refer to the cross built openssl
     # For the 'urandom', maybe it should be a cross-system option
     configureFlags = [
         ( if sslSupport then "--with-ssl=${openssl.crossDrv}" else "--without-ssl" )
-        ( if gnutlsSupport then "--with-gnutls=${gnutls.crossDrv}" else "--without-gnutls" )
         "--with-random /dev/urandom"
-      ];
+      ]
+      ++ stdenv.lib.optionals linkStatic [ "--enable-static" "--disable-shared" ]
+    ;
   };
 
   passthru = {

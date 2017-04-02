@@ -1,128 +1,78 @@
-{ lib, stdenv, fetchurl, pkgconfig
+{stdenv, fetchurl, unicode ? true}:
 
-, abiVersion
-, mouseSupport ? false
-, unicode ? true
-
-, gpm
-}:
 let
-  version = if abiVersion == "5" then "5.9" else "6.0";
-  sha256 = if abiVersion == "5"
-    then "0fsn7xis81za62afan0vvm38bvgzg5wfmv1m86flqcj0nj7jjilh"
-    else "0q3jck7lna77z5r42f13c4xglc7azd19pxfrjrpgp2yf615w4lgm";
+  /* C++ bindings fail to build on `i386-pc-solaris2.11' with GCC 3.4.3:
+     <http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6395191>.
+     It seems that it could be worked around by #including <wchar.h> in the
+     right place, according to
+     <http://mail.python.org/pipermail/python-bugs-list/2006-September/035362.html>,
+     but this is left as an exercise to the reader.
+     So disable them for now.  */
+  cxx = !stdenv.isSunOS;
 in
-stdenv.mkDerivation rec {
-  name = "ncurses-${version}";
+stdenv.mkDerivation (rec {
+  name = "ncurses-5.9";
 
   src = fetchurl {
     url = "mirror://gnu/ncurses/${name}.tar.gz";
-    inherit sha256;
+    sha256 = "0fsn7xis81za62afan0vvm38bvgzg5wfmv1m86flqcj0nj7jjilh";
   };
 
-  patches = [ ./clang.patch ] ++ lib.optional (abiVersion == "5" && stdenv.cc.isGNU) ./gcc-5.patch;
+  clangPatch = fetchurl {
+    # Patch referenced from https://github.com/Homebrew/homebrew-dupes/issues/43
+    url = "http://lists.gnu.org/archive/html/bug-ncurses/2011-04/txtkWQqiQvcZe.txt";
+    sha256 = "03lrwqvb0r2qgi8hz7ayd3g26d6xilr3c92j8li3b77kdc0w0rlv";
+  };
 
-  outputs = [ "out" "dev" "man" ];
-  setOutputFlags = false; # some aren't supported
+  patches = [ ./patch-ac ] ++ stdenv.lib.optional stdenv.isDarwin clangPatch;
 
-  configureFlags = [
-    "--with-shared"
-    "--without-debug"
-    "--enable-pc-files"
-    "--enable-symlinks"
-  ] ++ lib.optional unicode "--enable-widec";
+  configureFlags = ''
+    --with-shared --without-debug --enable-pc-files --enable-symlinks
+    ${if unicode then "--enable-widec" else ""}${if cxx then "" else "--without-cxx-binding"}
+  '';
 
-  # Only the C compiler, and explicitly not C++ compiler needs this flag on solaris:
-  CFLAGS = lib.optionalString stdenv.isSunOS "-D_XOPEN_SOURCE_EXTENDED";
-
-  nativeBuildInputs = [ pkgconfig ];
-  buildInputs = lib.optional (mouseSupport && stdenv.isLinux) gpm;
-
+  # PKG_CONFIG_LIBDIR is where the *.pc files will be installed. If this
+  # directory doesn't exist, the configure script will disable installation of
+  # *.pc files. The configure script usually (on LSB distros) pick $(path of
+  # pkg-config)/../lib/pkgconfig. On NixOS that path doesn't exist and is not
+  # the place we want to put *.pc files from other packages anyway. So we must
+  # tell it explicitly where to install with PKG_CONFIG_LIBDIR.
   preConfigure = ''
-    export PKG_CONFIG_LIBDIR="$dev/lib/pkgconfig"
+    export configureFlags="$configureFlags --includedir=$out/include"
+    export PKG_CONFIG_LIBDIR="$out/lib/pkgconfig"
     mkdir -p "$PKG_CONFIG_LIBDIR"
-    configureFlagsArray+=(
-      "--libdir=$out/lib"
-      "--includedir=$dev/include"
-      "--bindir=$dev/bin"
-      "--mandir=$man/share/man"
-      "--with-pkg-config-libdir=$PKG_CONFIG_LIBDIR"
-    )
-  ''
-  + lib.optionalString stdenv.isSunOS ''
-    sed -i -e '/-D__EXTENSIONS__/ s/-D_XOPEN_SOURCE=\$cf_XOPEN_SOURCE//' \
-           -e '/CPPFLAGS="$CPPFLAGS/s/ -D_XOPEN_SOURCE_EXTENDED//' \
-        configure
-    CFLAGS=-D_XOPEN_SOURCE_EXTENDED
-  '' + lib.optionalString stdenv.isCygwin ''
-    sed -i -e 's,LIB_SUFFIX="t,LIB_SUFFIX=",' configure
   '';
 
   selfNativeBuildInput = true;
 
   enableParallelBuilding = true;
 
-  doCheck = false;
+  preBuild =
+    # On Darwin, we end up using the native `sed' during bootstrap, and it
+    # fails to run this command, which isn't needed anyway.
+    stdenv.lib.optionalString (!stdenv.isDarwin)
+    ''sed -e "s@\([[:space:]]\)sh @\1''${SHELL} @" -i */Makefile Makefile'';
 
   # When building a wide-character (Unicode) build, create backward
   # compatibility links from the the "normal" libraries to the
   # wide-character libraries (e.g. libncurses.so to libncursesw.so).
-  postFixup = ''
-    # Determine what suffixes our libraries have
-    suffix="$(awk -F': ' 'f{print $3; f=0} /default library suffix/{f=1}' config.log)"
-    libs="$(ls $dev/lib/pkgconfig | tr ' ' '\n' | sed "s,\(.*\)$suffix\.pc,\1,g")"
-    suffixes="$(echo "$suffix" | awk '{for (i=1; i < length($0); i++) {x=substr($0, i+1, length($0)-i); print x}}')"
-
-    # Get the path to the config util
-    cfg=$(basename $dev/bin/ncurses*-config)
-
-    # symlink the full suffixed include directory
-    ln -svf . $dev/include/ncurses$suffix
-
-    for newsuffix in $suffixes ""; do
-      # Create a non-abi versioned config util links
-      ln -svf $cfg $dev/bin/ncurses$newsuffix-config
-
-      # Allow for end users who #include <ncurses?w/*.h>
-      ln -svf . $dev/include/ncurses$newsuffix
-
-      for library in $libs; do
-        for dylibtype in so dll dylib; do
-          if [ -e "$out/lib/lib''${library}$suffix.$dylibtype" ]; then
-            ln -svf lib''${library}$suffix.$dylibtype $out/lib/lib$library$newsuffix.$dylibtype
-            ln -svf lib''${library}$suffix.$dylibtype.${abiVersion} $out/lib/lib$library$newsuffix.$dylibtype.${abiVersion}
-            if [ "ncurses" = "$library" ]
-            then
-              # make libtinfo symlinks
-              ln -svf lib''${library}$suffix.$dylibtype $out/lib/libtinfo$newsuffix.$dylibtype
-              ln -svf lib''${library}$suffix.$dylibtype.${abiVersion} $out/lib/libtinfo$newsuffix.$dylibtype.${abiVersion}
-            fi
-          fi
-        done
-        for statictype in a dll.a la; do
-          if [ -e "$out/lib/lib''${library}$suffix.$statictype" ]; then
-            ln -svf lib''${library}$suffix.$statictype $out/lib/lib$library$newsuffix.$statictype
-          fi
-        done
-        ln -svf ''${library}$suffix.pc $dev/lib/pkgconfig/$library$newsuffix.pc
-      done
-    done
-
-    # move some utilities to $bin
-    # these programs are used at runtime and don't really belong in $dev
-    moveToOutput "bin/clear" "$out"
-    moveToOutput "bin/reset" "$out"
-    moveToOutput "bin/tabs" "$out"
-    moveToOutput "bin/tput" "$out"
-    moveToOutput "bin/tset" "$out"
-  '';
-
-  preFixup = ''
-    rm "$out"/lib/*.a
-  '';
+  postInstall = if unicode then ''
+    ${if cxx then "chmod 644 $out/lib/libncurses++w.a" else ""}
+    for lib in curses ncurses form panel menu; do
+      if test -e $out/lib/lib''${lib}w.a; then
+        rm -f $out/lib/lib$lib.so
+        echo "INPUT(-l''${lib}w)" > $out/lib/lib$lib.so
+        ln -svf lib''${lib}w.a $out/lib/lib$lib.a
+        ln -svf lib''${lib}w.so.5 $out/lib/lib$lib.so.5
+        ln -svf ''${lib}w.pc $out/lib/pkgconfig/$lib.pc
+      fi
+    done;
+    ln -svf . $out/include/ncursesw
+    ln -svf ncursesw5-config $out/bin/ncurses5-config
+  '' else "";
 
   meta = {
-    description = "Free software emulation of curses in SVR4 and more";
+    description = "GNU Ncurses, a free software emulation of curses in SVR4 and more";
 
     longDescription = ''
       The Ncurses (new curses) library is a free software emulation of
@@ -140,13 +90,9 @@ stdenv.mkDerivation rec {
 
     homepage = http://www.gnu.org/software/ncurses/;
 
-    license = lib.licenses.mit;
-    platforms = lib.platforms.all;
-    maintainers = [ lib.maintainers.wkennington ];
-  };
+    license = stdenv.lib.licenses.mit;
 
-  passthru = {
-    ldflags = "-lncurses";
-    inherit unicode abiVersion;
+    maintainers = [ stdenv.lib.maintainers.ludo ];
+    platforms = stdenv.lib.platforms.all;
   };
-}
+} // ( if stdenv.isDarwin then { postFixup = "rm $out/lib/*.so"; } else { } ) )

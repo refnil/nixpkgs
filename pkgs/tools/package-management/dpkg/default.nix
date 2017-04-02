@@ -1,27 +1,24 @@
 { stdenv, fetchurl, perl, zlib, bzip2, xz, makeWrapper }:
 
-stdenv.mkDerivation rec {
+let version = "1.16.9"; in
+
+stdenv.mkDerivation {
   name = "dpkg-${version}";
-  version = "1.18.18";
 
   src = fetchurl {
     url = "mirror://debian/pool/main/d/dpkg/dpkg_${version}.tar.xz";
-    sha256 = "1xbgjdazcxb9iqrz6jcmy8qwgwggvf6rws2265sh01b6skin32y8";
+    sha256 = "0ykby9x4x2zb7rfj30lfjcsrq2q32z2lnsrl8pbdvb2l9sx7zkbk";
   };
 
-  configureFlags = [
-    "--disable-dselect"
-    "--with-admindir=/var/lib/dpkg"
-    "PERL_LIBDIR=$(out)/${perl.libPrefix}"
-    (stdenv.lib.optionalString stdenv.isDarwin "--disable-linker-optimisations")
-    (stdenv.lib.optionalString stdenv.isDarwin "--disable-start-stop-daemon")
-  ];
+  patches = [ ./cache-arch.patch ];
+
+  configureFlags = "--disable-dselect --with-admindir=/var/lib/dpkg PERL_LIBDIR=$(out)/${perl.libPrefix}";
 
   preConfigure = ''
-    # Nice: dpkg has a circular dependency on itself. Its configure
+    # Nice: dpkg has a circular dependency on itself.  Its configure
     # script calls scripts/dpkg-architecture, which calls "dpkg" in
-    # $PATH. It doesn't actually use its result, but fails if it
-    # isn't present, so make a dummy available.
+    # $PATH.  It doesn't actually use its result, but fails if it
+    # isn't present.  So make a dummy available.
     touch $TMPDIR/dpkg
     chmod +x $TMPDIR/dpkg
     PATH=$TMPDIR:$PATH
@@ -31,8 +28,7 @@ stdenv.mkDerivation rec {
     done
   '';
 
-  buildInputs = [ perl zlib bzip2 xz ];
-  nativeBuildInputs = [ makeWrapper ];
+  buildInputs = [ perl zlib bzip2 xz makeWrapper ];
 
   postInstall =
     ''
@@ -40,17 +36,13 @@ stdenv.mkDerivation rec {
         if head -n 1 $i | grep -q perl; then
           wrapProgram $i --prefix PERL5LIB : $out/${perl.libPrefix}
         fi
-      done
-
-      mkdir -p $out/etc/dpkg
-      cp -r scripts/t/origins $out/etc/dpkg
+      done # */
     '';
 
   meta = with stdenv.lib; {
     description = "The Debian package manager";
     homepage = http://wiki.debian.org/Teams/Dpkg;
-    license = licenses.gpl2Plus;
-    platforms = platforms.unix;
-    maintainers = with maintainers; [ mornfall nckx ];
+    platforms = platforms.linux;
+    maintainers = maintainers.mornfall;
   };
 }

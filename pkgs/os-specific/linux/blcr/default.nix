@@ -1,25 +1,20 @@
-{ stdenv, lib, fetchurl, kernel, perl, makeWrapper }:
+{ stdenv, fetchurl, kernel, perl, makeWrapper }:
 
+# BLCR 0.8.4 works for kernel version up to 2.6.38 (including 2.6.38.x)
 # BLCR 0.8.5 should works for kernel version up to 3.7.1
-# BLCR 0.8.6 should works for kernel version up to 3.17.x
 
 assert stdenv.isLinux;
-assert builtins.compareVersions "3.18" kernel.version == 1;
-
-# it doesn't compile anymore on 3.12
-assert lib.versionAtLeast kernel.version "3.14";
+assert builtins.compareVersions "3.7.2" kernel.version == 1;
 
 stdenv.mkDerivation {
-  name = "blcr_${kernel.version}-0.8.6pre4";
+  name = "blcr_${kernel.version}-0.8.5";
 
   src = fetchurl {
-    url = https://upc-bugs.lbl.gov/blcr-dist/blcr-0.8.6_b4.tar.gz;
-    sha256 = "1a3gdhdnmk592jc652szxgfz8rjd8dax5jwxfsypiqx5lgkj3m21";
+    url = http://crd.lbl.gov/assets/Uploads/FTG/Projects/CheckpointRestart/downloads/blcr-0.8.5.tar.gz;
+    sha256 = "01a809nfbr715pnidlslv55pxadm3021l97p98zkqy8chyrnkjb0";
   };
 
   buildInputs = [ perl makeWrapper ];
-
-  hardeningDisable = [ "pic" ];
 
   preConfigure = ''
     configureFlagsArray=(
@@ -35,7 +30,7 @@ stdenv.mkDerivation {
       wrapProgram "$prog" --prefix LD_LIBRARY_PATH ":" "$out/lib"
     done
   '';
-
+      
   meta = {
     description = "Berkeley Lab Checkpoint/Restart for Linux (BLCR)";
     homepage = https://ftg.lbl.gov/projects/CheckpointRestart/;

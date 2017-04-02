@@ -1,32 +1,19 @@
-{ lib, stdenv, fetchurl, pkgconfig, libatomic_ops, enableLargeConfig ? false }:
+{ stdenv, fetchurl }:
 
 stdenv.mkDerivation rec {
-  name = "boehm-gc-7.6.0";
+  name = "boehm-gc-7.2d";
 
   src = fetchurl {
-    url = http://www.hboehm.info/gc/gc_source/gc-7.6.0.tar.gz;
-    sha256 = "143x7g0d0k6250ai6m2x3l4y352mzizi4wbgrmahxscv2aqjhjm1";
+    url = http://www.hpl.hp.com/personal/Hans_Boehm/gc/gc_source/gc-7.2d.tar.gz;
+    sha256 = "0phwa5driahnpn79zqff14w9yc8sn3599cxz91m78hqdcpl0mznr";
   };
 
-  buildInputs = [ libatomic_ops ];
-  nativeBuildInputs = [ pkgconfig ];
-
-  outputs = [ "out" "dev" "doc" ];
-
-  configureFlags =
-    [ "--enable-cplusplus" ]
-    ++ lib.optional enableLargeConfig "--enable-large-config";
+  configureFlags = "--enable-cplusplus";
 
   doCheck = true;
 
   # Don't run the native `strip' when cross-compiling.
   dontStrip = stdenv ? cross;
-
-  postInstall =
-    ''
-      mkdir -p $out/share/doc
-      mv $out/share/gc $out/share/doc/gc
-    '';
 
   meta = {
     description = "The Boehm-Demers-Weiser conservative garbage collector for C and C++";
@@ -48,12 +35,12 @@ stdenv.mkDerivation rec {
       C or C++ programs, though that is not its primary goal.
     '';
 
-    homepage = http://hboehm.info/gc/;
+    homepage = http://www.hpl.hp.com/personal/Hans_Boehm/gc/;
 
     # non-copyleft, X11-style license
-    license = http://hboehm.info/gc/license.txt;
+    license = "http://www.hpl.hp.com/personal/Hans_Boehm/gc/license.txt";
 
-    maintainers = [ ];
+    maintainers = [ stdenv.lib.maintainers.ludo ];
     platforms = stdenv.lib.platforms.all;
   };
 }

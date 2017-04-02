@@ -1,39 +1,34 @@
-{ stdenv, pythonPackages, fetchurl, makeWrapper, pandoc
-, coreutils, iptables, nettools, openssh, procps }:
+{ stdenv, fetchurl, iptables, python, pythonPackages }:
   
-pythonPackages.buildPythonApplication rec {
+stdenv.mkDerivation rec {
   name = "sshuttle-${version}";
-  version = "0.78.0";
+  version = "0.61";
 
   src = fetchurl {
-    sha256 = "18hrwi2gyri1n2rq0nghvv7hfhbhh5h67am89524vc1yyx40vn3b";
-    url = "mirror://pypi/s/sshuttle/${name}.tar.gz";
+    url = "https://github.com/apenwarr/sshuttle/archive/sshuttle-0.61.tar.gz";
+    sha256 = "1v2v1kbwnmx6ygzhbgqcmyafx914s2p7vjp7l0pf52sa7qkliy9b";
   };
 
-  patches = [ ./sudo.patch ];
+  preBuild = ''
+   substituteInPlace Documentation/all.do --replace "/bin/ls" "$(type -tP ls)";
+   substituteInPlace Documentation/md2man.py --replace "/usr/bin/env python" "${python}/bin/python"
+  '';
 
-  propagatedBuildInputs = with pythonPackages; [ PyXAPI mock pytest ];
-  nativeBuildInputs = [ makeWrapper pandoc pythonPackages.setuptools_scm ];
-  buildInputs =
-    [ coreutils openssh ] ++
-    stdenv.lib.optionals stdenv.isLinux [ iptables nettools procps ];
+  phases = "unpackPhase installPhase";
 
-  postInstall = let
-    mapPath = f: x: stdenv.lib.concatStringsSep ":" (map f x);
-  in ''
-  wrapProgram $out/bin/sshuttle \
-    --prefix PATH : "${mapPath (x: "${x}/bin") buildInputs}" \
+  installPhase = ''
+    mkdir -p $out/bin
+    cp -R . $out
+    ln -s $out/sshuttle $out/bin/sshuttle
   '';
   
+
+  buildInputs = [ iptables python pythonPackages.markdown pythonPackages.beautifulsoup ];
+
   meta = with stdenv.lib; {
-    homepage = https://github.com/sshuttle/sshuttle/;
+    homepage = https://github.com/apenwarr/sshuttle;
     description = "Transparent proxy server that works as a poor man's VPN";
-    longDescription = ''
-      Forward connections over SSH, without requiring administrator access to the
-      target network (though it does require Python 2 at both ends).
-      Works with Linux and Mac OS and supports DNS tunneling.
-    '';
-    maintainers = with maintainers; [ domenkozar nckx ];
+    maintainers = with maintainers; [ iElectric ];
     platforms = platforms.unix;
   };
 }

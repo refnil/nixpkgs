@@ -1,58 +1,25 @@
-{ fetchurl
-, lib
-, stdenv
-, darwin
-, openglSupport ? true
-, libX11
-, wxGTK
-, wxmac
-, pkgconfig
-, buildPythonPackage
-, pyopengl
-, isPy3k
-, isPyPy
-, python
-}:
+{ stdenv, fetchurl, pkgconfig, wxGTK, pythonPackages, openglSupport ? true }:
 
 assert wxGTK.unicode;
 
-buildPythonPackage rec {
+with stdenv.lib;
+
+let version = "3.0.0.0"; in
+
+stdenv.mkDerivation {
   name = "wxPython-${version}";
-  version = "3.0.2.0";
-
-  disabled = isPy3k || isPyPy;
-  doCheck = false;
-
+  
+  builder = ./builder3.0.sh;
+  
   src = fetchurl {
     url = "mirror://sourceforge/wxpython/wxPython-src-${version}.tar.bz2";
-    sha256 = "0qfzx3sqx4mwxv99sfybhsij4b5pc03ricl73h4vhkzazgjjjhfm";
+    sha256 = "af88695e820dd914e8375dc91ecb736f6fb605979bb38460ace61bbea494dc11";
   };
+  
+  buildInputs = [ pkgconfig wxGTK (wxGTK.gtk) pythonPackages.python pythonPackages.wrapPython ]
+                ++ optional openglSupport pythonPackages.pyopengl;
 
-  hardeningDisable = [ "format" ];
-
-  propagatedBuildInputs = [ pkgconfig ]
-    ++ (lib.optional openglSupport pyopengl)
-    ++ (lib.optionals (!stdenv.isDarwin) [ wxGTK (wxGTK.gtk) libX11 ])
-    ++ (lib.optionals stdenv.isDarwin [ wxmac darwin.apple_sdk.frameworks.Cocoa ])
-    ;
-  preConfigure = ''
-    cd wxPython
-    # remove wxPython's darwin hack that interference with python-2.7-distutils-C++.patch
-    substituteInPlace config.py \
-      --replace "distutils.unixccompiler.UnixCCompiler = MyUnixCCompiler" ""
-    # this check is supposed to only return false on older systems running non-framework python
-    substituteInPlace src/osx_cocoa/_core_wrap.cpp \
-      --replace "return wxPyTestDisplayAvailable();" "return true;"
-  '';
-
-  NIX_LDFLAGS = lib.optionalString (!stdenv.isDarwin) "-lX11 -lgdk-x11-2.0";
-
-  buildPhase = "";
-
-  installPhase = ''
-    ${python.interpreter} setup.py install WXPORT=${if stdenv.isDarwin then "osx_cocoa" else "gtk2"} NO_HEADERS=1 BUILD_GLCANVAS=${if openglSupport then "1" else "0"} UNICODE=1 --prefix=$out
-    wrapPythonPrograms
-  '';
+  inherit openglSupport;
 
   passthru = { inherit wxGTK openglSupport; };
 }

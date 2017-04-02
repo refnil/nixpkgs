@@ -3,19 +3,17 @@
 
 stdenv.mkDerivation (rec {
 
-  name = "unison-2.48.4";
+  name = "unison-2.40.102";
   src = fetchurl {
     url = "http://www.seas.upenn.edu/~bcpierce/unison/download/releases/stable/${name}.tar.gz";
-    sha256 = "30aa53cd671d673580104f04be3cf81ac1e20a2e8baaf7274498739d59e99de8";
+    sha256 = "0m78q5vnsric1virvkmxxx32ipaq0cnj0kbirdbg36395gq94jix";
   };
 
   buildInputs = [ ocaml makeWrapper ncurses ];
 
-  preBuild = (if enableX11 then ''
+  preBuild = if enableX11 then ''
     sed -i "s|\(OCAMLOPT=.*\)$|\1 -I $(echo "${lablgtk}"/lib/ocaml/*/site-lib/lablgtk2)|" Makefile.OCaml
-  '' else "") + ''
-  echo -e '\ninstall:\n\tcp $(FSMONITOR)$(EXEC_EXT) $(INSTALLDIR)' >> fsmonitor/linux/Makefile
-  '';
+  '' else "";
 
   makeFlags = "INSTALLDIR=$(out)/bin/" + (if enableX11 then " UISTYLE=gtk2" else "")
     + (if ! ocaml.nativeCompilers then " NATIVE=false" else "");

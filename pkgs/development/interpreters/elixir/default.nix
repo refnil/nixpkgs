@@ -1,31 +1,17 @@
-{ stdenv, fetchFromGitHub, erlang, rebar, makeWrapper, coreutils, curl, bash,
-  debugInfo ? false }:
+{ stdenv, fetchurl, erlang, rebar, makeWrapper, coreutils }:
 
-stdenv.mkDerivation rec {
+let
+  version = "0.13.3";
+in
+stdenv.mkDerivation {
   name = "elixir-${version}";
-  version = "1.4.2";
 
-  src = fetchFromGitHub {
-    owner = "elixir-lang";
-    repo = "elixir";
-    rev = "v${version}";
-    sha256 = "0jqww3l5jgqvlqpp6lh8i55v23a5imw4giarr05gsl7imv2qqshz";
+  src = fetchurl {
+    url = "https://github.com/elixir-lang/elixir/archive/v${version}.tar.gz";
+    sha256 = "17nb8qfyjc67g62x10l2gq0z1501xa4wry906br0w2rm8bf4j8rf";
   };
 
   buildInputs = [ erlang rebar makeWrapper ];
-
-  # Elixir expects that UTF-8 locale to be set (see https://github.com/elixir-lang/elixir/issues/3548).
-  # In other cases there is warnings during compilation.
-  LANG = "en_US.UTF-8";
-  LC_TYPE = "en_US.UTF-8";
-
-  setupHook = ./setup-hook.sh;
-
-  inherit debugInfo;
-
-  buildFlags = if debugInfo
-   then "ERL_COMPILER_OPTIONS=debug_info"
-   else "";
 
   preBuild = ''
     # The build process uses ./rebar. Link it to the nixpkgs rebar
@@ -40,16 +26,11 @@ stdenv.mkDerivation rec {
     # Elixir binaries are shell scripts which run erl. Add some stuff
     # to PATH so the scripts can run without problems.
 
-    for f in $out/bin/*; do
-     b=$(basename $f)
-      if [ $b == "mix" ]; then continue; fi
+    for f in $out/bin/*
+    do
       wrapProgram $f \
-        --prefix PATH ":" "${stdenv.lib.makeBinPath [ erlang coreutils curl bash ]}" \
-        --set CURL_CA_BUNDLE /etc/ssl/certs/ca-certificates.crt
+      --prefix PATH ":" "${erlang}/bin:${coreutils}/bin"
     done
-
-    substituteInPlace $out/bin/mix \
-          --replace "/usr/bin/env elixir" "${coreutils}/bin/env elixir"
   '';
 
   meta = with stdenv.lib; {
@@ -65,7 +46,7 @@ stdenv.mkDerivation rec {
     '';
 
     license = licenses.epl10;
-    platforms = platforms.unix;
-    maintainers = with maintainers; [ the-kenny havvy couchemar ];
+    platforms = platforms.linux;
+    maintainers = [ maintainers.the-kenny ];
   };
 }

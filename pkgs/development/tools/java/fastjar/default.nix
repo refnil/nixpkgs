@@ -1,12 +1,12 @@
 { fetchurl, stdenv, zlib }:
 
-let version = "0.98"; in
-  stdenv.mkDerivation {
+let version = "0.94"; in
+  stdenv.mkDerivation rec {
     name = "fastjar-${version}";
 
     src = fetchurl {
-      url = "http://download.savannah.gnu.org/releases/fastjar/fastjar-${version}.tar.gz";
-      sha256 = "0iginbz2m15hcsa3x4y7v3mhk54gr1r7m3ghx0pg4n46vv2snmpi";
+      url = "mirror://sourceforge/fastjar/${version}/${name}.tar.gz";
+      sha256 = "15bvhvn2fzpziynk4myg1wl70wxa5a6v65hkzlcgnzh1wg1py8as";
     };
 
     buildInputs = [ zlib ];
@@ -14,7 +14,7 @@ let version = "0.98"; in
     doCheck = true;
 
     meta = {
-      description = "Fast Java archiver written in C";
+      description = "FastJar, a fast Java archiver written in C";
 
       longDescription = ''
         Fastjar is a version of Sun's `jar' utility, written entirely in C, and
@@ -22,10 +22,10 @@ let version = "0.98"; in
         the stock `jar' program running without a JIT.
       '';
 
-      homepage = http://savannah.nongnu.org/projects/fastjar/;
+      homepage = http://fastjar.sourceforge.net/;
 
       license = stdenv.lib.licenses.gpl2Plus;
-      platforms = stdenv.lib.platforms.linux;
+
       maintainers = [ ];
     };
   }

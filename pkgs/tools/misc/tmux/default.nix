@@ -1,46 +1,22 @@
-{ stdenv, fetchFromGitHub, autoreconfHook, ncurses, libevent, pkgconfig, makeWrapper }:
-
-let
-
-  bashCompletion = fetchFromGitHub {
-    owner = "imomaliev";
-    repo = "tmux-bash-completion";
-    rev = "fcda450d452f07d36d2f9f27e7e863ba5241200d";
-    sha256 = "092jpkhggjqspmknw7h3icm0154rg21mkhbc71j5bxfmfjdxmya8";
-  };
-
-in
+{stdenv, fetchurl, ncurses, libevent, pkgconfig}:
 
 stdenv.mkDerivation rec {
-  name = "tmux-${version}";
-  version = "2.3";
+  pname = "tmux";
+  version = "1.9a";
+  name = "${pname}-${version}";
 
-  outputs = [ "out" "man" ];
-
-  src = fetchFromGitHub {
-    owner = "tmux";
-    repo = "tmux";
-    rev = version;
-    sha256 = "14c6iw0p3adz7w8jm42w9f3s1zph9is10cbwdjgh5bvifrhxrary";
+  src = fetchurl {
+    url = "mirror://sourceforge/${pname}/${name}.tar.gz";
+    sha256 = "1x9k4wfd4l5jg6fh7xkr3yyilizha6ka8m5b1nr0kw8wj0mv5qy5";
   };
 
-  nativeBuildInputs = [ pkgconfig autoreconfHook ];
+  nativeBuildInputs = [ pkgconfig ];
 
-  buildInputs = [ ncurses libevent makeWrapper ];
-
-  configureFlags = [
-    "--sysconfdir=/etc"
-    "--localstatedir=/var"
-  ];
-
-  postInstall = ''
-    mkdir -p $out/share/bash-completion/completions
-    cp -v ${bashCompletion}/completions/tmux $out/share/bash-completion/completions/tmux
-  '';
+  buildInputs = [ ncurses libevent ];
 
   meta = {
-    homepage = http://tmux.github.io/;
-    description = "Terminal multiplexer";
+    homepage = http://tmux.sourceforge.net/;
+    description = "tmux is a terminal multiplexer";
 
     longDescription =
       '' tmux is intended to be a modern, BSD-licensed alternative to programs such as GNU screen. Major features include:
@@ -53,12 +29,12 @@ stdenv.mkDerivation rec {
           * Interactive menus to select windows, sessions or clients.
           * Change the current window by searching for text in the target.
           * Terminal locking, manually or after a timeout.
-          * A clean, easily extended, BSD-licensed codebase, under active development.
+          * A clean, easily extended, BSD-licensed codebase, under active development. 
       '';
 
     license = stdenv.lib.licenses.bsd3;
 
     platforms = stdenv.lib.platforms.unix;
-    maintainers = with stdenv.lib.maintainers; [ thammers fpletz ];
+    maintainers = with stdenv.lib.maintainers; [ shlevy thammers ];
   };
 }

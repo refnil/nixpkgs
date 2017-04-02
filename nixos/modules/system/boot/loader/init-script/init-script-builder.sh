@@ -80,13 +80,8 @@ for generation in $(
     | sort -n -r); do
     link=/nix/var/nix/profiles/system-$generation-link
     date=$(stat --printf="%y\n" $link | sed 's/\..*//')
-    if [ -d $link/kernel ]; then
-      kernelVersion=$(cd $(dirname $(readlink -f $link/kernel))/lib/modules && echo *)
-      suffix="($date - $kernelVersion)"
-    else
-      suffix="($date)"
-    fi
-    addEntry "NixOS - Configuration $generation $suffix" $link "$generation ($date)"
+    kernelVersion=$(cd $(dirname $(readlink -f $link/kernel))/lib/modules && echo *)
+    addEntry "NixOS - Configuration $generation ($date - $kernelVersion)" $link "$generation ($date)"
 done
 
 mv $tmpOther $targetOther

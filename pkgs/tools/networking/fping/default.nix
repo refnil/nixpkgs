@@ -1,19 +1,15 @@
 { stdenv, fetchurl }:
 
 stdenv.mkDerivation rec {
-  name = "fping-3.16";
+  name = "fping-3.8";
 
   src = fetchurl {
     url = "http://www.fping.org/dist/${name}.tar.gz";
-    sha256 = "2f753094e4df3cdb1d99be1687c0fb7d2f14c0d526ebf03158c8c5519bc78f54";
+    sha256 = "04iwj4x3wns09wp777mb3kwfi7ypb4m9m73p0s2y699px77hcx67";
   };
-
-  configureFlags = [ "--enable-ipv6" "--enable-ipv4" ];
 
   meta = {
     homepage = "http://fping.org/";
     description = "Send ICMP echo probes to network hosts";
-    maintainers = with stdenv.lib.maintainers; [ the-kenny ];
-    platforms = with stdenv.lib.platforms; all;
   };
 }

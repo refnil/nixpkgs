@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, buildPythonApplication, tempita, jinja2, pyyaml, clepy, mock
+{ stdenv, fetchurl, buildPythonPackage, tempita, jinja2, pyyaml, clepy, mock
 , nose, decorator, docutils
 }:
 
@@ -11,12 +11,12 @@
 # pitz-shell is not the primary interface, so it is not critical to have it
 # working. Concider fixing pitz upstream.
 
-buildPythonApplication rec {
+buildPythonPackage rec {
   name = "pitz-1.2.4";
   namePrefix = "";
 
   src = fetchurl {
-    url = "mirror://pypi/p/pitz/${name}.tar.gz";
+    url = "http://pypi.python.org/packages/source/p/pitz/${name}.tar.gz";
     sha256 = "1k7f3h4acllzqy3mjqnjd4w5jskp03s79b7dx3c85vlmd7824smr";
   };
 

@@ -1,17 +1,12 @@
 { stdenv, fetchurl, kernel }:
 
-assert stdenv.lib.versionOlder kernel.version "4.10";
-
-stdenv.mkDerivation rec {
-  name = "e1000e-${version}-${kernel.version}";
-  version = "3.3.5.3";
+stdenv.mkDerivation {
+  name = "e1000e-2.5.4-${kernel.version}";
 
   src = fetchurl {
-    url = "mirror://sourceforge/e1000/e1000e-${version}.tar.gz";
-    sha256 = "1ajz3vdnf1y307k585w95r6jlh4ah8d74bq36gdkjl1z5hgiqi9q";
+    url = "mirror://sourceforge/e1000/e1000e-2.5.4.tar.gz";
+    sha256 = "0bmihkc7y37jzwi996ryqblnyflyhhbimbnrnmlk419vxlzg1pzi";
   };
-
-  hardeningDisable = [ "pic" ];
 
   configurePhase = ''
     cd src

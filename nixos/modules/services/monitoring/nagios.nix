@@ -12,7 +12,7 @@ let
   nagiosObjectDefs = cfg.objectDefs;
 
   nagiosObjectDefsDir = pkgs.runCommand "nagios-objects" {inherit nagiosObjectDefs;}
-    "mkdir -p $out; ln -s $nagiosObjectDefs $out/";
+    "ensureDir $out; ln -s $nagiosObjectDefs $out/";
 
   nagiosCfgFile = pkgs.writeText "nagios.cfg"
     ''
@@ -94,9 +94,7 @@ in
       };
 
       plugins = mkOption {
-        type = types.listOf types.package;
         default = [pkgs.nagiosPluginsOfficial pkgs.ssmtp];
-        defaultText = "[pkgs.nagiosPluginsOfficial pkgs.ssmtp]";
         description = "
           Packages to be added to the Nagios <envar>PATH</envar>.
           Typically used to add plugins, but can be anything.
@@ -104,18 +102,14 @@ in
       };
 
       mainConfigFile = mkOption {
-        type = types.package;
         default = nagiosCfgFile;
-        defaultText = "nagiosCfgFile";
         description = "
           Derivation for the main configuration file of Nagios.
         ";
       };
 
       cgiConfigFile = mkOption {
-        type = types.package;
         default = nagiosCGICfgFile;
-        defaultText = "nagiosCGICfgFile";
         description = "
           Derivation for the configuration file of Nagios CGI scripts
           that can be used in web servers for running the Nagios web interface.
@@ -163,7 +157,7 @@ in
       description = "Nagios monitoring daemon";
       path     = [ pkgs.nagios ];
       wantedBy = [ "multi-user.target" ];
-      after    = [ "network.target" ];
+      after    = [ "network-interfaces.target" ];
 
       serviceConfig = {
         User = "nagios";

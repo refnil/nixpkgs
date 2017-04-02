@@ -1,18 +1,26 @@
-{ stdenv, fetchurl }:
+a :  
+let 
+  s = import ./src-for-default.nix;
+  buildInputs = with a; [
+    
+  ];
+in
+rec {
+  src = a.fetchUrlFromSrcInfo s;
 
-stdenv.mkDerivation rec {
-  name = "libev-${version}";
-  version="4.22";
+  inherit (s) name;
+  inherit buildInputs;
+  configureFlags = [];
 
-  src = fetchurl {
-    url = "http://dist.schmorp.de/libev/Attic/${name}.tar.gz";
-    sha256 = "1mhvy38g9947bbr0n0hzc34zwfvvfd99qgzpkbap8g2lmkl7jq3k";
-  };
-
+  /* doConfigure should be removed if not needed */
+  phaseNames = ["doConfigure" "doMakeInstall"];
+      
   meta = {
-    description = "A high-performance event loop/event model with lots of features";
-    maintainers = [ stdenv.lib.maintainers.raskin ];
-    platforms = stdenv.lib.platforms.all;
-    license = stdenv.lib.licenses.bsd2; # or GPL2+
+    description = "An event loop library remotely similar to libevent";
+    maintainers = [
+      a.lib.maintainers.raskin
+    ];
+    platforms = with a.lib.platforms;
+      linux ++ freebsd;
   };
 }

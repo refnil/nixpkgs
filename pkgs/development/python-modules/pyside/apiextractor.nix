@@ -1,16 +1,17 @@
-{ stdenv, fetchurl, cmake, libxml2, libxslt, python, sphinx, qt4 }:
+{ stdenv, fetchgit, cmake, libxml2, libxslt, python27Packages, qt4 }:
 
 stdenv.mkDerivation {
-  name = "pyside-apiextractor-0.10.10";
+  name = "pyside-apiextractor-0.10.7-6-gdcb1195";
 
-  src = fetchurl {
-    url = "https://github.com/PySide/Apiextractor/archive/0.10.10.tar.gz";
-    sha256 = "1zj8yrxy08iv1pk38djxw3faimm226w6wmi0gm32w4yczblylwz3";
+  src = fetchgit {
+    url = "git://github.com/PySide/Apiextractor.git";
+    rev = "dcb11958cabe518630f9f2d2bebd9f8711c2b15b";
+    sha256 = "d7b6cb16d11b6134de17a15635d0b5ad7460d31d7870cafe23a690141b9a2274";
   };
 
   enableParallelBuilding = true;
 
-  buildInputs = [ cmake libxml2 libxslt sphinx qt4 ];
+  buildInputs = [ cmake libxml2 libxslt python27Packages.sphinx qt4 ];
 
   meta = {
     description = "Eases the development of bindings of Qt-based libraries for high level languages by automating most of the process";

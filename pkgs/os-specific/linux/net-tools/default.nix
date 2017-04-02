@@ -16,7 +16,7 @@ stdenv.mkDerivation rec {
   makeFlags = "BASEDIR=$(out) mandir=/share/man";
 
   meta = {
-    homepage = http://net-tools.sourceforge.net/;
+    homepage = http://www.tazenda.demon.co.uk/phil/net-tools/;
     description = "A set of tools for controlling the network subsystem in Linux";
     license = stdenv.lib.licenses.gpl2Plus;
     platforms = stdenv.lib.platforms.linux;

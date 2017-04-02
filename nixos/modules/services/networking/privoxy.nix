@@ -6,16 +6,19 @@ let
 
   inherit (pkgs) privoxy;
 
-  cfg = config.services.privoxy;
+  stateDir = "/var/spool/privoxy";
 
-  confFile = pkgs.writeText "privoxy.conf" ''
-    user-manual ${privoxy}/share/doc/privoxy/user-manual
-    confdir ${privoxy}/etc/
-    listen-address  ${cfg.listenAddress}
-    enable-edit-actions ${if (cfg.enableEditActions == true) then "1" else "0"}
-    ${concatMapStrings (f: "actionsfile ${f}\n") cfg.actionsFiles}
-    ${concatMapStrings (f: "filterfile ${f}\n") cfg.filterFiles}
-    ${cfg.extraConfig}
+  privoxyUser = "privoxy";
+
+  privoxyFlags = "--no-daemon --user ${privoxyUser} ${privoxyCfg}";
+
+  privoxyCfg = pkgs.writeText "privoxy.conf" ''
+    listen-address  ${config.services.privoxy.listenAddress}
+    logdir          ${config.services.privoxy.logDir}
+    confdir         ${privoxy}/etc
+    filterfile      default.filter
+
+    ${config.services.privoxy.extraConfig}
   '';
 
 in
@@ -29,51 +32,27 @@ in
     services.privoxy = {
 
       enable = mkOption {
-        type = types.bool;
         default = false;
         description = ''
-          Whether to enable the Privoxy non-caching filtering proxy.
+          Whether to run the machine as a HTTP proxy server.
         '';
       };
 
       listenAddress = mkOption {
-        type = types.str;
         default = "127.0.0.1:8118";
         description = ''
           Address the proxy server is listening to.
         '';
       };
 
-      actionsFiles = mkOption {
-        type = types.listOf types.str;
-        example = [ "match-all.action" "default.action" "/etc/privoxy/user.action" ];
-        default = [ "match-all.action" "default.action" ];
+      logDir = mkOption {
+        default = "/var/log/privoxy" ;
         description = ''
-          List of paths to Privoxy action files.
-          These paths may either be absolute or relative to the privoxy configuration directory.
-        '';
-      };
-
-      filterFiles = mkOption {
-        type = types.listOf types.str;
-        example = [ "default.filter" "/etc/privoxy/user.filter" ];
-        default = [ "default.filter" ];
-        description = ''
-          List of paths to Privoxy filter files.
-          These paths may either be absolute or relative to the privoxy configuration directory.
-        '';
-      };
-
-      enableEditActions = mkOption {
-        type = types.bool;
-        default = false;
-        description = ''
-          Whether or not the web-based actions file editor may be used.
+          Location for privoxy log files.
         '';
       };
 
       extraConfig = mkOption {
-        type = types.lines;
         default = "" ;
         description = ''
           Extra configuration. Contents will be added verbatim to the configuration file.
@@ -83,29 +62,33 @@ in
 
   };
 
+
   ###### implementation
 
-  config = mkIf cfg.enable {
+  config = mkIf config.services.privoxy.enable {
+  
+    environment.systemPackages = [ privoxy ];
 
-    users.users.privoxy = {
-      isSystemUser = true;
-      home = "/var/empty";
-      group = "privoxy";
-    };
+    users.extraUsers = singleton
+      { name = privoxyUser;
+        uid = config.ids.uids.privoxy;
+        description = "Privoxy daemon user";
+        home = stateDir;
+      };
 
-    users.groups.privoxy = {};
+    jobs.privoxy =
+      { name = "privoxy";
 
-    systemd.services.privoxy = {
-      description = "Filtering web proxy";
-      after = [ "network.target" "nss-lookup.target" ];
-      wantedBy = [ "multi-user.target" ];
-      serviceConfig.ExecStart = "${privoxy}/bin/privoxy --no-daemon --user privoxy ${confFile}";
+        startOn = "startup";
 
-      serviceConfig.PrivateDevices = true;
-      serviceConfig.PrivateTmp = true;
-      serviceConfig.ProtectHome = true;
-      serviceConfig.ProtectSystem = "full";
-    };
+        preStart =
+          ''
+            mkdir -m 0755 -p ${stateDir}
+            chown ${privoxyUser} ${stateDir}
+          '';
+
+        exec = "${privoxy}/sbin/privoxy ${privoxyFlags}";
+      };
 
   };
 

@@ -2,10 +2,6 @@
 
 with lib;
 
-let
-  cfg = config.services.dictd;
-in
-
 {
 
   ###### interface
@@ -15,7 +11,6 @@ in
     services.dictd = {
 
       enable = mkOption {
-        type = types.bool;
         default = false;
         description = ''
           Whether to enable the DICT.org dictionary server.
@@ -23,10 +18,8 @@ in
       };
 
       DBs = mkOption {
-        type = types.listOf types.package;
-        default = with pkgs.dictdDBs; [ wiktionary wordnet ];
-        defaultText = "with pkgs.dictdDBs; [ wiktionary wordnet ]";
-        example = literalExample "[ pkgs.dictdDBs.nld2eng ]";
+        default = [];
+        # example = [ pkgs.dictDBs.nld2eng ];
         description = ''List of databases to make available.'';
       };
 
@@ -39,8 +32,8 @@ in
 
   config = let dictdb = pkgs.dictDBCollector { dictlist = map (x: {
                name = x.name;
-               filename = x; } ) cfg.DBs; };
-  in mkIf cfg.enable {
+               filename = x; } ) config.services.dictd.DBs; };
+  in mkIf config.services.dictd.enable {
 
     # get the command line client on system path to make some use of the service
     environment.systemPackages = [ pkgs.dict ];
@@ -58,12 +51,13 @@ in
         gid = config.ids.gids.dictd;
       };
 
-    systemd.services.dictd = {
-      description = "DICT.org Dictionary Server";
-      wantedBy = [ "multi-user.target" ];
-      environment = { LOCALE_ARCHIVE = "/run/current-system/sw/lib/locale/locale-archive"; };
-      serviceConfig.Type = "forking";
-      script = "${pkgs.dict}/sbin/dictd -s -c ${dictdb}/share/dictd/dictd.conf --locale en_US.UTF-8";
-    };
+    jobs.dictd =
+      { description = "DICT.org Dictionary Server";
+        startOn = "startup";
+        environment = { LOCALE_ARCHIVE = "/run/current-system/sw/lib/locale/locale-archive"; };
+        daemonType = "fork";
+        exec = "${pkgs.dict}/sbin/dictd -s -c ${dictdb}/share/dictd/dictd.conf --locale en_US.UTF-8";
+      };
   };
+
 }

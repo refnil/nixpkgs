@@ -30,8 +30,4 @@ stdenv.mkDerivation {
       unzip ${isoents}
       sed -e "s/iso-/ISO/" -e "s/.gml//" -i docbook.cat
     '';
-
-  meta = {
-    platforms = stdenv.lib.platforms.unix;
-  };
 }

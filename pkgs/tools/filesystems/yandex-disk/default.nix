@@ -1,23 +1,19 @@
-{ stdenv, fetchurl, writeText, zlib, rpmextract, patchelf, which }:
-
-assert stdenv.isLinux;
-
+{ stdenv, fetchurl, writeText, zlib, rpm, cpio, patchelf, which }:
 let
   p = if stdenv.is64bit then {
       arch = "x86_64";
-      gcclib = "${stdenv.cc.cc.lib}/lib64";
-      sha256 = "1skbzmrcjbw00a3jnbl2llqwz3ahsgvq74mjav68s2hw1wjidvk6";
+      gcclib = "${stdenv.gcc.gcc}/lib64";
+      sha256 = "1fmmlvvh97d60n9k08bn4k6ghwr3yhs8sib82025nwpw1sq08vim";
     }
     else {
       arch = "i386";
-      gcclib = "${stdenv.cc.cc.lib}/lib";
-      sha256 = "09h71i3k9d24ki81jdwhnav63fqbc44glbx228s9g3cr4ap41jcx";
+      gcclib = "${stdenv.gcc.gcc}/lib";
+      sha256 = "3940420bd9d1fe1ecec1a117bfd9d21d545bca59f5e0a4364304ab808c976f7f";
     };
 in 
 stdenv.mkDerivation rec {
 
-  name = "yandex-disk-${version}";
-  version = "0.1.5.978";
+  name = "yandex-disk-0.1.2.481";
 
   src = fetchurl {
     url = "http://repo.yandex.ru/yandex-disk/rpm/stable/${p.arch}/${name}-1.fedora.${p.arch}.rpm";
@@ -32,7 +28,7 @@ stdenv.mkDerivation rec {
 
     mkdir -pv unpacked
     cd unpacked
-    ${rpmextract}/bin/rpmextract $src
+    ${rpm}/bin/rpm2cpio $src | ${cpio}/bin/cpio -imd
 
     cp -r -t $out/bin usr/bin/*
     cp -r -t $out/share usr/share/*
@@ -42,15 +38,15 @@ stdenv.mkDerivation rec {
       $out/etc/bash_completion.d/yandex-disk-completion.bash
 
     ${patchelf}/bin/patchelf \
-      --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" \
-      --set-rpath "${zlib.out}/lib:${p.gcclib}" \
+      --set-interpreter "$(cat $NIX_GCC/nix-support/dynamic-linker)" \
+      --set-rpath "${zlib}/lib:${p.gcclib}" \
       $out/bin/yandex-disk
   '';
 
   meta = {
     homepage = http://help.yandex.com/disk/cli-clients.xml;
-    description = "A free cloud file storage service";
-    maintainers = with stdenv.lib.maintainers; [ smironov jagajaga ];
+    description = "Yandex.Disk is a free cloud file storage service";
+    maintainers = with stdenv.lib.maintainers; [smironov];
     platforms = ["i686-linux" "x86_64-linux"];
     license = stdenv.lib.licenses.unfree;
     longDescription = ''

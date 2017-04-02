@@ -1,7 +1,6 @@
-{ stdenv, fetchurl, pkgconfig, gtk2, libXinerama, libSM, libXxf86vm, xf86vidmodeproto
-, gstreamer, gst-plugins-base, GConf, setfile
-, withMesa ? true, mesa ? null, compat24 ? false, compat26 ? true, unicode ? true
-, Carbon ? null, Cocoa ? null, Kernel ? null, QuickTime ? null, AGL ? null
+{ stdenv, fetchurl, pkgconfig, gtk, libXinerama, libSM, libXxf86vm, xf86vidmodeproto
+, gstreamer, gst_plugins_base, GConf, setfile
+, withMesa ? true, mesa ? null, compat24 ? false, compat26 ? true, unicode ? true,
 }:
 
 assert withMesa -> mesa != null;
@@ -20,14 +19,12 @@ stdenv.mkDerivation {
   };
 
   buildInputs =
-    [ gtk2 libXinerama libSM libXxf86vm xf86vidmodeproto gstreamer
-      gst-plugins-base GConf ]
+    [ gtk libXinerama libSM libXxf86vm xf86vidmodeproto gstreamer
+      gst_plugins_base GConf ]
     ++ optional withMesa mesa
-    ++ optionals stdenv.isDarwin [ setfile Carbon Cocoa Kernel QuickTime ];
+    ++ optional stdenv.isDarwin setfile;
 
   nativeBuildInputs = [ pkgconfig ];
-
-  propagatedBuildInputs = optional stdenv.isDarwin AGL;
 
   configureFlags =
     [ "--enable-gtk2" "--disable-precomp-headers" "--enable-mediactrl"
@@ -37,7 +34,7 @@ stdenv.mkDerivation {
     ++ optional withMesa "--with-opengl"
     ++ optionals stdenv.isDarwin
       # allow building on 64-bit
-      [ "--with-cocoa" "--enable-universal-binaries" "--with-macosx-version-min=10.7" ];
+      [ "--with-cocoa" "--enable-universal-binaries" ];
 
   SEARCH_LIB = optionalString withMesa "${mesa}/lib";
 
@@ -49,23 +46,13 @@ stdenv.mkDerivation {
     substituteInPlace configure --replace \
       'ac_cv_prog_SETFILE="/Developer/Tools/SetFile"' \
       'ac_cv_prog_SETFILE="${setfile}/bin/SetFile"'
-    substituteInPlace configure --replace \
-      "-framework System" \
-      -lSystem
   '';
 
   postInstall = "
     (cd $out/include && ln -s wx-*/* .)
   ";
 
-  passthru = {
-    inherit compat24 compat26 unicode;
-    gtk = gtk2;
-  };
+  passthru = {inherit gtk compat24 compat26 unicode;};
 
   enableParallelBuilding = true;
-  
-  meta = {
-    platforms = with stdenv.lib.platforms; darwin ++ linux;
-  };
 }

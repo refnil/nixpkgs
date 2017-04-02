@@ -1,8 +1,8 @@
 { stdenv, fetchurl, python3Packages, gst_all_1, makeWrapper, gobjectIntrospection
-, gtk3, libwnck3, keybinder, intltool, libcanberra_gtk2 }:
+, gtk3, libwnck3, keybinder, intltool, libcanberra }:
 
 
-python3Packages.buildPythonApplication rec {
+python3Packages.buildPythonPackage rec {
   name = "kazam-${version}";
   version = "1.4.3";
   namePrefix = "";
@@ -16,16 +16,16 @@ python3Packages.buildPythonApplication rec {
   buildInputs = with python3Packages;
     [ pygobject3 pyxdg pycairo gst_all_1.gstreamer gst_all_1.gst-plugins-base
       gst_all_1.gst-plugins-good gobjectIntrospection gtk3 libwnck3 distutils_extra
-      intltool dbus-python ];
+      intltool dbus ];
 
   # TODO: figure out why PYTHONPATH is not passed automatically for those programs
   pythonPath = with python3Packages;
-    [ pygobject3 pyxdg pycairo dbus-python ];
+    [ pygobject3 pyxdg pycairo dbus ];
 
   patches = [ ./datadir.patch ./bug_1190693.patch ];
   prePatch = ''
     rm setup.cfg
-    substituteInPlace kazam/backend/grabber.py --replace "/usr/bin/canberra-gtk-play" "${libcanberra_gtk2}/bin/canberra-gtk-play"
+    substituteInPlace kazam/backend/grabber.py --replace "/usr/bin/canberra-gtk-play" "${libcanberra}/bin/canberra-gtk-play"
   '';
 
   # no tests
@@ -34,9 +34,9 @@ python3Packages.buildPythonApplication rec {
   preFixup = ''
     wrapProgram $out/bin/kazam \
       --prefix GI_TYPELIB_PATH : "$GI_TYPELIB_PATH" \
-      --prefix LD_LIBRARY_PATH ":" "${stdenv.lib.makeLibraryPath [ gtk3 gst_all_1.gstreamer keybinder ]}" \
+      --prefix LD_LIBRARY_PATH ":" "${gtk3}/lib:${gst_all_1.gstreamer}/lib:${keybinder}/lib" \
       --prefix GST_PLUGIN_SYSTEM_PATH : "$GST_PLUGIN_SYSTEM_PATH" \
-      --prefix XDG_DATA_DIRS : "${gtk3.out}/share" \
+      --prefix XDG_DATA_DIRS : "${gtk3}/share" \
       --set GST_REGISTRY "/tmp/kazam.gstreamer.registry";
   '';
 
@@ -46,6 +46,6 @@ python3Packages.buildPythonApplication rec {
     homepage = https://code.launchpad.net/kazam;
     #license = licenses.bsd2;
     platforms = platforms.linux;
-    maintainers = [ maintainers.domenkozar ];
+    maintainers = [ maintainers.iElectric ];
   };
 }

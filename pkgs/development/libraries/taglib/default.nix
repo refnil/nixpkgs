@@ -1,11 +1,11 @@
 {stdenv, fetchurl, zlib, cmake}:
 
 stdenv.mkDerivation rec {
-  name = "taglib-1.10";
+  name = "taglib-1.9.1";
 
   src = fetchurl {
-    url = "http://taglib.github.io/releases/${name}.tar.gz";
-    sha256 = "1alv6vp72p0x9i9yscmz2a71anjwqy53y9pbcbqxvc1c0i82vhr4";
+    url = http://taglib.github.io/releases/taglib-1.9.1.tar.gz;
+    sha256 = "06n7gnbcqa3r6c9gv00y0y1r48dyyazm6yj403i7ma0r2k6p3lvj";
   };
 
   cmakeFlags = "-DWITH_ASF=ON -DWITH_MP4=ON";
@@ -19,6 +19,6 @@ stdenv.mkDerivation rec {
 
     description = "A library for reading and editing the meta-data of several popular audio formats";
     inherit (cmake.meta) platforms;
-    maintainers = [ ];
+    maintainers = [ stdenv.lib.maintainers.urkud ];
   };
 }

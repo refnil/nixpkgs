@@ -1,33 +1,51 @@
-{ stdenv, fetchurl, unzip, cmake, mesa, freeglut, libX11, xproto, inputproto
-, libXi, pkgconfig }:
+x@{builderDefsPackage
+  , unzip, cmake, mesa, freeglut, libX11, xproto
+  , inputproto, libXi, fetchsvn, pkgconfig
+  , ...}:
+builderDefsPackage
+(a :  
+let 
+  helperArgNames = ["stdenv" "fetchurl" "builderDefsPackage"] ++ 
+    [];
 
-stdenv.mkDerivation rec {
-  name = "box2d-${version}";
+  buildInputs = map (n: builtins.getAttr n x)
+    (builtins.attrNames (builtins.removeAttrs x helperArgNames));
+in
+rec {
   version = "2.3.0";
-
-  src = fetchurl {
-    url = "https://github.com/erincatto/Box2D/archive/v${version}.tar.gz";
-    sha256 = "1dmbswh4x2n5l3c9h0k72m0z4rdpzfy1xl8m8p3rf5rwkvk3bkg2";
+  name = "box2d-${version}";
+  srcDrv = a.fetchsvn {
+    url = "http://box2d.googlecode.com/svn/trunk";
+    rev = "277";
+    sha256 = "1xp93yw2zcqhmh999v7cwqaqxq1glgyg5r8kfm4yabc1ypba3in4";
   };
+  src = srcDrv + "/";
 
-  sourceRoot = "Box2D-${version}/Box2D";
+  inherit buildInputs;
 
-  buildInputs = [
-    unzip cmake mesa freeglut libX11 xproto inputproto libXi pkgconfig
-  ];
+  phaseNames = ["changeSettings" "doCmake" "doMakeInstall"];
 
-  cmakeFlags = [ "-DBOX2D_INSTALL=ON" "-DBOX2D_BUILD_SHARED=ON" ];
+  changeSettings = a.fullDepEntry ''
+    sed -i Box2D/Common/b2Settings.h -e 's@b2_maxPolygonVertices .*@b2_maxPolygonVertices 15@'
+  '' ["minInit" "addInputs" "doUnpack"];
+      
+  goSrcDir = ''cd Box2D'';
 
-  prePatch = ''
-    substituteInPlace Box2D/Common/b2Settings.h \
-      --replace 'b2_maxPolygonVertices	8' 'b2_maxPolygonVertices	15'
-  '';
-
-  meta = with stdenv.lib; {
+  doCmake = a.fullDepEntry ''
+    cd Build; 
+    cmake -DBOX2D_INSTALL=ON -DBOX2D_BUILD_SHARED=ON -DCMAKE_INSTALL_PREFIX=$out ..
+  '' ["minInit" "addInputs" "doUnpack"];
+      
+  meta = {
     description = "2D physics engine";
-    homepage = http://box2d.org/;
-    maintainers = [ maintainers.raskin ];
-    platforms = platforms.linux;
-    license = licenses.zlib;
+    maintainers = with a.lib.maintainers;
+    [
+      raskin
+    ];
+    platforms = with a.lib.platforms;
+      linux;
+    license = "bsd";
+    inherit version;
   };
-}
+}) x
+

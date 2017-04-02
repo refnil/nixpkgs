@@ -10,18 +10,13 @@ KEYNAME=na
 export NIX_REMOTE=daemon
 
 config="${NIX_BINARY_CACHE_CONFIG:-${HTTP_NIX_BINARY_CACHE_CONFIG:-/etc/nix/nix-binary-cache.cgi.conf}}"
-config="$(cd "$(@coreutils@/dirname "$config")";
+config="$(cd "$(@coreutils@/dirname "$config")"; 
   @coreutils@/pwd)/$(@coreutils@/basename "$config")"
 @coreutils@/test -e "$config" && . "$config"
 
 header(){
 	echo "Content-Type: text/plain; charset=utf-8"
-	echo
-}
-
-header404(){
-	echo "Status: 404 Not Found"
-	echo
+	echo 
 }
 
 clean_path() {
@@ -33,12 +28,12 @@ storeq(){
 }
 
 sign(){
-	test -n "$1" &&
-	  @coreutils@/sha256sum | @gnused@/sed -e 's/ .*//' |
+	test -n "$1" && 
+	  @coreutils@/sha256sum | @gnused@/sed -e 's/ .*//' | 
 	  @openssl@/openssl rsautl -sign -inkey "$@" | @coreutils@/base64 -w 0
 }
 
-case "$QUERY_STRING" in
+case "$QUERY_STRING" in 
 	"")
 		header
 		echo "Hello, this is a dynamically-generated Nix binary cache"
@@ -56,7 +51,7 @@ case "$QUERY_STRING" in
 	*.narinfo)
 		hash=${QUERY_STRING%.narinfo}
 		hash=${hash#/}
-		path="$(echo "$STORE_DIR/$hash-"* | @coreutils@/sort | @coreutils@/head -n 1)"
+		path="$(echo "$STORE_DIR/$hash-"* )"
 		if [ -n "$path" ] && [ -e "$path" ]; then
 			header
 			info="$(
@@ -66,9 +61,9 @@ case "$QUERY_STRING" in
 			echo "Compression: $COMPRESSION"
 			echo "NarHash: $(storeq --hash "$path")"
 			echo "NarSize: $(storeq --size "$path")"
-			echo "References: $(storeq --references "$path" |
+			echo "References: $(storeq --references "$path" | 
 			  @coreutils@/tac | clean_path )"
-			echo "Deriver: $(storeq --deriver "$path" |
+			echo "Deriver: $(storeq --deriver "$path" | 
 			  clean_path )"
 			)"
 			signature="$(echo "$info" | sign "$KEY")"
@@ -77,7 +72,6 @@ case "$QUERY_STRING" in
 			echo "Signature: 1;$KEYNAME;$signature"
 
 		else
-			header404
 			exit 1
 		fi
 		;;
@@ -87,7 +81,6 @@ case "$QUERY_STRING" in
 			header
 			@nix@/nix-store --dump "$path" | @xz@/xz
 		else
-			header404
 			exit 1
 		fi
 		;;
@@ -98,7 +91,6 @@ case "$QUERY_STRING" in
 			header
 			@nix@/nix-store --dump "$path" | @bzip2@/bzip2
 		else
-			header404
 			exit 1
 		fi
 		;;

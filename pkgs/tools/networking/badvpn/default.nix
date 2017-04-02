@@ -1,18 +1,17 @@
-{stdenv, fetchurl, cmake, openssl, nss, pkgconfig, nspr, bash, debug ? false}:
+{stdenv, fetchurl, cmake, openssl, nss, pkgconfig, nspr, bash}:
 let
   s = # Generated upstream information
   rec {
     baseName="badvpn";
-    version="1.999.130";
+    version="1.999.129";
     name="${baseName}-${version}";
-    hash="02b1fra43l75mljkhrq45vcrrqv0znicjn15g7nbqx3jppzbpm5z";
-    url="https://github.com/ambrop72/badvpn/archive/1.999.130.tar.gz";
-    sha256="02b1fra43l75mljkhrq45vcrrqv0znicjn15g7nbqx3jppzbpm5z";
+    hash="078gax6yifkf9y9g01wn1p0dypvgiwcsdmzp1bhwwfi0fbpnzzgl";
+    url="https://github.com/ambrop72/badvpn/archive/1.999.129.tar.gz";
+    sha256="078gax6yifkf9y9g01wn1p0dypvgiwcsdmzp1bhwwfi0fbpnzzgl";
   };
   buildInputs = [
     cmake openssl nss pkgconfig nspr
   ];
-  compileFlags = "-O3 ${stdenv.lib.optionalString (!debug) "-DNDEBUG"}";
 in
 stdenv.mkDerivation {
   inherit (s) name version;
@@ -24,7 +23,6 @@ stdenv.mkDerivation {
   preConfigure = ''
     find . -name '*.sh' -exec sed -e 's@#!/bin/sh@${stdenv.shell}@' -i '{}' ';'
     find . -name '*.sh' -exec sed -e 's@#!/bin/bash@${bash}/bin/bash@' -i '{}' ';'
-    cmakeFlagsArray=("-DCMAKE_BUILD_TYPE=" "-DCMAKE_C_FLAGS=${compileFlags}");
   '';
 
   meta = {

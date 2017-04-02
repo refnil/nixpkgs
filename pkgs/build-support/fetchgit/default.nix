@@ -1,21 +1,5 @@
-{stdenv, git, cacert}: let
-  urlToName = url: rev: let
-    base = baseNameOf (stdenv.lib.removeSuffix "/" url);
-
-    matched = builtins.match "(.*).git" base;
-
-    short = builtins.substring 0 7 rev;
-
-    appendShort = if (builtins.match "[a-f0-9]*" rev) != null
-      then "-${short}"
-      else "";
-  in "${if matched == null then base else builtins.head matched}${appendShort}";
-in
-{ url, rev ? "HEAD", md5 ? "", sha256 ? "", leaveDotGit ? deepClone
-, fetchSubmodules ? true, deepClone ? false
-, branchName ? null
-, name ? urlToName url rev
-}:
+{stdenv, git, cacert}:
+{url, rev ? "HEAD", md5 ? "", sha256 ? "", leaveDotGit ? false, fetchSubmodules ? true}:
 
 /* NOTE:
    fetchgit has one problem: git fetch only works for refs.
@@ -26,7 +10,7 @@ in
    Cloning branches will make the hash check fail when there is an update.
    But not all patches we want can be accessed by tags.
 
-   The workaround is getting the last n commits so that it's likely that they
+   The workaround is getting the last n commits so that it's likly that they
    still contain the hash we want.
 
    for now : increase depth iteratively (TODO)
@@ -39,28 +23,30 @@ in
    server admins start using the new version?
 */
 
-assert deepClone -> leaveDotGit;
+assert md5 != "" || sha256 != "";
 
-if md5 != "" then
-  throw "fetchgit does not support md5 anymore, please use sha256"
-else
 stdenv.mkDerivation {
-  inherit name;
+  name = "git-export";
   builder = ./builder.sh;
-  fetcher = "${./nix-prefetch-git}";  # This must be a string to ensure it's called with bash.
+  fetcher = ./nix-prefetch-git;
   buildInputs = [git];
 
-  outputHashAlgo = "sha256";
+  outputHashAlgo = if sha256 == "" then "md5" else "sha256";
   outputHashMode = "recursive";
-  outputHash = sha256;
+  outputHash = if sha256 == "" then md5 else sha256;
 
-  inherit url rev leaveDotGit fetchSubmodules deepClone branchName;
+  inherit url rev leaveDotGit fetchSubmodules;
 
-  GIT_SSL_CAINFO = "${cacert}/etc/ssl/certs/ca-bundle.crt";
+  GIT_SSL_CAINFO = "${cacert}/etc/ca-bundle.crt";
 
-  impureEnvVars = stdenv.lib.fetchers.proxyImpureEnvVars ++ [
-    "GIT_PROXY_COMMAND" "SOCKS_SERVER"
-  ];
+  impureEnvVars = [
+    # We borrow these environment variables from the caller to allow
+    # easy proxy configuration.  This is impure, but a fixed-output
+    # derivation like fetchurl is allowed to do so since its result is
+    # by definition pure.
+    "http_proxy" "https_proxy" "ftp_proxy" "all_proxy" "no_proxy"
+    ];
 
   preferLocalBuild = true;
 }
+

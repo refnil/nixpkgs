@@ -1,25 +1,24 @@
-{ fetchurl, stdenv, lib
+{ fetchurl, stdenv
 , cmake, mesa
 , freetype, freeimage, zziplib, randrproto, libXrandr
 , libXaw, freeglut, libXt, libpng, boost, ois
 , xproto, libX11, libXmu, libSM, pkgconfig
 , libXxf86vm, xf86vidmodeproto, libICE
 , renderproto, libXrender
-, withNvidiaCg ? false, nvidia_cg_toolkit
-, withSamples ? false }:
+, nvidia_cg_toolkit }:
 
 stdenv.mkDerivation {
-  name = "ogre-1.9-hg-20160322";
+  name = "ogre-1.8.1";
 
   src = fetchurl {
-     url = "https://bitbucket.org/sinbad/ogre/get/v1-9.tar.gz";
-     sha256 = "0w3argjy1biaxwa3c80zxxgll67wjp8czd83p87awlcvwzdk5mz9";
+    url = "mirror://sourceforge/ogre/1.8.1/ogre_src_v1-8-1.tar.bz2";
+    sha256 = "1avadx87sdfdk8165wlffnd5dzks694dcdnkg3ijap966k4qm46s";
   };
 
-  cmakeFlags = [ "-DOGRE_BUILD_SAMPLES=${toString withSamples}" ]
-    ++ map (x: "-DOGRE_BUILD_PLUGIN_${x}=on")
-           ([ "BSP" "OCTREE" "PCZ" "PFX" ] ++ lib.optional withNvidiaCg "CG")
-    ++ map (x: "-DOGRE_BUILD_RENDERSYSTEM_${x}=on") [ "GL" ];
+  cmakeFlags = [ "-DOGRE_INSTALL_SAMPLES=yes" ]
+    ++ (map (x: "-DOGRE_BUILD_PLUGIN_${x}=on")
+            [ "BSP" "CG" "OCTREE" "PCZ" "PFX" ])
+    ++ (map (x: "-DOGRE_BUILD_RENDERSYSTEM_${x}=on") [ "GL" ]);
 
   enableParallelBuilding = true;
 
@@ -30,7 +29,8 @@ stdenv.mkDerivation {
      xproto libX11 libXmu libSM pkgconfig
      libXxf86vm xf86vidmodeproto libICE
      renderproto libXrender
-   ] ++ lib.optional withNvidiaCg nvidia_cg_toolkit;
+     nvidia_cg_toolkit
+   ];
 
   meta = {
     description = "A 3D engine";

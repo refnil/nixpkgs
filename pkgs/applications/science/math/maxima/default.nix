@@ -1,25 +1,22 @@
-{ stdenv, fetchurl, sbcl, texinfo, perl, python, makeWrapper, rlwrap ? null,
-tk ? null, gnuplot ? null, ecl ? null, ecl-fasl ? false
-}:
+{ stdenv, fetchurl, sbcl, texinfo, perl, makeWrapper, rlwrap ? null, tk ? null, gnuplot ? null }:
 
 let
   name    = "maxima";
-  version = "5.39.0";
+  version = "5.33.0";
 
   searchPath =
-    stdenv.lib.makeBinPath
-      (stdenv.lib.filter (x: x != null) [ sbcl ecl rlwrap tk gnuplot ]);
+    stdenv.lib.makeSearchPath "bin"
+      (stdenv.lib.filter (x: x != null) [ sbcl rlwrap tk gnuplot ]);
 in
-stdenv.mkDerivation ({
+stdenv.mkDerivation {
   name = "${name}-${version}";
 
   src = fetchurl {
     url = "mirror://sourceforge/${name}/${name}-${version}.tar.gz";
-    sha256 = "1cvignn5y6qzrby6qb885yc8zdcdqdr1d50vcvc3gapw2f0gk3zm";
+    sha256 = "13axm11xw0f3frx5b0qdidi7igkn1524fzz77s9rbpl2yy2nrbz2";
   };
 
-  buildInputs = stdenv.lib.filter (x: x != null)
-    [sbcl ecl texinfo perl python makeWrapper];
+  buildInputs = [sbcl texinfo perl makeWrapper];
 
   postInstall = ''
     # Make sure that maxima can find its runtime dependencies.
@@ -30,21 +27,18 @@ stdenv.mkDerivation ({
     mkdir -p $out/share/emacs $out/share/doc
     ln -s ../maxima/${version}/emacs $out/share/emacs/site-lisp
     ln -s ../maxima/${version}/doc $out/share/doc/maxima
-  ''
-   + (stdenv.lib.optionalString ecl-fasl ''
-     cp src/binary-ecl/maxima.fas* "$out/lib/maxima/${version}/binary-ecl/"
-   '')
-  ;
+  '';
 
-  # Failures in the regression test suite won't abort the build process. We run
-  # the suite only so that potential errors show up in the build log. See also:
-  # http://sourceforge.net/tracker/?func=detail&aid=3365831&group_id=4933&atid=104933.
+  # Failures in the regression test suite are not going to abort the
+  # build process. We run the suite mostly so that potential errors show
+  # up in the build log. See also:
+  # <http://sourceforge.net/tracker/?func=detail&aid=3365831&group_id=4933&atid=104933>.
   doCheck = true;
 
   enableParallelBuilding = true;
 
   meta = {
-    description = "Computer algebra system";
+    description = "Maxima computer algebra system";
     homepage = "http://maxima.sourceforge.net";
     license = stdenv.lib.licenses.gpl2;
 
@@ -56,11 +50,6 @@ stdenv.mkDerivation ({
     '';
 
     platforms = stdenv.lib.platforms.unix;
-    maintainers = [ stdenv.lib.maintainers.peti ];
-    broken = ecl != null;
+    maintainers = [ stdenv.lib.maintainers.simons ];
   };
-} // (stdenv.lib.optionalAttrs ecl-fasl {
-  preConfigure = ''
-    sed -e '/c::build-program "binary-ecl\/maxima"/i(c::build-fasl "binary-ecl\/maxima.fasl" :lisp-files obj :ld-flags (let ((x (symbol-value (find-symbol "*AUTOCONF-LD-FLAGS*" (find-package "MAXIMA"))))) (if (and x (not (string= x ""))) (list x))))' -i src/maxima.system
-  '';
-}))
+}

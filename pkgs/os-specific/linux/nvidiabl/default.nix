@@ -1,19 +1,12 @@
-{ stdenv, fetchFromGitHub, kernel }:
+{ stdenv, fetchurl, kernel }:
 
-stdenv.mkDerivation rec {
-  name = "nvidiabl-${version}-${kernel.version}";
-  version = "0.87";
+stdenv.mkDerivation {
+  name = "nvidiabl-0.85-${kernel.version}";
 
-  src = fetchFromGitHub {
-    owner = "guillaumezin";
-    repo = "nvidiabl";
-    rev = "v${version}";
-    sha256 = "1hs61dxn84vsyvrd2s899dhgg342mhfkbdn1nkhcvly45hdp2nca";
+  src = fetchurl {
+    url = "https://github.com/guillaumezin/nvidiabl/archive/v0.85.tar.gz";
+    sha256 = "1c7ar39wc8jpqh67sw03lwnyp0m9l6dad469ybqrgcywdiwxspwj";
   };
-
-  hardeningDisable = [ "pic" ];
-
-  patches = [ ./linux4compat.patch ];
 
   preConfigure = ''
     sed -i 's|/sbin/depmod|#/sbin/depmod|' Makefile
@@ -22,14 +15,11 @@ stdenv.mkDerivation rec {
   makeFlags = [
     "KDIR=${kernel.dev}/lib/modules/${kernel.modDirVersion}/build"
     "DESTDIR=$(out)"
-    "KVER=${kernel.modDirVersion}"
   ];
 
   meta = {
     description = "Linux driver for setting the backlight brightness on laptops using NVIDIA GPU";
     homepage = https://github.com/guillaumezin/nvidiabl;
     license = stdenv.lib.licenses.gpl2;
-    platforms = stdenv.lib.platforms.linux;
-    broken = !stdenv.lib.versionOlder kernel.version "4.9";
   };
 }

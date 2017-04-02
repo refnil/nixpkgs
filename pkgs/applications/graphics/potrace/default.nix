@@ -1,23 +1,24 @@
 { stdenv, fetchurl, zlib }:
 
-stdenv.mkDerivation rec {
+let version = "1.11"; in
+
+stdenv.mkDerivation {
   name = "potrace-${version}";
-  version = "1.14";
 
   src = fetchurl {
-    url = "http://potrace.sourceforge.net/download/${version}/potrace-${version}.tar.gz";
-    sha256 = "0znr9i0ljb818qiwm22zw63g11a4v08gc5xkh0wbdp6g259vcwnv";
+    url = "http://potrace.sourceforge.net/download/potrace-${version}.tar.gz";
+    sha256 = "1bbyl7jgigawmwc8r14znv8lb6lrcxh8zpvynrl6s800dr4yp9as";
   };
 
-  configureFlags = [ "--with-libpotrace" ];
+  configureFlags = ["--with-libpotrace"];
 
   buildInputs = [ zlib ];
 
-  meta = with stdenv.lib; {
+  meta = {
     homepage = http://potrace.sourceforge.net/;
     description = "A tool for tracing a bitmap, which means, transforming a bitmap into a smooth, scalable image";
-    platforms = platforms.unix;
-    maintainers = [ maintainers.pSub ];
-    license = licenses.gpl2;
+    platforms = stdenv.lib.platforms.unix;
+    maintainers = [ stdenv.lib.maintainers.pSub ];
+    license = stdenv.lib.licenses.gpl2;
   };
 }

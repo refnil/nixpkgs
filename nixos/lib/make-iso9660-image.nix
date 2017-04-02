@@ -1,4 +1,4 @@
-{ stdenv, perl, pathsFromGraph, xorriso, syslinux
+{ stdenv, perl, cdrkit, pathsFromGraph
 
 , # The file name of the resulting ISO image.
   isoName ? "cd.iso"
@@ -22,35 +22,29 @@
 , # Whether this should be an efi-bootable El-Torito CD.
   efiBootable ? false
 
-, # Whether this should be an hybrid CD (bootable from USB as well as CD).
-  usbBootable ? false
-
 , # The path (in the ISO file system) of the boot image.
   bootImage ? ""
 
 , # The path (in the ISO file system) of the efi boot image.
   efiBootImage ? ""
 
-, # The path (outside the ISO file system) of the isohybrid-mbr image.
-  isohybridMbrImage ? ""
-
 , # Whether to compress the resulting ISO image with bzip2.
   compressImage ? false
 
 , # The volume ID.
   volumeID ? ""
+
 }:
 
 assert bootable -> bootImage != "";
 assert efiBootable -> efiBootImage != "";
-assert usbBootable -> isohybridMbrImage != "";
 
 stdenv.mkDerivation {
-  name = isoName;
+  name = "iso9660-image";
   builder = ./make-iso9660-image.sh;
-  buildInputs = [perl xorriso syslinux];
+  buildInputs = [perl cdrkit];
 
-  inherit isoName bootable bootImage compressImage volumeID pathsFromGraph efiBootImage efiBootable isohybridMbrImage usbBootable;
+  inherit isoName bootable bootImage compressImage volumeID pathsFromGraph efiBootImage efiBootable;
 
   # !!! should use XML.
   sources = map (x: x.source) contents;

@@ -1,19 +1,17 @@
 { fetchurl, stdenv }:
 
 stdenv.mkDerivation rec {
-  name = "rush-1.8";
+  name = "rush-1.7";
 
   src = fetchurl {
     url = "mirror://gnu/rush/${name}.tar.gz";
-    sha256 = "1vxdb81ify4xcyygh86250pi50krb16dkj42i5ii4ns3araiwckz";
+    sha256 = "0fh0gbbp0iiq3wbkf503xb40r8ljk42vyj9bnlflbz82d6ipy1rm";
   };
-
-  patches = [ ./fix-format-security-error.patch ];
 
   doCheck = true;
 
   meta = {
-    description = "Restricted User Shell";
+    description = "GNU Rush, Restricted User Shell";
 
     longDescription =
       '' GNU Rush is a Restricted User Shell, designed for sites
@@ -34,9 +32,5 @@ stdenv.mkDerivation rec {
 
     maintainers = [ stdenv.lib.maintainers.bjg ];
     platforms = stdenv.lib.platforms.all;
-  };
-
-  passthru = {
-    shellPath = "/bin/rush";
   };
 }

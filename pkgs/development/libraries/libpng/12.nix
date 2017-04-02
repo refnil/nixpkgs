@@ -1,18 +1,18 @@
-{ stdenv, fetchurl, zlib }:
+{ stdenv, fetchurl, zlib, xz }:
 
 assert !(stdenv ? cross) -> zlib != null;
 
 stdenv.mkDerivation rec {
-  name = "libpng-1.2.57";
+  name = "libpng-1.2.51";
 
   src = fetchurl {
     url = "mirror://sourceforge/libpng/${name}.tar.xz";
-    sha256 = "1n2lrzjkm5jhfg2bs10q398lkwbbx742fi27zgdgx0x23zhj0ihg";
+    sha256 = "0jkdlmnvn72jwm94dp98pznm9fy7alvcr2zpfh2dgbr2n09vimy7";
   };
 
-  outputs = [ "out" "dev" "man" ];
-
   propagatedBuildInputs = [ zlib ];
+
+  nativeBuildInputs = [ xz ];
 
   passthru = { inherit zlib; };
 
@@ -23,14 +23,9 @@ stdenv.mkDerivation rec {
 
   configureFlags = "--enable-static";
 
-  postInstall = ''mv "$out/bin" "$dev/bin"'';
-
-  meta = with stdenv.lib; {
+  meta = {
     description = "The official reference implementation for the PNG file format";
     homepage = http://www.libpng.org/pub/png/libpng.html;
-    license = licenses.libpng;
-    maintainers = [ maintainers.fuuzetsu ];
-    branch = "1.2";
-    platforms = platforms.unix;
+    license = "free-non-copyleft"; # http://www.libpng.org/pub/png/src/libpng-LICENSE.txt
   };
 }

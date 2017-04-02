@@ -1,18 +1,17 @@
-{ stdenv, fetchurl, pkgconfig, telepathy_glib, farstream, dbus_glib }:
+{ stdenv, fetchurl, telepathy_glib, farstream, gst_plugins_base, dbus_glib
+, pkgconfig, libxslt, python, gstreamer, gst_python, pygobject }:
 
 stdenv.mkDerivation rec {
-  name = "${pname}-0.6.2";
+  name = "${pname}-0.6.1";
   pname = "telepathy-farstream";
 
   src = fetchurl {
     url = "http://telepathy.freedesktop.org/releases/${pname}/${name}.tar.gz";
-    sha256 = "02ky12bb92prr5f6xmvmfq4yz2lj33li6nj4829a98hk5pr9k83g";
+    sha256 = "0ia8nldxxan1cvplr62aicjhfcrm27s3qyk0x46c8q0fmqvnzlm3";
   };
 
-  propagatedBuildInputs = [ dbus_glib telepathy_glib farstream ];
-  nativeBuildInputs = [ pkgconfig ];
+  buildInputs = [ gst_plugins_base gst_python pygobject ];
 
-  meta = {
-    platforms = stdenv.lib.platforms.linux;
-  };
+  propagatedBuildInputs = [ dbus_glib telepathy_glib gstreamer farstream ];
+  nativeBuildInputs = [ pkgconfig python libxslt];
 }

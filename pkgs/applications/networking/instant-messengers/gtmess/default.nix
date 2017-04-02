@@ -1,14 +1,16 @@
 {stdenv, fetchurl, ncurses, openssl, tcl, tk}:
 
 stdenv.mkDerivation {
-  name = "gtmess-0.97";
+  name = "gtmess-0.96";
 
   src = fetchurl {
-    url = mirror://sourceforge/gtmess/gtmess-0.97.tar.gz;
-    sha256 = "1ipmqsrj0r1ssbgs2fpr4x5vnzlxlqhx9jrnadp1jw7s0sxpjqv0";
+    url = mirror://sourceforge/gtmess/gtmess-0.96.tar.gz;
+    sha256 = "0w29wyshx32485c7wazj51lvk2j9k1kn2jmwpf916r4513hwplvm";
   };
 
   buildInputs = [ ncurses openssl tcl tk];
+
+  patches = [ ./va_list.patch ];
 
   meta = {
     description = "Console MSN Messenger client for Linux and other unix systems";

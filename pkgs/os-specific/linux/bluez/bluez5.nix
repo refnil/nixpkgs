@@ -1,31 +1,27 @@
-{ stdenv, fetchurl, pkgconfig, dbus, glib, alsaLib,
-  pythonPackages, readline, libsndfile, udev, libical,
-  systemd, enableWiimote ? false }:
+{ stdenv, fetchurl, pkgconfig, dbus, glib, alsaLib, python,
+  pythonPackages, pythonDBus, readline, libsndfile, udev, libical,
+  systemd }:
 
 assert stdenv.isLinux;
 
 stdenv.mkDerivation rec {
-  name = "bluez-5.43";
-
+  name = "bluez-5.16";
+   
   src = fetchurl {
     url = "mirror://kernel/linux/bluetooth/${name}.tar.xz";
-    sha256 = "05cdnpz0w2lwq2x5ba87q1h2wgb4lfnpbnbh6p7499hx59fw1j8n";
+    sha256 = "0qxivd64az3qziw82axj2ksilllxq4fnb6fdrnlxr6d74550kmf8";
   };
 
   pythonPath = with pythonPackages;
-    [ dbus pygobject2 pygobject3 recursivePthLoader ];
+    [ pythonDBus pygobject pygobject3 recursivePthLoader ];
 
   buildInputs =
-    [ pkgconfig dbus glib alsaLib pythonPackages.python pythonPackages.wrapPython
+    [ pkgconfig dbus.libs glib alsaLib python pythonPackages.wrapPython
       readline libsndfile udev libical
       # Disables GStreamer; not clear what it gains us other than a
       # zillion extra dependencies.
-      # gstreamer gst-plugins-base
+      # gstreamer gst_plugins_base 
     ];
-
-  outputs = [ "out" "dev" "test" ];
-
-  patches = [ ./bluez-5.37-obexd_without_systemd-1.patch ];
 
   preConfigure = ''
       substituteInPlace tools/hid2hci.rules --replace /sbin/udevadm ${systemd}/bin/udevadm
@@ -42,8 +38,7 @@ stdenv.mkDerivation rec {
     "--with-systemdsystemunitdir=$(out)/etc/systemd/system"
     "--with-systemduserunitdir=$(out)/etc/systemd/user"
     "--with-udevdir=$(out)/lib/udev"
-    ] ++
-    stdenv.lib.optional enableWiimote [ "--enable-wiimote" ];
+    ];
 
   # Work around `make install' trying to create /var/lib/bluetooth.
   installFlags = "statedir=$(TMPDIR)/var/lib/bluetooth";
@@ -53,9 +48,9 @@ stdenv.mkDerivation rec {
   # FIXME: Move these into a separate package to prevent Bluez from
   # depending on Python etc.
   postInstall = ''
-    mkdir -p $test/test
-    cp -a test $test
-    pushd $test/test
+    mkdir $out/test
+    cp -a test $out
+    pushd $out/test
     for a in \
             simple-agent \
             test-adapter \
@@ -67,19 +62,12 @@ stdenv.mkDerivation rec {
       ln -s ../test/$a $out/bin/bluez-$a
     done
     popd
-    wrapPythonProgramsIn $test/test "$test/test $pythonPath"
+    wrapPythonProgramsIn $out/test "$out/test $pythonPath"
 
     # for bluez4 compatibility for NixOS
     mkdir $out/sbin
     ln -s ../libexec/bluetooth/bluetoothd $out/sbin/bluetoothd
-    ln -s ../libexec/bluetooth/obexd $out/sbin/obexd
-
-    # Add extra configuration
-    mkdir $out/etc/bluetooth
-    ln -s /etc/bluetooth/main.conf $out/etc/bluetooth/main.conf
   '';
-
-  enableParallelBuilding = true;
 
   meta = with stdenv.lib; {
     homepage = http://www.bluez.org/;

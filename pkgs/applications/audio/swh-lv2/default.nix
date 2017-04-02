@@ -1,16 +1,19 @@
-{ stdenv, fetchurl, fftwSinglePrec, libxslt, lv2, pkgconfig }:
+{ stdenv, fetchgit, fftwSinglePrec, libxslt, lv2, pkgconfig }:
 
+let
+  rev = "ec6b85e19e24ed";
+in
 stdenv.mkDerivation rec {
-  name = "swh-lv2-v${version}";
-  version = "1.0.16";
+  name = "swh-lv2-${rev}";
 
-  src = fetchurl {
-    url = "https://github.com/swh/lv2/archive/v${version}.tar.gz";
-    sha256 = "0j1mih0lp4fds07knp5i32in515sh0df1qi6694pmyz2wqnm295w";
+  src = fetchgit {
+    url = "git://github.com/swh/lv2.git";
+    inherit rev;
+    sha256 = "d0d918ee642cd9649215737fcc008ce2bf55f4ea893a1897138b33775ea60d17";
   };
 
   patchPhase = ''
-    sed -e "s#xsltproc#${libxslt.bin}/bin/xsltproc#" -i Makefile
+    sed -e "s#xsltproc#${libxslt}/bin/xsltproc#" -i Makefile
     sed -e "s#PREFIX = /usr/local#PREFIX = $out#" -i Makefile
   '';
 

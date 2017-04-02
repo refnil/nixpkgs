@@ -2,10 +2,10 @@
 ftgl, freetype}:
 
 stdenv.mkDerivation rec {
-  name = "opencascade-oce-0.17.2";
+  name = "opencascade-oce-0.14.1";
   src = fetchurl {
-    url = https://github.com/tpaviot/oce/archive/OCE-0.17.2.tar.gz;
-    sha256 = "0vpmnb0k5y2f7lpmwx9pg9yfq24zjvnsak5alzacncfm1hv9b6cd";
+    url = https://github.com/tpaviot/oce/archive/OCE-0.14.1.tar.gz;
+    sha256 = "0pfc94nmzipm6zmxywxbly1cpfr6wadxasqqkkbdvzg937mrwl5d";
   };
 
   buildInputs = [ mesa tcl tk file libXmu libtool qt4 ftgl freetype cmake ];
@@ -13,9 +13,6 @@ stdenv.mkDerivation rec {
   preConfigure = ''
     cmakeFlags="$cmakeFlags -DOCE_INSTALL_PREFIX=$out"
   '';
-
-  # https://bugs.freedesktop.org/show_bug.cgi?id=83631
-  NIX_CFLAGS_COMPILE = "-DGLX_GLXEXT_LEGACY";
 
   enableParallelBuilding = true;
 

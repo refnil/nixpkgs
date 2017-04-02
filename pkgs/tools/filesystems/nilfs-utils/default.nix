@@ -1,40 +1,52 @@
-{ stdenv, fetchurl, libuuid, libselinux }:
+x@{builderDefsPackage
+  , libuuid
+  , ...}:
+builderDefsPackage
+(a :  
 let 
+  helperArgNames = ["stdenv" "fetchurl" "builderDefsPackage"] ++ 
+    [];
+
+  buildInputs = map (n: builtins.getAttr n x)
+    (builtins.attrNames (builtins.removeAttrs x helperArgNames));
   sourceInfo = rec {
-    version = "2.2.6";
-    url = "http://nilfs.sourceforge.net/download/nilfs-utils-${version}.tar.bz2";
-    sha256 = "1rjj6pv7yx5wm7b3w6hv88v6r53jqaam5nrnkw2and4ifhsprf3y";
+    version = "2.0.19";
+    url = "http://www.nilfs.org/download/nilfs-utils-${version}.tar.bz2";
+    hash = "0q9cb6ny0ah1s9rz1rgqka1pxdm3xvg0ywcqyhzcz4yhamfhg100";
     baseName = "nilfs-utils";
     name = "${baseName}-${version}";
   };
 in
-stdenv.mkDerivation rec {
-  src = fetchurl {
+rec {
+  src = a.fetchurl {
     url = sourceInfo.url;
-    sha256 = sourceInfo.sha256;
+    sha256 = sourceInfo.hash;
   };
 
   inherit (sourceInfo) name version;
-  buildInputs = [libuuid libselinux];
+  inherit buildInputs;
 
-  preConfigure = ''
-    sed -e '/sysconfdir=\/etc/d; ' -i configure
-    sed -e "s@sbindir=/sbin@sbindir=$out/sbin@" -i configure
-    sed -e 's@/sbin/@'"$out"'/sbin/@' -i ./lib/cleaner*.c
-  '';
+  /* doConfigure should be removed if not needed */
+  phaseNames = ["doFixPaths" "doConfigure" "doMakeInstall"];
 
-  # FIXME: Remove after https://github.com/NixOS/patchelf/pull/98 is in
-  dontPatchELF = true;
+  doFixPaths = a.fullDepEntry (''
+    sed -e '/sysconfdir=\/etc/d; /sbindir=\/sbin/d' -i configure
+    sed -e 's@/sbin/@'"$out"'/sbin/@' -i ./sbin/mount/cleaner_ctl.c
+  '') ["doUnpack" "minInit"];
 
   meta = {
     description = "NILFS utilities";
-    maintainers = with stdenv.lib.maintainers;
+    maintainers = with a.lib.maintainers;
     [
       raskin
     ];
-    platforms = with stdenv.lib.platforms;
+    platforms = with a.lib.platforms;
       linux;
-    downloadPage = "http://nilfs.sourceforge.net/en/download.html";
-    updateWalker = true;
   };
-}
+  passthru = {
+    updateInfo = {
+      downloadPage = "http://www.nilfs.org/download/?C=M;O=D";
+    };
+  };
+}) x
+

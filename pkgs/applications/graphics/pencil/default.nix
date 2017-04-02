@@ -1,36 +1,33 @@
-{ stdenv, fetchurl, makeWrapper, xulrunner }:
+{ stdenv, fetchurl, xulrunner }:
 
 stdenv.mkDerivation rec {
-  version = "2.0.21";
-  name = "pencil-${version}";
+  name = "pencil-2.0.5";
 
   src = fetchurl {
-    url = "https://github.com/prikhi/pencil/releases/download/v${version}/Pencil-${version}-linux-pkg.tar.gz";
-    sha256 = "0xq3gczqy7gzf1997qxdql5z7qqk1vabr0rzgakmsi4dq2q4d3kq";
+    url = "http://evoluspencil.googlecode.com/files/${name}.tar.gz";
+    sha256 = "0rn5nb08p8wph5s5gajkil6y06zgrm86p4gnjdgv76czx1fqazm0";
   };
 
-  buildPhase = "";
-
-  buildInputs = [ makeWrapper ];
+  # Pre-built package
+  buildPhase = "true";
 
   installPhase = ''
     mkdir -p "$out"
     cp -r usr/* "$out"
-    sed -e "s|/usr/share/evolus-pencil|$out/share/evolus-pencil|" \
+    cp COPYING "$out/share/pencil"
+    sed -e "s|/usr/bin/xulrunner|${xulrunner}/bin/xulrunner|" \
+        -e "s|/usr/share/pencil|$out/share/pencil|" \
         -i "$out/bin/pencil"
     sed -e "s|/usr/bin/pencil|$out/bin/pencil|" \
-        -e "s|Icon=.*|Icon=$out/share/evolus-pencil/skin/classic/icon.svg|" \
+        -e "s|Icon=.*|Icon=$out/share/pencil/skin/classic/icon.svg|" \
         -i "$out/share/applications/pencil.desktop"
-
-    wrapProgram $out/bin/pencil \
-      --prefix PATH ":" ${xulrunner}/bin
   '';
 
   meta = with stdenv.lib; {
     description = "GUI prototyping/mockup tool";
-    homepage = http://github.com/prikhi/pencil;
+    homepage = http://pencil.evolus.vn/;
     license = licenses.gpl2; # Commercial license is also available
-    maintainers = with maintainers; [ bjornfor prikhi ];
+    maintainers = [ maintainers.bjornfor ];
     platforms = platforms.linux;
   };
 }

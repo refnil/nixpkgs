@@ -15,7 +15,7 @@ in
 
     enable = mkOption {
       default = false;
-      type = types.bool;
+      type = types.uniq types.bool;
       description = ''
         If true, enable cgit (fast web interface for git repositories) as a
         sub-service in lighttpd. cgit will be accessible at
@@ -44,9 +44,6 @@ in
     # make the cgitrc manpage available
     environment.systemPackages = [ pkgs.cgit ];
 
-    # declare module dependencies
-    services.lighttpd.enableModules = [ "mod_cgi" "mod_alias" "mod_setenv" ];
-
     services.lighttpd.extraConfig = ''
       $HTTP["url"] =~ "^/cgit" {
           cgi.assign = (
@@ -61,11 +58,6 @@ in
               "CGIT_CONFIG" => "${configFile}"
           )
       }
-    '';
-
-    systemd.services.lighttpd.preStart = ''
-      mkdir -p /var/cache/cgit
-      chown lighttpd:lighttpd /var/cache/cgit
     '';
 
   };

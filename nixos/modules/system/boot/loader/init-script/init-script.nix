@@ -23,7 +23,6 @@ in
 
       enable = mkOption {
         default = false;
-        type = types.bool;
         description = ''
           Some systems require a /sbin/init script which is started.
           Or having it makes starting NixOS easier.

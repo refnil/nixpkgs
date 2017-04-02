@@ -37,8 +37,6 @@ in
 
     services.dbus.packages = [ gnome3.evolution_data_server ];
 
-    systemd.packages = [ gnome3.evolution_data_server ];
-
   };
 
 }

@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, unzip, buildPythonApplication, makeDesktopItem
+{ stdenv, fetchurl, unzip, buildPythonPackage, makeDesktopItem
 # mandatory
 , pyside
 # recommended
@@ -7,19 +7,18 @@
 , ipython ? null, pylint ? null, pep8 ? null
 }:
 
-buildPythonApplication rec {
-  name = "spyder-${version}";
-  version = "2.3.8";
+buildPythonPackage rec {
+  name = "spyder-2.2.5";
   namePrefix = "";
 
   src = fetchurl {
-    url = "mirror://pypi/s/spyder/${name}.zip";
-    sha256 = "99fdae2cea325c0f2842c77bd67dd22db19fef3d9c0dde1545b1a2650eae517e";
+    url = "https://spyderlib.googlecode.com/files/${name}.zip";
+    sha256 = "1bxc5qs2bqc21s6kxljsfxnmwgrgnyjfr9mkwzg9njpqsran3bp2";
   };
 
-  # NOTE: sphinx makes the build fail with: ValueError: ZIP does not support timestamps before 1980
+  buildInputs = [ unzip ];
   propagatedBuildInputs =
-    [ pyside pyflakes rope  numpy scipy matplotlib ipython pylint pep8 ];
+    [ pyside pyflakes rope sphinx numpy scipy matplotlib ipython pylint pep8 ];
 
   # There is no test for spyder
   doCheck = false;
@@ -36,21 +35,23 @@ buildPythonApplication rec {
 
   # Create desktop item
   postInstall = ''
-    mkdir -p $out/share/{applications,icons}
-    cp  $desktopItem/share/applications/* $out/share/applications/
-    cp  spyderlib/images/spyder.svg $out/share/icons/
+    mkdir -p $out/share/applications
+    cp $desktopItem/share/applications/* $out/share/applications/
+
+    mkdir -p $out/share/icons
+    cp spyderlib/images/spyder.svg $out/share/icons/
   '';
 
   meta = with stdenv.lib; {
-    description = "Scientific python development environment";
+    description = "Scientific PYthon Development EnviRonment (SPYDER)";
     longDescription = ''
       Spyder (previously known as Pydee) is a powerful interactive development
       environment for the Python language with advanced editing, interactive
       testing, debugging and introspection features.
     '';
-    homepage = https://github.com/spyder-ide/spyder/;
+    homepage = https://code.google.com/p/spyderlib/;
     license = licenses.mit;
     platforms = platforms.linux;
-    maintainers = with maintainers; [ bjornfor fridh ];
+    maintainers = [ maintainers.bjornfor ];
   };
 }

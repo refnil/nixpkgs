@@ -1,18 +1,22 @@
 { stdenv, fetchurl }:
 
 stdenv.mkDerivation rec {
-  name = "connect-${version}";
-  version ="1.105";
-
+  name = "connect-1.95";
+  
   src = fetchurl {
-    url = "https://bitbucket.org/gotoh/connect/get/${version}.tar.bz2";
-    sha256 = "00yld6yinc8s4xv3b8kbvzn2f4rja5dmp6ysv3n4847qn4k60dh7";
+    url = http://savannah.gnu.org/maintenance/connect.c;
+    sha256 = "11dx07pcanwaq71g4xh8d4blr5j7iy0ilmb0fkgpj8p22blb74mf";
   };
 
-  makeFlags = [ "CC=cc" ];      # gcc and/or clang compat
+  phases = "unpackPhase buildPhase fixupPhase";
 
-  installPhase = ''
-    install -D -m ugo=rx connect $out/bin/connect
+  unpackPhase = ''
+    cp $src connect.c
+  '';
+
+  buildPhase = ''
+    ensureDir $out/bin
+    gcc -o $out/bin/connect connect.c
   '';
 
   meta = {
@@ -21,7 +25,7 @@ stdenv.mkDerivation rec {
       This proxy traversal tool is intended to assist OpenSSH (via ProxyCommand
       in ~/.ssh/config) and GIT (via $GIT_PROXY_COMMAND) utilize SOCKS and https proxies. 
       '';
-    homepage = https://bitbucket.org/gotoh/connect/wiki/Home;
+    homepage = http://bent.latency.net/bent/git/goto-san-connect-1.85/src/connect.html; # source URL is busted there
     license = stdenv.lib.licenses.gpl2Plus;
     platforms = stdenv.lib.platforms.gnu;
     maintainers = with stdenv.lib.maintainers; [ jcumming ];

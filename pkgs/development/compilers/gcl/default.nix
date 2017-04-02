@@ -1,44 +1,55 @@
-{ stdenv, fetchurl, mpfr, m4, binutils, fetchcvs, emacs, zlib, which
-, texinfo, libX11, xproto, inputproto, libXi, gmp
-, libXext, xextproto, libXt, libXaw, libXmu } :
+a :  
+let 
+  buildInputs = with a; [
+    mpfr m4 binutils emacs gmp
+    libX11 xproto inputproto libXi 
+    libXext xextproto libXt libXaw libXmu
+    zlib which texinfo texLive
+  ]; 
+in
 
-assert stdenv ? cc ;
-assert stdenv.cc.isGNU ;
-assert stdenv.cc ? libc ;
-assert stdenv.cc.libc != null ;
+(
+assert a.stdenv ? gcc ;
+assert a.stdenv.gcc ? gcc ;
+assert a.stdenv.gcc ? libc ;
+assert a.stdenv.gcc.gcc != null ;
+assert a.stdenv.gcc.libc != null ;
 
-stdenv.mkDerivation rec {
-  name = "gcl-${version}";
-  version = "2.6.12";
-
-  src = fetchurl {
-    sha256 = "1s4hs2qbjqmn9h88l4xvsifq5c3dlc5s74lyb61rdi5grhdlkf4f";
-    url = "http://gnu.spinellicreations.com/gcl/${name}.tar.gz";
+rec {
+  src = a.fetchurl {
+    sha256 = "1vsicv81ml7d92c87bckgkpvcshi6hzdnj44k0j6zs5mj8pzp8br";
+    url="http://gnu.spinellicreations.com/gcl/gcl-2.6.10.tar.gz";
   };
 
-  patches = [(fetchurl {
-    url = https://gitweb.gentoo.org/repo/gentoo.git/plain/dev-lisp/gcl/files/gcl-2.6.12-gcc5.patch;
-    sha256 = "00jbsn0qp8ki2w7dx8caha7g2hr9076xa6bg48j3qqqncff93zdh";
-  })];
-
-  buildInputs = [
-    mpfr m4 binutils emacs gmp
-    libX11 xproto inputproto libXi
-    libXext xextproto libXt libXaw libXmu
-    zlib which texinfo
-  ];
-
+  name = "gcl-2.6.10";
+  inherit buildInputs;
   configureFlags = [
     "--enable-ansi"
   ];
 
-  hardeningDisable = [ "pic" "bindnow" ];
+  # Upstream bug submitted - http://savannah.gnu.org/bugs/index.php?30371
+  # $TMPDIR must have no extension
+  setVars = a.noDepEntry ''
+    export TMPDIR="''${TMPDIR:-''${TMP:-''${TEMP}}}/tmp-for-gcl"
+    mkdir -p "$TMPDIR"
+  '';
 
-  NIX_CFLAGS_COMPILE = "-fgnu89-inline";
+  preBuild = a.fullDepEntry (''
+    sed -re "s@/bin/cat@$(which cat)@g" -i configure */configure
+    sed -re "s@if test -d /proc/self @if false @" -i configure
+    sed -re 's^([ \t])cpp ^\1cpp -I${a.stdenv.gcc.gcc}/include -I${a.stdenv.gcc.libc}/include ^g' -i makefile
+  '') ["minInit" "doUnpack" "addInputs"];
 
+  /* doConfigure should be removed if not needed */
+  phaseNames = ["setVars" "doUnpack" "preBuild" 
+    "doConfigure" "doMakeInstall"];
+}) // {
   meta = {
     description = "GNU Common Lisp compiler working via GCC";
-    maintainers = [ stdenv.lib.maintainers.raskin ];
-    platforms = stdenv.lib.platforms.linux;
+    maintainers = [
+      a.lib.maintainers.raskin
+    ];
+    platforms = with a.lib.platforms; 
+      linux;
   };
 }

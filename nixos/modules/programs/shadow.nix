@@ -1,6 +1,6 @@
 # Configuration for the pwdutils suite of tools: passwd, useradd, etc.
 
-{ config, lib, utils, pkgs, ... }:
+{ config, lib, pkgs, ... }:
 
 with lib;
 
@@ -43,13 +43,13 @@ in
     users.defaultUserShell = lib.mkOption {
       description = ''
         This option defines the default shell assigned to user
-        accounts. This can be either a full system path or a shell package.
-
-        This must not be a store path, since the path is
+        accounts.  This must not be a store path, since the path is
         used outside the store (in particular in /etc/passwd).
+        Rather, it should be the path of a symlink that points to the
+        actual shell in the Nix store.
       '';
-      example = literalExample "pkgs.zsh";
-      type = types.either types.path types.shellPackage;
+      example = "/run/current-system/sw/bin/zsh";
+      type = types.path;
     };
 
   };
@@ -60,9 +60,7 @@ in
   config = {
 
     environment.systemPackages =
-      lib.optional config.users.mutableUsers pkgs.shadow ++
-      lib.optional (types.shellPackage.check config.users.defaultUserShell)
-        config.users.defaultUserShell;
+      lib.optional config.users.mutableUsers pkgs.shadow;
 
     environment.etc =
       [ { # /etc/login.defs: global configuration for pwdutils.  You
@@ -76,7 +74,7 @@ in
             ''
               GROUP=100
               HOME=/home
-              SHELL=${utils.toShellPath config.users.defaultUserShell}
+              SHELL=${config.users.defaultUserShell}
             '';
           target = "default/useradd";
         }
@@ -85,7 +83,7 @@ in
     security.pam.services =
       { chsh = { rootOK = true; };
         chfn = { rootOK = true; };
-        su = { rootOK = true; forwardXAuth = true; logFailures = true; };
+        su = { rootOK = true; forwardXAuth = true; };
         passwd = {};
         # Note: useradd, groupadd etc. aren't setuid root, so it
         # doesn't really matter what the PAM config says as long as it
@@ -99,17 +97,11 @@ in
         groupdel = { rootOK = true; };
         login = { startSession = true; allowNullPassword = true; showMotd = true; updateWtmp = true; };
         chpasswd = { rootOK = true; };
+        chgpasswd = { rootOK = true; };
       };
 
-    security.wrappers = {
-      su.source        = "${pkgs.shadow.su}/bin/su";
-      chfn.source      = "${pkgs.shadow.out}/bin/chfn";
-      newuidmap.source = "${pkgs.shadow.out}/bin/newuidmap";
-      newgidmap.source = "${pkgs.shadow.out}/bin/newgidmap";
-    } // (if config.users.mutableUsers then {
-      passwd.source    = "${pkgs.shadow.out}/bin/passwd";
-      sg.source        = "${pkgs.shadow.out}/bin/sg";
-      newgrp.source    = "${pkgs.shadow.out}/bin/newgrp";
-    } else {});
+    security.setuidPrograms = [ "passwd" "chfn" "su" "newgrp" ];
+
   };
+
 }

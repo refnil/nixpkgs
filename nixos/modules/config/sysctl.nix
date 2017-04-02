@@ -22,9 +22,10 @@ in
 
     boot.kernel.sysctl = mkOption {
       default = {};
-      example = literalExample ''
-        { "net.ipv4.tcp_syncookies" = false; "vm.swappiness" = 60; }
-      '';
+      example = {
+        "net.ipv4.tcp_syncookies" = false;
+        "vm.swappiness" = 60;
+      };
       type = types.attrsOf sysctlOption;
       description = ''
         Runtime parameters of the Linux kernel, as set by
@@ -63,10 +64,6 @@ in
     #
     # Removed under grsecurity.
     boot.kernel.sysctl."kernel.kptr_restrict" =
-      if (config.boot.kernelPackages.kernel.features.grsecurity or false) then null else 1;
-
-    # Disable YAMA by default to allow easy debugging.
-    boot.kernel.sysctl."kernel.yama.ptrace_scope" = mkDefault 0;
-
+      if config.security.grsecurity.enable then null else 1;
   };
 }

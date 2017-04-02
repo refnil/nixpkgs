@@ -2,7 +2,7 @@
 
 stdenv.mkDerivation rec {
   name = "autoconf-2.13";
-
+  
   src = fetchurl {
     url = "mirror://gnu/autoconf/${name}.tar.gz";
     sha256 = "07krzl4czczdsgzrrw9fiqx35xcf32naf751khg821g5pqv12qgh";
@@ -15,8 +15,6 @@ stdenv.mkDerivation rec {
   # Don't fixup "#! /bin/sh" in Autoconf, otherwise it will use the
   # "fixed" path in generated files!
   dontPatchShebangs = true;
-
-  postInstall = ''ln -s autoconf "$out"/bin/autoconf-2.13'';
 
   meta = {
     homepage = http://www.gnu.org/software/autoconf/;
@@ -34,6 +32,5 @@ stdenv.mkDerivation rec {
     '';
 
     license = stdenv.lib.licenses.gpl2Plus;
-    platforms = stdenv.lib.platforms.unix;
   };
 }

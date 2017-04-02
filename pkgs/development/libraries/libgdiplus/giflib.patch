@@ -1,7 +1,8 @@
-diff -Naur libgdiplus-2.10.9-orig/src/gifcodec.c libgdiplus-2.10.9/src/gifcodec.c
+diff --git a/src/gifcodec.c b/src/gifcodec.c
+index 8dee0eb..564beed 100644
 --- src/gifcodec.c
 +++ src/gifcodec.c
-@@ -39,8 +39,10 @@
+@@ -39,8 +39,10 @@ GUID gdip_gif_image_format_guid = {0xb96b3cb0U, 0x0728U, 0x11d3U, {0x9d, 0x7b, 0
  
  #include "gifcodec.h"
  
@@ -12,7 +13,7 @@ diff -Naur libgdiplus-2.10.9-orig/src/gifcodec.c libgdiplus-2.10.9/src/gifcodec.
  
  /* Data structure used for callback */
  typedef struct
-@@ -105,7 +107,7 @@
+@@ -105,7 +107,7 @@ gdip_gif_inputfunc (GifFileType *gif, GifByteType *data, int len)
  */
  
  static int
@@ -21,7 +22,7 @@ diff -Naur libgdiplus-2.10.9-orig/src/gifcodec.c libgdiplus-2.10.9/src/gifcodec.
  {
  	ExtensionBlock	*ep;
  
-@@ -129,7 +131,7 @@
+@@ -129,7 +131,7 @@ AddExtensionBlockMono(SavedImage *New, int Len, BYTE ExtData[])
  
  	if (ExtData) {
  		memcpy(ep->Bytes, ExtData, Len);
@@ -30,7 +31,7 @@ diff -Naur libgdiplus-2.10.9-orig/src/gifcodec.c libgdiplus-2.10.9/src/gifcodec.
  	}
  
  	return (GIF_OK);
-@@ -232,20 +234,20 @@
+@@ -232,20 +234,20 @@ DGifSlurpMono(GifFileType * GifFile, SavedImage *TrailingExtensions)
  			}
  
  			case EXTENSION_RECORD_TYPE: {
@@ -54,7 +55,7 @@ diff -Naur libgdiplus-2.10.9-orig/src/gifcodec.c libgdiplus-2.10.9/src/gifcodec.
  				}
  				break;
  			}
-@@ -303,12 +305,19 @@
+@@ -303,12 +305,19 @@ gdip_load_gif_image (void *stream, GpImage **image, BOOL from_file)
  	result = NULL;
  	loop_counter = FALSE;
  
@@ -75,25 +76,7 @@ diff -Naur libgdiplus-2.10.9-orig/src/gifcodec.c libgdiplus-2.10.9/src/gifcodec.
  	if (gif == NULL) {
  		goto error;
  	}
-@@ -581,7 +590,7 @@
- 	}
- 
- 	FreeExtensionMono(&global_extensions);
--	DGifCloseFile (gif);
-+	DGifCloseFile (gif, NULL);
- 
- 	*image = result;
- 	return Ok;
-@@ -597,7 +606,7 @@
- 
- 	if (gif != NULL) {
- 		FreeExtensionMono (&global_extensions);
--		DGifCloseFile (gif);
-+		DGifCloseFile (gif, NULL);
- 	}
- 
- 	*image = NULL;
-@@ -660,11 +669,22 @@
+@@ -660,11 +669,22 @@ gdip_save_gif_image (void *stream, GpImage *image, BOOL from_file)
  		return InvalidParameter;
  	}
  
@@ -116,7 +99,7 @@ diff -Naur libgdiplus-2.10.9-orig/src/gifcodec.c libgdiplus-2.10.9/src/gifcodec.
  		
  	if (!fp) {
  		return FileNotFound;
-@@ -848,8 +868,15 @@
+@@ -848,8 +868,15 @@ gdip_save_gif_image (void *stream, GpImage *image, BOOL from_file)
  						Buffer[0] = 1;
  						Buffer[1] = ptr[0];
  						Buffer[2] = ptr[1];
@@ -132,12 +115,3 @@ diff -Naur libgdiplus-2.10.9-orig/src/gifcodec.c libgdiplus-2.10.9/src/gifcodec.
  					}
  				}
  
-@@ -923,7 +950,7 @@
- 		}
- 	}
- 
--	EGifCloseFile (fp);	
-+	EGifCloseFile (fp, NULL);	
- 	
- 	return Ok;
-

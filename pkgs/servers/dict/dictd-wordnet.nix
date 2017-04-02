@@ -9,7 +9,7 @@ stdenv.mkDerivation rec {
 
   builder = writeScript "builder.sh" ''
     . ${stdenv}/setup
-    mkdir -p $out/share/dictd/
+    ensureDir $out/share/dictd/
     cd $out/share/dictd
 
     for i in ${wordnet}/dict/data.*; do

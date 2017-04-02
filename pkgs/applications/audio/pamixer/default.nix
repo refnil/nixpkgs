@@ -1,16 +1,20 @@
-{ stdenv, fetchurl, boost, libpulseaudio }:
+{ stdenv, fetchgit, pulseaudio, boost }:
+
+let
+  tag = "1.1";
+in
 
 stdenv.mkDerivation rec {
 
-  name = "pamixer-${version}";
-  version = "1.3";
+  name = "pamixer-${tag}";
 
-  src = fetchurl {
-    url = "https://github.com/cdemoulins/pamixer/archive/${version}.tar.gz";
-    sha256 = "091676ww4jbf4jr728gjfk7fkd5nisy70mr6f3s1p7n05hjpmfjx";
+  src = fetchgit {
+    url = git://github.com/cdemoulins/pamixer;
+    rev = "refs/tags/${tag}";
+    sha256 = "03r0sbfj85wp6yxa87pjg69ivmk0mxxa2nykr8gf2c607igmb034";
   };
 
-  buildInputs = [ boost libpulseaudio ];
+  buildInputs = [ pulseaudio boost ];
 
   installPhase = ''
     mkdir -p $out/bin
@@ -18,18 +22,17 @@ stdenv.mkDerivation rec {
   '';
 
   meta = with stdenv.lib; {
-    description = "Pulseaudio command line mixer";
-    longDescription = ''
-      Features:
-        - Get the current volume of the default sink, the default source or a selected one by his id
-        - Set the volume for the default sink, the default source or any other device
-        - List the sinks
-        - List the sources
-        - Increase / Decrease the volume for a device
-        - Mute or unmute a device
-    '';
+    description = "pamixer is like amixer but for pulseaudio.";
+    longDescription = "Features:
+      - Get the current volume of the default sink, the default source or a selected one by his id
+      - Set the volume for the default sink, the default source or any other device
+      - List the sinks
+      - List the sources
+      - Increase / Decrease the volume for a device
+      - Mute or unmute a device";
     homepage = https://github.com/cdemoulins/pamixer;
     license = licenses.gpl3;
     platforms = platforms.linux;
+    maintainers = [ maintainers._1126 ];
   };
 }

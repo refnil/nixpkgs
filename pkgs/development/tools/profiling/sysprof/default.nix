@@ -1,5 +1,5 @@
 { fetchurl, stdenv, binutils
-, pkgconfig, gtk2, glib, pango, libglade }:
+, pkgconfig, gtk, glib, pango, libglade }:
 
 stdenv.mkDerivation rec {
   name = "sysprof-1.2.0";
@@ -9,11 +9,11 @@ stdenv.mkDerivation rec {
     sha256 = "1wb4d844rsy8qjg3z5m6rnfm72da4xwzrrkkb1q5r10sq1pkrw5s";
   };
 
-  buildInputs = [ binutils pkgconfig gtk2 glib pango libglade ];
+  buildInputs = [ binutils pkgconfig gtk glib pango libglade ];
 
   meta = {
     homepage = http://sysprof.com/;
-    description = "System-wide profiler for Linux";
+    description = "Sysprof, a system-wide profiler for Linux";
     license = stdenv.lib.licenses.gpl2Plus;
 
     longDescription = ''
@@ -23,6 +23,5 @@ stdenv.mkDerivation rec {
       do not need to be recompiled.  In fact they don't even have to
       be restarted.
     '';
-    platforms = stdenv.lib.platforms.linux;
   };
 }

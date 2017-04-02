@@ -1,15 +1,15 @@
 {stdenv, fetchurl}:
 
 stdenv.mkDerivation rec {
-  name = "gperf-3.1";
+  name = "gperf-3.0.4";
 
   src = fetchurl {
     url = "mirror://gnu/gperf/${name}.tar.gz";
-    sha256 = "1qispg6i508rq8pkajh26cznwimbnj06wq9sd85vg95v8nwld1aq";
+    sha256 = "0gnnm8iqcl52m8iha3sxrzrl9mcyhg7lfrhhqgdn4zj00ji14wbn";
   };
 
   meta = {
-    description = "Perfect hash function generator";
+    description = "GNU gperf, a perfect hash function generator";
 
     longDescription = ''
       GNU gperf is a perfect hash function generator.  For a given
@@ -28,6 +28,5 @@ stdenv.mkDerivation rec {
     license = stdenv.lib.licenses.gpl3Plus;
 
     homepage = http://www.gnu.org/software/gperf/;
-    platforms = stdenv.lib.platforms.unix;
   };
 }

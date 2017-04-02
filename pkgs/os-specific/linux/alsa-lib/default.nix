@@ -1,18 +1,28 @@
-{ stdenv, fetchurl }:
+{stdenv, fetchurl}:
 
 stdenv.mkDerivation rec {
-  name = "alsa-lib-1.1.2";
+  name = "alsa-lib-1.0.27.2";
 
   src = fetchurl {
     urls = [
      "ftp://ftp.alsa-project.org/pub/lib/${name}.tar.bz2"
      "http://alsa.cybermirror.org/lib/${name}.tar.bz2"
     ];
-    sha256 = "1mk1v2av6ibyydgr6f2mxrwy7clgnf0c68s9y2zvh1ibi7csr3fk";
+    sha256 = "068d8c92122hwca5jzhrjp4a131995adlb1d79zgrm7gwy9x63k9";
   };
 
   patches = [
-    ./alsa-plugin-conf-multilib.patch
+    /* allow specifying alternatives alsa plugin locations using
+       export ALSA_PLUGIN_DIRS=$(nix-build -A alsaPlugins)/lib/alsa-lib
+       This patch should be improved:
+       See http://thread.gmane.org/gmane.linux.distributions.nixos/3435
+    */
+    ./alsa-plugin-dirs.patch
+
+    /* patch provided by larsc on irc.
+       it may be a compiler problem on mips; without this, alsa does not build
+       on mips, because lacks some symbols atomic_add/atomic_sub  */
+    ./mips-atomic.patch
   ];
 
   # Fix pcm.h file in order to prevent some compilation bugs
@@ -25,9 +35,15 @@ stdenv.mkDerivation rec {
     sed -i -e 's/u_int\([0-9]*\)_t/uint\1_t/g' include/pcm.h
   '';
 
-  outputs = [ "out" "dev" ];
+  configureFlags = "--disable-xmlto";
 
-  meta = with stdenv.lib; {
+  crossAttrs = {
+    patchPhase = ''
+      sed -i s/extern/static/g include/iatomic.h
+    '';
+  };
+
+  meta = {
     homepage = http://www.alsa-project.org/;
     description = "ALSA, the Advanced Linux Sound Architecture libraries";
 
@@ -36,7 +52,6 @@ stdenv.mkDerivation rec {
       MIDI functionality to the Linux-based operating system.
     '';
 
-    license = licenses.gpl3Plus;
-    platforms = platforms.linux;
+    platforms = stdenv.lib.platforms.linux;
   };
 }

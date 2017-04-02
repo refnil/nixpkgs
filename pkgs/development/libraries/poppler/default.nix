@@ -1,74 +1,76 @@
-{ stdenv, lib, fetchurl, fetchpatch, pkgconfig, libiconv, libintlOrEmpty
+{ stdenv, fetchurl, fetchgit, pkgconfig, cmake, libiconvOrEmpty, libintlOrEmpty
 , zlib, curl, cairo, freetype, fontconfig, lcms, libjpeg, openjpeg
-, withData ? false, poppler_data
 , qt4Support ? false, qt4 ? null
-, qt5Support ? false, qtbase ? null
-, introspectionSupport ? false, gobjectIntrospection ? null
-, utils ? false
-, minimal ? false, suffix ? "glib"
 }:
 
-let # beware: updates often break cups-filters build
-  version = "0.50.0";
-  sha256 = "0dmwnh59m75vhii6dw63x8l0qa0ha733pb8bdqzr7lw9nwc37jf9";
-in
-stdenv.mkDerivation rec {
-  name = "poppler-${suffix}-${version}";
+let
+  version = "0.24.5"; # even major numbers are stable
+  sha256 = "114zfm4771iq25wa4bsg4nc2gnr6waaj8936wd23r4hc2084jrd2";
 
-  src = fetchurl {
-    url = "${meta.homepage}/poppler-${version}.tar.xz";
-    inherit sha256;
-  };
+  qtcairo_patches =
+    let qtcairo = fetchgit { # the version for poppler-0.24
+      url = "git://github.com/giddie/poppler-qt4-cairo-backend.git";
+      rev = "c4578cde09834e0d70873f63b1c2a410f66bb4f9";
+      sha256 = "07bs2phmp7f4mqrwqz2bgyw2gw7s00mwsm548bsikyz1cbj7fl93";
+    }; in
+      [ "${qtcairo}/0001-Cairo-backend-added-to-Qt4-wrapper.patch"
+        "${qtcairo}/0002-Setting-default-Qt4-backend-to-Cairo.patch"
+        "${qtcairo}/0003-Forcing-subpixel-rendering-in-Cairo-backend.patch" ];
 
-  outputs = [ "out" "dev" ];
+  poppler_drv = nameSuff: merge: stdenv.mkDerivation (stdenv.lib.mergeAttrsByFuncDefaultsClean [
+  rec {
+    name = "poppler-${nameSuff}-${version}";
 
-  buildInputs = [ libiconv ] ++ libintlOrEmpty ++ lib.optional withData poppler_data;
+    src = fetchurl {
+      url = "${meta.homepage}/poppler-${version}.tar.xz";
+      inherit sha256;
+    };
 
-  # TODO: reduce propagation to necessary libs
-  propagatedBuildInputs = with lib;
-    [ zlib freetype fontconfig libjpeg openjpeg ]
-    ++ optionals (!minimal) [ cairo lcms curl ]
-    ++ optional qt4Support qt4
-    ++ optional qt5Support qtbase
-    ++ optional introspectionSupport gobjectIntrospection;
+    propagatedBuildInputs = [ zlib cairo freetype fontconfig libjpeg lcms curl openjpeg ];
 
-  nativeBuildInputs = [ pkgconfig ];
+    nativeBuildInputs = [ pkgconfig cmake ] ++ libiconvOrEmpty ++ libintlOrEmpty;
 
-  NIX_CFLAGS_COMPILE = [ "-DQT_NO_DEBUG" ];
+    cmakeFlags = "-DENABLE_XPDF_HEADERS=ON -DENABLE_LIBCURL=ON -DENABLE_ZLIB=ON";
 
-  CXXFLAGS = lib.optional qt5Support "-std=c++11";
+    patches = [ ./datadir_env.patch ./poppler-glib.patch ];
 
-  configureFlags = with lib;
-    [
-      "--enable-xpdf-headers"
-      "--enable-libcurl"
-      "--enable-zlib"
-      "--enable-build-type=release"
-    ]
-    ++ optionals minimal [
-      "--disable-poppler-glib" "--disable-poppler-cpp"
-      "--disable-libcurl"
-    ]
-    ++ optional (!utils) "--disable-utils"
-    ++ optional introspectionSupport "--enable-introspection";
+    # XXX: The Poppler/Qt4 test suite refers to non-existent PDF files
+    # such as `../../../test/unittestcases/UseNone.pdf'.
+    #doCheck = !qt4Support;
+    checkTarget = "test";
 
-  enableParallelBuilding = true;
+    enableParallelBuilding = true;
 
-  crossAttrs.postPatch =
-    # there are tests using `strXXX_s` functions that are missing apparently
-    stdenv.lib.optionalString (stdenv.cross.libc or null == "msvcrt")
-      "sed '/^SUBDIRS =/s/ test / /' -i Makefile.in";
+    meta = {
+      homepage = http://poppler.freedesktop.org/;
+      description = "A PDF rendering library";
 
-  meta = with lib; {
-    homepage = http://poppler.freedesktop.org/;
-    description = "A PDF rendering library";
+      longDescription = ''
+        Poppler is a PDF rendering library based on the xpdf-3.0 code base.
+      '';
 
-    longDescription = ''
-      Poppler is a PDF rendering library based on the xpdf-3.0 code base.
+      license = stdenv.lib.licenses.gpl2;
+      platforms = stdenv.lib.platforms.all;
+    };
+  } merge ]); # poppler_drv
+
+  /* We always use cairo in poppler, so we always depend on glib,
+     so we always build the glib wrapper (~350kB).
+     We also always build the cpp wrapper (<100kB).
+     ToDo: around half the size could be saved by splitting out headers and tools (1.5 + 0.5 MB).
+  */
+
+  poppler_glib = poppler_drv "glib" { };
+
+  poppler_qt4 = poppler_drv "qt4" {
+    propagatedBuildInputs = [ qt4 poppler_glib ];
+    patches = qtcairo_patches;
+    NIX_LDFLAGS = "-lpoppler";
+    postConfigure = ''
+      mkdir -p "$out/lib/pkgconfig"
+      install -c -m 644 poppler-qt4.pc "$out/lib/pkgconfig"
+      cd qt4
     '';
-
-    license = licenses.gpl2;
-    platforms = platforms.all;
-    maintainers = with maintainers; [ ttuegel ];
   };
-}
+
+in { inherit poppler_glib poppler_qt4; } // poppler_glib

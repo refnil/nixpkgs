@@ -1,33 +1,51 @@
-{ stdenv, fetchurl, foomatic-filters, bc, unzip, ghostscript, systemd, vim }:
+x@{builderDefsPackage
+  , foomatic_filters, bc, unzip, ghostscript, udev, vim
+  , ...}:
+builderDefsPackage
+(a :  
+let 
+  helperArgNames = ["stdenv" "fetchurl" "builderDefsPackage"] ++ 
+    [];
 
-stdenv.mkDerivation rec {
-  name = "foo2zjs-20110210";
-
-  src = fetchurl {
-    url = "http://www.loegria.net/mirrors/foo2zjs/${name}.tar.gz";
-    sha256 = "0vss8gdbbgxr694xw48rys2qflbnb4sp4gdb1v6z4m9ab97hs5yk";
+  buildInputs = map (n: builtins.getAttr n x)
+    (builtins.attrNames (builtins.removeAttrs x helperArgNames));
+  sourceInfo = rec {
+    baseName="foo2zjs";
+    version="20110210";
+    name="${baseName}-${version}";
+    url="http://www.loegria.net/mirrors/foo2zjs/${name}.tar.gz";
+    hash="0vss8gdbbgxr694xw48rys2qflbnb4sp4gdb1v6z4m9ab97hs5yk";
+  };
+in
+rec {
+  src = a.fetchurl {
+    url = sourceInfo.url;
+    sha256 = sourceInfo.hash;
   };
 
-  buildInputs = [ foomatic-filters bc unzip ghostscript systemd vim ];
+  inherit (sourceInfo) name version;
+  inherit buildInputs;
+
+  phaseNames = ["doPatch" "fixHardcodedPaths" "doMakeDirs" "doMakeInstall" "deployGetWeb"];
 
   patches = [ ./no-hardcode-fw.diff ];
 
   makeFlags = [
-    "PREFIX=$(out)"
-    "APPL=$(out)/share/applications"
-    "PIXMAPS=$(out)/share/pixmaps"
-    "UDEVBIN=$(out)/bin"
-    "UDEVDIR=$(out)/etc/udev/rules.d"
-    "UDEVD=${systemd.udev.bin}/sbin/udevd"
-    "LIBUDEVDIR=$(out)/lib/udev/rules.d"
-    "USBDIR=$(out)/etc/hotplug/usb"
-    "FOODB=$(out)/share/foomatic/db/source"
-    "MODEL=$(out)/share/cups/model"
+      ''PREFIX=$out''
+      ''APPL=$out/share/applications''
+      ''PIXMAPS=$out/share/pixmaps''
+      ''UDEVBIN=$out/bin''
+      ''UDEVDIR=$out/etc/udev/rules.d''
+      ''UDEVD=${udev}/sbin/udevd''
+      ''LIBUDEVDIR=$out/lib/udev/rules.d''
+      ''USBDIR=$out/etc/hotplug/usb''
+      ''FOODB=$out/share/foomatic/db/source''
+      ''MODEL=$out/share/cups/model''
   ];
 
   installFlags = [ "install-hotplug" ];
 
-  postPatch = ''
+  fixHardcodedPaths = a.fullDepEntry ''
     touch all-test
     sed -e "/BASENAME=/iPATH=$out/bin:$PATH" -i *-wrapper *-wrapper.in
     sed -e "s@PREFIX=/usr@PREFIX=$out@" -i *-wrapper{,.in}
@@ -37,25 +55,28 @@ stdenv.mkDerivation rec {
     sed -e "s@/etc/hotplug/usb@$out&@" -i *rules*
     sed -e "s@/usr@$out@g" -i hplj1020.desktop
     sed -e "/PRINTERID=/s@=.*@=$out/bin/usb_printerid@" -i hplj1000
-  '';
+  '' ["doPatch" "minInit"];
 
-  preInstall = ''
+  doMakeDirs = a.fullDepEntry ''
     mkdir -pv $out/{etc/udev/rules.d,lib/udev/rules.d,etc/hotplug/usb}
     mkdir -pv $out/share/foomatic/db/source/{opt,printer,driver}
     mkdir -pv $out/share/cups/model
     mkdir -pv $out/share/{applications,pixmaps}
+  '' ["minInit"];
 
+  deployGetWeb = a.fullDepEntry ''
     mkdir -pv "$out/bin"
     cp -v getweb arm2hpdl "$out/bin"
-  '';
-
-  meta = with stdenv.lib; {
+  '' ["minInit"];
+      
+  meta = {
     description = "ZjStream printer drivers";
-    maintainers = with maintainers;
+    maintainers = with a.lib.maintainers;
     [
-      raskin
+      raskin urkud
     ];
-    platforms = platforms.linux;
-    license = licenses.gpl2Plus;
+    platforms = with a.lib.platforms;
+      linux;
+    license = a.lib.licenses.gpl2Plus;
   };
-}
+}) x

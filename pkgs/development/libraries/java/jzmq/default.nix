@@ -1,30 +1,27 @@
-{ stdenv, fetchFromGitHub, autoreconfHook, pkgconfig, zeromq3, jdk }:
+{stdenv, fetchgit, automake, autoconf, libtool, pkgconfig, zeromq2, jdk}:
 
 stdenv.mkDerivation rec {
-  name = "jzmq-${version}";
-  version = "3.1.0";
+  name = "jzmq-2.1.0";
 
-  src = fetchFromGitHub {
-    owner = "zeromq";
-    repo = "jzmq";
-    rev = "v${version}";
-    sha256 = "1wlzs604mgmqmrgpk4pljx2nrlxzdfi3r8k59qlm90fx8qkqkc63";
+  src = fetchgit {
+    url = git://github.com/zeromq/jzmq.git;
+    rev = "946fd39780423b2df6e5efd9fa2cd863fd79c9db";
   };
 
-  nativeBuildInputs = [ autoreconfHook ];
-  buildInputs = [ pkgconfig zeromq3 jdk ];
+  buildInputs = [ automake autoconf libtool pkgconfig zeromq2 jdk ];
 
+  preConfigurePhases = ["./autogen.sh"];
   preConfigure = ''
+    sed -i -e 's|(JAVAC)|(JAVAC) -encoding utf8|' src/Makefile.in
     ${if stdenv.system == "x86_64-darwin" then
       '' sed -i -e 's~/Headers~/include~' -e 's~_JNI_INC_SUBDIRS=\".*\"~_JNI_INC_SUBDIRS=\"darwin\"~' configure
       '' else ""}
   '';
 
+
+  maintainers = [ stdenv.lib.maintainers.vizanto ];
   meta = {
     homepage = "http://www.zeromq.org";
     description = "Java bindings for ZeroMQ";
-    platforms = stdenv.lib.platforms.unix;
-    license = stdenv.lib.licenses.lgpl3;
-    maintainers = [ stdenv.lib.maintainers.vizanto ];
   };
 }

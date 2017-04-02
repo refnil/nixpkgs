@@ -23,6 +23,5 @@ stdenv.mkDerivation rec {
   meta = with stdenv.lib; {
     description = "A symbolic link maintenance utility";
     maintainers = [ maintainers.goibhniu ];
-    platforms = platforms.linux;
   };
 }

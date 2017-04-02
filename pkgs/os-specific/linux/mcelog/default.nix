@@ -1,46 +1,37 @@
-{ stdenv, fetchFromGitHub, utillinux }:
+{ stdenv, fetchgit }:
 
-stdenv.mkDerivation rec {
+# Shows the machine check exceptions logged by the kernel.
+# E.g. a log is generated when intel processors cpu-throttle.
+
+# The releases of this package are no longer on kernel.org
+# hence we fetch them from github. Apparently, these
+# are also more recent.
+
+let
+
+  rev = "7fa99818367a6d17014b36d6f918ad848cbe7ce2";
+  version = "1.0pre-${stdenv.lib.strings.substring 0 7 rev}"; 
+  sha256 = "15eea3acd76190c7922c71028b31963221a2eefd8afa713879e191a26bc22ae7";
+
+in stdenv.mkDerivation {
+
   name = "mcelog-${version}";
-  version = "148";
 
-  src = fetchFromGitHub {
-    sha256 = "04mzscvr38r2q9da9wmv3cxb99vrkxks1mzgvwsxk753xan3p42c";
-    rev = "v${version}";
-    repo = "mcelog";
-    owner = "andikleen";
+  src = fetchgit {
+    url = "https://github.com/andikleen/mcelog";
+    inherit sha256;
+    inherit rev;
   };
 
-  postPatch = ''
-    for i in mcelog.conf paths.h; do
-      substituteInPlace $i --replace /etc $out/etc
-    done
-    touch mcelog.conf.5 # avoid regeneration requiring Python
+  makeFlags = "prefix=$(out) etcprefix=$(out) DOCDIR=$(out)/share/doc";
 
-    substituteInPlace Makefile --replace '"unknown"' '"${version}"'
-
-    for i in triggers/*; do
-      substituteInPlace $i --replace 'logger' '${utillinux}/bin/logger'
-    done
+  preInstall = ''
+    ensureDir $out/share/doc
   '';
 
-  enableParallelBuilding = true;
-
-  installFlags = [ "DESTDIR=$(out)" "prefix=" "DOCDIR=/share/doc" ];
-
-  meta = with stdenv.lib; {
-    description = "Log x86 machine checks: memory, IO, and CPU hardware errors";
-    longDescription = ''
-      The mcelog daemon accounts memory and some other errors in various ways
-      on modern x86 Linux systems. The daemon can be queried and/or execute
-      triggers when configurable error thresholds are exceeded. This is used to
-      implement a range of automatic predictive failure analysis algorithms,
-      including bad page offlining and automatic cache error handling. All
-      errors are logged to /var/log/mcelog or syslog or the journal.
-    '';
+  meta = {
+    description = "Tool to display logged machine check exceptions";
     homepage = http://mcelog.org/;
-    license = licenses.gpl2;
-    platforms = platforms.linux;
-    maintainers = with maintainers; [ nckx ];
+    license = stdenv.lib.licenses.gpl2;
   };
 }

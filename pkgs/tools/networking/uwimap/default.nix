@@ -14,19 +14,16 @@ stdenv.mkDerivation {
     # -fPIC is required to compile php with imap on x86_64 systems
     + stdenv.lib.optionalString stdenv.isx86_64 " EXTRACFLAGS=-fPIC";
 
-  hardeningDisable = [ "format" ];
-
   buildInputs = [ openssl ]
     ++ stdenv.lib.optional (!stdenv.isDarwin) pam;
 
   patchPhase = ''
-    sed -i src/osdep/unix/Makefile -e 's,/usr/local/ssl,${openssl.dev},'
-    sed -i src/osdep/unix/Makefile -e 's,^SSLCERTS=.*,SSLCERTS=/etc/ssl/certs,'
-    sed -i src/osdep/unix/Makefile -e 's,^SSLLIB=.*,SSLLIB=${openssl.out}/lib,'
+    sed -i -e s,/usr/local/ssl,${openssl}, \
+      src/osdep/unix/Makefile
   '';
 
   NIX_CFLAGS_COMPILE = stdenv.lib.optionalString stdenv.isDarwin
-    "-I${openssl.dev}/include/openssl";
+    "-I${openssl}/include/openssl";
 
   installPhase = ''
     mkdir -p $out/bin $out/lib $out/include

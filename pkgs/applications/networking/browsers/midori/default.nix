@@ -1,55 +1,42 @@
-{ stdenv, fetchurl, cmake, pkgconfig, intltool, vala_0_23, wrapGAppsHook
-, gtk3, webkitgtk, librsvg, libnotify, sqlite
-, glib_networking, gsettings_desktop_schemas, libsoup, pcre, gnome3
-, libxcb, libpthreadstubs, libXdmcp, libxkbcommon, epoxy, at_spi2_core
-, zeitgeistSupport ? false, zeitgeist ? null
+{ stdenv, fetchurl, cmake, pkgconfig, intltool, vala, makeWrapper
+, gtk3, webkitgtk, librsvg, libnotify
+, glib_networking, gsettings_desktop_schemas
 }:
 
-assert zeitgeistSupport -> zeitgeist != null;
-
+let
+  version = "0.5.8";
+in
 stdenv.mkDerivation rec {
   name = "midori-${version}";
-  version = "0.5.11";
 
-  meta = with stdenv.lib; {
+  meta = {
     description = "Lightweight WebKitGTK+ web browser";
-    homepage = "http://midori-browser.org";
-    license = with licenses; [ lgpl21Plus ];
-    platforms = with platforms; linux;
-    maintainers = with maintainers; [ raskin ramkromberg ];
+    homepage = "http://www.midori-browser.org";
+    license = stdenv.lib.licenses.lgpl21Plus;
+    platforms = stdenv.lib.platforms.linux;
+    maintainers = with stdenv.lib.maintainers; [ raskin iyzsong ];
   };
 
   src = fetchurl {
-    urls = [
-      "${meta.homepage}/downloads/midori_${version}_all_.tar.bz2"
-      "http://mirrors-ru.go-parts.com/blfs/conglomeration/midori/midori_${version}_all_.tar.bz2"
-    ];
-    name = "midori_${version}_all_.tar.bz2";
-    sha256 = "0gcwqkcyliqz10i33ww3wl02mmfnl7jzl2d493l4l53ipsb1l6cn";
+    url = "${meta.homepage}/downloads/midori_${version}_all_.tar.bz2";
+    sha256 = "10ckm98rfqfbwr84b8mc1ssgj84wjgkr4dadvx2l7c64sigi66dg";
   };
 
-  nativeBuildInputs = [
-    pkgconfig wrapGAppsHook cmake intltool
-  ];
+  sourceRoot = ".";
 
   buildInputs = [
-    vala_0_23
-    gtk3 webkitgtk librsvg libnotify sqlite gsettings_desktop_schemas pcre gnome3.gcr
-    libxcb libpthreadstubs libXdmcp libxkbcommon epoxy at_spi2_core
-    (libsoup.override {gnomeSupport = true; valaSupport = true;})
-  ] ++ stdenv.lib.optionals zeitgeistSupport [
-    zeitgeist
+    cmake pkgconfig intltool vala makeWrapper
+    webkitgtk librsvg libnotify
   ];
 
-  cmakeFlags = [
-    "-DUSE_ZEITGEIST=${if zeitgeistSupport then "ON" else "OFF"}"
-    "-DHALF_BRO_INCOM_WEBKIT2=ON"
-    "-DUSE_GTK3=1"
-  ];
-
-  NIX_LDFLAGS="-lX11";
+  cmakeFlags = ''
+    -DHALF_BRO_INCOM_WEBKIT2=ON
+    -DUSE_ZEITGEIST=OFF
+  '';
 
   preFixup = ''
-    gappsWrapperArgs+=(--prefix XDG_DATA_DIRS : "$GSETTINGS_SCHEMAS_PATH" --prefix GIO_EXTRA_MODULES : "${glib_networking.out}/lib/gio/modules")
+    wrapProgram $out/bin/midori \
+      --prefix GIO_EXTRA_MODULES : "${glib_networking}/lib/gio/modules" \
+      --prefix XDG_DATA_DIRS : "$GSETTINGS_SCHEMAS_PATH"
   '';
 }

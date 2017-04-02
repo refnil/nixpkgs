@@ -18,8 +18,4 @@ stdenv.mkDerivation rec {
     mkdir -p $out/share/java
     cp -v *.jar $out/share/java
   '';
-
-  meta = {
-    platforms = stdenv.lib.platforms.unix;
-  };
 }

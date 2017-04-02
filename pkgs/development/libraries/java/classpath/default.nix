@@ -1,4 +1,4 @@
-{ fetchurl, stdenv, javac, jvm, antlr, pkgconfig, gtk2, gconf, ecj }:
+{ fetchurl, stdenv, javac, jvm, antlr, pkgconfig, gtk, gconf }:
 
 stdenv.mkDerivation rec {
   name = "classpath-0.99";
@@ -10,7 +10,7 @@ stdenv.mkDerivation rec {
 
   patches = [ ./missing-casts.patch ];
 
-  buildInputs = [ javac jvm antlr pkgconfig gtk2 gconf ecj ];
+  buildInputs = [ javac jvm antlr pkgconfig gtk gconf ];
 
   configurePhase = ''
     # GCJ tries to compile all of Classpath during the `configure' run when
@@ -41,7 +41,7 @@ stdenv.mkDerivation rec {
   configureFlags = "--disable-Werror --disable-plugin --with-antlr-jar=${antlr}/lib/antlr.jar";
 
   meta = {
-    description = "Essential libraries for Java";
+    description = "GNU Classpath, essential libraries for Java";
 
     longDescription = ''
       GNU Classpath, Essential Libraries for Java, is a GNU project to create
@@ -52,9 +52,8 @@ stdenv.mkDerivation rec {
     homepage = http://www.gnu.org/software/classpath/;
 
     # The exception makes it similar to LGPLv2+ AFAICS.
-    license = stdenv.lib.licenses.gpl2ClasspathPlus;
+    license = "GPLv2+ + exception";
 
     maintainers = [ ];
-    platforms = stdenv.lib.platforms.linux;
   };
 }

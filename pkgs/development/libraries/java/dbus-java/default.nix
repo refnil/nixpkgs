@@ -18,8 +18,4 @@ stdenv.mkDerivation {
            -e "s|install: install-bin install-man install-doc|install: install-bin|" Makefile
   '';
   maintainers = [ stdenv.lib.maintainers.sander ];
-
-  meta = {
-    platforms = stdenv.lib.platforms.linux;
-  };
 }

@@ -1,17 +1,18 @@
 { stdenv, fetchurl, libogg, pkgconfig }:
 
-stdenv.mkDerivation rec {
-  name = "libvorbis-1.3.5";
-
+let
+  name = "libvorbis-1.3.4";
+in
+stdenv.mkDerivation {
+  inherit name;
+  
   src = fetchurl {
     url = "http://downloads.xiph.org/releases/vorbis/${name}.tar.xz";
-    sha256 = "1lg1n3a6r41492r7in0fpvzc7909mc5ir9z0gd3qh2pz4yalmyal";
+    sha256 = "0wpk87jnhngcl3nc5i39flkycx1sjzilx8jjx4zc4p8r55ylj19g";
   };
 
-  outputs = [ "out" "dev" "doc" ];
+  buildInputs = [ pkgconfig ];
 
-
-  nativeBuildInputs = [ pkgconfig ];
   propagatedBuildInputs = [ libogg ];
 
   doCheck = true;
@@ -19,7 +20,7 @@ stdenv.mkDerivation rec {
   meta = with stdenv.lib; {
     homepage = http://xiph.org/vorbis/;
     license = licenses.bsd3;
-    maintainers = [ maintainers.ehmry ];
+    maintainers = [ maintainers.emery ];
     platforms = platforms.all;
   };
 }

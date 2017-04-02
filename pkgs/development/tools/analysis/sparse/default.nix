@@ -16,7 +16,7 @@ stdenv.mkDerivation rec {
   doCheck = true;
 
   meta = {
-    description = "Semantic parser for C";
+    description = "Sparse, a semantic parser for C";
     homepage    = "https://git.kernel.org/cgit/devel/sparse/sparse.git/";
     license     = stdenv.lib.licenses.mit;
     platforms   = stdenv.lib.platforms.linux;

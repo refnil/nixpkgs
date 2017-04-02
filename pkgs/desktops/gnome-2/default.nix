@@ -47,9 +47,6 @@ let overridden = set // overrides; set = with overridden; {
 
   gnome_python = callPackage ./bindings/gnome-python { };
 
-  gnome_python_desktop = callPackage ./bindings/gnome-python-desktop { };
-  python_rsvg = overridden.gnome_python_desktop;
-
   gnome_vfs = callPackage ./platform/gnome-vfs { };
 
   gnome_vfs_monikers = callPackage ./platform/gnome-vfs-monikers { };
@@ -61,6 +58,8 @@ let overridden = set // overrides; set = with overridden; {
   libbonobo = callPackage ./platform/libbonobo { };
 
   libbonoboui = callPackage ./platform/libbonoboui { };
+
+  python_rsvg = callPackage ./bindings/python-rsvg { };
 
   at_spi = callPackage ./platform/at-spi { };
 

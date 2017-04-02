@@ -1,8 +1,8 @@
-{ stdenv, fetchurl, python2Packages }:
+{ stdenv, fetchurl, pythonPackages }:
 
 let version = "0.9.5.1.1"; in
 
-python2Packages.buildPythonPackage rec {
+pythonPackages.buildPythonPackage rec {
   name = "pyrex-${version}";
 
   src = fetchurl {

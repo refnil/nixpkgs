@@ -1,22 +1,19 @@
-{ stdenv, fetchFromGitHub, makeWrapper, lrzsz }:
+{ stdenv, fetchurl, makeWrapper, lrzsz }:
 
 stdenv.mkDerivation rec {
-  name = "picocom-${version}";
-  version = "2.1";
+  name = "picocom-1.7";
 
-  src = fetchFromGitHub {
-    owner = "npat-efault";
-    repo = "picocom";
-    rev = version;
-    sha256 = "1ac3xdfiw5bd24lw4l9hxc75rcagw0y182x7svhkqp2gwsvzkbjv";
+  src = fetchurl {
+    url = "http://picocom.googlecode.com/files/${name}.tar.gz";
+    sha256 = "17hjq713naq02xar711aw24qqd52p591mj1h5n97cni1ga7irwyh";
   };
 
   buildInputs = [ makeWrapper ];
 
   installPhase = ''
-    mkdir -p $out/bin $out/share/man/man1
+    ensureDir $out/bin $out/share/man/man8
     cp picocom $out/bin
-    cp picocom.1 $out/share/man/man1
+    cp picocom.8 $out/share/man/man8
 
     wrapProgram $out/bin/picocom \
       --prefix PATH ":" "${lrzsz}/bin"
@@ -24,7 +21,7 @@ stdenv.mkDerivation rec {
 
   meta = {
     description = "Minimal dumb-terminal emulation program";
-    homepage = https://github.com/npat-efault/picocom/;
+    homepage = http://code.google.com/p/picocom/;
     license = stdenv.lib.licenses.gpl2Plus;
     platforms = stdenv.lib.platforms.gnu;  # arbitrary choice
   };

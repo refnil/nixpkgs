@@ -1,25 +1,31 @@
-{ stdenv, fetchurl, gcc_multi, glibc_multi }:
+a :  
+let 
+  fetchurl = a.fetchurl;
 
-let version = "1.7.3"; in
-stdenv.mkDerivation {
-  name = "statifier-${version}";
-
+  version = a.lib.attrByPath ["version"] "1.6.15" a; 
+  buildInputs = with a; [
+    
+  ];
+in
+rec {
   src = fetchurl {
     url = "mirror://sourceforge/statifier/statifier-${version}.tar.gz";
-    sha256 = "0jc67kq3clkdwvahpr2bjp2zix4j7z7z8b7bcn1b3g3sybh1cbd6";
+    sha256 = "0lhdbp7hc15nn6r31yxx7i993a5k8926n5r6j2gi2vvkmf1hciqf";
   };
 
-  buildInputs = [ gcc_multi glibc_multi ];
+  inherit buildInputs;
+  configureFlags = [];
 
-  phaseNames = [ "patchPhase" "installPhase" ];
+  /* doConfigure should be removed if not needed */
+  phaseNames = ["fixPaths" "doMakeInstall"];
 
-  postPatch = ''
+  fixPaths = a.fullDepEntry (''
     sed -e s@/usr/@"$out/"@g -i */Makefile src/statifier
-    sed -e s@/bin/bash@"${stdenv.shell}"@g -i src/*.sh
-  '';
-
-  meta = with stdenv.lib; {
+    sed -e s@/bin/bash@"$shell"@g -i src/*.sh
+  '') ["minInit" "doUnpack"];
+      
+  name = "statifier-" + version;
+  meta = {
     description = "Tool for creating static Linux binaries";
-    platforms = platforms.linux;
   };
 }

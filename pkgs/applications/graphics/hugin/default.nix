@@ -1,47 +1,36 @@
-{ stdenv, cmake, fetchurl, gnumake, makeWrapper, pkgconfig
-, autopanosiftc, boost, cairo, enblend-enfuse, exiv2, fftw, flann, gettext
-, glew, ilmbase, lcms2, lensfun, libjpeg, libpng, libtiff, libX11, libXi
-, libXmu, mesa, openexr, panotools, perlPackages, sqlite, vigra, wxGTK, zlib
-}:
+{stdenv, fetchurl, panotools, cmake, wxGTK, libtiff, libpng, openexr, boost
+, pkgconfig, exiv2, gettext, ilmbase, enblendenfuse, autopanosiftc, mesa
+, freeglut, glew, libXmu, libXi, tclap }:
 
 stdenv.mkDerivation rec {
-  name = "hugin-2016.2.0";
+  name = "hugin-2011.4.0";
 
   src = fetchurl {
     url = "mirror://sourceforge/hugin/${name}.tar.bz2";
-    sha256 = "058zd63vx29yrx2pphbbll7kzcxkai22q26lpw13rn4lvp41pasl";
+    sha256 = "1bnxljgqxzfdz14l7y29wzi52x1a38mghsjavnr28fr4vfmqwjrf";
   };
 
-  buildInputs = [
-    boost cairo exiv2 fftw flann gettext glew ilmbase lcms2 lensfun libjpeg
-    libpng libtiff libX11 libXi libXmu mesa openexr panotools sqlite vigra
-    wxGTK zlib
-  ];
+  NIX_CFLAGS_COMPILE = "-I${ilmbase}/include/OpenEXR";
 
-  nativeBuildInputs = [ cmake makeWrapper pkgconfig ];
+#NIX_LDFLAGS = "-lrt";
 
-  # disable installation of the python scripting interface
-  cmakeFlags = [ "-DBUILD_HSI:BOOl=OFF" ];
+  buildInputs = [ panotools wxGTK libtiff libpng openexr boost tclap
+    exiv2 gettext ilmbase mesa freeglut glew libXmu libXi ];
 
-  enableParallelBuilding = true;
+  nativeBuildInputs = [ cmake pkgconfig ];
 
-  NIX_CFLAGS_COMPILE = "-I${ilmbase.dev}/include/OpenEXR";
+  propagatedUserEnvPackages = [ enblendenfuse autopanosiftc ];
 
   postInstall = ''
-    for p in $out/bin/*; do
-      wrapProgram "$p" \
-        --suffix PATH : ${autopanosiftc}/bin \
-        --suffix PATH : ${enblend-enfuse}/bin \
-        --suffix PATH : ${gnumake}/bin \
-        --suffix PATH : ${perlPackages.ImageExifTool}/bin
-    done
+    mkdir -p "$out/nix-support"
+    echo $propagatedUserEnvPackages > $out/nix-support/propagated-user-env-packages
   '';
 
-  meta = with stdenv.lib; {
+  meta = {
     homepage = http://hugin.sourceforge.net/;
     description = "Toolkit for stitching photographs and assembling panoramas, together with an easy to use graphical front end";
-    license = licenses.gpl2Plus;
-    maintainers = with maintainers; [ viric hrdinka ];
-    platforms = platforms.linux;
+    license = stdenv.lib.licenses.gpl2Plus;
+    maintainers = with stdenv.lib.maintainers; [viric];
+    platforms = with stdenv.lib.platforms; linux;
   };
 }

@@ -37,6 +37,13 @@ let
     '';
     executable = true;
   });
+
+  exec = "${pkgs.gvpe}/sbin/gvpe -c /var/gvpe -D ${cfg.nodename} "
+    + " ${cfg.nodename}.pid-file=/var/gvpe/gvpe.pid"
+    + " ${cfg.nodename}.if-up=if-up"
+    + " &> /var/log/gvpe";
+
+  inherit (cfg) startOn stopOn;
 in
 
 {
@@ -46,6 +53,18 @@ in
         default = false;
         description = ''
           Whether to run gvpe
+        '';
+      };
+      startOn = mkOption {
+        default = "started network-interfaces";
+        description = ''
+          Condition to start GVPE
+        '';
+      };
+      stopOn = mkOption {
+        default = "stopping network-interfaces";
+        description = ''
+          Condition to stop GVPE
         '';
       };
       nodename = mkOption {
@@ -103,10 +122,10 @@ in
     };
   };
   config = mkIf cfg.enable {
-    systemd.services.gvpe = {
+    jobs.gvpe = {
       description = "GNU Virtual Private Ethernet node";
-      after = [ "network.target" ];
-      wantedBy = [ "multi-user.target" ];
+
+      inherit startOn stopOn;
 
       preStart = ''
         mkdir -p /var/gvpe
@@ -117,12 +136,9 @@ in
         cp ${ifupScript} /var/gvpe/if-up
       '';
 
-      script = "${pkgs.gvpe}/sbin/gvpe -c /var/gvpe -D ${cfg.nodename} "
-        + " ${cfg.nodename}.pid-file=/var/gvpe/gvpe.pid"
-        + " ${cfg.nodename}.if-up=if-up"
-        + " &> /var/log/gvpe";
+      inherit exec;
 
-      serviceConfig.Restart = "always";
+      respawn = true;
     };
   };
 }

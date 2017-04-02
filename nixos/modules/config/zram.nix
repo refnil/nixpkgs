@@ -8,7 +8,7 @@ let
 
   devices = map (nr: "zram${toString nr}") (range 0 (cfg.numDevices - 1));
 
-  modprobe = "${pkgs.kmod}/bin/modprobe";
+  modprobe = "${config.system.sbin.modprobe}/sbin/modprobe";
 
 in
 
@@ -98,9 +98,11 @@ in
             script = ''
               set -u
               set -o pipefail
-              
+
+              PATH=${pkgs.procps}/bin:${pkgs.gnugrep}/bin:${pkgs.gnused}/bin
+
               # Calculate memory to use for zram
-              totalmem=$(${pkgs.gnugrep}/bin/grep 'MemTotal: ' /proc/meminfo | ${pkgs.gawk}/bin/awk '{print $2}')
+              totalmem=$(free | grep -e "^Mem:" | sed -e 's/^Mem: *//' -e 's/  *.*//')
               mem=$(((totalmem * ${toString cfg.memoryPercent} / 100 / ${toString cfg.numDevices}) * 1024))
 
               echo $mem > /sys/class/block/${dev}/disksize

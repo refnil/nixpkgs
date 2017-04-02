@@ -3,12 +3,12 @@
 let startFPC = import ./binary.nix { inherit stdenv fetchurl; }; in
 
 stdenv.mkDerivation rec {
-  version = "3.0.0";
+  version = "2.6.0";
   name = "fpc-${version}";
 
   src = fetchurl {
     url = "mirror://sourceforge/freepascal/fpcbuild-${version}.tar.gz";
-    sha256 = "1v40bjp0kvsi8y0mndqvvhnsqjfssl2w6wpfww51j4rxblfkp4fm";
+    sha256 = "1vxy2y8pm0ribhpdhqlwwz696ncnz4rk2dafbn1mjgipm97qb26p";
   };
 
   buildInputs = [ startFPC gawk ];
@@ -19,7 +19,7 @@ stdenv.mkDerivation rec {
       sed -e "s@'/lib64/ld-linux[^']*'@'''@" -i fpcsrc/compiler/systems/t_linux.pas
     '' else "";
 
-  makeFlags = "NOGDB=1 FPC=${startFPC}/bin/fpc";
+  makeFlags = "NOGDB=1";
 
   installFlags = "INSTALL_PREFIX=\${out}";
   
@@ -31,14 +31,9 @@ stdenv.mkDerivation rec {
     $out/lib/fpc/*/samplecfg $out/lib/fpc/${version} $out/lib/fpc/etc/
   '';
 
-  passthru = {
-    bootstrap = startFPC;
-  };
-
   meta = {
     description = "Free Pascal Compiler from a source distribution";
     maintainers = [stdenv.lib.maintainers.raskin];
     platforms = stdenv.lib.platforms.linux;
-    inherit version;
   };
 }

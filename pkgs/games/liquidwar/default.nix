@@ -1,41 +1,39 @@
-{ stdenv, fetchurl, xproto, libX11, libXrender
-, gmp, mesa, libjpeg, libpng
-, expat, gettext, perl, guile
-, SDL, SDL_image, SDL_mixer, SDL_ttf
-, curl, sqlite
-, libogg, libvorbis, libcaca, csound, cunit } :
-
-stdenv.mkDerivation rec {
-  name = "liquidwar6-${version}";
-  version = "0.6.3902";
-
-  src = fetchurl {
-    url = "mirror://gnu/liquidwar6/${name}.tar.gz";
-    sha256 = "1976nnl83d8wspjhb5d5ivdvdxgb8lp34wp54jal60z4zad581fn";
-  };
-
-  buildInputs = [
+a :  
+let 
+  buildInputs = with a; [
     xproto libX11 gmp guile
     mesa libjpeg libpng
     expat gettext perl
     SDL SDL_image SDL_mixer SDL_ttf
-    curl sqlite
-    libogg libvorbis csound
-    libXrender libcaca cunit
+    curl sqlite 
+    libogg libvorbis
+    libXrender
   ];
+in
+rec {
+  name = "liquidwar6-0.0.13beta";
 
-  hardeningDisable = [ "format" ];
+  src = a.fetchurl {
+    url = "mirror://gnu/liquidwar6/${name}.tar.gz";
+    sha256 = "1jjf7wzb8jf02hl3473vz1q74fhmxn0szbishgi1f1j6a7234wx2";
+  };
 
-  NIX_CFLAGS_COMPILE = "-Wno-error=deprecated-declarations";
+  inherit buildInputs;
+  configureFlags = [];
 
-  # To avoid problems finding SDL_types.h.
-  configureFlags = [ "CFLAGS=-I${SDL.dev}/include/SDL" ];
+  /* doConfigure should be removed if not needed */
+  phaseNames = ["setVars" "doConfigure" "doMakeInstall"];
 
-  meta = with stdenv.lib; {
+  setVars = a.noDepEntry (''
+    export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE -I${a.SDL}/include/SDL"
+  '');
+      
+  meta = {
     description = "Quick tactics game";
-    homepage = "http://www.gnu.org/software/liquidwar6/";
-    maintainers = [ maintainers.raskin ];
-    license = licenses.gpl3Plus;
-    platforms = platforms.linux;
+    maintainers = [
+      a.lib.maintainers.raskin
+    ];
+    platforms = with a.lib.platforms; 
+      linux;
   };
 }

@@ -1,17 +1,16 @@
 # This module defines the software packages included in the "minimal"
 # installation CD.  It might be useful elsewhere.
 
-{ config, lib, pkgs, ... }:
+{ config, pkgs, ... }:
 
 {
   # Include some utilities that are useful for installing or repairing
   # the system.
   environment.systemPackages = [
-    pkgs.w3m-nox # needed for the manual anyway
+    pkgs.subversion # for nixos-checkout
+    pkgs.w3m # needed for the manual anyway
     pkgs.testdisk # useful for repairing boot problems
     pkgs.mssys # for writing Microsoft boot sectors / MBRs
-    pkgs.efibootmgr
-    pkgs.efivar
     pkgs.parted
     pkgs.gptfdisk
     pkgs.ddrescue
@@ -20,7 +19,7 @@
 
     # Some networking tools.
     pkgs.fuse
-    pkgs.sshfs-fuse
+    pkgs.sshfsFuse
     pkgs.socat
     pkgs.screen
 
@@ -29,24 +28,29 @@
     pkgs.hdparm
     pkgs.dmraid
     pkgs.smartmontools # for diagnosing hard disks
-    pkgs.pciutils
-    pkgs.usbutils
 
     # Tools to create / manipulate filesystems.
     pkgs.ntfsprogs # for resizing NTFS partitions
     pkgs.dosfstools
-    pkgs.xfsprogs.bin
+    pkgs.xfsprogs
     pkgs.jfsutils
     pkgs.f2fs-tools
+    #pkgs.jfsrec # disabled because of Boost dependency
 
     # Some compression/archiver tools.
+    pkgs.unrar
     pkgs.unzip
     pkgs.zip
+    pkgs.dar # disk archiver
+    pkgs.cabextract
+
+    # Some editors.
+    pkgs.vim
+    pkgs.bvi # binary editor
+    pkgs.joe
   ];
 
   # Include support for various filesystems.
-  boot.supportedFilesystems = [ "btrfs" "reiserfs" "vfat" "f2fs" "xfs" "ntfs" "cifs" ];
+  boot.supportedFilesystems = [ "btrfs" "reiserfs" "vfat" "f2fs" ];
 
-  # Configure host id for ZFS to work
-  networking.hostId = lib.mkDefault "8425e349";
 }

@@ -10,14 +10,13 @@ stdenv.mkDerivation rec {
 
   buildInputs = [ pkgconfig libXt libXaw libXres utilmacros ];
 
-  configureFlags = "--with-appdefaultdir=$(out)/share/X11/app-defaults/editres";
-
-  hardeningDisable = [ "format" ];
+  preConfigure = "configureFlags=--with-appdefaultdir=$out/share/X11/app-defaults/editres";
 
   meta = {
     homepage = "http://cgit.freedesktop.org/xorg/app/editres/";
-    description = "A dynamic resource editor for X Toolkit applications";
+    description = "a dynamic resource editor for X Toolkit applications";
 
     platforms = stdenv.lib.platforms.linux;
+    maintainers = [ stdenv.lib.maintainers.simons ];
   };
 }

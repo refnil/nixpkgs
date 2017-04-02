@@ -1,30 +1,41 @@
-{ stdenv, fetchurl, pkgconfig, glib, dbus_glib
-, intltool, libxslt, docbook_xsl, udev, libgudev, libusb1
+{ stdenv, fetchurl, pkgconfig, glib, dbus, dbus_glib, dbus_tools, polkit
+, intltool, libxslt, docbook_xsl, udev, libusb1, pmutils
 , useSystemd ? true, systemd, gobjectIntrospection
 }:
 
 assert stdenv.isLinux;
 
 stdenv.mkDerivation rec {
-  name = "upower-0.99.4";
+  name = "upower-0.9.23";
 
   src = fetchurl {
     url = "http://upower.freedesktop.org/releases/${name}.tar.xz";
-    sha256 = "1c1ph1j1fnrf3vipxb7ncmdfc36dpvcvpsv8n8lmal7grjk2b8ww";
+    sha256 = "06wqhab2mn0j4biiwh7mn4kxbxnfnzjkxvhpgvnlpaz9m2q54cj3";
   };
 
   buildInputs =
-    [ dbus_glib intltool libxslt docbook_xsl udev libgudev libusb1 gobjectIntrospection ]
+    [ dbus_glib polkit intltool libxslt docbook_xsl udev libusb1 gobjectIntrospection ]
     ++ stdenv.lib.optional useSystemd systemd;
 
   nativeBuildInputs = [ pkgconfig ];
 
+  preConfigure =
+    ''
+      substituteInPlace src/linux/up-backend.c \
+        --replace /usr/bin/pm- ${pmutils}/bin/pm- \
+        --replace /usr/sbin/pm- ${pmutils}/sbin/pm-
+      substituteInPlace src/notify-upower.sh \
+        --replace /usr/bin/dbus-send ${dbus_tools}/bin/dbus-send
+    '';
+
   configureFlags =
     [ "--with-backend=linux" "--localstatedir=/var"
+      "--enable-deprecated" # needed for Xfce (Nov 2013)
     ]
     ++ stdenv.lib.optional useSystemd
-    [ "--with-systemdsystemunitdir=$(out)/etc/systemd/system"
-      "--with-systemdutildir=$(out)/lib/systemd"
+    [ "--enable-systemd"
+      "--with-systemdsystemunitdir=$(out)/etc/systemd/system"
+      "--with-systemdutildir=$(out)/lib/systemd/system-sleep"
       "--with-udevrulesdir=$(out)/lib/udev/rules.d"
     ];
 

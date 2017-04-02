@@ -1,38 +1,51 @@
-{ stdenv, fetchFromGitHub, pkgconfig
-, openssl ? null, libpcap ? null
-}:
+x@{builderDefsPackage
+  , autoconf, automake, libtool, doxygen, procps
+  , ...}:
+builderDefsPackage
+(a :  
+let 
+  helperArgNames = ["stdenv" "fetchurl" "builderDefsPackage"] ++ 
+    [];
 
-with stdenv.lib;
-stdenv.mkDerivation rec {
-  name = "libsrtp-${version}";
-  version = "1.5.4";
-
-  src = fetchFromGitHub {
-    owner = "cisco";
-    repo = "libsrtp";
-    rev = "v${version}";
-    sha256 = "0s029m4iw0nsvnsm2hlz8yajrasdvf315iv2dw8mfm7nhbshwsqa";
+  buildInputs = map (n: builtins.getAttr n x)
+    (builtins.attrNames (builtins.removeAttrs x helperArgNames));
+  sourceInfo = rec {
+    baseName="srtp";
+    version="1.4.4";
+    name="${baseName}-${version}";
+    url="mirror://sourceforge/${baseName}/${name}.tgz";
+    hash="057k191hx7sf84wdvc8wr1nk4whhrvbg1vv3r4nyswjir6qwphnr";
+  };
+in
+rec {
+  src = a.fetchurl {
+    url = sourceInfo.url;
+    sha256 = sourceInfo.hash;
   };
 
-  buildInputs = [ pkgconfig ];
+  inherit (sourceInfo) name version;
+  inherit buildInputs;
 
-  # libsrtp.pc references -lcrypto -lpcap without -L
-  propagatedBuildInputs = [ openssl libpcap ];
+  /* doConfigure should be removed if not needed */
+  phaseNames = ["setVars" "doConfigure" "doMakeInstall"];
 
-  configureFlags = [
-    "--disable-debug"
-  ] ++ optional (openssl != null) "--enable-openssl";
-
-  buildFlags = [ "shared_library" ];
-
-  postInstall = ''
-    rm -rf $out/bin
-  '';
+  setVars = a.fullDepEntry ''
+    export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE -fPIC"
+  '' ["minInit"];
 
   meta = {
-    homepage = https://github.com/cisco/libsrtp;
-    description = "Secure RTP (SRTP) Reference Implementation";
-    license = licenses.bsd3;
-    platforms = platforms.all;
+    description = "Secure RTP";
+    maintainers = with a.lib.maintainers;
+    [
+      raskin
+    ];
+    platforms = with a.lib.platforms;
+      linux;
   };
-}
+  passthru = {
+    updateInfo = {
+      downloadPage = "http://srtp.sourceforge.net/download.html";
+    };
+  };
+}) x
+

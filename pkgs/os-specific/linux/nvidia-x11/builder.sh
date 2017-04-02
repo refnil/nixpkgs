@@ -1,19 +1,17 @@
 source $stdenv/setup
 
-unpackManually() {
+dontPatchELF=1 # must keep libXv, $out in RPATH
+
+
+unpackFile() {
     skip=$(sed 's/^skip=//; t; d' $src)
     tail -n +$skip $src | xz -d | tar xvf -
     sourceRoot=.
 }
 
 
-unpackFile() {
-    sh $src -x || unpackManually
-}
-
-
 buildPhase() {
-    if [ -n "$bin" ]; then
+    if test -z "$libsOnly"; then
         # Create the module.
         echo "Building linux driver against kernel: $kernel";
         cd kernel
@@ -21,102 +19,91 @@ buildPhase() {
         sysSrc=$(echo $kernel/lib/modules/$kernelVersion/source)
         sysOut=$(echo $kernel/lib/modules/$kernelVersion/build)
         unset src # used by the nv makefile
-        make SYSSRC=$sysSrc SYSOUT=$sysOut module -j$NIX_BUILD_CORES
-
+        make SYSSRC=$sysSrc SYSOUT=$sysOut module
+        cd uvm
+        make SYSSRC=$sysSrc SYSOUT=$sysOut module
+        cd ..
         cd ..
     fi
 }
 
-    
+
 installPhase() {
+
     # Install libGL and friends.
-    mkdir -p "$out/lib"
-    cp -prd *.so.* tls "$out/lib/"
-    rm $out/lib/lib{glx,nvidia-wfb}.so.* # handled separately
-    rm -f $out/lib/libnvidia-gtk* # built from source
-    if [ "$useGLVND" = "1" ]; then
-        # Pre-built libglvnd
-        rm $out/lib/lib{GL,GLX,EGL,GLESv1_CM,GLESv2,OpenGL,GLdispatch}.so.*
-    fi
-    # Use ocl-icd instead
-    rm $out/lib/libOpenCL.so*
-    # Move VDPAU libraries to their place
-    mkdir $out/lib/vdpau
-    mv $out/lib/libvdpau* $out/lib/vdpau
+    mkdir -p $out/lib/vendors
 
-    # Install ICDs.
-    install -Dm644 nvidia.icd $out/etc/OpenCL/vendors/nvidia.icd
-    if [ -e nvidia_icd.json ]; then
-        install -Dm644 nvidia_icd.json $out/share/vulkan/icd.d/nvidia.json
-    fi
-    if [ "$useGLVND" = "1" ]; then
-        install -Dm644 10_nvidia.json $out/share/glvnd/egl_vendor.d/nvidia.json
-    fi
-
-    if [ -n "$bin" ]; then
-        # Install the X drivers.
-        mkdir -p $bin/lib/xorg/modules
-        cp -p libnvidia-wfb.* $bin/lib/xorg/modules/
-        mkdir -p $bin/lib/xorg/modules/drivers
-        cp -p nvidia_drv.so $bin/lib/xorg/modules/drivers
-        mkdir -p $bin/lib/xorg/modules/extensions
-        cp -p libglx.so.* $bin/lib/xorg/modules/extensions
-
-        # Install the kernel module.
-        mkdir -p $bin/lib/modules/$kernelVersion/misc
-        for i in $(find ./kernel -name '*.ko'); do
-            nuke-refs $i
-            cp $i $bin/lib/modules/$kernelVersion/misc/
-        done
-
-        # Install application profiles.
-        if [ "$useProfiles" = "1" ]; then
-            mkdir -p $bin/share/nvidia
-            cp nvidia-application-profiles-*-rc $bin/share/nvidia/nvidia-application-profiles-rc
-            cp nvidia-application-profiles-*-key-documentation $bin/share/nvidia/nvidia-application-profiles-key-documentation
-        fi
-    fi
-
-    # All libs except GUI-only are installed now, so fixup them.
-    for libname in `find "$out/lib/" -name '*.so.*'` `test -z "$bin" || find "$bin/lib/" -name '*.so.*'`
+    for f in \
+      libcuda libGL libnvcuvid libnvidia-cfg libnvidia-compiler \
+      libnvidia-encode libnvidia-glcore libnvidia-ml libnvidia-opencl \
+      libnvidia-tls libOpenCL libnvidia-tls libvdpau_nvidia
     do
-      # I'm lazy to differentiate needed libs per-library, as the closure is the same.
-      # Unfortunately --shrink-rpath would strip too much.
-      patchelf --set-rpath "$out/lib:$libPath" "$libname"
-
-      libname_short=`echo -n "$libname" | sed 's/so\..*/so/'`
-
-      if [[ "$libname" != "$libname_short" ]]; then
-        ln -srnf "$libname" "$libname_short"
-      fi
-
-      if [[ $libname_short =~ libEGL.so || $libname_short =~ libEGL_nvidia.so || $libname_short =~ libGLX.so || $libname_short =~ libGLX_nvidia.so ]]; then
-          major=0
-      else
-          major=1
-      fi
-
-      if [[ "$libname" != "$libname_short.$major" ]]; then
-        ln -srnf "$libname" "$libname_short.$major"
-      fi
+      cp -prd $f.* $out/lib/
+      ln -snf $f.so.$versionNumber $out/lib/$f.so
+      ln -snf $f.so.$versionNumber $out/lib/$f.so.1
     done
 
-    if [ -n "$bin" ]; then
-        # Install /share files.
-        mkdir -p $bin/share/man/man1
-        cp -p *.1.gz $bin/share/man/man1
-        rm -f $bin/share/man/man1/{nvidia-xconfig,nvidia-settings,nvidia-persistenced}.1.gz
+    cp -p nvidia.icd $out/lib/vendors/
+    cp -prd tls $out/lib/
+    cp -prd libOpenCL.so.1.0.0 $out/lib/
+    ln -snf libOpenCL.so.1.0.0 $out/lib/libOpenCL.so
+    ln -snf libOpenCL.so.1.0.0 $out/lib/libOpenCL.so.1
+
+    patchelf --set-rpath $out/lib:$glPath $out/lib/libGL.so.*.*
+    patchelf --set-rpath $out/lib:$glPath $out/lib/libvdpau_nvidia.so.*.*
+    patchelf --set-rpath $cudaPath $out/lib/libcuda.so.*.*
+    patchelf --set-rpath $openclPath $out/lib/libnvidia-opencl.so.*.*
+
+    if test -z "$libsOnly"; then
+
+        # Install the kernel module.
+        mkdir -p $out/lib/modules/$kernelVersion/misc
+        cp kernel/nvidia.ko $out/lib/modules/$kernelVersion/misc
+        cp kernel/uvm/nvidia-uvm.ko $out/lib/modules/$kernelVersion/misc
+
+        # Install the X driver.
+        mkdir -p $out/lib/xorg/modules
+        cp -p libnvidia-wfb.* $out/lib/xorg/modules/
+        mkdir -p $out/lib/xorg/modules/drivers
+        cp -p nvidia_drv.so $out/lib/xorg/modules/drivers
+        mkdir -p $out/lib/xorg/modules/extensions
+        cp -p libglx.so.* $out/lib/xorg/modules/extensions
+
+        ln -snf libnvidia-wfb.so.$versionNumber $out/lib/xorg/modules/libnvidia-wfb.so.1
+        ln -snf libglx.so.$versionNumber $out/lib/xorg/modules/extensions/libglx.so
+
+        patchelf --set-rpath $out/lib $out/lib/xorg/modules/extensions/libglx.so.*.*
 
         # Install the programs.
-        for i in nvidia-cuda-mps-control nvidia-cuda-mps-server nvidia-smi nvidia-debugdump; do
-            if [ -e "$i" ]; then
-                install -Dm755 $i $bin/bin/$i
-                patchelf --interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" \
-                    --set-rpath $out/lib:$libPath $bin/bin/$i
-            fi
+        mkdir -p $out/bin
+
+        for i in nvidia-settings nvidia-smi; do
+            cp $i $out/bin/$i
+            patchelf --interpreter "$(cat $NIX_GCC/nix-support/dynamic-linker)" \
+                --set-rpath $out/lib:$programPath:$glPath $out/bin/$i
         done
-        # FIXME: needs PATH and other fixes
-        # install -Dm755 nvidia-bug-report.sh $bin/bin/nvidia-bug-report.sh
+
+        # Header files etc.
+        mkdir -p $out/include/nvidia
+        cp -p *.h $out/include/nvidia
+
+        mkdir -p $out/share/man/man1
+        cp -p *.1.gz $out/share/man/man1
+        rm $out/share/man/man1/nvidia-xconfig.1.gz
+
+        mkdir -p $out/share/applications
+        cp -p *.desktop $out/share/applications
+
+        mkdir -p $out/share/pixmaps
+        cp -p nvidia-settings.png $out/share/pixmaps
+
+        # Patch the `nvidia-settings.desktop' file.
+        substituteInPlace $out/share/applications/nvidia-settings.desktop \
+            --replace '__UTILS_PATH__' $out/bin \
+            --replace '__PIXMAP_PATH__' $out/share/pixmaps
+
+        # Test a bit.
+        $out/bin/nvidia-settings --version
     fi
 }
 

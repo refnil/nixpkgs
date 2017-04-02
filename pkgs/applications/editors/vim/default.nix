@@ -1,23 +1,19 @@
-{ stdenv, fetchurl, callPackage, ncurses, gettext, pkgconfig
-# default vimrc
-, vimrc ? fetchurl {
-    name = "default-vimrc";
-    url = https://projects.archlinux.org/svntogit/packages.git/plain/trunk/archlinux.vim?h=packages/vim?id=68f6d131750aa778807119e03eed70286a17b1cb;
-    sha256 = "18ifhv5q9prd175q3vxbqf6qyvkk6bc7d2lhqdk0q78i68kv9y0c";
-  }
-# apple frameworks
-, Carbon, Cocoa }:
+{ stdenv, fetchhg, ncurses, gettext, pkgconfig }:
 
-let
-  common = callPackage ./common.nix {};
-in
 stdenv.mkDerivation rec {
   name = "vim-${version}";
 
-  inherit (common) version src postPatch hardeningDisable enableParallelBuilding meta;
+  version = "7.4.335";
 
-  buildInputs = [ ncurses pkgconfig ]
-    ++ stdenv.lib.optionals stdenv.isDarwin [ Carbon Cocoa ];
+  src = fetchhg {
+    url = "https://vim.googlecode.com/hg/";
+    rev = "v7-4-335";
+    sha256 = "0qnpzfcbi6fhz82pj68l4vrnigca1akq2ksrxz6krwlfhns6jhhj";
+  };
+
+  enableParallelBuilding = true;
+
+  buildInputs = [ ncurses pkgconfig ];
   nativeBuildInputs = [ gettext ];
 
   configureFlags = [
@@ -25,11 +21,7 @@ stdenv.mkDerivation rec {
     "--enable-nls"
   ];
 
-  postInstall = ''
-    ln -s $out/bin/vim $out/bin/vi
-    mkdir -p $out/share/vim
-    cp "${vimrc}" $out/share/vim/vimrc
-  '';
+  postInstall = "ln -s $out/bin/vim $out/bin/vi";
 
   crossAttrs = {
     configureFlags = [
@@ -47,12 +39,17 @@ stdenv.mkDerivation rec {
     ];
   };
 
-  __impureHostDeps = [ "/dev/ptmx" ];
-
   # To fix the trouble in vim73, that it cannot cross-build with this patch
   # to bypass a configure script check that cannot be done cross-building.
   # http://groups.google.com/group/vim_dev/browse_thread/thread/66c02efd1523554b?pli=1
   # patchPhase = ''
   #   sed -i -e 's/as_fn_error.*int32.*/:/' src/auto/configure
   # '';
+
+  meta = with stdenv.lib; {
+    description = "The most popular clone of the VI editor";
+    homepage    = http://www.vim.org;
+    maintainers = with maintainers; [ lovek323 ];
+    platforms   = platforms.unix;
+  };
 }

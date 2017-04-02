@@ -33,11 +33,6 @@ stdenv.mkDerivation rec {
     libxslt
   ];
 
-  # FIXME: Remove as soon as kmscon > 8 comes along.
-  postPatch = ''
-    sed -i -e 's/libsystemd-daemon libsystemd-login/libsystemd/g' configure
-  '';
-
   configureFlags = [
     "--enable-multi-seat"
     "--disable-debug"
@@ -49,6 +44,7 @@ stdenv.mkDerivation rec {
     description = "KMS/DRM based System Console";
     homepage = "http://www.freedesktop.org/wiki/Software/kmscon/";
     license = stdenv.lib.licenses.mit;
+    maintainers = [ stdenv.lib.maintainers.shlevy ];
     platforms = stdenv.lib.platforms.linux;
   };
 }

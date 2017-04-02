@@ -1,25 +1,17 @@
-{ fetchurl, stdenv, pkgconfig, guile, ncurses, libffi }:
+{ fetchurl, stdenv, guile, ncurses, libffi }:
 
 stdenv.mkDerivation rec {
-  name = "guile-ncurses-1.7";
+  name = "guile-ncurses-1.4";
 
   src = fetchurl {
     url = "mirror://gnu/guile-ncurses/${name}.tar.gz";
-    sha256 = "153vv75gb7l62sp3666rc97i63rnaqbx2rjar7d9b5w81fhwv4r5";
+    sha256 = "070wl664lsm14hb6y9ch97x9q6cns4k6nxgdzbdzi5byixn74899";
   };
 
-  nativeBuildInputs = [ pkgconfig ];
   buildInputs = [ guile ncurses libffi ];
 
   preConfigure =
     '' configureFlags="$configureFlags --with-guilesitedir=$out/share/guile/site" '';
-
-  postFixup =
-    '' for f in $out/share/guile/site/ncurses/**.scm; do \
-           substituteInPlace $f \
-             --replace "libguile-ncurses" "$out/lib/libguile-ncurses"; \
-       done
-    '';
 
   doCheck = false;  # XXX: 1 of 65 tests failed
 
@@ -35,7 +27,7 @@ stdenv.mkDerivation rec {
 
     license = stdenv.lib.licenses.lgpl3Plus;
 
-    maintainers = [ ];
+    maintainers = [ stdenv.lib.maintainers.ludo ];
     platforms = stdenv.lib.platforms.gnu;  # arbitrary choice
   };
 }

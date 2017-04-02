@@ -15,7 +15,7 @@ stdenv.mkDerivation (rec {
   configureFlags = [ "--prefix" "$(out)" ];
 
   meta = {
-    description = "A program for proof-tree visualization";
+    description = "Prooftree is a program for proof-tree visualization";
     longDescription = ''
       Prooftree is a program for proof-tree visualization during interactive
       proof development in a theorem prover. It is currently being developed

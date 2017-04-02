@@ -15,7 +15,7 @@ let
     slides.intro = 3DOVID:addons/3dovideo/intro/intro.duk
   '' + concatMapStrings makeSpin (range 0 24));
 
-  helper = with haskellPackages; mkDerivation {
+  helper = with haskellPackages; cabal.mkDerivation (self: {
     pname = "uqm3donix";
     version = "0.1.0.0";
 
@@ -27,11 +27,14 @@ let
     isLibrary = false;
     isExecutable = true;
 
-    buildDepends = [ base binary bytestring filepath tar ];
+    buildDepends = [ binary filepath tar ];
 
-    description = "Extract video files from a Star Control II 3DO image";
-    license = stdenv.lib.licenses.bsd3;
-  };
+    meta = {
+      description = "Extract video files from a Star Control II 3DO image";
+      license = self.stdenv.lib.licenses.bsd3;
+      platforms = self.ghc.meta.platforms;
+    };
+  });
 
 in stdenv.mkDerivation {
   name = "uqm-3dovideo";

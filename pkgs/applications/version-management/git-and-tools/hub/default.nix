@@ -1,48 +1,27 @@
-{ stdenv, fetchgit, go, Security }:
+{ stdenv, fetchurl, groff, rake, makeWrapper }:
 
 stdenv.mkDerivation rec {
   name = "hub-${version}";
-  version = "2.2.9";
+  version = "1.12.0";
 
-  src = fetchgit {
-    url = https://github.com/github/hub.git;
-    rev = "refs/tags/v${version}";
-    sha256 = "195ckp1idz2azv0mm1q258yjz2n51sia9xdcjnqlprmq9aig5ldh";
+  src = fetchurl {
+    url = "https://github.com/github/hub/archive/v${version}.tar.gz";
+    sha256 = "1lbl4dl7483q320qw4jm6mqq4dbbk3xncypxgg86zcdigxvw6igv";
   };
 
-
-  buildInputs = [ go ] ++ stdenv.lib.optional stdenv.isDarwin Security;
-
-  phases = [ "unpackPhase" "buildPhase" "installPhase" ];
-
-  buildPhase = ''
-    patchShebangs .
-    sh script/build
-  '';
+  buildInputs = [ rake makeWrapper ];
 
   installPhase = ''
-    mkdir -p "$out/bin"
-    cp bin/hub "$out/bin/"
-
-    mkdir -p "$out/share/man/man1"
-    cp "man/hub.1" "$out/share/man/man1/"
-
-    mkdir -p "$out/share/zsh/site-functions"
-    cp "etc/hub.zsh_completion" "$out/share/zsh/site-functions/_hub"
-
-    mkdir -p "$out/etc/bash_completion.d"
-    cp "etc/hub.bash_completion.sh" "$out/etc/bash_completion.d/"
-
-# Should we also install provided git-hooks?
-# ?
+    rake install "prefix=$out"
   '';
 
-  meta = with stdenv.lib; {
-    description = "Command-line wrapper for git that makes you better at GitHub";
+  fixupPhase = ''
+    wrapProgram $out/bin/hub --prefix PATH : ${groff}/bin
+  '';
 
-    license = licenses.mit;
-    homepage = https://hub.github.com/;
-    maintainers = with maintainers; [ the-kenny ];
-    platforms = with platforms; unix;
+  meta = {
+    description = "A GitHub specific wrapper for git";
+    homepage = "http://defunkt.io/hub/";
+    license = stdenv.lib.licenses.mit;
   };
 }

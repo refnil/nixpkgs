@@ -7,11 +7,11 @@ assert gtkSupport -> glib != null && gtk3 != null;
 assert videoSupport -> ffmpeg != null && libmpeg2 != null;
 
 stdenv.mkDerivation rec {
-  name = "libextractor-1.3";
+  name = "libextractor-1.2";
 
   src = fetchurl {
     url = "mirror://gnu/libextractor/${name}.tar.gz";
-    sha256 = "0zvv7wd011npcx7yphw9bpgivyxz6mlp87a57n96nv85k96dd2l6";
+    sha256 = "1n7z6s5ils6xmf6b0z1xda41maxj94c1n6wlyyxmacs5lrkh2a96";
   };
 
   preConfigure =
@@ -29,7 +29,7 @@ stdenv.mkDerivation rec {
 
   configureFlags = "--disable-ltdl-install "
     + "--with-ltdl-include=${libtool}/include "
-    + "--with-ltdl-lib=${libtool.lib}/lib "
+    + "--with-ltdl-lib=${libtool}/lib "
     + "--enable-xpdf";
 
   # Checks need to be run after "make install", otherwise plug-ins are not in
@@ -40,7 +40,7 @@ stdenv.mkDerivation rec {
   #postInstall = "make check";
 
   meta = {
-    description = "Simple library for keyword extraction";
+    description = "GNU libextractor, a simple library for keyword extraction";
 
     longDescription =
       '' GNU libextractor is a library used to extract meta-data from files
@@ -66,6 +66,5 @@ stdenv.mkDerivation rec {
     license = stdenv.lib.licenses.gpl2Plus;
 
     maintainers = [ ];
-    platforms = stdenv.lib.platforms.linux;
   };
 }

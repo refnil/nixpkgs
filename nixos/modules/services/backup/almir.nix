@@ -95,7 +95,7 @@ in {
 
       port = mkOption {
         default = 35000;
-        type = types.int;
+        type = types.uniq types.int;
         description = ''
           Port for Almir web server to listen on.
         '';
@@ -109,7 +109,6 @@ in {
       };
 
       sqlalchemy_engine_url = mkOption {
-        default = "postgresql:///bacula";
         example = ''
           postgresql://bacula:bacula@localhost:5432/bacula
           mysql+mysqlconnector://<user>:<password>@<hostname>/<database>'

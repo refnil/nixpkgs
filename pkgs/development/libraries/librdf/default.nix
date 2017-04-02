@@ -1,5 +1,5 @@
-{ stdenv, fetchurl, pkgconfig, autoreconfHook
-, librdf_raptor2, ladspaH, openssl, zlib
+{ stdenv, fetchurl, pkgconfig, libtool, automake, autoconf
+, librdf_raptor, librdf_raptor2, ladspaH, openssl, zlib #, swh_lv2
 }:
 
 stdenv.mkDerivation rec {
@@ -11,12 +11,18 @@ stdenv.mkDerivation rec {
     sha256 = "18p2flb2sv2hq6w2qkd29z9c7knnwqr3f12i2srshlzx6vwkm05s";
   };
 
-  preAutoreconf = "rm m4/*";
   postPatch = "sed -i -e 's:usr/local:usr:' examples/{instances,remove}_test.c";
 
-  buildInputs = [ pkgconfig autoreconfHook ladspaH openssl zlib ];
+  preConfigure = "rm m4/* && autoreconf -if";
+
+  buildInputs = [
+    pkgconfig libtool automake autoconf ladspaH openssl zlib /*swh_lv2*/
+    #librdf_raptor 
+  ];
 
   propagatedBuildInputs = [ librdf_raptor2 ];
+
+  #doCheck = true; # would need swh_lv2 and some path patching
 
   meta = {
     description = "Lightweight RDF library with special support for LADSPA plugins";

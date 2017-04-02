@@ -1,9 +1,7 @@
-{ stdenv, fetchurl, gtk2, which, pkgconfig, intltool, file }:
-
-with stdenv.lib;
+{ stdenv, fetchurl, gtk2, which, pkgconfig, intltool }:
 
 let
-  version = "1.30.1";
+  version = "1.23.1";
 in
 
 stdenv.mkDerivation rec {
@@ -11,19 +9,14 @@ stdenv.mkDerivation rec {
 
   src = fetchurl {
     url = "http://download.geany.org/${name}.tar.bz2";
-    sha256 = "0ac360f1f3d6c28790a81d570252a7d40421f6e1d8e5a8d653756bd041d88491";
+    sha256 = "1bcgjxywggsljs9kq22kr9xpzrq5xr7pb9d1b71rwryqb5pb25c8";
   };
 
-  NIX_LDFLAGS = if stdenv.isDarwin then "-lintl" else null;
-  
-  nativeBuildInputs = [ pkgconfig intltool ];
-  buildInputs = [ gtk2 which file ];
+  buildInputs = [ gtk2 which pkgconfig intltool ];
 
   doCheck = true;
 
   enableParallelBuilding = true;
-
-  patchPhase = "patchShebangs .";
 
   # This file should normally require a gtk-update-icon-cache -q /usr/share/icons/hicolor command
   # It have no reasons to exist in a redistribuable package
@@ -50,9 +43,9 @@ stdenv.mkDerivation rec {
       - Simple project management
       - Plugin interface
     '';
-    homepage = http://www.geany.org/;
+    homepage = "http://www.geany.org/";
     license = "GPL";
-    maintainers = [];
-    platforms = platforms.all;
+    maintainers = [ stdenv.lib.maintainers.bbenoist ];
+    platforms = stdenv.lib.platforms.all;
   };
 }

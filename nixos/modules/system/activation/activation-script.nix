@@ -12,14 +12,11 @@ let
     '';
   });
 
-  path = with pkgs; map getBin
-    [ coreutils
-      gnugrep
-      findutils
-      glibc # needed for getent
-      shadow
-      nettools # needed for hostname
-      utillinux # needed for mount and mountpoint
+  path =
+    [ pkgs.coreutils pkgs.gnugrep pkgs.findutils
+      pkgs.glibc # needed for getent
+      pkgs.shadow
+      pkgs.nettools # needed for hostname
     ];
 
 in
@@ -33,19 +30,18 @@ in
     system.activationScripts = mkOption {
       default = {};
 
-      example = literalExample ''
-        { stdio = {
-            text = '''
-              # Needed by some programs.
-              ln -sfn /proc/self/fd /dev/fd
-              ln -sfn /proc/self/fd/0 /dev/stdin
-              ln -sfn /proc/self/fd/1 /dev/stdout
-              ln -sfn /proc/self/fd/2 /dev/stderr
-            ''';
-            deps = [];
-          };
-        }
-      '';
+      example = {
+        stdio = {
+          text = ''
+            # Needed by some programs.
+            ln -sfn /proc/self/fd /dev/fd
+            ln -sfn /proc/self/fd/0 /dev/stdin
+            ln -sfn /proc/self/fd/1 /dev/stdout
+            ln -sfn /proc/self/fd/2 /dev/stderr
+          '';
+          deps = [];
+        };
+      };
 
       description = ''
         A set of shell script fragments that are executed when a NixOS
@@ -70,9 +66,6 @@ in
                 PATH=$PATH:$i/bin:$i/sbin
             done
 
-            _status=0
-            trap "_status=1" ERR
-
             # Ensure a consistent umask.
             umask 0022
 
@@ -91,25 +84,11 @@ in
 
             # Prevent the current configuration from being garbage-collected.
             ln -sfn /run/current-system /nix/var/nix/gcroots/current-system
-
-            exit $_status
           '';
       };
 
     };
 
-    environment.usrbinenv = mkOption {
-      default = "${pkgs.coreutils}/bin/env";
-      example = literalExample ''
-        "''${pkgs.busybox}/bin/env"
-      '';
-      type = types.nullOr types.path;
-      visible = false;
-      description = ''
-        The env(1) executable that is linked system-wide to
-        <literal>/usr/bin/env</literal>.
-      '';
-    };
   };
 
 
@@ -130,6 +109,10 @@ in
       ''
         # Various log/runtime directories.
 
+        touch /run/utmp # must exist
+        chgrp ${toString config.ids.gids.utmp} /run/utmp
+        chmod 664 /run/utmp
+
         mkdir -m 0755 -p /run/nix/current-load # for distributed builds
         mkdir -m 0700 -p /run/nix/remote-stores
 
@@ -140,43 +123,22 @@ in
 
         mkdir -m 1777 -p /var/tmp
 
-        # Empty, immutable home directory of many system accounts.
-        mkdir -p /var/empty
-        # Make sure it's really empty
-        ${pkgs.e2fsprogs}/bin/chattr -f -i /var/empty || true
-        find /var/empty -mindepth 1 -delete
-        chmod 0555 /var/empty
-        chown root:root /var/empty
-        ${pkgs.e2fsprogs}/bin/chattr -f +i /var/empty || true
+        # Empty, read-only home directory of many system accounts.
+        mkdir -m 0555 -p /var/empty
       '';
 
-    system.activationScripts.usrbinenv = if config.environment.usrbinenv != null
-      then ''
+    system.activationScripts.usrbinenv =
+      ''
         mkdir -m 0755 -p /usr/bin
-        ln -sfn ${config.environment.usrbinenv} /usr/bin/.env.tmp
+        ln -sfn ${pkgs.coreutils}/bin/env /usr/bin/.env.tmp
         mv /usr/bin/.env.tmp /usr/bin/env # atomically replace /usr/bin/env
-      ''
-      else ''
-        rm -f /usr/bin/env
-        rmdir --ignore-fail-on-non-empty /usr/bin /usr
       '';
 
-    system.activationScripts.specialfs =
+    system.activationScripts.tmpfs =
       ''
-        specialMount() {
-          local device="$1"
-          local mountPoint="$2"
-          local options="$3"
-          local fsType="$4"
-
-          if mountpoint -q "$mountPoint"; then
-            local options="remount,$options"
-          else
-            mkdir -m 0755 -p "$mountPoint"
-          fi
-          mount -t "$fsType" -o "$options" "$device" "$mountPoint"
-        }
-        source ${config.system.build.earlyMountScript}
+        ${pkgs.utillinux}/bin/mount -o "remount,size=${config.boot.devSize}" none /dev
+        ${pkgs.utillinux}/bin/mount -o "remount,size=${config.boot.devShmSize}" none /dev/shm
+        ${pkgs.utillinux}/bin/mount -o "remount,size=${config.boot.runSize}" none /run
       '';
 
   };

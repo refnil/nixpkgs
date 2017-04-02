@@ -1,206 +1,133 @@
-{ lib, ... }:
+{ config, lib, options, ... }:
 
 with lib;
 
-{
-  imports = [
-    (mkRenamedOptionModule [ "environment" "x11Packages" ] [ "environment" "systemPackages" ])
-    (mkRenamedOptionModule [ "environment" "enableBashCompletion" ] [ "programs" "bash" "enableCompletion" ])
-    (mkRenamedOptionModule [ "environment" "nix" ] [ "nix" "package" ])
-    (mkRenamedOptionModule [ "fonts" "enableFontConfig" ] [ "fonts" "fontconfig" "enable" ])
-    (mkRenamedOptionModule [ "fonts" "extraFonts" ] [ "fonts" "fonts" ])
+let
 
-    (mkRenamedOptionModule [ "networking" "enableWLAN" ] [ "networking" "wireless" "enable" ])
-    (mkRenamedOptionModule [ "networking" "enableRT73Firmware" ] [ "networking" "enableRalinkFirmware" ])
+  alias = from: to: rename {
+    inherit from to;
+    name = "Alias";
+    use = id;
+    define = id;
+    visible = true;
+  };
 
-    (mkRenamedOptionModule [ "services" "cadvisor" "host" ] [ "services" "cadvisor" "listenAddress" ])
-    (mkRenamedOptionModule [ "services" "elasticsearch" "host" ] [ "services" "elasticsearch" "listenAddress" ])
-    (mkRenamedOptionModule [ "services" "graphite" "api" "host" ] [ "services" "graphite" "api" "listenAddress" ])
-    (mkRenamedOptionModule [ "services" "graphite" "web" "host" ] [ "services" "graphite" "web" "listenAddress" ])
-    (mkRenamedOptionModule [ "services" "logstash" "address" ] [ "services" "logstash" "listenAddress" ])
-    (mkRenamedOptionModule [ "services" "kibana" "host" ] [ "services" "kibana" "listenAddress" ])
-    (mkRenamedOptionModule [ "services" "mpd" "network" "host" ] [ "services" "mpd" "network" "listenAddress" ])
-    (mkRenamedOptionModule [ "services" "neo4j" "host" ] [ "services" "neo4j" "listenAddress" ])
-    (mkRenamedOptionModule [ "services" "shout" "host" ] [ "services" "shout" "listenAddress" ])
-    (mkRenamedOptionModule [ "services" "sslh" "host" ] [ "services" "sslh" "listenAddress" ])
-    (mkRenamedOptionModule [ "services" "statsd" "host" ] [ "services" "statsd" "listenAddress" ])
-    (mkRenamedOptionModule [ "services" "subsonic" "host" ] [ "services" "subsonic" "listenAddress" ])
-    (mkRenamedOptionModule [ "jobs" ] [ "systemd" "services" ])
+  # warn option was renamed
+  obsolete = from: to: rename {
+    inherit from to;
+    name = "Obsolete name";
+    use = x: builtins.trace "Obsolete option `${showOption from}' is used. It was renamed to `${showOption to}'." x;
+    define = x: builtins.trace "Obsolete option `${showOption from}' is used. It was renamed to `${showOption to}'." x;
+  };
 
-    (mkRenamedOptionModule [ "services" "gitlab" "stateDir" ] [ "services" "gitlab" "statePath" ])
-    (mkRemovedOptionModule [ "services" "gitlab" "satelliteDir" ] "")
+  # abort if deprecated option is used
+  deprecated = from: to: rename {
+    inherit from to;
+    name = "Deprecated name";
+    use = x: abort "Deprecated option `${showOption from}' is used. It was renamed to `${showOption to}'.";
+    define = x: abort "Deprecated option `${showOption from}' is used. It was renamed to `${showOption to}'.";
+  };
 
-    (mkRenamedOptionModule [ "services" "clamav" "updater" "config" ] [ "services" "clamav" "updater" "extraConfig" ])
+  showOption = concatStringsSep ".";
 
-    (mkRemovedOptionModule [ "security" "setuidOwners" ] "Use security.wrappers instead")
-    (mkRemovedOptionModule [ "security" "setuidPrograms" ] "Use security.wrappers instead")
+  zipModules = list:
+    zipAttrsWith (n: v:
+      if tail v != [] then
+        if n == "_type" then (head v)
+        else if n == "warnings" then concatLists v
+        else if n == "description" || n == "apply" then
+          abort "Cannot rename an option to multiple options."
+        else zipModules v
+      else head v
+    ) list;
 
-    (mkRemovedOptionModule [ "services" "rmilter" "bindInetSockets" ] "Use services.rmilter.bindSocket.* instead")
-    (mkRemovedOptionModule [ "services" "rmilter" "bindUnixSockets" ] "Use services.rmilter.bindSocket.* instead")
+  rename = { from, to, name, use, define, visible ? false }:
+    let
+      setTo = setAttrByPath to;
+      setFrom = setAttrByPath from;
+      toOf = attrByPath to
+        (abort "Renaming error: option `${showOption to}' does not exists.");
+      fromOf = attrByPath from
+        (abort "Internal error: option `${showOption from}' should be declared.");
+    in
+      [ { options = setFrom (mkOption {
+            description = "${name} of <option>${showOption to}</option>.";
+            apply = x: use (toOf config);
+            inherit visible;
+          });
+        }
+        { config = setTo (mkMerge (if (fromOf options).isDefined then [ (define (mkMerge (fromOf options).definitions)) ] else []));
+        }
+      ];
 
-    # Old Grub-related options.
-    (mkRenamedOptionModule [ "boot" "initrd" "extraKernelModules" ] [ "boot" "initrd" "kernelModules" ])
-    (mkRenamedOptionModule [ "boot" "extraKernelParams" ] [ "boot" "kernelParams" ])
-    (mkRenamedOptionModule [ "boot" "loader" "grub" "timeout" ] [ "boot" "loader" "timeout" ])
-    (mkRenamedOptionModule [ "boot" "loader" "gummiboot" "timeout" ] [ "boot" "loader" "timeout" ])
+  obsolete' = option: singleton
+    { options = setAttrByPath option (mkOption {
+        default = null;
+        visible = false;
+      });
+      config.warnings = optional (getAttrFromPath option config != null)
+        "The option `${showOption option}' defined in your configuration no longer has any effect; please remove it.";
+    };
 
-    # smartd
-    (mkRenamedOptionModule [ "services" "smartd" "deviceOpts" ] [ "services" "smartd" "defaults" "monitored" ])
+in zipModules ([]
 
-    # OpenSSH
-    (mkRenamedOptionModule [ "services" "sshd" "ports" ] [ "services" "openssh" "ports" ])
-    (mkAliasOptionModule [ "services" "sshd" "enable" ] [ "services" "openssh" "enable" ])
-    (mkRenamedOptionModule [ "services" "sshd" "allowSFTP" ] [ "services" "openssh" "allowSFTP" ])
-    (mkRenamedOptionModule [ "services" "sshd" "forwardX11" ] [ "services" "openssh" "forwardX11" ])
-    (mkRenamedOptionModule [ "services" "sshd" "gatewayPorts" ] [ "services" "openssh" "gatewayPorts" ])
-    (mkRenamedOptionModule [ "services" "sshd" "permitRootLogin" ] [ "services" "openssh" "permitRootLogin" ])
-    (mkRenamedOptionModule [ "services" "xserver" "startSSHAgent" ] [ "services" "xserver" "startOpenSSHAgent" ])
-    (mkRenamedOptionModule [ "services" "xserver" "startOpenSSHAgent" ] [ "programs" "ssh" "startAgent" ])
-    (mkAliasOptionModule [ "services" "openssh" "knownHosts" ] [ "programs" "ssh" "knownHosts" ])
+++ obsolete [ "environment" "x11Packages" ] [ "environment" "systemPackages" ]
+++ obsolete [ "environment" "enableBashCompletion" ] [ "programs" "bash" "enableCompletion" ]
+++ obsolete [ "environment" "nix" ] [ "nix" "package" ]
+++ obsolete [ "fonts" "extraFonts" ] [ "fonts" "fonts" ]
 
-    # VirtualBox
-    (mkRenamedOptionModule [ "services" "virtualbox" "enable" ] [ "virtualisation" "virtualbox" "guest" "enable" ])
-    (mkRenamedOptionModule [ "services" "virtualboxGuest" "enable" ] [ "virtualisation" "virtualbox" "guest" "enable" ])
-    (mkRenamedOptionModule [ "programs" "virtualbox" "enable" ] [ "virtualisation" "virtualbox" "host" "enable" ])
-    (mkRenamedOptionModule [ "programs" "virtualbox" "addNetworkInterface" ] [ "virtualisation" "virtualbox" "host" "addNetworkInterface" ])
-    (mkRenamedOptionModule [ "programs" "virtualbox" "enableHardening" ] [ "virtualisation" "virtualbox" "host" "enableHardening" ])
-    (mkRenamedOptionModule [ "services" "virtualboxHost" "enable" ] [ "virtualisation" "virtualbox" "host" "enable" ])
-    (mkRenamedOptionModule [ "services" "virtualboxHost" "addNetworkInterface" ] [ "virtualisation" "virtualbox" "host" "addNetworkInterface" ])
-    (mkRenamedOptionModule [ "services" "virtualboxHost" "enableHardening" ] [ "virtualisation" "virtualbox" "host" "enableHardening" ])
+++ obsolete [ "security" "extraSetuidPrograms" ] [ "security" "setuidPrograms" ]
+++ obsolete [ "networking" "enableWLAN" ] [ "networking" "wireless" "enable" ]
+++ obsolete [ "networking" "enableRT73Firmware" ] [ "networking" "enableRalinkFirmware" ]
 
-    # Tarsnap
-    (mkRenamedOptionModule [ "services" "tarsnap" "config" ] [ "services" "tarsnap" "archives" ])
+# FIXME: Remove these eventually.
+++ obsolete [ "boot" "systemd" "sockets" ] [ "systemd" "sockets" ]
+++ obsolete [ "boot" "systemd" "targets" ] [ "systemd" "targets" ]
+++ obsolete [ "boot" "systemd" "services" ] [ "systemd" "services" ]
 
-    # ibus
-    (mkRenamedOptionModule [ "programs" "ibus" "plugins" ] [ "i18n" "inputMethod" "ibus" "engines" ])
+# Old Grub-related options.
+++ obsolete [ "boot" "copyKernels" ] [ "boot" "loader" "grub" "copyKernels" ]
+++ obsolete [ "boot" "extraGrubEntries" ] [ "boot" "loader" "grub" "extraEntries" ]
+++ obsolete [ "boot" "extraGrubEntriesBeforeNixos" ] [ "boot" "loader" "grub" "extraEntriesBeforeNixOS" ]
+++ obsolete [ "boot" "grubDevice" ] [ "boot" "loader" "grub" "device" ]
+++ obsolete [ "boot" "bootMount" ] [ "boot" "loader" "grub" "bootDevice" ]
+++ obsolete [ "boot" "grubSplashImage" ] [ "boot" "loader" "grub" "splashImage" ]
 
-    # proxy
-    (mkRenamedOptionModule [ "nix" "proxy" ] [ "networking" "proxy" "default" ])
+++ obsolete [ "boot" "initrd" "extraKernelModules" ] [ "boot" "initrd" "kernelModules" ]
+++ obsolete [ "boot" "extraKernelParams" ] [ "boot" "kernelParams" ]
 
-    # sandboxing
-    (mkRenamedOptionModule [ "nix" "useChroot" ] [ "nix" "useSandbox" ])
-    (mkRenamedOptionModule [ "nix" "chrootDirs" ] [ "nix" "sandboxPaths" ])
+# OpenSSH
+++ obsolete [ "services" "sshd" "ports" ] [ "services" "openssh" "ports" ]
+++ alias [ "services" "sshd" "enable" ] [ "services" "openssh" "enable" ]
+++ obsolete [ "services" "sshd" "allowSFTP" ] [ "services" "openssh" "allowSFTP" ]
+++ obsolete [ "services" "sshd" "forwardX11" ] [ "services" "openssh" "forwardX11" ]
+++ obsolete [ "services" "sshd" "gatewayPorts" ] [ "services" "openssh" "gatewayPorts" ]
+++ obsolete [ "services" "sshd" "permitRootLogin" ] [ "services" "openssh" "permitRootLogin" ]
+++ obsolete [ "services" "xserver" "startSSHAgent" ] [ "services" "xserver" "startOpenSSHAgent" ]
+++ obsolete [ "services" "xserver" "startOpenSSHAgent" ] [ "programs" "ssh" "startAgent" ]
+++ obsolete [ "services" "xserver" "windowManager" "xbmc" ] [ "services" "xserver" "desktopManager" "xbmc" ]
 
-    # KDE
-    (mkRenamedOptionModule [ "kde" "extraPackages" ] [ "environment" "systemPackages" ])
-    (mkRenamedOptionModule [ "environment" "kdePackages" ] [ "environment" "systemPackages" ])
+# KDE
+++ deprecated [ "kde" "extraPackages" ] [ "environment" "kdePackages" ]
+# ++ obsolete [ "environment" "kdePackages" ] [ "environment" "systemPackages" ] # !!! doesn't work!
 
-    # Multiple efi bootloaders now
-    (mkRenamedOptionModule [ "boot" "loader" "efi" "efibootmgr" "enable" ] [ "boot" "loader" "efi" "canTouchEfiVariables" ])
+# Multiple efi bootloaders now
+++ obsolete [ "boot" "loader" "efi" "efibootmgr" "enable" ] [ "boot" "loader" "efi" "canTouchEfiVariables" ]
 
-    # NixOS environment changes
-    # !!! this hardcodes bash, could we detect from config which shell is actually used?
-    (mkRenamedOptionModule [ "environment" "promptInit" ] [ "programs" "bash" "promptInit" ])
+# NixOS environment changes
+# !!! this hardcodes bash, could we detect from config which shell is actually used?
+++ obsolete [ "environment" "promptInit" ] [ "programs" "bash" "promptInit" ]
 
-    (mkRenamedOptionModule [ "services" "xserver" "driSupport" ] [ "hardware" "opengl" "driSupport" ])
-    (mkRenamedOptionModule [ "services" "xserver" "driSupport32Bit" ] [ "hardware" "opengl" "driSupport32Bit" ])
-    (mkRenamedOptionModule [ "services" "xserver" "s3tcSupport" ] [ "hardware" "opengl" "s3tcSupport" ])
-    (mkRenamedOptionModule [ "hardware" "opengl" "videoDrivers" ] [ "services" "xserver" "videoDrivers" ])
-    (mkRenamedOptionModule [ "services" "xserver" "vaapiDrivers" ] [ "hardware" "opengl" "extraPackages" ])
+++ obsolete [ "services" "xserver" "driSupport" ] [ "hardware" "opengl" "driSupport" ]
+++ obsolete [ "services" "xserver" "driSupport32Bit" ] [ "hardware" "opengl" "driSupport32Bit" ]
+++ obsolete [ "services" "xserver" "s3tcSupport" ] [ "hardware" "opengl" "s3tcSupport" ]
+++ obsolete [ "hardware" "opengl" "videoDrivers" ] [ "services" "xserver" "videoDrivers" ]
 
-    (mkRenamedOptionModule [ "services" "mysql55" ] [ "services" "mysql" ])
+++ obsolete [ "services" "mysql55" ] [ "services" "mysql" ]
 
-    (mkAliasOptionModule [ "environment" "checkConfigurationOptions" ] [ "_module" "check" ])
+# Options that are obsolete and have no replacement.
+++ obsolete' [ "boot" "loader" "grub" "bootDevice" ]
+++ obsolete' [ "boot" "initrd" "luks" "enable" ]
+++ obsolete' [ "programs" "bash" "enable" ]
 
-    # XBMC
-    (mkRenamedOptionModule [ "services" "xserver" "windowManager" "xbmc" ] [ "services" "xserver" "desktopManager" "kodi" ])
-    (mkRenamedOptionModule [ "services" "xserver" "desktopManager" "xbmc" ] [ "services" "xserver" "desktopManager" "kodi" ])
-
-    (mkRenamedOptionModule [ "services" "hostapd" "extraCfg" ] [ "services" "hostapd" "extraConfig" ])
-
-    # Enlightenment
-    (mkRenamedOptionModule [ "services" "xserver" "desktopManager" "e19" "enable" ] [ "services" "xserver" "desktopManager" "enlightenment" "enable" ])
-
-    # Iodine
-    (mkRenamedOptionModule [ "services" "iodined" "enable" ] [ "services" "iodine" "server" "enable" ])
-    (mkRenamedOptionModule [ "services" "iodined" "domain" ] [ "services" "iodine" "server" "domain" ])
-    (mkRenamedOptionModule [ "services" "iodined" "ip" ] [ "services" "iodine" "server" "ip" ])
-    (mkRenamedOptionModule [ "services" "iodined" "extraConfig" ] [ "services" "iodine" "server" "extraConfig" ])
-    (mkRemovedOptionModule [ "services" "iodined" "client" ] "")
-
-    # Grsecurity
-    (mkRemovedOptionModule [ "security" "grsecurity" "kernelPatch" ] "")
-    (mkRemovedOptionModule [ "security" "grsecurity" "config" "mode" ] "")
-    (mkRemovedOptionModule [ "security" "grsecurity" "config" "priority" ] "")
-    (mkRemovedOptionModule [ "security" "grsecurity" "config" "system" ] "")
-    (mkRemovedOptionModule [ "security" "grsecurity" "config" "virtualisationConfig" ] "")
-    (mkRemovedOptionModule [ "security" "grsecurity" "config" "hardwareVirtualisation" ] "")
-    (mkRemovedOptionModule [ "security" "grsecurity" "config" "virtualisationSoftware" ] "")
-    (mkRemovedOptionModule [ "security" "grsecurity" "config" "sysctl" ] "")
-    (mkRemovedOptionModule [ "security" "grsecurity" "config" "denyChrootChmod" ] "")
-    (mkRemovedOptionModule [ "security" "grsecurity" "config" "denyChrootCaps" ] "")
-    (mkRemovedOptionModule [ "security" "grsecurity" "config" "denyUSB" ] "")
-    (mkRemovedOptionModule [ "security" "grsecurity" "config" "restrictProc" ] "")
-    (mkRemovedOptionModule [ "security" "grsecurity" "config" "restrictProcWithGroup" ] "")
-    (mkRemovedOptionModule [ "security" "grsecurity" "config" "unrestrictProcGid" ] "")
-    (mkRemovedOptionModule [ "security" "grsecurity" "config" "disableRBAC" ] "")
-    (mkRemovedOptionModule [ "security" "grsecurity" "config" "disableSimultConnect" ] "")
-    (mkRemovedOptionModule [ "security" "grsecurity" "config" "verboseVersion" ] "")
-    (mkRemovedOptionModule [ "security" "grsecurity" "config" "kernelExtraConfig" ] "")
-
-    # Unity3D
-    (mkRenamedOptionModule [ "programs" "unity3d" "enable" ] [ "security" "chromiumSuidSandbox" "enable" ])
-
-    # murmur
-    (mkRenamedOptionModule [ "services" "murmur" "welcome" ] [ "services" "murmur" "welcometext" ])
-
-    # parsoid
-    (mkRemovedOptionModule [ "services" "parsoid" "interwikis" ] [ "services" "parsoid" "wikis" ])
-
-    # tarsnap
-    (mkRemovedOptionModule [ "services" "tarsnap" "cachedir" ] "Use services.tarsnap.archives.<name>.cachedir")
-
-    # alsa
-    (mkRenamedOptionModule [ "sound" "enableMediaKeys" ] [ "sound" "mediaKeys" "enable" ])
-
-    # postgrey
-    (mkMergedOptionModule [ [ "services" "postgrey" "inetAddr" ] [ "services" "postgrey" "inetPort" ] ] [ "services" "postgrey" "socket" ] (config: let
-        value = p: getAttrFromPath p config;
-        inetAddr = [ "services" "postgrey" "inetAddr" ];
-        inetPort = [ "services" "postgrey" "inetPort" ];
-      in
-        if value inetAddr == null
-        then { path = "/var/run/postgrey.sock"; }
-        else { addr = value inetAddr; port = value inetPort; }
-    ))
-
-    # dhcpd
-    (mkRenamedOptionModule [ "services" "dhcpd" ] [ "services" "dhcpd4" ])
-
-    # locate
-    (mkRenamedOptionModule [ "services" "locate" "period" ] [ "services" "locate" "interval" ])
-    (mkRemovedOptionModule [ "services" "locate" "includeStore" ] "Use services.locate.prunePaths" )
-
-    # nfs
-    (mkRenamedOptionModule [ "services" "nfs" "lockdPort" ] [ "services" "nfs" "server" "lockdPort" ])
-    (mkRenamedOptionModule [ "services" "nfs" "statdPort" ] [ "services" "nfs" "server" "statdPort" ])
-
-    # KDE Plasma 5
-    (mkRenamedOptionModule [ "services" "xserver" "desktopManager" "kde5" ] [ "services" "xserver" "desktopManager" "plasma5" ])
-
-    # Fontconfig
-    (mkRenamedOptionModule [ "config" "fonts" "fontconfig" "ultimate" "allowBitmaps" ] [ "config" "fonts" "fontconfig" "allowBitmaps" ])
-    (mkRenamedOptionModule [ "config" "fonts" "fontconfig" "ultimate" "allowType1" ] [ "config" "fonts" "fontconfig" "allowType1" ])
-    (mkRenamedOptionModule [ "config" "fonts" "fontconfig" "ultimate" "useEmbeddedBitmaps" ] [ "config" "fonts" "fontconfig" "useEmbeddedBitmaps" ])
-    (mkRenamedOptionModule [ "config" "fonts" "fontconfig" "ultimate" "forceAutohint" ] [ "config" "fonts" "fontconfig" "forceAutohint" ])
-    (mkRenamedOptionModule [ "config" "fonts" "fontconfig" "ultimate" "renderMonoTTFAsBitmap" ] [ "config" "fonts" "fontconfig" "renderMonoTTFAsBitmap" ])
-
-    # Options that are obsolete and have no replacement.
-    (mkRemovedOptionModule [ "boot" "initrd" "luks" "enable" ] "")
-    (mkRemovedOptionModule [ "programs" "bash" "enable" ] "")
-    (mkRemovedOptionModule [ "services" "samba" "defaultShare" ] "")
-    (mkRemovedOptionModule [ "services" "syslog-ng" "serviceName" ] "")
-    (mkRemovedOptionModule [ "services" "syslog-ng" "listenToJournal" ] "")
-    (mkRemovedOptionModule [ "ec2" "metadata" ] "")
-    (mkRemovedOptionModule [ "services" "openvpn" "enable" ] "")
-    (mkRemovedOptionModule [ "services" "printing" "cupsFilesConf" ] "")
-    (mkRemovedOptionModule [ "services" "printing" "cupsdConf" ] "")
-    (mkRemovedOptionModule [ "services" "xserver" "startGnuPGAgent" ]
-      "See the 16.09 release notes for more information.")
-    (mkRemovedOptionModule [ "services" "phpfpm" "phpIni" ] "")
-    (mkRemovedOptionModule [ "services" "dovecot2" "package" ] "")
-    (mkRemovedOptionModule [ "fonts" "fontconfig" "hinting" "style" ] "")
-    (mkRemovedOptionModule [ "services" "xserver" "displayManager" "sddm" "themes" ]
-      "Set the option `services.xserver.displayManager.sddm.package' instead.")
-  ];
-}
+)

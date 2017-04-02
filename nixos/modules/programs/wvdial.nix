@@ -24,7 +24,7 @@ in
 
       dialerDefaults = mkOption {
         default = "";
-        type = types.str;
+        type = types.string;
         example = ''Init1 = AT+CGDCONT=1,"IP","internet.t-mobile"'';
         description = ''
           Contents of the "Dialer Defaults" section of
@@ -40,7 +40,7 @@ in
           persist
           noauth
         '';
-        type = types.str;
+        type = types.string;
         description = "Default ppp settings for wvdial.";
       };
 

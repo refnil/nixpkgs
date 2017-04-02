@@ -3,18 +3,14 @@
 assert stdenv.isLinux;
 
 stdenv.mkDerivation {
-  name = "lsscsi-0.28";
+  name = "lsscsi-0.27";
 
   src = fetchurl {
-    url = "http://sg.danny.cz/scsi/lsscsi-0.28.tgz";
-    sha256 = "0l6xz8545lnfd9f4z974ar1pbzfdkr6c8r56zjrcaazl3ad00p82";
+    url = "http://sg.danny.cz/scsi/lsscsi-0.27.tgz";
+    sha256 = "1d6rl2jwpd6zlqymmp9z4ri5j43d44db2s71j0v0rzs1nbvm90kb";
   };
 
   preConfigure = ''
     substituteInPlace Makefile.in --replace /usr "$out"
   '';
-
-  meta = {
-    platforms = stdenv.lib.platforms.linux;
-  };
 }

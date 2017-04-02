@@ -17,8 +17,4 @@ stdenv.mkDerivation {
     rm $out/lib/libvolume_id.so.0
     cp -f libvolume_id.so.0 $out/lib/
   ";
-
-  meta = {
-    platforms = stdenv.lib.platforms.linux;
-  };
 }

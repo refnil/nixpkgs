@@ -1,15 +1,13 @@
-{ stdenv, fetchurl, fetchpatch, pkgconfig, freetype, yasm, ffmpeg
-, aalibSupport ? true, aalib ? null
+{ stdenv, fetchurl, pkgconfig, freetype, yasm
 , fontconfigSupport ? true, fontconfig ? null, freefont_ttf ? null
-, fribidiSupport ? true, fribidi ? null
 , x11Support ? true, libX11 ? null, libXext ? null, mesa ? null
 , xineramaSupport ? true, libXinerama ? null
 , xvSupport ? true, libXv ? null
-, alsaSupport ? stdenv.isLinux, alsaLib ? null
+, alsaSupport ? true, alsaLib ? null
 , screenSaverSupport ? true, libXScrnSaver ? null
 , vdpauSupport ? false, libvdpau ? null
-, cddaSupport ? !stdenv.isDarwin, cdparanoia ? null
-, dvdnavSupport ? !stdenv.isDarwin, libdvdnav ? null
+, cddaSupport ? true, cdparanoia ? null
+, dvdnavSupport ? true, libdvdnav ? null
 , bluraySupport ? true, libbluray ? null
 , amrSupport ? false, amrnb ? null, amrwb ? null
 , cacaSupport ? true, libcaca ? null
@@ -17,19 +15,16 @@
 , speexSupport ? true, speex ? null
 , theoraSupport ? true, libtheora ? null
 , x264Support ? false, x264 ? null
-, jackaudioSupport ? false, libjack2 ? null
-, pulseSupport ? false, libpulseaudio ? null
+, jackaudioSupport ? false, jack2 ? null
+, pulseSupport ? false, pulseaudio ? null
 , bs2bSupport ? false, libbs2b ? null
 # For screenshots
 , libpngSupport ? true, libpng ? null
-, libjpegSupport ? true, libjpeg ? null
 , useUnfreeCodecs ? false
-, darwin ? null
 }:
 
 assert fontconfigSupport -> (fontconfig != null);
 assert (!fontconfigSupport) -> (freefont_ttf != null);
-assert fribidiSupport -> (fribidi != null);
 assert x11Support -> (libX11 != null && libXext != null && mesa != null);
 assert xineramaSupport -> (libXinerama != null && x11Support);
 assert xvSupport -> (libXv != null && x11Support);
@@ -45,11 +40,10 @@ assert lameSupport -> lame != null;
 assert speexSupport -> speex != null;
 assert theoraSupport -> libtheora != null;
 assert x264Support -> x264 != null;
-assert jackaudioSupport -> libjack2 != null;
-assert pulseSupport -> libpulseaudio != null;
+assert jackaudioSupport -> jack2 != null;
+assert pulseSupport -> pulseaudio != null;
 assert bs2bSupport -> libbs2b != null;
 assert libpngSupport -> libpng != null;
-assert libjpegSupport -> libjpeg != null;
 
 let
 
@@ -84,11 +78,19 @@ let
 in
 
 stdenv.mkDerivation rec {
-  name = "mplayer-1.3.0";
+  name = "mplayer-1.1";
 
   src = fetchurl {
-    url = "http://www.mplayerhq.hu/MPlayer/releases/MPlayer-1.3.0.tar.xz";
-    sha256 = "0hwqn04bdknb2ic88xd75smffxx63scvz0zvwvjb56nqj9n89l1s";
+    # Old kind of URL:
+    # url = http://tarballs.nixos.org/mplayer-snapshot-20101227.tar.bz2;
+    # Snapshot I took on 20110423
+
+    #Transient
+    #url = http://www.mplayerhq.hu/MPlayer/releases/mplayer-export-snapshot.tar.bz2;
+    #sha256 = "cc1b3fda75b172f02c3f46581cfb2c17f4090997fe9314ad046e464a76b858bb";
+
+    url = "http://www.mplayerhq.hu/MPlayer/releases/MPlayer-1.1.tar.xz";
+    sha256 = "173cmsfz7ckzy1hay9mpnc5as51127cfnxl20b521d2jvgm4gjvn";
   };
 
   prePatch = ''
@@ -96,10 +98,8 @@ stdenv.mkDerivation rec {
   '';
 
   buildInputs = with stdenv.lib;
-    [ pkgconfig freetype ffmpeg ]
-    ++ optional aalibSupport aalib
+    [ pkgconfig freetype ]
     ++ optional fontconfigSupport fontconfig
-    ++ optional fribidiSupport fribidi
     ++ optionals x11Support [ libX11 libXext mesa ]
     ++ optional alsaSupport alsaLib
     ++ optional xvSupport libXv
@@ -109,18 +109,16 @@ stdenv.mkDerivation rec {
     ++ optional dvdnavSupport libdvdnav
     ++ optional bluraySupport libbluray
     ++ optional cddaSupport cdparanoia
-    ++ optional jackaudioSupport libjack2
+    ++ optional jackaudioSupport jack2
     ++ optionals amrSupport [ amrnb amrwb ]
     ++ optional x264Support x264
-    ++ optional pulseSupport libpulseaudio
+    ++ optional pulseSupport pulseaudio
     ++ optional screenSaverSupport libXScrnSaver
     ++ optional lameSupport lame
     ++ optional vdpauSupport libvdpau
     ++ optional speexSupport speex
     ++ optional libpngSupport libpng
-    ++ optional libjpegSupport libjpeg
     ++ optional bs2bSupport libbs2b
-    ++ (with darwin.apple_sdk.frameworks; optionals stdenv.isDarwin [ Cocoa OpenGL ])
     ;
 
   nativeBuildInputs = [ yasm ];
@@ -148,22 +146,20 @@ stdenv.mkDerivation rec {
       ${if speexSupport then "--enable-speex" else "--disable-speex"}
       ${if theoraSupport then "--enable-theora" else "--disable-theora"}
       ${if x264Support then "--enable-x264 --disable-x264-lavc" else "--disable-x264 --enable-x264-lavc"}
-      ${if jackaudioSupport then "" else "--disable-jack"}
+      ${if jackaudioSupport then "--enable-jack" else "--disable-jack"}
       ${if pulseSupport then "--enable-pulse" else "--disable-pulse"}
       ${optionalString (useUnfreeCodecs && codecs != null) "--codecsdir=${codecs}"}
       ${optionalString (stdenv.isi686 || stdenv.isx86_64) "--enable-runtime-cpudetection"}
-      ${optionalString fribidiSupport "--enable-fribidi"}
       --disable-xanim
       --disable-ivtv
       --disable-xvid --disable-xvid-lavc
-      ${optionalString stdenv.isLinux "--enable-vidix"}
-      ${optionalString stdenv.isLinux "--enable-fbdev"}
+      --enable-vidix
+      --enable-fbdev
       --disable-ossaudio
     '';
 
   NIX_LDFLAGS = with stdenv.lib;
        optional  fontconfigSupport "-lfontconfig"
-    ++ optional  fribidiSupport "-lfribidi"
     ++ optionals x11Support [ "-lX11" "-lXext" ]
     ;
 
@@ -198,7 +194,7 @@ stdenv.mkDerivation rec {
     description = "A movie player that supports many video formats";
     homepage = "http://mplayerhq.hu";
     license = "GPL";
-    maintainers = [ stdenv.lib.maintainers.eelco ];
-    platforms = stdenv.lib.platforms.linux ++ stdenv.lib.platforms.darwin;
+    maintainers = [ stdenv.lib.maintainers.eelco stdenv.lib.maintainers.urkud ];
+    platforms = stdenv.lib.platforms.linux;
   };
 }

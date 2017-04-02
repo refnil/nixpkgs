@@ -1,26 +1,21 @@
-{ stdenv, fetchFromGitHub, zlib, ffmpeg, pkgconfig }:
+{ stdenv, fetchurl, zlib, ffmpeg, pkgconfig }:
 
 stdenv.mkDerivation rec {
-  name = "ffms-${version}";
-  version = "2.22";
+  name = "ffms-2.19";
 
-  src = fetchFromGitHub {
-    owner = "FFMS";
-    repo = "ffms2";
-    rev = version;
-    sha256 = "1ywcx1f3q533qfrbck5qhik3l617qhm062l8zixv02gnla7w6rkm";
+  src = fetchurl {
+    url = https://codeload.github.com/FFMS/ffms2/tar.gz/2.19;
+    name = "${name}.tar.gz";
+    sha256 = "0498si8bzwyxxq0f1yc6invzb1lv1ab436gwzn9418839x8pj4vg";
   };
 
   NIX_CFLAGS_COMPILE = "-fPIC";
 
-  nativeBuildInputs = [ pkgconfig ];
-  buildInputs = [ zlib ffmpeg ];
+  buildInputs = [ zlib ffmpeg pkgconfig ];
 
-  meta = with stdenv.lib; {
-    homepage = http://github.com/FFMS/ffms2/;
+  meta = {
+    homepage = http://code.google.com/p/ffmpegsource/;
     description = "Libav/ffmpeg based source library for easy frame accurate access";
-    license = licenses.mit;
-    maintainers = with maintainers; [ fuuzetsu ];
-    platforms = platforms.unix;
+    license = stdenv.lib.licenses.mit;
   };
 }

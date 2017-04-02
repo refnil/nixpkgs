@@ -1,18 +1,14 @@
 { stdenv, fetchurl, kernel }:
 
-#assert stdenv.lib.versionOlder kernel.version "3.17";
-
-let base = "batman-adv-2017.0.1"; in
+let base = "batman-adv-2013.4.0"; in
 
 stdenv.mkDerivation rec {
   name = "${base}-${kernel.version}";
 
   src = fetchurl {
     url = "http://downloads.open-mesh.org/batman/releases/${base}/${base}.tar.gz";
-    sha256 = "0z640jgi9l9355s8v75yhrb9wjyc7cd4618pjpb17vy576bvrhjm";
+    sha1 = "870a85df5410b3b5623be69e75297e642c91a7d4";
   };
-
-  hardeningDisable = [ "pic" ];
 
   preBuild = ''
     makeFlags="KERNELPATH=${kernel.dev}/lib/modules/${kernel.modDirVersion}/build"
@@ -24,8 +20,7 @@ stdenv.mkDerivation rec {
     homepage = http://www.open-mesh.org/projects/batman-adv/wiki/Wiki;
     description = "B.A.T.M.A.N. routing protocol in a linux kernel module for layer 2";
     license = stdenv.lib.licenses.gpl2;
-    maintainers = with stdenv.lib.maintainers; [ viric fpletz ];
+    maintainers = with stdenv.lib.maintainers; [viric];
     platforms = with stdenv.lib.platforms; linux;
-    broken = (kernel.features.grsecurity or false);
   };
 }

@@ -3,13 +3,10 @@
 , pkgconfig ? null  # most of the extra deps need pkgconfig to be found
 , curl ? null
 , iptables ? null
-, jdk ? null
-, libatasmart ? null
 , libcredis ? null
 , libdbi ? null
 , libgcrypt ? null
 , libmemcached ? null, cyrus_sasl ? null
-, libmicrohttpd ? null
 , libmodbus ? null
 , libnotify ? null, gdk_pixbuf ? null
 , liboping ? null
@@ -17,49 +14,42 @@
 , libsigrok ? null
 , libvirt ? null
 , libxml2 ? null
-, libtool ? null
 , lm_sensors ? null
 , lvm2 ? null
-, libmysql ? null
+, mysql ? null
 , postgresql ? null
 , protobufc ? null
-, python ? null
 , rabbitmq-c ? null
-, riemann ? null
 , rrdtool ? null
-, udev ? null
 , varnish ? null
 , yajl ? null
-, net_snmp ? null
-, hiredis ? null
-, libmnl ? null
 }:
+
 stdenv.mkDerivation rec {
-  version = "5.7.0";
-  name = "collectd-${version}";
+  name = "collectd-5.4.1";
 
   src = fetchurl {
     url = "http://collectd.org/files/${name}.tar.bz2";
-    sha256 = "1cpjkv4d0iifngihxikzljavya0r2k3blarlahamgbdsqsymz815";
+    sha256 = "1q365zx6d1wyhv7n97bagfxqnqbhj2j14zz552nhmjviy8lj2ibm";
   };
 
+  NIX_LDFLAGS = "-lgcc_s"; # for pthread_cancel
+
   buildInputs = [
-    pkgconfig curl iptables libatasmart libcredis libdbi libgcrypt libmemcached
-    cyrus_sasl libmodbus libnotify gdk_pixbuf liboping libpcap libsigrok libvirt
-    lm_sensors libxml2 lvm2 libmysql postgresql protobufc rabbitmq-c rrdtool
-    varnish yajl jdk libtool python udev net_snmp hiredis libmnl libmicrohttpd
+    pkgconfig curl iptables libcredis libdbi libgcrypt libmemcached cyrus_sasl
+    libmodbus libnotify gdk_pixbuf liboping libpcap libsigrok libvirt
+    lm_sensors libxml2 lvm2 mysql postgresql protobufc rabbitmq-c rrdtool
+    varnish yajl
   ];
 
   # for some reason libsigrok isn't auto-detected
-  configureFlags =
-    stdenv.lib.optional (libsigrok != null) "--with-libsigrok" ++
-    stdenv.lib.optional (python != null) "--with-python=${python}/bin/python";
+  configureFlags = stdenv.lib.optional (libsigrok != null) "--with-libsigrok";
 
   meta = with stdenv.lib; {
     description = "Daemon which collects system performance statistics periodically";
     homepage = http://collectd.org;
     license = licenses.gpl2;
     platforms = platforms.linux;
-    maintainers = with maintainers; [ bjornfor fpletz ];
+    maintainers = [ maintainers.bjornfor ];
   };
 }

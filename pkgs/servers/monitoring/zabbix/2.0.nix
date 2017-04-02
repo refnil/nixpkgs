@@ -17,8 +17,8 @@ let
     ''
       substituteInPlace ./configure \
         --replace " -static" "" \
-        ${stdenv.lib.optionalString (stdenv.cc.libc != null) ''
-          --replace /usr/include/iconv.h ${stdenv.lib.getDev stdenv.cc.libc}/include/iconv.h
+        ${stdenv.lib.optionalString (stdenv.gcc.libc != null) ''
+          --replace /usr/include/iconv.h ${stdenv.gcc.libc}/include/iconv.h
         ''}
     '';
 
@@ -78,13 +78,13 @@ in
 
     configureFlags = "--enable-agent";
 
-    meta = with stdenv.lib; {
+    meta = {
       inherit branch;
       description = "An enterprise-class open source distributed monitoring solution (client-side agent)";
       homepage = http://www.zabbix.com/;
-      license = licenses.gpl2;
-      maintainers = [ maintainers.eelco ];
-      platforms = platforms.linux;
+      license = "GPL";
+      maintainers = [ stdenv.lib.maintainers.eelco ];
+      platforms = stdenv.lib.platforms.linux ++ stdenv.lib.platforms.darwin;
     };
   };
 

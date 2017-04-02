@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, flex, systemd, perl }:
+{ stdenv, fetchurl, flex, udev, perl }:
 
 assert stdenv.isLinux;
 
@@ -7,7 +7,7 @@ stdenv.mkDerivation rec {
 
   src = fetchurl {
     url = "http://oss.linbit.com/drbd/8.4/${name}.tar.gz";
-    sha256 = "1w4889h1ak7gy9w33kd4fgjlfpgmp6hzfya16p1pkc13bjf22mm0";
+    sha256 = "0hm1cnd7vsccyc22sg85f9aj48nijl2f1kgbvl5crv414ihv5giq";
   };
 
   patches = [ ./pass-force.patch ];
@@ -18,11 +18,11 @@ stdenv.mkDerivation rec {
 
   preConfigure =
     ''
-      export PATH=${systemd.udev.bin}/sbin:$PATH
-      substituteInPlace user/Makefile.in \
-        --replace /sbin '$(sbindir)'
+      export PATH=${udev}/sbin:$PATH
+      substituteInPlace user/Makefile.in --replace /sbin/ $out/sbin/
       substituteInPlace user/legacy/Makefile.in \
-        --replace '$(DESTDIR)/lib/drbd' '$(DESTDIR)$(LIBDIR)'
+        --replace /sbin/ $out/sbin/ \
+        --replace '$(DESTDIR)/lib/drbd' $out/lib/drbd
       substituteInPlace user/drbdadm_usage_cnt.c --replace /lib/drbd $out/lib/drbd
       substituteInPlace scripts/drbd.rules --replace /sbin/drbdadm $out/sbin/drbdadm
     '';

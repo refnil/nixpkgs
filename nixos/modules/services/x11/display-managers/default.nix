@@ -1,5 +1,5 @@
 # This module declares the options to define a *display manager*, the
-# program responsible for handling X logins (such as xdm, gdb, or
+# program responsible for handling X logins (such as xdm, kdm, gdb, or
 # SLiM).  The display manager allows the user to select a *session
 # type*.  When the user logs in, the display manager starts the
 # *session script* ("xsession" below) to launch the selected session
@@ -16,30 +16,17 @@ let
   cfg = config.services.xserver;
   xorg = pkgs.xorg;
 
-  fontconfig = config.fonts.fontconfig;
-  xresourcesXft = pkgs.writeText "Xresources-Xft" ''
-    ${optionalString (fontconfig.dpi != 0) ''Xft.dpi: ${toString fontconfig.dpi}''}
-    Xft.antialias: ${if fontconfig.antialias then "1" else "0"}
-    Xft.rgba: ${fontconfig.subpixel.rgba}
-    Xft.lcdfilter: lcd${fontconfig.subpixel.lcdfilter}
-    Xft.hinting: ${if fontconfig.hinting.enable then "1" else "0"}
-    Xft.autohint: ${if fontconfig.hinting.autohint then "1" else "0"}
-    Xft.hintstyle: hintslight
-  '';
+  vaapiDrivers = pkgs.buildEnv {
+    name = "vaapi-drivers";
+    paths = cfg.vaapiDrivers;
+    # We only want /lib/dri, but with a single input path, we need "/" for it to work
+    pathsToLink = [ "/" ];
+  };
 
   # file provided by services.xserver.displayManager.session.script
   xsession = wm: dm: pkgs.writeScript "xsession"
     ''
-      #! ${pkgs.bash}/bin/bash
-
-      # Handle being called by SDDM.
-      if test "''${1:0:1}" = / ; then eval exec $1 $2 ; fi
-
-      ${optionalString cfg.displayManager.logToJournal ''
-        if [ -z "$_DID_SYSTEMD_CAT" ]; then
-          _DID_SYSTEMD_CAT=1 exec ${config.systemd.package}/bin/systemd-cat -t xsession -- "$0" "$@"
-        fi
-      ''}
+      #! /bin/sh
 
       . /etc/profile
       cd "$HOME"
@@ -48,48 +35,60 @@ let
       sessionType="$1"
       if [ "$sessionType" = default ]; then sessionType=""; fi
 
-      ${optionalString (!cfg.displayManager.job.logsXsession && !cfg.displayManager.logToJournal) ''
+      ${optionalString (!cfg.displayManager.job.logsXsession) ''
         exec > ~/.xsession-errors 2>&1
       ''}
 
-      ${optionalString cfg.startDbusSession ''
-        if test -z "$DBUS_SESSION_BUS_ADDRESS"; then
-          exec ${pkgs.dbus.dbus-launch} --exit-with-session "$0" "$sessionType"
+      ${optionalString cfg.displayManager.desktopManagerHandlesLidAndPower ''
+        # Stop systemd from handling the power button and lid switch,
+        # since presumably the desktop environment will handle these.
+        if [ -z "$_INHIBITION_LOCK_TAKEN" ]; then
+          export _INHIBITION_LOCK_TAKEN=1
+          if ! ${config.systemd.package}/bin/loginctl show-session $XDG_SESSION_ID | grep -q '^RemoteHost='; then
+            exec ${config.systemd.package}/bin/systemd-inhibit --what=handle-lid-switch:handle-power-key "$0" "$sessionType"
+          fi
+        fi
+
+      ''}
+
+      ${optionalString cfg.startGnuPGAgent ''
+        if test -z "$SSH_AUTH_SOCK"; then
+            # Restart this script as a child of the GnuPG agent.
+            exec "${pkgs.gnupg}/bin/gpg-agent"                         \
+              --enable-ssh-support --daemon                             \
+              --pinentry-program "${pkgs.pinentry}/bin/pinentry-gtk-2"  \
+              --write-env-file "$HOME/.gpg-agent-info"                  \
+              "$0" "$sessionType"
         fi
       ''}
+
+      # Handle being called by kdm.
+      if test "''${1:0:1}" = /; then eval exec "$1"; fi
 
       # Start PulseAudio if enabled.
       ${optionalString (config.hardware.pulseaudio.enable) ''
         ${optionalString (!config.hardware.pulseaudio.systemWide)
-          "${config.hardware.pulseaudio.package.out}/bin/pulseaudio --start"
+          "${pkgs.pulseaudio}/bin/pulseaudio --start"
         }
 
         # Publish access credentials in the root window.
-        ${config.hardware.pulseaudio.package.out}/bin/pactl load-module module-x11-publish "display=$DISPLAY"
+        ${pkgs.pulseaudio}/bin/pactl load-module module-x11-publish "display=$DISPLAY"
+
+        # Keep track of devices.  Mostly useful for Phonon/KDE.
+        ${pkgs.pulseaudio}/bin/pactl load-module module-device-manager "do_routing=1"
       ''}
 
-      # Tell systemd about our $DISPLAY. This is needed by the
-      # ssh-agent unit.
-      ${config.systemd.package}/bin/systemctl --user import-environment DISPLAY
-
       # Load X defaults.
-      ${xorg.xrdb}/bin/xrdb -merge ${xresourcesXft}
-      if test -e ~/.Xresources; then
-          ${xorg.xrdb}/bin/xrdb -merge ~/.Xresources
-      elif test -e ~/.Xdefaults; then
+      if test -e ~/.Xdefaults; then
           ${xorg.xrdb}/bin/xrdb -merge ~/.Xdefaults
       fi
 
+      export LIBVA_DRIVERS_PATH=${vaapiDrivers}/lib/dri
+
       # Speed up application start by 50-150ms according to
       # http://kdemonkey.blogspot.nl/2008/04/magic-trick.html
-      rm -rf "$HOME/.compose-cache"
-      mkdir "$HOME/.compose-cache"
-
-      # Work around KDE errors when a user first logs in and
-      # .local/share doesn't exist yet.
-      mkdir -p "$HOME/.local/share"
-
-      unset _DID_SYSTEMD_CAT
+      rm -rf $HOME/.compose-cache
+      mkdir $HOME/.compose-cache
 
       ${cfg.displayManager.sessionCommands}
 
@@ -134,21 +133,13 @@ let
         (*) echo "$0: Desktop manager '$desktopManager' not found.";;
       esac
 
-      ${optionalString cfg.updateDbusEnvironment ''
-        ${lib.getBin pkgs.dbus}/bin/dbus-update-activation-environment --systemd --all
-      ''}
-
       test -n "$waitPID" && wait "$waitPID"
       exit 0
     '';
 
-  mkDesktops = names: pkgs.runCommand "desktops"
-    { # trivial derivation
-      preferLocalBuild = true;
-      allowSubstitutes = false;
-    }
+  mkDesktops = names: pkgs.runCommand "desktops" {}
     ''
-      mkdir -p "$out"
+      mkdir -p $out
       ${concatMapStrings (n: ''
         cat - > "$out/${n}.desktop" << EODESKTOP
         [Desktop Entry]
@@ -156,7 +147,6 @@ let
         Type=XSession
         TryExec=${cfg.displayManager.session.script}
         Exec=${cfg.displayManager.session.script} '${n}'
-        X-GDM-BypassXsession=true
         Name=${n}
         Comment=
         EODESKTOP
@@ -179,14 +169,16 @@ in
 
       xserverBin = mkOption {
         type = types.path;
+        default = "${xorg.xorgserver}/bin/X";
         description = "Path to the X server used by display managers.";
       };
 
       xserverArgs = mkOption {
         type = types.listOf types.str;
         default = [];
-        example = [ "-ac" "-logverbose" "-verbose" "-nolisten tcp" ];
+        example = [ "-ac" "-logverbose" "-nolisten tcp" ];
         description = "List of arguments for the X server.";
+        apply = toString;
       };
 
       sessionCommands = mkOption {
@@ -199,11 +191,14 @@ in
         description = "Shell commands executed just before the window or desktop manager is started.";
       };
 
-      hiddenUsers = mkOption {
-        type = types.listOf types.str;
-        default = [ "nobody" ];
+      desktopManagerHandlesLidAndPower = mkOption {
+        type = types.bool;
+        default = true;
         description = ''
-          A list of users which will not be shown in the display manager.
+          Whether the display manager should prevent systemd from handling
+          lid and power events. This is normally handled by the desktop
+          environment's power manager. Turn this off when using a minimal
+          X11 setup without a full power manager.
         '';
       };
 
@@ -256,16 +251,14 @@ in
 
         execCmd = mkOption {
           type = types.str;
-          example = literalExample ''
-            "''${pkgs.slim}/bin/slim"
-          '';
+          example = "${pkgs.slim}/bin/slim";
           description = "Command to start the display manager.";
         };
 
         environment = mkOption {
           type = types.attrsOf types.unspecified;
           default = {};
-          example = { SLIM_CFGFILE = "/etc/slim.conf"; };
+          example = { SLIM_CFGFILE = /etc/slim.conf; };
           description = "Additional environment variables needed by the display manager.";
         };
 
@@ -281,27 +274,8 @@ in
 
       };
 
-      logToJournal = mkOption {
-        type = types.bool;
-        default = true;
-        description = ''
-          By default, the stdout/stderr of sessions is written
-          to <filename>~/.xsession-errors</filename>. When this option
-          is enabled, it will instead be written to the journal.
-        '';
-      };
-
     };
 
   };
-
-  config = {
-    services.xserver.displayManager.xserverBin = "${xorg.xorgserver.out}/bin/X";
-  };
-
-  imports = [
-   (mkRemovedOptionModule [ "services" "xserver" "displayManager" "desktopManagerHandlesLidAndPower" ]
-     "The option is no longer necessary because all display managers have already delegated lid management to systemd.")
-  ];
 
 }

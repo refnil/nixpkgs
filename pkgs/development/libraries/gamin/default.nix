@@ -16,9 +16,7 @@ stdenv.mkDerivation (rec {
   # <sys/socket.h> with Glibc 2.9.
   configureFlags = "--disable-debug --with-python=${python} CPPFLAGS=-D_GNU_SOURCE";
 
-  patches = [ ./deadlock.patch ]
-    ++ map fetchurl (import ./debian-patches.nix)
-    ++ stdenv.lib.optional stdenv.cc.isClang ./returnval.patch;
+  patches = [ ./deadlock.patch ] ++ map fetchurl (import ./debian-patches.nix);
 
 
   meta = with stdenv.lib; {

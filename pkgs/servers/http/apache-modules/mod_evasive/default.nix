@@ -1,10 +1,4 @@
-{ lib, stdenv, fetchurl, apacheHttpd }:
-
-if lib.versionAtLeast (lib.getVersion apacheHttpd) "2.4" then
-
-  throw "mod_evasive is not supported on Apache httpd 2.4"
-
-else
+{ stdenv, fetchurl, apacheHttpd }:
 
 stdenv.mkDerivation {
   name = "mod_evasive-1.10.1";

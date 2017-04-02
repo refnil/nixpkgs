@@ -12,23 +12,21 @@
 let dummyMount = writeScriptBin "mount" "#!/bin/sh";
 in
 
-stdenv.mkDerivation rec {
+stdenv.mkDerivation {
 
-  version = "3.5";
-
-  name = "store-backup-${version}";
+  name = "store-backup-3.4";
 
   enableParallelBuilding = true;
 
   buildInputs = [ perl makeWrapper ];
 
   src = fetchurl {
-    url = "http://download.savannah.gnu.org/releases/storebackup/storeBackup-${version}.tar.bz2";
-    sha256 = "0y4gzssc93x6y93mjsxm5b5cdh68d7ffa43jf6np7s7c99xxxz78";
+    url = http://download.savannah.gnu.org/releases/storebackup/storeBackup-3.4.tar.bz2;
+    sha256 = "101k3nhyfjj8y8hg0v0xqxsr4vlcfkmlczgbihvlv722fb7n5gi3";
   };
 
   installPhase = ''
-    mkdir -p $out/scripts
+    ensureDir $out/scripts
     mv * $out
     mv $out/_ATTENTION_ $out/doc
     mv $out/{correct.sh,cron-storebackup} $out/scripts
@@ -41,7 +39,7 @@ stdenv.mkDerivation rec {
     for p in $out/bin/*
       do wrapProgram "$p" \
       --prefix PERL5LIB ":" "${perlPackages.DBFile}/lib/perl5/site_perl" \
-      --prefix PATH ":" "${stdenv.lib.makeBinPath [ which bzip2 ]}"
+      --prefix PATH ":" "${which}/bin:${bzip2}/bin"
     done
 
     patchShebangs $out
@@ -102,7 +100,7 @@ stdenv.mkDerivation rec {
   '';
 
   meta = {
-    description = "A backup suite that stores files on other disks";
+    description = "Storebackup is a backup suite that stores files on other disks";
     homepage = http://savannah.nongnu.org/projects/storebackup;
     license = stdenv.lib.licenses.gpl3Plus;
     maintainers = [stdenv.lib.maintainers.marcweber];

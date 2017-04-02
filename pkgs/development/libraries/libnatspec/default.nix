@@ -1,14 +1,12 @@
-{ stdenv, fetchurl, autoreconfHook, popt, libiconv }:
+{ stdenv, fetchurl, popt, libiconv }:
 
 stdenv.mkDerivation (rec {
-  name = "libnatspec-0.3.0";
+  name = "libnatspec-0.2.6";
 
   src = fetchurl {
     url = "mirror://sourceforge/natspec/${name}.tar.bz2";
-    sha256 = "0wffxjlc8svilwmrcg3crddpfrpv35mzzjgchf8ygqsvwbrbb3b7";
+    sha256 = "0zvm9afh1skxgdv62ylrpwyykpjhhskxj0zv7yrdf7jhfdriz0y3";
   };
-
-  nativeBuildInputs = [ autoreconfHook ];
 
   buildInputs = [ popt ];
 
@@ -16,9 +14,10 @@ stdenv.mkDerivation (rec {
     homepage = http://natspec.sourceforge.net/ ;
     description = "A library intended to smooth national specificities in using of programs";
     platforms = stdenv.lib.platforms.unix;
-    maintainers = [ ];
+    maintainers = [ stdenv.lib.maintainers.urkud ];
   };
 } // stdenv.lib.optionalAttrs (!stdenv.isLinux) {
-  NIX_LDFLAGS = "-liconv";
-  propagatedBuildInputs = [ libiconv ];
+  NIX_CFLAGS_COMPILE = "-I${libiconv}/include";
+
+  NIX_CFLAGS_LINK = "-L${libiconv}/lib -liconv";
 })

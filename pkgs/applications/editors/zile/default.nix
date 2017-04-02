@@ -1,14 +1,14 @@
-{ fetchurl, stdenv, pkgconfig, ncurses, boehmgc, perl, help2man }:
+{ fetchurl, stdenv, ncurses, boehmgc, perl, help2man }:
 
 stdenv.mkDerivation rec {
-  name = "zile-2.4.13";
+  name = "zile-2.4.9";
 
   src = fetchurl {
     url = "mirror://gnu/zile/${name}.tar.gz";
-    sha256 = "03mcg0bxkzprlsx8y6h22w924pzx4a9zr7zm3g11j8j3x9lz75f7";
+    sha256 = "0j801c28ypm924rw3lqyb6khxyslg6ycrv16wmmwcam0mk3mj6f7";
   };
 
-  buildInputs = [ pkgconfig ncurses boehmgc ];
+  buildInputs = [ ncurses boehmgc ];
   nativeBuildInputs = [ help2man perl ];
 
   # `help2man' wants to run Zile, which fails when cross-compiling.
@@ -21,7 +21,7 @@ stdenv.mkDerivation rec {
   # XXX: Work around cross-compilation-unfriendly `gl_FUNC_FSTATAT' macro.
   preConfigure = "export gl_cv_func_fstatat_zero_flag=yes";
 
-  meta = with stdenv.lib; {
+  meta = {
     description = "Lightweight Emacs clone";
 
     longDescription = ''
@@ -45,10 +45,8 @@ stdenv.mkDerivation rec {
 
     homepage = http://www.gnu.org/software/zile/;
 
-    license = licenses.gpl3Plus;
+    license = stdenv.lib.licenses.gpl3Plus;
 
-    maintainers = with maintainers; [ pSub ];
-
-    platforms = platforms.unix;
+    maintainers = [ ];
   };
 }

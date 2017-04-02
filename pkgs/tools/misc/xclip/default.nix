@@ -1,24 +1,18 @@
-{ stdenv, fetchFromGitHub, autoreconfHook, libXmu }:
+{ stdenv, fetchurl, x11, libXmu }:
 
 stdenv.mkDerivation rec {
-  name = "xclip-${version}";
-  version = "0.13";
+  name = "xclip-0.12";
 
-  src = fetchFromGitHub {
-    owner = "astrand";
-    repo = "xclip";
-    rev = version;
-    sha256 = "0q0hmvcjlv8arhh1pzhja2wglyj6n7z209jnpnzd281kqqv4czcs";
+  src = fetchurl {
+    url = "mirror://sourceforge/xclip/${name}.tar.gz";
+    sha256 = "0ibcf46rldnv0r424qcnai1fa5iq3lm5q5rdd7snsi5sb78gmixp";
   };
 
-  nativeBuildInputs = [ autoreconfHook ];
+  buildInputs = [ x11 libXmu ];
 
-  buildInputs = [ libXmu ];
-
-  meta = {
+  meta = { 
     description = "Tool to access the X clipboard from a console application";
-    homepage = https://github.com/astrand/xclip;
+    homepage = http://people.debian.org/~kims/xclip/;
     license = stdenv.lib.licenses.gpl2;
-    platforms = stdenv.lib.platforms.all;
   };
 }

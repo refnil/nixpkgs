@@ -1,8 +1,6 @@
-{ stdenv, fetchurl, python }:
+{ stdenv, fetchurl, pythonFull }:
 
-let
-  pythonEnv = python.withPackages(ps: [ps.pyro3]);
-in stdenv.mkDerivation rec {
+stdenv.mkDerivation rec {
   name = "openopc-${version}";
   version = "1.2.0";
 
@@ -15,16 +13,16 @@ in stdenv.mkDerivation rec {
   installPhase = ''
     mkdir -p "$out/bin"
     mkdir -p "$out/share/doc/openopc"
-    mkdir -p "$out/${pythonEnv.python.sitePackages}"
+    mkdir -p "$out/${pythonFull.python.sitePackages}"
     mkdir -p "$out/libexec/opc"
 
-    cp src/OpenOPC.py "$out/${pythonEnv.python.sitePackages}"
+    cp src/OpenOPC.py "$out/${pythonFull.python.sitePackages}"
     cp src/opc.py "$out/libexec/opc/"
 
     cat > "$out/bin/opc" << __EOF__
     #!${stdenv.shell}
-    export PYTHONPATH="$out/${pythonEnv.python.sitePackages}"
-    exec ${pythonEnv}/bin/${pythonEnv.python.executable} "$out/libexec/opc/opc.py" "\$@"
+    export PYTHONPATH="$out/${pythonFull.python.sitePackages}"
+    exec ${pythonFull}/bin/${pythonFull.python.executable} "$out/libexec/opc/opc.py" "\$@"
     __EOF__
     chmod a+x "$out/bin/opc"
 

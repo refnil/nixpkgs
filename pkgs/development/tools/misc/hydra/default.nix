@@ -1,144 +1,73 @@
-{ stdenv, nixUnstable, perlPackages, buildEnv, releaseTools, fetchFromGitHub
-, makeWrapper, autoconf, automake, libtool, unzip, pkgconfig, sqlite, libpqxx
-, gitAndTools, mercurial, darcs, subversion, bazaar, openssl, bzip2, libxslt
-, guile, perl, postgresql92, aws-sdk-cpp, nukeReferences, git, boehmgc
-, docbook_xsl, openssh, gnused, coreutils, findutils, gzip, lzma, gnutar
-, rpm, dpkg, cdrkit, fetchpatch, pixz }:
-
-with stdenv;
+{ stdenv, fetchurl, nix, perlPackages, perl, makeWrapper, libtool
+, unzip, nukeReferences, pkgconfig, boehmgc, libxslt, sqlite
+, subversion, openssh, coreutils, findutils, gzip, bzip2, lzma
+, gnutar, git, mercurial, gnused, graphviz, rpm, dpkg, cdrkit
+}:
 
 let
-  perlDeps = buildEnv {
-    name = "hydra-perl-deps";
-    paths = with perlPackages;
-      [ ModulePluggable
-        CatalystActionREST
-        CatalystAuthenticationStoreDBIxClass
-        CatalystDevel
-        CatalystDispatchTypeRegex
-        CatalystPluginAccessLog
-        CatalystPluginAuthorizationRoles
-        CatalystPluginCaptcha
-        CatalystPluginSessionStateCookie
-        CatalystPluginSessionStoreFastMmap
-        CatalystPluginStackTrace
-        CatalystPluginUnicodeEncoding
-        CatalystTraitForRequestProxyBase
-        CatalystViewDownload
-        CatalystViewJSON
-        CatalystViewTT
-        CatalystXScriptServerStarman
-        CryptRandPasswd
-        DBDPg
-        DBDSQLite
-        DataDump
-        DateTime
-        DigestSHA1
-        EmailMIME
-        EmailSender
-        FileSlurp
-        IOCompress
-        IPCRun
-        JSONXS
-        LWP
-        LWPProtocolHttps
-        NetAmazonS3
-        NetStatsd
-        PadWalker
-        Readonly
-        SQLSplitStatement
-        SetScalar
-        Starman
-        SysHostnameLong
-        TestMore
-        TextDiff
-        TextTable
-        XMLSimple
-        nixUnstable
-        git
-        boehmgc
-      ];
-  };
-in releaseTools.nixBuild rec {
-  name = "hydra-${version}";
-  version = "2017-03-21";
 
-  inherit stdenv;
-
-  src = fetchFromGitHub {
-    owner = "NixOS";
-    repo = "hydra";
-    rev = "57bc0eaead8c76ffd71ddc49adfacc47bb8a75ac";
-    sha256 = "1kshl6ms42fgh621s1ba3a224rawqzgvl89rq1k6c9qhlplpndd9";
-  };
-
-  buildInputs =
-    [ makeWrapper autoconf automake libtool unzip nukeReferences pkgconfig sqlite libpqxx
-      gitAndTools.topGit mercurial darcs subversion bazaar openssl bzip2 libxslt
-      guile # optional, for Guile + Guix support
-      perlDeps perl nixUnstable
-      postgresql92 # for running the tests
-      (lib.overrideDerivation (aws-sdk-cpp.override {
-        apis = ["s3"];
-        customMemoryManagement = false;
-      }) (attrs: {
-        src = fetchFromGitHub {
-          owner = "edolstra";
-          repo = "aws-sdk-cpp";
-          rev = "local";
-          sha256 = "1vhgsxkhpai9a7dk38q4r239l6dsz2jvl8hii24c194lsga3g84h";
-        };
-      }))
+  perldeps = with perlPackages; 
+    [ CatalystDevel
+      CatalystPluginSessionStoreFastMmap
+      CatalystPluginStackTrace
+      CatalystPluginAuthorizationRoles
+      CatalystAuthenticationStoreDBIxClass
+      CatalystViewTT
+      CatalystEngineHTTPPrefork
+      CatalystViewDownload
+      XMLSimple
+      IPCRun
+      IOCompress
+      Readonly
+      DBDPg
+      EmailSender
+      TextTable
+      NetTwitterLite
+      PadWalker
+      DataDump
+      JSONXS
+      DateTime
+      DigestSHA1
+      CryptRandPasswd
+      nixPerl
     ];
 
-  hydraPath = lib.makeBinPath (
-    [ sqlite subversion openssh nixUnstable coreutils findutils pixz
-      gzip bzip2 lzma gnutar unzip git gitAndTools.topGit mercurial darcs gnused bazaar
-    ] ++ lib.optionals stdenv.isLinux [ rpm dpkg cdrkit ] );
+  version = "0.1pre27592"; 
 
-  postUnpack = ''
-    # Clean up when building from a working tree.
-    (cd $sourceRoot && (git ls-files -o --directory | xargs -r rm -rfv)) || true
-  '';
+in
 
-  configureFlags = [ "--with-docbook-xsl=${docbook_xsl}/xml/xsl/docbook" ];
+stdenv.mkDerivation {
+  name = "hydra-${version}";
 
-  preHook = ''
-    PATH=$(pwd)/src/script:$(pwd)/src/hydra-eval-jobs:$(pwd)/src/hydra-queue-runner:$(pwd)/src/hydra-evaluator:$PATH
-    PERL5LIB=$(pwd)/src/lib:$PERL5LIB;
-  '';
+  src = fetchurl {
+    url = http://hydra.nixos.org/build/1142240/download/2/hydra-0.1pre27592.tar.gz;
+    sha256 = "0197bcfkabqqv7611fh9kjabfm0nfci8kanfaa59hqwf3h6fmpwz";
+  };
 
-  preConfigure = "autoreconf -vfi";
+  configureFlags = "--with-nix=${nix}";
 
-  enableParallelBuilding = true;
+  buildInputs = [ perl makeWrapper libtool nix unzip nukeReferences pkgconfig boehmgc ] ++ perldeps ;
 
-  preCheck = ''
-    patchShebangs .
-    export LOGNAME=''${LOGNAME:-foo}
-  '';
+  hydraPath = stdenv.lib.concatStringsSep ":" (map (p: "${p}/bin") ( [
+    libxslt sqlite subversion openssh nix coreutils findutils
+    gzip bzip2 lzma gnutar unzip git mercurial gnused graphviz
+    rpm dpkg cdrkit]));
 
   postInstall = ''
-    mkdir -p $out/nix-support
-    for i in $out/bin/*; do
-        read -n 4 chars < $i
-        if [[ $chars =~ ELF ]]; then continue; fi
+    for i in "$out/bin/"*; do
         wrapProgram $i \
             --prefix PERL5LIB ':' $out/libexec/hydra/lib:$PERL5LIB \
             --prefix PATH ':' $out/bin:$hydraPath \
             --set HYDRA_RELEASE ${version} \
             --set HYDRA_HOME $out/libexec/hydra \
-            --set NIX_RELEASE ${nixUnstable.name or "unknown"}
+            --set NIX_RELEASE ${nix.name}
     done
-  ''; # */
+  '';
 
-  dontStrip = true;
-
-  passthru.perlDeps = perlDeps;
-
-  meta = with stdenv.lib; {
-    description = "Nix-based continuous build system";
-    license = licenses.gpl3;
-    platforms = platforms.linux;
-    maintainers = with maintainers; [ domenkozar ];
+  meta = {
+    description = "Hydra, the Nix-based continuous integration system";
+    homepage = http://nixos.org/hydra/;
+    license = stdenv.lib.licenses.gpl3Plus;
+    platforms = stdenv.lib.platforms.linux;
   };
- }
+}

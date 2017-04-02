@@ -10,8 +10,6 @@ stdenv.mkDerivation {
 
   nativeBuildInputs = [ perl ];
 
-  hardeningDisable = [ "format" ];
-
   meta = {
     homepage = http://ccrypt.sourceforge.net/;
     description = "Utility for encrypting and decrypting files and streams with AES-256";

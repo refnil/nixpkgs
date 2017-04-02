@@ -1,53 +1,51 @@
-{ lib
-, crossSystem, config
-, bootStages
-, ...
-}:
+{ stdenv, pkgs, config }:
 
-assert crossSystem == null;
+import ../generic rec {
+  inherit config;
 
-bootStages ++ [
-  (prevStage: let
-    inherit (prevStage) stdenv;
-  in {
-    inherit (prevStage) buildPlatform hostPlatform targetPlatform;
-    inherit config overlays;
+  preHook =
+    ''
+      export NIX_ENFORCE_PURITY=1
+      export NIX_IGNORE_LD_THROUGH_GCC=1
 
-    stdenv = import ../generic rec {
-      inherit config;
+      if [ "$system" = "i686-darwin" -o "$system" = "powerpc-darwin" -o "$system" = "x86_64-darwin" ]; then
+        export NIX_ENFORCE_PURITY=
+        export NIX_DONT_SET_RPATH=1
+        export NIX_NO_SELF_RPATH=1
+        dontFixLibtool=1
+        stripAllFlags=" " # the Darwin "strip" command doesn't know "-s"
+        xargsFlags=" "
+      fi
+    '';
 
-      preHook = ''
-        export NIX_ENFORCE_PURITY="''${NIX_ENFORCE_PURITY-1}"
-        export NIX_ENFORCE_NO_NATIVE="''${NIX_ENFORCE_NO_NATIVE-1}"
-        export NIX_IGNORE_LD_THROUGH_GCC=1
-      '';
+  initialPath = (import ../common-path.nix) {pkgs = pkgs;};
 
-      initialPath = (import ../common-path.nix) { pkgs = prevStage; };
+  system = stdenv.system;
 
-      system = stdenv.system;
+  gcc = import ../../build-support/gcc-wrapper {
+    nativeTools = false;
+    nativePrefix = stdenv.lib.optionalString stdenv.isSunOS "/usr";
+    nativeLibc = true;
+    inherit stdenv;
+    binutils =
+      if stdenv.isDarwin then
+        import ../../build-support/native-darwin-cctools-wrapper {inherit stdenv;}
+      else
+        pkgs.binutils;
+    gcc = pkgs.gcc.gcc;
+    coreutils = pkgs.coreutils;
+    shell = pkgs.bash + "/bin/sh";
+  };
 
-      cc = import ../../build-support/cc-wrapper {
-        nativeTools = false;
-        nativePrefix = stdenv.lib.optionalString stdenv.isSunOS "/usr";
-        nativeLibc = true;
-        inherit stdenv;
-        inherit (prevStage) binutils coreutils gnugrep;
-        cc = prevStage.gcc.cc;
-        isGNU = true;
-        shell = prevStage.bash + "/bin/sh";
-      };
+  shell = pkgs.bash + "/bin/sh";
 
-      shell = prevStage.bash + "/bin/sh";
+  fetchurlBoot = stdenv.fetchurlBoot;
 
-      fetchurlBoot = stdenv.fetchurlBoot;
-
-      overrides = self: super: {
-        inherit cc;
-        inherit (cc) binutils;
-        inherit (prevStage)
-          gzip bzip2 xz bash coreutils diffutils findutils gawk
-          gnumake gnused gnutar gnugrep gnupatch perl;
-      };
-    };
-  })
-]
+  overrides = pkgs_: {
+    inherit gcc;
+    inherit (gcc) binutils;
+    inherit (pkgs)
+      gzip bzip2 xz bash coreutils diffutils findutils gawk
+      gnumake gnused gnutar gnugrep gnupatch perl;
+  };
+}

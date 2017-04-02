@@ -1,15 +1,15 @@
 { stdenv, fetchurl, jre }:
 
+with import <nixpkgs> {};
+
 stdenv.mkDerivation rec {
   name    = "minecraft-server-${version}";
-  version = "1.11.2";
+  version = "1.7.9";
 
   src  = fetchurl {
     url    = "http://s3.amazonaws.com/Minecraft.Download/versions/${version}/minecraft_server.${version}.jar";
-    sha256 = "12nqcj6skwjfcywm3ah4jb1qn4r558ng9cchdc3hbz99nhv7vi6y";
+    sha256 = "088aqqifgzz8g6aars3kvsdvvrjp0lqxw9qmai48rky20l6ibfgp";
   };
-
-  preferLocalBuild = true;
 
   installPhase = ''
     mkdir -p $out/bin $out/lib/minecraft
@@ -30,6 +30,6 @@ stdenv.mkDerivation rec {
     homepage    = "https://minecraft.net";
     license     = stdenv.lib.licenses.unfreeRedistributable;
     platforms   = stdenv.lib.platforms.unix;
-    maintainers = [ stdenv.lib.maintainers.thoughtpolice stdenv.lib.maintainers.tomberek ];
+    maintainers = [ stdenv.lib.maintainers.thoughtpolice ];
   };
 }

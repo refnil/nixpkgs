@@ -49,13 +49,14 @@ in
   # Include some utilities that are useful for installing or repairing
   # the system.
   environment.systemPackages =
-    [ pkgs.w3m # needed for the manual anyway
+    [ pkgs.subversion # for nixos-checkout
+      pkgs.w3m # needed for the manual anyway
       pkgs.ddrescue
       pkgs.ccrypt
       pkgs.cryptsetup # needed for dm-crypt volumes
 
       # Some networking tools.
-      pkgs.sshfs-fuse
+      pkgs.sshfsFuse
       pkgs.socat
       pkgs.screen
       pkgs.wpa_supplicant # !!! should use the wpa module
@@ -66,9 +67,10 @@ in
       pkgs.dmraid
 
       # Tools to create / manipulate filesystems.
-      pkgs.btrfs-progs
+      pkgs.btrfsProgs
 
       # Some compression/archiver tools.
+      pkgs.unrar
       pkgs.unzip
       pkgs.zip
       pkgs.xz
@@ -85,7 +87,8 @@ in
   system.boot.loader.kernelFile = "uImage";
 
   boot.initrd.availableKernelModules =
-    [ "mvsdio" "reiserfs" "ext3" "ums-cypress" "rtc_mv" "ext4" ];
+    [ "mvsdio" "mmc_block" "reiserfs" "ext3" "ums-cypress" "rtc_mv"
+      "ext4" ];
 
   boot.postBootCommands =
     ''
@@ -96,7 +99,7 @@ in
 
   boot.initrd.extraUtilsCommands =
     ''
-      copy_bin_and_libs ${pkgs.utillinux}/sbin/hwclock
+      cp ${pkgs.utillinux}/sbin/hwclock $out/bin
     '';
 
   boot.initrd.postDeviceCommands =
@@ -162,7 +165,7 @@ in
   # not be started by default on the installation CD because the
   # default root password is empty.
   services.openssh.enable = true;
-  systemd.services.openssh.wantedBy = lib.mkOverride 50 [];
+  jobs.openssh.startOn = lib.mkOverride 50 "";
 
   # cpufrequtils fails to build on non-pc
   powerManagement.enable = false;

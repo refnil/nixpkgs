@@ -1,27 +1,19 @@
 {stdenv, fetchurl, fltk13, ghostscript}:
 
-stdenv.mkDerivation rec {
-  name = "flpsed-${version}";
-  version = "0.7.3";
+stdenv.mkDerivation {
+  name = "flpsed-0.7.1";
 
   src = fetchurl {
-    url = "http://www.flpsed.org/${name}.tar.gz";
-    sha256 = "0vngqxanykicabhfdznisv82k5ypkxwg0s93ms9ribvhpm8vf2xp";
+    url = "http://www.ecademix.com/JohannesHofmann/flpsed-0.7.1.tar.gz";
+    sha256 = "16i3mjc1cdx2wiwfhnv3z2ywmjma9785vwl3l31izx9l51w7ngj3";
   };
 
-  buildInputs = [ fltk13 ];
+  buildInputs = [ fltk13 ghostscript ];
 
-  postPatch = ''
-    # replace the execvp call to ghostscript
-    sed -e '/exec_gs/ {n; s|"gs"|"${stdenv.lib.getBin ghostscript}/bin/gs"|}' \
-        -i src/GsWidget.cxx
-  '';
-
-  meta = with stdenv.lib; {
+  meta = {
     description = "WYSIWYG PostScript annotator";
     homepage = "http://http://flpsed.org/flpsed.html";
-    license = licenses.gpl3;
-    platforms = platforms.mesaPlatforms;
-    maintainers = with maintainers; [ fuuzetsu ];
+    license = stdenv.lib.licenses.gpl3;
+    platforms = stdenv.lib.platforms.mesaPlatforms;
   };
 }

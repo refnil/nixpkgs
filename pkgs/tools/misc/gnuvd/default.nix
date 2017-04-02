@@ -11,6 +11,5 @@ stdenv.mkDerivation {
   meta = {
     description = "Command-line dutch dictionary application";
     homepage = http://www.djcbsoftware.nl/code/gnuvd/;
-    platforms = stdenv.lib.platforms.unix;
   };
 }

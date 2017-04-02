@@ -1,11 +1,11 @@
-{stdenv, fetchurl, flex, bison, pkgconfig, glib, gettext}:
+{stdenv, fetchurlGnome, flex, bison, pkgconfig, glib, gettext}:
 
 stdenv.mkDerivation rec {
-  name = "libIDL-${minVer}.14";
-  minVer = "0.8";
+  name = src.pkgname;
 
-  src = fetchurl {
-    url = "mirror://gnome/sources/libIDL/${minVer}/${name}.tar.bz2";
+  src = fetchurlGnome {
+    project = "libIDL";
+    major = "0"; minor = "8"; patchlevel = "14";
     sha256 = "08129my8s9fbrk0vqvnmx6ph4nid744g5vbwphzkaik51664vln5";
   };
 

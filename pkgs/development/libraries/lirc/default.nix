@@ -1,38 +1,18 @@
-{ stdenv, fetchurl, alsaLib, bash, help2man, pkgconfig, xlibsWrapper, python3, libxslt }:
+{ stdenv, fetchurl, alsaLib }:
 
 stdenv.mkDerivation rec {
-  name = "lirc-0.9.4";
+  name = "lirc-0.9.0";
 
   src = fetchurl {
     url = "mirror://sourceforge/lirc/${name}.tar.bz2";
-    sha256 = "19c6ldjsdnk1md66q3nb035ja1xj217k8iabhxpsb8rs10a6kwi6";
+    sha256 = "1zx4mcnjwzz6jsi6ln7a3dkgx05nvg1pxxvmjqvd966ldapay8v3";
   };
 
-  preBuild = "patchShebangs .";
-
-  nativeBuildInputs = [ pkgconfig help2man ];
-
-  buildInputs = [ alsaLib xlibsWrapper python3 libxslt ];
+  buildInputs = [ alsaLib ];
 
   configureFlags = [
     "--with-driver=devinput"
-    "--sysconfdir=/etc"
-    "--localstatedir=/var"
+    "--sysconfdir=$(out)/etc"
     "--enable-sandboxed"
   ];
-
-  makeFlags = [ "m4dir=$(out)/m4" ];
-
-  installFlags = [
-    "sysconfdir=\${out}/etc"
-    "localstatedir=\${TMPDIR}"
-  ];
-
-  meta = with stdenv.lib; {
-    description = "Allows to receive and send infrared signals";
-    homepage = http://www.lirc.org/;
-    license = licenses.gpl2;
-    platforms = platforms.linux;
-    maintainers = with maintainers; [ pSub ];
-  };
 }

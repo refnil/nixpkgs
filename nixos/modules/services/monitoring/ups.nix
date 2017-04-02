@@ -32,7 +32,7 @@ let
 
       shutdownOrder = mkOption {
         default = 0;
-        type = types.int;
+        type = types.uniq types.int;
         description = ''
           When you have multiple UPSes on your system, you usually need to
           turn them off in a certain order.  upsdrvctl shuts down all the
@@ -63,7 +63,7 @@ let
 
       directives = mkOption {
         default = [];
-        type = types.listOf types.str;
+        type = types.listOf types.string;
         description = ''
           List of configuration directives for this UPS.
         '';
@@ -151,7 +151,7 @@ in
 
       maxStartDelay = mkOption {
         default = 45;
-        type = types.int;
+        type = types.uniq types.int;
         description = ''
           This can be set as a global variable above your first UPS
           definition and it can also be set in a UPS section.  This value
@@ -169,7 +169,8 @@ in
           monitoring directly.  These are usually attached to serial ports,
           but USB devices are also supported.
         '';
-        type = with types; attrsOf (submodule upsOptions);
+        type = types.attrsOf types.optionSet;
+        options = [ upsOptions ];
       };
 
     };
@@ -179,37 +180,31 @@ in
 
     environment.systemPackages = [ pkgs.nut ];
 
-    systemd.services.upsmon = {
+    jobs.upsmon = {
       description = "Uninterruptible Power Supplies (Monitor)";
-      after = [ "network.target" ];
-      wantedBy = [ "multi-user.target" ];
-      serviceConfig.Type = "forking";
-      script = "${pkgs.nut}/sbin/upsmon";
+      startOn = "ip-up";
+      daemonType = "fork";
+      exec = ''${pkgs.nut}/sbin/upsmon'';
       environment.NUT_CONFPATH = "/etc/nut/";
       environment.NUT_STATEPATH = "/var/lib/nut/";
     };
 
-    systemd.services.upsd = {
+    jobs.upsd = {
       description = "Uninterruptible Power Supplies (Daemon)";
-      after = [ "network.target" "upsmon.service" ];
-      wantedBy = [ "multi-user.target" ];
-      serviceConfig.Type = "forking";
+      startOn = "started network-interfaces and started upsmon";
+      daemonType = "fork";
       # TODO: replace 'root' by another username.
-      script = "${pkgs.nut}/sbin/upsd -u root";
+      exec = ''${pkgs.nut}/sbin/upsd -u root'';
       environment.NUT_CONFPATH = "/etc/nut/";
       environment.NUT_STATEPATH = "/var/lib/nut/";
     };
 
-    systemd.services.upsdrv = {
+    jobs.upsdrv = {
       description = "Uninterruptible Power Supplies (Register all UPS)";
-      after = [ "upsd.service" ];
-      wantedBy = [ "multi-user.target" ];
+      startOn = "started upsd";
       # TODO: replace 'root' by another username.
-      script = ''${pkgs.nut}/bin/upsdrvctl -u root start'';
-      serviceConfig = {
-        Type = "oneshot";
-        RemainAfterExit = true;
-      };
+      exec = ''${pkgs.nut}/bin/upsdrvctl -u root start'';
+      task = true;
       environment.NUT_CONFPATH = "/etc/nut/";
       environment.NUT_STATEPATH = "/var/lib/nut/";
     };

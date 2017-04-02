@@ -33,7 +33,7 @@ for i in $storePaths; do
 done
 
 
-# TODO tar ruxo
+# TODO tar ruxo 
 # Also include a manifest of the closures in a format suitable for
 # nix-store --load-db.
 printRegistration=1 perl $pathsFromGraph closure-* > nix-path-registration
@@ -48,14 +48,11 @@ for ((n = 0; n < ${#objects[*]}; n++)); do
     fi
 done
 
-$extraCommands
+ensureDir $out/tarball
 
-mkdir -p $out/tarball
+tar cvJf $out/tarball/$fileName.tar.xz *
 
-rm env-vars
-
-tar --sort=name --mtime='@1' --owner=0 --group=0 --numeric-owner -cvJf $out/tarball/$fileName.tar.xz * $extraArgs
-
-mkdir -p $out/nix-support
+ensureDir $out/nix-support
 echo $system > $out/nix-support/system
 echo "file system-tarball $out/tarball/$fileName.tar.xz" > $out/nix-support/hydra-build-products
+

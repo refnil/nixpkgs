@@ -1,4 +1,4 @@
-{ stdenv, fetchgit, qt48, qmake4Hook, flex }:
+{ stdenv, fetchgit, qt48, flex, cmake }:
 
 # At the time of committing this, the expression fails for me to cross-build in
 # both mingw32 and mingw64.
@@ -13,9 +13,12 @@ stdenv.mkDerivation {
   };
 
   buildInputs = [ qt48 ];
-  nativeBuildInputs = [ flex qmake4Hook ];
+  nativeBuildInputs = [ flex /*cmake*/ ];
 
   QTDIR = qt48;
+  configurePhase = ''
+    qmake PREFIX=$out
+  '';
   
   crossAttrs = {
     # cmakeFlags = "-DWIN32=1 -DCMAKE_SYSTEM_NAME=Windows -DCMAKE_RC_COMPILER=${stdenv.cross.config}-windres";

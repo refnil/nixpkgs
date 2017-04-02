@@ -1,36 +1,21 @@
-{ stdenv, lib, fetchurl, openssl, perl, libcap ? null, libseccomp ? null }:
+{ stdenv, fetchurl, libcap }:
 
 assert stdenv.isLinux -> libcap != null;
-assert stdenv.isLinux -> libseccomp != null;
-
-let
-  withSeccomp = stdenv.isLinux && (stdenv.isi686 || stdenv.isx86_64);
-in
 
 stdenv.mkDerivation rec {
-  name = "ntp-4.2.8p9";
+  name = "ntp-4.2.6p5";
 
   src = fetchurl {
     url = "http://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-4.2/${name}.tar.gz";
-    sha256 = "0whbyf82lrczbri4adbsa4hg1ppfa6c7qcj7nhjwdfp1g1vjh95p";
+    sha256 = "077r69a41hasl8zf5c44km7cqgfhrkaj6a4jnr75j7nkz5qq7ayn";
   };
 
-  configureFlags = [
-    "--sysconfdir=/etc"
-    "--localstatedir=/var"
-    "--with-openssl-libdir=${openssl.out}/lib"
-    "--with-openssl-incdir=${openssl.dev}/include"
-    "--enable-ignore-dns-errors"
-  ] ++ stdenv.lib.optional stdenv.isLinux "--enable-linuxcaps"
-    ++ stdenv.lib.optional withSeccomp "--enable-libseccomp";
-
-  buildInputs = [ libcap openssl perl ] ++ lib.optional withSeccomp libseccomp;
-
-  hardeningEnable = [ "pie" ];
-
-  postInstall = ''
-    rm -rf $out/share/doc
+  configureFlags = ''
+    --without-crypto
+    ${if stdenv.isLinux then "--enable-linuxcaps" else ""}
   '';
+
+  buildInputs = stdenv.lib.optional stdenv.isLinux libcap;
 
   meta = {
     homepage = http://www.ntp.org/;

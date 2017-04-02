@@ -1,20 +1,37 @@
-{ callPackage, fetchgit, fetchpatch, ... } @ args:
+{stdenv, fetchgit, libatomic_ops, autoconf, automake, boost, btrfsProgs, cryptopp, curl, expat,
+ fcgi, fuse, gperftools, keyutils, leveldb, libaio, libedit, libtool,
+ libuuid, linuxHeaders, openssl, pkgconfig, python, snappy, which, xfsprogs, xz}:
 
-callPackage ./generic.nix (args // rec {
-  version = "9.2.0";
+stdenv.mkDerivation rec {
+  baseName="ceph";
+  version="0.79";
+  name="${baseName}-${version}";
+  buildInputs = [
+    fuse linuxHeaders pkgconfig libatomic_ops autoconf automake boost btrfsProgs cryptopp expat
+    fcgi fuse gperftools keyutils leveldb libaio libedit libtool libuuid openssl pkgconfig
+    python snappy which xfsprogs.lib xz
+  ];
 
+  preConfigure = ''
+    ./autogen.sh
+  '';
+
+  installFlags = "DESTDIR=\${out}";
+
+  enableParallelBuilding = true;
   src = fetchgit {
-    url = "https://github.com/ceph/ceph.git";
-    rev = "refs/tags/v${version}";
-    sha256 = "0a2v3bgkrbkzardcw7ymlhhyjlwi08qmcm7g34y2sjsxk9bd78an";
+    url = "https://github.com/ceph/ceph";
+    rev = "4c2d73a5095f527c3a2168deb5fa54b3c8991a6e";
+    sha256 = "0850m817wqqmw2qdnwm5jvbdgifzlc7kcd05jv526pdvmq1x92rf";
   };
 
-  patches = [
-    ./fix-pythonpath.patch
-    # For building with xfsprogs 4.5.0:
-    (fetchpatch {
-      url = "https://github.com/ceph/ceph/commit/602425abd5cef741fc1b5d4d1dd70c68e153fc8d.patch";
-      sha256 = "1iyf0ml2n50ki800vjich8lvzmcdviwqwkbs6cdj0vqv2nc5ii1g";
-    })
-  ];
-})
+  meta = {
+    inherit version;
+    description = "Distributed storage system";
+    maintainers = [
+      stdenv.lib.maintainers.ak
+    ];
+    platforms = with stdenv.lib.platforms; 
+      linux;
+  };
+}

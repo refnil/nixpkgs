@@ -11,13 +11,13 @@ in
 {
   config = mkIf (any (fs: fs == "xfs") config.boot.supportedFilesystems) {
 
-    system.fsPackages = [ pkgs.xfsprogs.bin ];
+    system.fsPackages = [ pkgs.xfsprogs ];
 
     boot.initrd.availableKernelModules = mkIf inInitrd [ "xfs" "crc32c" ];
 
     boot.initrd.extraUtilsCommands = mkIf inInitrd
       ''
-        copy_bin_and_libs ${pkgs.xfsprogs.bin}/bin/fsck.xfs
+        cp -v ${pkgs.xfsprogs}/sbin/fsck.xfs $out/bin
       '';
 
     # Trick just to set 'sh' after the extraUtils nuke-refs.

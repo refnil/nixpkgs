@@ -1,31 +1,26 @@
-{stdenv, fetchurl, yasm, enable10bit ? false}:
+{stdenv, fetchurl, yasm}:
 
 stdenv.mkDerivation rec {
-  version = "20160615-2245";
-  name = "x264-${version}";
+  version = "snapshot-20130424-2245-stable";
+  name = "x264-20130424_2245";
 
   src = fetchurl {
-    url = "http://download.videolan.org/x264/snapshots/x264-snapshot-${version}-stable.tar.bz2";
-    sha256 = "0w5l77gm8bsmafzimzyc5s27kcw79r6nai3bpccqy0spyxhjsdc2";
+    url = "ftp://ftp.videolan.org/pub/videolan/x264/snapshots/x264-${version}.tar.bz2";
+    sha256 = "0vzyqsgrm9k3hzka2p8ib92jl0ha8d4267r2rb3pr9gmpjaj9azk";
   };
 
   patchPhase = ''
     sed -i s,/bin/bash,${stdenv.shell}, configure version.sh
   '';
 
-  outputs = [ "out" "lib" ]; # leaving 52 kB of headers
-
   configureFlags = [ "--enable-shared" ]
-    ++ stdenv.lib.optional (!stdenv.isi686) "--enable-pic"
-    ++ stdenv.lib.optional (enable10bit) "--bit-depth=10";
+    ++ stdenv.lib.optional (!stdenv.isi686) "--enable-pic";
 
   buildInputs = [ yasm ];
 
-  meta = with stdenv.lib; {
-    description = "Library for encoding H264/AVC video streams";
-    homepage    = http://www.videolan.org/developers/x264.html;
-    license     = licenses.gpl2;
-    platforms   = platforms.unix;
-    maintainers = [ maintainers.spwhitt ];
+  meta = {
+    description = "library for encoding H264/AVC video streams";
+    homepage = http://www.videolan.org/developers/x264.html;
+    license = "GPL";
   };
 }

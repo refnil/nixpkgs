@@ -13,8 +13,6 @@ with lib;
 
 let
 
-  qemu = config.system.build.qemu or pkgs.qemu_test;
-
   vmName =
     if config.networking.hostName == ""
     then "noname"
@@ -34,61 +32,42 @@ let
       NIX_DISK_IMAGE=$(readlink -f ''${NIX_DISK_IMAGE:-${config.virtualisation.diskImage}})
 
       if ! test -e "$NIX_DISK_IMAGE"; then
-          ${qemu}/bin/qemu-img create -f qcow2 "$NIX_DISK_IMAGE" \
+          ${pkgs.qemu_kvm}/bin/qemu-img create -f qcow2 "$NIX_DISK_IMAGE" \
             ${toString config.virtualisation.diskSize}M || exit 1
       fi
 
-      # Create a directory for storing temporary data of the running VM.
+      # Create a directory for exchanging data with the VM.
       if [ -z "$TMPDIR" -o -z "$USE_TMPDIR" ]; then
           TMPDIR=$(mktemp -d nix-vm.XXXXXXXXXX --tmpdir)
       fi
-
-      # Create a directory for exchanging data with the VM.
+      cd $TMPDIR
       mkdir -p $TMPDIR/xchg
 
-      ${if cfg.useBootLoader then ''
-        # Create a writable copy/snapshot of the boot disk.
-        # A writable boot disk can be booted from automatically.
-        ${qemu}/bin/qemu-img create -f qcow2 -b ${bootDisk}/disk.img $TMPDIR/disk.img || exit 1
-
-        ${if cfg.useEFIBoot then ''
-          # VM needs a writable flash BIOS.
-          cp ${bootDisk}/bios.bin $TMPDIR || exit 1
-          chmod 0644 $TMPDIR/bios.bin || exit 1
-        '' else ''
-        ''}
-      '' else ''
-      ''}
-
-      cd $TMPDIR
       idx=2
       extraDisks=""
       ${flip concatMapStrings cfg.emptyDiskImages (size: ''
-        if ! test -e "empty$idx.qcow2"; then
-            ${qemu}/bin/qemu-img create -f qcow2 "empty$idx.qcow2" "${toString size}M"
-        fi
-        extraDisks="$extraDisks -drive index=$idx,file=$(pwd)/empty$idx.qcow2,if=${cfg.qemu.diskInterface},werror=report"
+        ${pkgs.qemu_kvm}/bin/qemu-img create -f raw "empty$idx" "${toString size}M"
+        extraDisks="$extraDisks -drive index=$idx,file=$(pwd)/empty$idx,if=virtio,werror=report"
         idx=$((idx + 1))
       '')}
 
       # Start QEMU.
-      exec ${qemu}/bin/qemu-kvm \
+      # "-boot menu=on" is there, because I don't know how to make qemu boot from 2nd hd.
+      exec ${pkgs.qemu_kvm}/bin/qemu-kvm \
           -name ${vmName} \
           -m ${toString config.virtualisation.memorySize} \
           ${optionalString (pkgs.stdenv.system == "x86_64-linux") "-cpu kvm64"} \
-          ${concatStringsSep " " config.virtualisation.qemu.networkingOptions} \
+          -net nic,vlan=0,model=virtio \
+          -net user,vlan=0''${QEMU_NET_OPTS:+,$QEMU_NET_OPTS} \
           -virtfs local,path=/nix/store,security_model=none,mount_tag=store \
           -virtfs local,path=$TMPDIR/xchg,security_model=none,mount_tag=xchg \
           -virtfs local,path=''${SHARED_DIR:-$TMPDIR/xchg},security_model=none,mount_tag=shared \
           ${if cfg.useBootLoader then ''
-            -drive index=0,id=drive1,file=$NIX_DISK_IMAGE,if=${cfg.qemu.diskInterface},cache=writeback,werror=report \
-            -drive index=1,id=drive2,file=$TMPDIR/disk.img,media=disk \
-            ${if cfg.useEFIBoot then ''
-              -pflash $TMPDIR/bios.bin \
-            '' else ''
-            ''}
+            -drive index=0,id=drive1,file=$NIX_DISK_IMAGE,if=virtio,cache=writeback,werror=report \
+            -drive index=1,id=drive2,file=${bootDisk}/disk.img,if=virtio,readonly \
+            -boot menu=on \
           '' else ''
-            -drive index=0,id=drive1,file=$NIX_DISK_IMAGE,if=${cfg.qemu.diskInterface},cache=writeback,werror=report \
+            -drive file=$NIX_DISK_IMAGE,if=virtio,cache=writeback,werror=report \
             -kernel ${config.system.build.toplevel}/kernel \
             -initrd ${config.system.build.toplevel}/initrd \
             -append "$(cat ${config.system.build.toplevel}/kernel-params) init=${config.system.build.toplevel}/init regInfo=${regInfo} ${kernelConsole} $QEMU_KERNEL_PARAMS" \
@@ -96,8 +75,7 @@ let
           $extraDisks \
           ${qemuGraphics} \
           ${toString config.virtualisation.qemu.options} \
-          $QEMU_OPTS \
-          $@
+          $QEMU_OPTS
     '';
 
 
@@ -114,7 +92,6 @@ let
 
   # Generate a hard disk image containing a /boot partition and GRUB
   # in the MBR.  Used when the `useBootLoader' option is set.
-  # FIXME: use nixos/lib/make-disk-image.nix.
   bootDisk =
     pkgs.vmTools.runInLinuxVM (
       pkgs.runCommand "nixos-boot-disk"
@@ -122,46 +99,23 @@ let
             ''
               mkdir $out
               diskImage=$out/disk.img
-              bootFlash=$out/bios.bin
-              ${qemu}/bin/qemu-img create -f qcow2 $diskImage "40M"
-              ${if cfg.useEFIBoot then ''
-                cp ${pkgs.OVMF-CSM}/FV/OVMF.fd $bootFlash
-                chmod 0644 $bootFlash
-              '' else ''
-              ''}
+              ${pkgs.qemu_kvm}/bin/qemu-img create -f qcow2 $diskImage "32M"
             '';
           buildInputs = [ pkgs.utillinux ];
-          QEMU_OPTS = if cfg.useEFIBoot
-                      then "-pflash $out/bios.bin -nographic -serial pty"
-                      else "-nographic -serial pty";
         }
         ''
-          # Create a /boot EFI partition with 40M and arbitrary but fixed GUIDs for reproducibility
-          ${pkgs.gptfdisk}/bin/sgdisk \
-            --set-alignment=1 --new=1:34:2047 --change-name=1:BIOSBootPartition --typecode=1:ef02 \
-            --set-alignment=512 --largest-new=2 --change-name=2:EFISystem --typecode=2:ef00 \
-            --attributes=1:set:1 \
-            --attributes=2:set:2 \
-            --disk-guid=97FD5997-D90B-4AA3-8D16-C1723AEA73C1 \
-            --partition-guid=1:1C06F03B-704E-4657-B9CD-681A087A2FDC \
-            --partition-guid=2:970C694F-AFD0-4B99-B750-CDB7A329AB6F \
-            --hybrid 2 \
-            --recompute-chs /dev/vda
-          . /sys/class/block/vda2/uevent
-          mknod /dev/vda2 b $MAJOR $MINOR
+          # Create a single /boot partition.
+          ${pkgs.parted}/sbin/parted /dev/vda mklabel msdos
+          ${pkgs.parted}/sbin/parted /dev/vda -- mkpart primary ext2 1M -1s
+          . /sys/class/block/vda1/uevent
+          mknod /dev/vda1 b $MAJOR $MINOR
           . /sys/class/block/vda/uevent
-          ${pkgs.dosfstools}/bin/mkfs.fat -F16 /dev/vda2
-          export MTOOLS_SKIP_CHECK=1
-          ${pkgs.mtools}/bin/mlabel -i /dev/vda2 ::boot
+          ${pkgs.e2fsprogs}/sbin/mkfs.ext4 -L boot /dev/vda1
+          ${pkgs.e2fsprogs}/sbin/tune2fs -c 0 -i 0 /dev/vda1
 
-          # Mount /boot; load necessary modules first.
-          ${pkgs.kmod}/bin/insmod ${pkgs.linux}/lib/modules/*/kernel/fs/nls/nls_cp437.ko.xz || true
-          ${pkgs.kmod}/bin/insmod ${pkgs.linux}/lib/modules/*/kernel/fs/nls/nls_iso8859-1.ko.xz || true
-          ${pkgs.kmod}/bin/insmod ${pkgs.linux}/lib/modules/*/kernel/fs/fat/fat.ko.xz || true
-          ${pkgs.kmod}/bin/insmod ${pkgs.linux}/lib/modules/*/kernel/fs/fat/vfat.ko.xz || true
-          ${pkgs.kmod}/bin/insmod ${pkgs.linux}/lib/modules/*/kernel/fs/efivarfs/efivarfs.ko.xz || true
+          # Mount /boot.
           mkdir /boot
-          mount /dev/vda2 /boot
+          mount /dev/vda1 /boot
 
           # This is needed for GRUB 0.97, which doesn't know about virtio devices.
           mkdir /boot/grub
@@ -173,7 +127,7 @@ let
           ${config.system.build.toplevel}/bin/switch-to-configuration boot
 
           umount /boot
-        '' # */
+        ''
     );
 
 in
@@ -212,25 +166,17 @@ in
           '';
       };
 
-    virtualisation.bootDevice =
-      mkOption {
-        type = types.str;
-        example = "/dev/vda";
-        description =
-          ''
-            The disk to be used for the root filesystem.
-          '';
-      };
-
     virtualisation.emptyDiskImages =
       mkOption {
         default = [];
         type = types.listOf types.int;
         description =
           ''
-            Additional disk images to provide to the VM. The value is
-            a list of size in megabytes of each disk. These disks are
-            writeable by the VM.
+            Additional disk images to provide to the VM, the value is a list of
+            sizes in megabytes the empty disk should be.
+
+            These disks are writeable by the VM and will be thrown away
+            afterwards.
           '';
       };
 
@@ -276,11 +222,11 @@ in
 
     virtualisation.writableStore =
       mkOption {
-        default = true; # FIXME
+        default = false;
         description =
           ''
             If enabled, the Nix store in the VM is made writable by
-            layering an overlay filesystem on top of the host's Nix
+            layering a unionfs-fuse/tmpfs filesystem on top of the host's Nix
             store.
           '';
       };
@@ -302,43 +248,12 @@ in
         description = "Primary IP address used in /etc/hosts.";
       };
 
-    virtualisation.qemu = {
-      options =
-        mkOption {
-          type = types.listOf types.unspecified;
-          default = [];
-          example = [ "-vga std" ];
-          description = "Options passed to QEMU.";
-        };
-
-      networkingOptions =
-        mkOption {
-          default = [
-            "-net nic,vlan=0,model=virtio"
-            "-net user,vlan=0\${QEMU_NET_OPTS:+,$QEMU_NET_OPTS}"
-          ];
-          type = types.listOf types.str;
-          description = ''
-            Networking-related command-line options that should be passed to qemu.
-            The default is to use userspace networking (slirp).
-
-            If you override this option, be advised to keep
-            ''${QEMU_NET_OPTS:+,$QEMU_NET_OPTS} (as seen in the default)
-            to keep the default runtime behaviour.
-          '';
-        };
-
-      diskInterface =
-        mkOption {
-          default = "virtio";
-          example = "scsi";
-          type = types.str;
-          description = ''
-            The interface used for the virtual hard disks
-            (<literal>virtio</literal> or <literal>scsi</literal>).
-          '';
-        };
-    };
+    virtualisation.qemu.options =
+      mkOption {
+        default = [];
+        example = [ "-vga std" ];
+        description = "Options passed to QEMU.";
+      };
 
     virtualisation.useBootLoader =
       mkOption {
@@ -354,36 +269,27 @@ in
           '';
       };
 
-    virtualisation.useEFIBoot =
-      mkOption {
-        default = false;
-        description =
-          ''
-            If enabled, the virtual machine will provide a EFI boot
-            manager.
-            useEFIBoot is ignored if useBootLoader == false.
-          '';
-      };
-
   };
 
   config = {
 
-    boot.loader.grub.device = mkVMOverride cfg.bootDevice;
+    boot.loader.grub.device = mkVMOverride "/dev/vda";
+
+    boot.initrd.supportedFilesystems = optional cfg.writableStore "unionfs-fuse";
 
     boot.initrd.extraUtilsCommands =
       ''
         # We need mke2fs in the initrd.
-        copy_bin_and_libs ${pkgs.e2fsprogs}/bin/mke2fs
+        cp ${pkgs.e2fsprogs}/sbin/mke2fs $out/bin
       '';
 
     boot.initrd.postDeviceCommands =
       ''
         # If the disk image appears to be empty, run mke2fs to
         # initialise.
-        FSTYPE=$(blkid -o value -s TYPE ${cfg.bootDevice} || true)
+        FSTYPE=$(blkid -o value -s TYPE /dev/vda || true)
         if test -z "$FSTYPE"; then
-            mke2fs -t ext4 ${cfg.bootDevice}
+            mke2fs -t ext4 /dev/vda
         fi
       '';
 
@@ -397,12 +303,19 @@ in
         chmod 1777 $targetRoot/tmp
 
         mkdir -p $targetRoot/boot
-
         ${optionalString cfg.writableStore ''
-          echo "mounting overlay filesystem on /nix/store..."
-          mkdir -p 0755 $targetRoot/nix/.rw-store/store $targetRoot/nix/.rw-store/work $targetRoot/nix/store
-          mount -t overlay overlay $targetRoot/nix/store \
-            -o lowerdir=$targetRoot/nix/.ro-store,upperdir=$targetRoot/nix/.rw-store/store,workdir=$targetRoot/nix/.rw-store/work || fail
+          mkdir -p /unionfs-chroot/ro-store
+          mount --rbind $targetRoot/nix/store /unionfs-chroot/ro-store
+
+          mkdir /unionfs-chroot/rw-store
+          ${if cfg.writableStoreUseTmpfs then ''
+          mount -t tmpfs -o "mode=755" none /unionfs-chroot/rw-store
+          '' else ''
+          mkdir $targetRoot/.nix-rw-store
+          mount --bind $targetRoot/.nix-rw-store /unionfs-chroot/rw-store
+          ''}
+
+          unionfs -o allow_other,cow,nonempty,chroot=/unionfs-chroot,max_files=32768,hide_meta_files /rw-store=RW:/ro-store=RO $targetRoot/nix/store
         ''}
       '';
 
@@ -416,16 +329,9 @@ in
     boot.postBootCommands =
       ''
         if [[ "$(cat /proc/cmdline)" =~ regInfo=([^ ]*) ]]; then
-          ${config.nix.package.out}/bin/nix-store --load-db < ''${BASH_REMATCH[1]}
+          ${config.nix.package}/bin/nix-store --load-db < ''${BASH_REMATCH[1]}
         fi
       '';
-
-    boot.initrd.availableKernelModules =
-      optional cfg.writableStore "overlay"
-      ++ optional (cfg.qemu.diskInterface == "scsi") "sym53c8xx";
-
-    virtualisation.bootDevice =
-      mkDefault (if cfg.qemu.diskInterface == "scsi" then "/dev/sda" else "/dev/vda");
 
     virtualisation.pathsInNixDB = [ config.system.build.toplevel ];
 
@@ -437,64 +343,50 @@ in
     # configuration, where the regular value for the `fileSystems'
     # attribute should be disregarded for the purpose of building a VM
     # test image (since those filesystems don't exist in the VM).
-    fileSystems = mkVMOverride (
-      { "/".device = cfg.bootDevice;
-        ${if cfg.writableStore then "/nix/.ro-store" else "/nix/store"} =
+    fileSystems = mkVMOverride
+      { "/".device = "/dev/vda";
+        "/nix/store" =
           { device = "store";
             fsType = "9p";
-            options = [ "trans=virtio" "version=9p2000.L" "cache=loose" ];
-            neededForBoot = true;
-          };
-        "/tmp" = mkIf config.boot.tmpOnTmpfs
-          { device = "tmpfs";
-            fsType = "tmpfs";
-            neededForBoot = true;
-            # Sync with systemd's tmp.mount;
-            options = [ "mode=1777" "strictatime" "nosuid" "nodev" ];
+            options = "trans=virtio,version=9p2000.L,msize=1048576,cache=loose";
           };
         "/tmp/xchg" =
           { device = "xchg";
             fsType = "9p";
-            options = [ "trans=virtio" "version=9p2000.L" "cache=loose" ];
+            options = "trans=virtio,version=9p2000.L,msize=1048576,cache=loose";
             neededForBoot = true;
           };
         "/tmp/shared" =
           { device = "shared";
             fsType = "9p";
-            options = [ "trans=virtio" "version=9p2000.L" ];
-            neededForBoot = true;
-          };
-      } // optionalAttrs (cfg.writableStore && cfg.writableStoreUseTmpfs)
-      { "/nix/.rw-store" =
-          { fsType = "tmpfs";
-            options = [ "mode=0755" ];
+            options = "trans=virtio,version=9p2000.L,msize=1048576";
             neededForBoot = true;
           };
       } // optionalAttrs cfg.useBootLoader
       { "/boot" =
-          { device = "/dev/vdb2";
-            fsType = "vfat";
-            options = [ "ro" ];
+          { device = "/dev/disk/by-label/boot";
+            fsType = "ext4";
+            options = "ro";
             noCheck = true; # fsck fails on a r/o filesystem
           };
-      });
+      };
 
     swapDevices = mkVMOverride [ ];
-    boot.initrd.luks.devices = mkVMOverride {};
+    boot.initrd.luks.devices = mkVMOverride [];
 
     # Don't run ntpd in the guest.  It should get the correct time from KVM.
-    services.timesyncd.enable = false;
+    services.ntp.enable = false;
 
     system.build.vm = pkgs.runCommand "nixos-vm" { preferLocalBuild = true; }
       ''
-        mkdir -p $out/bin
+        ensureDir $out/bin
         ln -s ${config.system.build.toplevel} $out/system
         ln -s ${pkgs.writeScript "run-nixos-vm" startVM} $out/bin/run-${vmName}-vm
       '';
 
     # When building a regular system configuration, override whatever
     # video driver the host uses.
-    services.xserver.videoDrivers = mkVMOverride [ "modesetting" ];
+    services.xserver.videoDrivers = mkVMOverride [ "vesa" ];
     services.xserver.defaultDepth = mkVMOverride 0;
     services.xserver.resolutions = mkVMOverride [ { x = 1024; y = 768; } ];
     services.xserver.monitorSection =
@@ -506,7 +398,6 @@ in
 
     # Wireless won't work in the VM.
     networking.wireless.enable = mkVMOverride false;
-    networking.connman.enable = mkVMOverride false;
 
     # Speed up booting by not waiting for ARP.
     networking.dhcpcd.extraConfig = "noarp";

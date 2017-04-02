@@ -1,35 +1,53 @@
-{ stdenv, fetchurl, intltool, openssl, expat, libgcrypt }:
+x@{builderDefsPackage
+  , intltool, openssl, expat, libgcrypt
+  , ...}:
+builderDefsPackage
+(a :  
+let 
+  helperArgNames = ["stdenv" "fetchurl" "builderDefsPackage"] ++ 
+    [];
 
-stdenv.mkDerivation rec {
-  version = "0.99.5";
-  baseName = "ggz-base-libs";
-  name = "${baseName}-snapshot-${version}";
-
-  src = fetchurl {
-    url = "http://mirrors.ibiblio.org/pub/mirrors/ggzgamingzone/ggz/snapshots/${name}.tar.gz";
-    sha256 = "1cw1vg0fbj36zyggnzidx9cbjwfc1yr4zqmsipxnvns7xa2awbdk";
+  buildInputs = map (n: builtins.getAttr n x)
+    (builtins.attrNames (builtins.removeAttrs x helperArgNames));
+  sourceInfo = rec {
+    baseName="ggz-base-libs";
+    version="0.99.5";
+    name="${baseName}-snapshot-${version}";
+    url="http://mirrors.ibiblio.org/pub/mirrors/ggzgamingzone/ggz/snapshots/${name}.tar.gz";
+    hash="1cw1vg0fbj36zyggnzidx9cbjwfc1yr4zqmsipxnvns7xa2awbdk";
+  };
+in
+rec {
+  src = a.fetchurl {
+    url = sourceInfo.url;
+    sha256 = sourceInfo.hash;
   };
 
-  buildInputs = [ intltool openssl expat libgcrypt ];
+  inherit (sourceInfo) name version;
+  inherit buildInputs;
 
-  patchPhase = ''
-    substituteInPlace configure \
-      --replace "/usr/local/ssl/include" "${openssl.dev}/include" \
-      --replace "/usr/local/ssl/lib" "${openssl.out}/lib"
-  '';
+  /* doConfigure should be removed if not needed */
+  phaseNames = ["doConfigure" "doMakeInstall"];
 
   configureFlags = [
+    "--with-ssl-dir=${a.openssl}/"
     "--with-tls"
   ];
-
-  meta = with stdenv.lib; {
+      
+  meta = {
     description = "GGZ Gaming zone libraries";
-    maintainers = with maintainers;
+    maintainers = with a.lib.maintainers;
     [
       raskin
     ];
-    platforms = platforms.linux;
-    license = licenses.gpl2;
-    downloadPage = "http://www.ggzgamingzone.org/releases/";
+    platforms = with a.lib.platforms;
+      linux;
+    license = a.lib.licenses.gpl2;
   };
-}
+  passthru = {
+    updateInfo = {
+      downloadPage = "http://www.ggzgamingzone.org/releases/";
+    };
+  };
+}) x
+

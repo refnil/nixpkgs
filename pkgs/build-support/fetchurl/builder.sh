@@ -9,7 +9,7 @@ source $mirrorsFile
 # cryptographic hash of the output anyway).
 curl="curl \
  --location --max-redirs 20 \
- --retry 3 \
+ --retry 3
  --disable-epsv \
  --cookie-jar cookies \
  --insecure \
@@ -25,31 +25,16 @@ tryDownload() {
     local url="$1"
     echo
     header "trying $url"
-    local curlexit=18;
-
     success=
-
-    # if we get error code 18, resume partial download
-    while [ $curlexit -eq 18 ]; do
-       # keep this inside an if statement, since on failure it doesn't abort the script
-       if $curl -C - --fail "$url" --output "$downloadedFile"; then
-          success=1
-          break
-       else
-          curlexit=$?;
-       fi
-    done
+    if $curl --fail "$url" --output "$downloadedFile"; then
+        success=1
+    fi
     stopNest
 }
 
 
 finish() {
     set +o noglob
-
-    if [[ $executable == "1" ]]; then
-      chmod +x $downloadedFile
-    fi
-
     runHook postFetch
     stopNest
     exit 0
@@ -94,6 +79,10 @@ for url in $urls; do
         if test -z "${!varName}"; then
             echo "warning: unknown mirror:// site \`$site'"
         else
+            # Assume that SourceForge/GNU/kernel mirrors have better
+            # bandwidth than nixos.org.
+            preferHashedMirrors=
+
             mirrors=${!varName}
 
             # Allow command-line override by setting NIX_MIRRORS_$site.

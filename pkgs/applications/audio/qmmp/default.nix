@@ -1,12 +1,11 @@
-{ stdenv, fetchurl, cmake, pkgconfig, xlibsWrapper
-, qtbase, qttools, qtmultimedia, qtx11extras
+{ stdenv, fetchurl, cmake, qt4, pkgconfig, x11
 # transports
 , curl, libmms
 # input plugins
 , libmad, taglib, libvorbis, libogg, flac, libmpcdec, libmodplug, libsndfile
 , libcdio, cdparanoia, libcddb, faad2, ffmpeg, wildmidi
 # output plugins
-, alsaLib, libpulseaudio
+, alsaLib, pulseaudio
 # effect plugins
 , libsamplerate
 }:
@@ -29,29 +28,26 @@
 # handle that.
 
 stdenv.mkDerivation rec {
-  name = "qmmp-1.1.5";
+  name = "qmmp-0.7.6";
 
   src = fetchurl {
     url = "http://qmmp.ylsoftware.com/files/${name}.tar.bz2";
-    sha256 = "1gfx6nm9v6qrx58gxib6grfhb45mnib1n4wdsnjq16br6bs8h4lv";
+    sha256 = "1hq08ii06lyfg516jrvxdfcjj509gvglvdlsr96aqi1fh8v4k5p9";
   };
 
   buildInputs =
     [ # basic requirements
-      cmake pkgconfig xlibsWrapper
-      qtbase qttools qtmultimedia qtx11extras
+      cmake qt4 pkgconfig x11
       # transports
       curl libmms
       # input plugins
       libmad taglib libvorbis libogg flac libmpcdec libmodplug libsndfile
       libcdio cdparanoia libcddb faad2 ffmpeg wildmidi
       # output plugins
-      alsaLib libpulseaudio
+      alsaLib pulseaudio
       # effect plugins
       libsamplerate
     ];
-
-  enableParallelBuilding = true;
 
   meta = with stdenv.lib; {
     description = "Qt-based audio player that looks like Winamp";

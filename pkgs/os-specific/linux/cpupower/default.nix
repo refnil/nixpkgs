@@ -34,8 +34,8 @@ stdenv.mkDerivation {
   enableParallelBuilding = true;
 
   meta = with stdenv.lib; {
-    description = "Tool to examine and tune power saving features";
-    homepage = https://www.kernel.org/;
+    description = "Tool to examine and tune power saving features.";
+    homepage = https://www.kernel.org.org/;
     license = licenses.gpl2;
     platforms = platforms.linux;
   };

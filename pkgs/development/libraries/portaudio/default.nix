@@ -1,5 +1,4 @@
-{ stdenv, fetchurl, alsaLib, pkgconfig
-, AudioUnit, AudioToolbox, CoreAudio, CoreServices, Carbon }:
+{ stdenv, fetchurl, alsaLib, pkgconfig }:
 
 stdenv.mkDerivation rec {
   name = "portaudio-19-20140130";
@@ -12,26 +11,31 @@ stdenv.mkDerivation rec {
   buildInputs = [ pkgconfig ]
     ++ stdenv.lib.optional (!stdenv.isDarwin) alsaLib;
 
-  configureFlags = [ "--disable-mac-universal" ];
+  configureFlags = stdenv.lib.optionals stdenv.isDarwin
+    [ "--build=x86_64" "--without-oss" "--enable-static" "--enable-shared" ];
 
-  propagatedBuildInputs = stdenv.lib.optionals stdenv.isDarwin [ AudioUnit AudioToolbox CoreAudio CoreServices Carbon ];
-
-  patchPhase = stdenv.lib.optionalString stdenv.isDarwin ''
+  preBuild = stdenv.lib.optionalString stdenv.isDarwin ''
     sed -i '50 i\
       #include <CoreAudio/AudioHardware.h>\
       #include <CoreAudio/AudioHardwareBase.h>\
       #include <CoreAudio/AudioHardwareDeprecated.h>' \
       include/pa_mac_core.h
+
+    # disable two tests that don't compile
+    sed -i -e 105d Makefile
+    sed -i -e 107d Makefile
   '';
 
   # not sure why, but all the headers seem to be installed by the make install
-  installPhase = ''
+  installPhase = if stdenv.isDarwin then ''
+    mkdir -p "$out"
+    cp -r include "$out"
+    cp -r lib "$out"
+  '' else ''
     make install
-  '' + stdenv.lib.optionalString (!stdenv.isDarwin) ''
+
     # fixup .pc file to find alsa library
-    sed -i "s|-lasound|-L${alsaLib.out}/lib -lasound|" "$out/lib/pkgconfig/"*.pc
-  '' + stdenv.lib.optionalString stdenv.isDarwin ''
-    cp include/pa_mac_core.h $out/include/pa_mac_core.h
+    sed -i "s|-lasound|-L${alsaLib}/lib -lasound|" "$out/lib/pkgconfig/"*.pc
   '';
 
   meta = with stdenv.lib; {

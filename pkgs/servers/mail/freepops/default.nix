@@ -23,6 +23,5 @@ stdenv.mkDerivation {
     homepage = http://www.freepops.org/;
     platforms = with stdenv.lib.platforms; linux;
     maintainers = with stdenv.lib.maintainers; [ pierron ];
-    broken = true;
   };
 }

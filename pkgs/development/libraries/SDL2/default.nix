@@ -1,58 +1,44 @@
-{ stdenv, lib, fetchurl, pkgconfig, audiofile
-, openglSupport ? false, mesa_noglu
-, alsaSupport ? true, alsaLib
-, x11Support ? true, libICE, libXi, libXScrnSaver, libXcursor, libXinerama, libXext, libXxf86vm, libXrandr
-, dbusSupport ? false, dbus
-, udevSupport ? false, udev
-, ibusSupport ? false, ibus
-, pulseaudioSupport ? true, libpulseaudio
-, AudioUnit, Cocoa, CoreAudio, CoreServices, ForceFeedback, OpenGL
+{ stdenv, fetchurl, pkgconfig, audiofile
+, openglSupport ? false, mesa ? null
+, alsaSupport ? true, alsaLib ? null
+, x11Support ? true, x11 ? null, libXrandr ? null
+, pulseaudioSupport ? true, pulseaudio ? null
 }:
 
 # OSS is no longer supported, for it's much crappier than ALSA and
 # PulseAudio.
-assert !stdenv.isDarwin -> alsaSupport || pulseaudioSupport;
+assert alsaSupport || pulseaudioSupport;
 
-assert openglSupport -> (stdenv.isDarwin || mesa_noglu != null && x11Support);
+assert openglSupport -> (mesa != null && x11Support);
+assert x11Support -> (x11 != null && libXrandr != null);
+assert alsaSupport -> alsaLib != null;
+assert pulseaudioSupport -> pulseaudio != null;
 
 let
-  configureFlagsFun = attrs: [
-      "--disable-oss" "--disable-x11-shared"
-      "--disable-pulseaudio-shared" "--disable-alsa-shared"
-    ] ++ lib.optional alsaSupport "--with-alsa-prefix=${attrs.alsaLib.out}/lib"
-      ++ lib.optional (!x11Support) "--without-x";
+  configureFlagsFun = attrs: ''
+        --disable-oss --disable-x11-shared
+        --disable-pulseaudio-shared --disable-alsa-shared
+        ${if alsaSupport then "--with-alsa-prefix=${attrs.alsaLib}/lib" else ""}
+      '';
 in
 stdenv.mkDerivation rec {
-  name = "SDL2-${version}";
-  version = "2.0.5";
+  name = "SDL2-2.0.3";
 
   src = fetchurl {
     url = "http://www.libsdl.org/release/${name}.tar.gz";
-    sha256 = "11c75qj1qxmx67iwkvf9z4x69phk301pdn86zzr6jncnap7kh824";
+    sha256 = "0369ngvb46x6c26h8zva4x22ywgy6mvn0wx87xqwxg40pxm9m9m5";
   };
 
-  outputs = [ "out" "dev" ];
-
-  patches = [ ./find-headers.patch ];
-
-  nativeBuildInputs = [ pkgconfig ];
-
   # Since `libpulse*.la' contain `-lgdbm', PulseAudio must be propagated.
-  propagatedBuildInputs = lib.optionals x11Support [ libICE libXi libXScrnSaver libXcursor libXinerama libXext libXrandr libXxf86vm ] ++
-    lib.optional pulseaudioSupport libpulseaudio;
+  propagatedBuildInputs = stdenv.lib.optionals x11Support [ x11 libXrandr ] ++
+    stdenv.lib.optional pulseaudioSupport pulseaudio;
 
-  buildInputs = [ audiofile ] ++
-    lib.optional openglSupport mesa_noglu ++
-    lib.optional alsaSupport alsaLib ++
-    lib.optional dbusSupport dbus ++
-    lib.optional udevSupport udev ++
-    lib.optional ibusSupport ibus ++
-    lib.optionals stdenv.isDarwin [ AudioUnit Cocoa CoreAudio CoreServices ForceFeedback OpenGL ];
+  buildInputs = [ pkgconfig audiofile ] ++
+    stdenv.lib.optional openglSupport [ mesa ] ++
+    stdenv.lib.optional alsaSupport alsaLib;
 
   # https://bugzilla.libsdl.org/show_bug.cgi?id=1431
   dontDisableStatic = true;
-
-  enableParallelBuilding = true;
 
   # XXX: By default, SDL wants to dlopen() PulseAudio, in which case
   # we must arrange to add it to its RPATH; however, `patchelf' seems
@@ -60,24 +46,20 @@ stdenv.mkDerivation rec {
   configureFlags = configureFlagsFun { inherit alsaLib; };
 
   crossAttrs = {
-    configureFlags = configureFlagsFun { alsaLib = alsaLib.crossDrv; };
+      configureFlags = configureFlagsFun { alsaLib = alsaLib.crossDrv; };
   };
 
   postInstall = ''
-    moveToOutput lib/libSDL2main.a "$dev"
     rm $out/lib/*.a
-    moveToOutput bin/sdl2-config "$dev"
   '';
 
-  setupHook = ./setup-hook.sh;
+  passthru = {inherit openglSupport;};
 
-  passthru = { inherit openglSupport; };
-
-  meta = with stdenv.lib; {
+  meta = {
     description = "A cross-platform multimedia library";
-    homepage = "http://www.libsdl.org/";
-    license = licenses.zlib;
-    platforms = platforms.all;
-    maintainers = with maintainers; [ cpages ];
+    homepage = http://www.libsdl.org/;
+    license = stdenv.lib.licenses.zlib;
+    platforms = stdenv.lib.platforms.linux;
+    maintainers = [ stdenv.lib.maintainers.page ];
   };
 }

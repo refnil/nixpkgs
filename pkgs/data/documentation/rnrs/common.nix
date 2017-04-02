@@ -24,7 +24,5 @@ stdenv.mkDerivation rec {
     '';
 
     homepage = http://swiss.csail.mit.edu/~jaffer/Scheme;
-
-    broken = true;
   };
 }

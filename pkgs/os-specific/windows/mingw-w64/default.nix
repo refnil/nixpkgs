@@ -4,15 +4,14 @@
 }:
 
 let
-  version = "4.0.6";
-  name = "mingw-w64-${version}";
+  name = "mingw-w64-3.1.0";
 in
-stdenv.mkDerivation ({
+stdenv.mkDerivation (rec {
   inherit name;
 
   src = fetchurl {
-    url = "mirror://sourceforge/mingw-w64/mingw-w64-v${version}.tar.bz2";
-    sha256 = "0p01vm5kx1ixc08402z94g1alip4vx66gjpvyi9maqyqn2a76h0c";
+    url = "mirror://sourceforge/mingw-w64/mingw-w64-v3.1.0.tar.bz2";
+    sha256 = "1lhpw381gc59w8b1r9zzdwa9cdi2wx6qx7s6rvajapmbw7ksgrzc";
   };
 } //
 (if onlyHeaders then {

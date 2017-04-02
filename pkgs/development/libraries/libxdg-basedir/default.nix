@@ -11,6 +11,5 @@ stdenv.mkDerivation rec {
     homepage = http://n.ethz.ch/student/nevillm/download/libxdg-basedir/;
     description = "Implementation of the XDG Base Directory specification";
     license = "BSD";
-    platforms = stdenv.lib.platforms.unix;
   };
 }

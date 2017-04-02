@@ -1,12 +1,11 @@
 { stdenv, fetchurl, which}:
 
-stdenv.mkDerivation rec {
-  name = "cntlm-${version}";
-  version = "0.92.3";
+stdenv.mkDerivation {
+  name = "cntlm-0.35.1";
 
   src = fetchurl {
-    url = "mirror://sourceforge/cntlm/${name}.tar.gz";
-    sha256 = "1632szz849wasvh5sm6rm1zbvbrkq35k7kcyvx474gyl4h4x2flw";
+    url = mirror://sourceforge/cntlm/cntlm-0.35.1.tar.gz;
+    sha256 = "7b3fb7184e72cc3f1743bb8e503a5305e96458bc630a7e1ebfc9f3c07ffa6c5e";
   };
 
   buildInputs = [ which ];
@@ -17,15 +16,10 @@ stdenv.mkDerivation rec {
     mkdir -p $out/man/; cp doc/cntlm.1 $out/man/;
   '';
 
-  meta = with stdenv.lib; {
-    description = "NTLM/NTLMv2 authenticating HTTP proxy";
+  meta = {
+    description = "Cntlm is an NTLM/NTLMv2 authenticating HTTP proxy";
     homepage = http://cntlm.sourceforge.net/;
-    license = licenses.gpl2;
-    maintainers = 
-      [
-        maintainers.qknight
-        maintainers.markWot
-      ];
-    platforms = platforms.linux;
+    license = stdenv.lib.licenses.gpl2;
+    maintainers = [ stdenv.lib.maintainers.qknight ];
   };
 }

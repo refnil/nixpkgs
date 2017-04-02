@@ -3,8 +3,6 @@
 stdenv.mkDerivation {
   name = "ndiswrapper-1.59-${kernel.version}";
 
-  hardeningDisable = [ "pic" ];
-
   patches = [ ./no-sbin.patch ];
 
   # need at least .config and include 
@@ -38,6 +36,5 @@ stdenv.mkDerivation {
     description = "Ndis driver wrapper for the Linux kernel";
     homepage = http://sourceforge.net/projects/ndiswrapper;
     license = "GPL";
-    broken = true;
   };
 }

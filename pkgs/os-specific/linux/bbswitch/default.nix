@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, fetchpatch, kernel }:
+{ stdenv, fetchurl, kernel }:
 
 let
   baseName = "bbswitch";
@@ -15,13 +15,6 @@ stdenv.mkDerivation {
     sha256 = "0xql1nv8dafnrcg54f3jsi3ny3cd2ca9iv73pxpgxd2gfczvvjkn";
   };
 
-  patches = [ (fetchpatch {
-    url = "https://github.com/Bumblebee-Project/bbswitch/pull/102.patch";
-    sha256 = "1lbr6pyyby4k9rn2ry5qc38kc738d0442jhhq57vmdjb6hxjya7m";
-  }) ];
-
-  hardeningDisable = [ "pic" ];
-
   preBuild = ''
     substituteInPlace Makefile \
       --replace "\$(shell uname -r)" "${kernel.modDirVersion}" \
@@ -29,10 +22,10 @@ stdenv.mkDerivation {
   '';
 
   installPhase = ''
-    mkdir -p $out/lib/modules/${kernel.modDirVersion}/misc
+    ensureDir $out/lib/modules/${kernel.modDirVersion}/misc
     cp bbswitch.ko $out/lib/modules/${kernel.modDirVersion}/misc
 
-    mkdir -p $out/bin
+    ensureDir $out/bin
     tee $out/bin/discrete_vga_poweroff << EOF
     #!/bin/sh
 
@@ -46,10 +39,8 @@ stdenv.mkDerivation {
     chmod +x $out/bin/discrete_vga_poweroff $out/bin/discrete_vga_poweron
   '';
 
-  meta = with stdenv.lib; {
+  meta = {
+    platforms = stdenv.lib.platforms.linux;
     description = "A module for powering off hybrid GPUs";
-    platforms = platforms.linux;
-    homepage = https://github.com/Bumblebee-Project/bbswitch;
-    maintainers = with maintainers; [ abbradar ];
   };
 }

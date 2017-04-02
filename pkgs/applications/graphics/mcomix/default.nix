@@ -1,15 +1,17 @@
-{ stdenv, fetchurl, python27Packages }:
+{ stdenv, fetchurl, buildPythonPackage, pygtk, pil }:
 
-python27Packages.buildPythonApplication rec {
-    name = "mcomix-${version}";
-    version = "1.2.1";
+buildPythonPackage rec {
+    namePrefix = "";
+    name = "mcomix-0.98";
 
     src = fetchurl {
       url = "mirror://sourceforge/mcomix/${name}.tar.bz2";
-      sha256 = "0fzsf9pklhfs1rzwzj64c0v30b74nk94p93h371rpg45qnfiahvy";
+      sha256 = "93805b6c8540bd673ac4a6ef6e952f00f8fc10e59a63c7e163324a64db2a6b03";
     };
 
-    propagatedBuildInputs = with python27Packages; [ pygtk pillow ];
+    doCheck = false;
+
+    pythonPath = [ pygtk pil ];
 
     meta = {
       description = "Image viewer designed to handle comic books";
@@ -26,7 +28,7 @@ python27Packages.buildPythonApplication rec {
       '';
 
       homepage = http://mcomix.sourceforge.net/;
+
       license = stdenv.lib.licenses.gpl2;
-      maintainers = with stdenv.lib.maintainers; [ fuuzetsu ];
     };
 }

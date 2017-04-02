@@ -14,7 +14,6 @@ stdenv.mkDerivation rec {
   meta = { 
     description = "Programming interface for the 1394 Trade Association AV/C (Audio/Video Control) Digital Interface Command Set";
     homepage = http://sourceforge.net/projects/libavc1394/;
-    license = stdenv.lib.licenses.lgpl21Plus;
-    platforms = stdenv.lib.platforms.linux;
+    license = [ "GPL" "LGPL" ];
   };
 }

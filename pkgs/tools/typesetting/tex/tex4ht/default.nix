@@ -10,13 +10,11 @@ stdenv.mkDerivation rec {
 
   buildInputs = [ tetex unzip ];
 
-  hardeningDisable = [ "format" ];
-
   buildPhase = ''
     cd src
     for f in tex4ht t4ht htcmd ; do
       # -DENVFILE="$out/share/texmf-nix/tex4ht/base/unix/tex4ht.env"
-      ''${CC:-gcc} -o $f $f.c -I${tetex}/include -L${tetex}/lib  -DHAVE_DIRENT_H -DHAVE_DIRENT_H -DKPATHSEA -lkpathsea
+      gcc -o $f $f.c -I${tetex}/include -L${tetex}/lib  -DHAVE_DIRENT_H -DHAVE_DIRENT_H -DKPATHSEA -lkpathsea
     done
     cd -
   '';
@@ -31,9 +29,7 @@ stdenv.mkDerivation rec {
 
   meta = {
     homepage = "http://tug.org/tex4ht/";
-    description = "A system to convert (La)TeX documents to HTML and various other formats";
-    license = stdenv.lib.licenses.lppl12;
-    platforms = stdenv.lib.platforms.unix;
-    broken = true; # use the one from texlive.tex4ht
+    description = "a system to convert (La)TeX documents to HTML and various other formats";
+    license = "LPPL-1.2";		# LaTeX Project Public License
   };
 }

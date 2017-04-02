@@ -66,7 +66,7 @@ in
       };
 
       extraParams = mkOption {
-        type = types.listOf types.str;
+        type = types.listOf types.string;
         default = [ ];
         example = [ "-m 0" ];
         description = ''

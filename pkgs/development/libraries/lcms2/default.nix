@@ -1,21 +1,20 @@
-{ stdenv, fetchurl, libtiff, libjpeg, zlib }:
+{stdenv, fetchurl, libtiff, libjpeg, zlib}:
 
 stdenv.mkDerivation rec {
-  name = "lcms2-2.8";
+  name = "lcms2-2.5";
 
   src = fetchurl {
     url = "mirror://sourceforge/lcms/${name}.tar.gz";
-    sha256 = "08pvl289g0mbznzx5l6ibhaldsgx41kwvdn2c974ga9fkli2pl36";
+    sha256 = "0ax71bmscjzlpmg1r8vj3dypxf2jr7j9qfx5vc8j22j78hmpf9v7";
   };
-
-  outputs = [ "bin" "dev" "out" ];
 
   propagatedBuildInputs = [ libtiff libjpeg zlib ];
 
-  meta = with stdenv.lib; {
+  meta = {
     description = "Color management engine";
     homepage = http://www.littlecms.com/;
-    license = licenses.mit;
-    platforms = platforms.all;
+    license = stdenv.lib.licenses.mit;
+    platforms = stdenv.lib.platforms.all;
+    maintainers = [ stdenv.lib.maintainers.urkud ];
   };
 }

@@ -1,19 +1,23 @@
-{ stdenv, fetchzip, which, openssl, ocaml, findlib }:
+{stdenv, fetchurl, which, openssl, ocaml, findlib}:
 
-stdenv.mkDerivation rec {
-  name = "ocaml${ocaml.version}-ssl-${version}";
-  version = "0.5.3";
+let
+  ocaml_version = (builtins.parseDrvName ocaml.name).version;
+  version = "0.4.4";
+in
 
-  src = fetchzip {
-    url = "https://github.com/savonet/ocaml-ssl/releases/download/0.5.3/ocaml-ssl-${version}.tar.gz";
-    sha256 = "0h2k19zpdvq1gqwrmmgkibw4j48l71vv6ajzxs0wi71y80c1vhwm";
+stdenv.mkDerivation {
+  name = "ocaml-ssl-${version}";
+
+  src = fetchurl {
+    url = "mirror://debian/pool/main/o/ocaml-ssl/ocaml-ssl_${version}.orig.tar.gz";
+    sha256 = "1m45d0bd4ndxswaa1symp6c1npzjmm9pz0nf7w0q15gflqhba5ch";
   };
 
-  buildInputs = [which ocaml findlib];
-
-  propagatedBuildInputs = [openssl];
+  buildInputs = [which openssl ocaml findlib];
 
   dontAddPrefix = true;
+
+  configureFlags = "--disable-ldconf";
 
   createFindlibDestdir = true;
 
@@ -21,7 +25,7 @@ stdenv.mkDerivation rec {
     homepage = http://savonet.rastageeks.org/;
     description = "OCaml bindings for libssl ";
     license = "LGPL+link exception";
-    platforms = ocaml.meta.platforms or [];
+    platforms = ocaml.meta.platforms;
     maintainers = [
       stdenv.lib.maintainers.z77z
     ];

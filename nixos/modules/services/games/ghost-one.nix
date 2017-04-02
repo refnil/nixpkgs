@@ -21,7 +21,8 @@ in
 
       language = mkOption {
         default = "English";
-        type = types.enum [ "English" "Spanish" "Russian" "Serbian" "Turkish" ];
+        type = types.addCheck types.str
+          (lang: elem lang [ "English" "Spanish" "Russian" "Serbian" "Turkish" ]);
         description = "The language of bot messages: English, Spanish, Russian, Serbian or Turkish.";
       };
 
@@ -77,8 +78,8 @@ in
       bot_replaypath = replays
     '';
 
-    systemd.services."ghost-one" = {
-      wantedBy = [ "multi-user.target" ];
+    jobs.ghostOne = {
+      name = "ghost-one";
       script = ''
         mkdir -p ${stateDir}
         cd ${stateDir}

@@ -1,6 +1,6 @@
 { stdenv, fetchurl
-, gpm, openssl, pkgconfig, libev # Misc.
-, libpng, libjpeg, libtiff, librsvg # graphic formats
+, gpm, openssl, pkgconfig # Misc.
+, libpng, libjpeg, libtiff # graphic formats
 , bzip2, zlib, xz # Transfer encodings
 , enableFB ? true
 , enableDirectFB ? false, directfb
@@ -8,19 +8,18 @@
 }:
 
 stdenv.mkDerivation rec {
-  version = "2.14";
+  version = "2.8";
   name = "links2-${version}";
 
   src = fetchurl {
     url = "${meta.homepage}/download/links-${version}.tar.bz2";
-    sha256 = "1f24y83wa1vzzjq5kp857gjqdpnmf8pb29yw7fam0m8wxxw0c3gp";
+    sha256 = "15h07498z52jfdahzgvkphg1f7qvxnpbyfn2xmsls0d2dwwdll3r";
   };
 
-  buildInputs = with stdenv.lib;
-    [ libev librsvg libpng libjpeg libtiff openssl xz bzip2 zlib ]
-    ++ optionals stdenv.isLinux [ gpm ]
-    ++ optionals enableX11 [ libX11 libXau libXt ]
-    ++ optional enableDirectFB [ directfb ];
+  buildInputs =
+    [ libpng libjpeg libtiff gpm openssl xz bzip2 zlib ]
+    ++ stdenv.lib.optionals enableX11 [ libX11 libXau libXt ]
+    ++ stdenv.lib.optional enableDirectFB [ directfb ];
 
   nativeBuildInputs = [ pkgconfig bzip2 ];
 
@@ -36,10 +35,10 @@ stdenv.mkDerivation rec {
     '';
   };
 
-  meta = with stdenv.lib; {
+  meta = {
     homepage = http://links.twibright.com/;
     description = "A small browser with some graphics support";
-    maintainers = with maintainers; [ raskin viric ];
-    platforms = platforms.unix;
+    maintainers = with stdenv.lib.maintainers; [ raskin urkud viric ];
+    platforms = stdenv.lib.platforms.linux;
   };
 }

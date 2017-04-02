@@ -1,18 +1,16 @@
 { stdenv, fetchurl }:
 
 stdenv.mkDerivation rec {
-  name = "cabextract-1.6";
+  name = "cabextract-1.4";
 
   src = fetchurl {
     url = "http://www.cabextract.org.uk/${name}.tar.gz";
-    sha256 = "1ysmmz25fjghq7mxb2anyyvr1ljxqxzi4piwjhk0sdamcnsn3rnf";
+    sha256 = "07p49053a727nwnw7vnx1bpj4xqa43cvx8mads2146fpqai8pfpp";
   };
 
-  meta = with stdenv.lib; {
+  meta = {
     homepage = http://www.cabextract.org.uk/;
     description = "Free Software for extracting Microsoft cabinet files";
-    platforms = platforms.all;
-    license = licenses.gpl3;
-    maintainers = with maintainers; [ pSub ];
+    platforms = stdenv.lib.platforms.all;
   };
 }

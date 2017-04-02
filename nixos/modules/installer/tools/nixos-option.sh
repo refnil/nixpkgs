@@ -11,9 +11,11 @@ usage () {
 # Process Arguments #
 #####################
 
+desc=false
+defs=false
+value=false
 xml=false
 verbose=false
-nixPath=""
 
 option=""
 
@@ -22,12 +24,14 @@ for arg; do
   if test -z "$argfun"; then
     case $arg in
       -*)
-        sarg="$arg"
         longarg=""
+        sarg="$arg"
         while test "$sarg" != "-"; do
           case $sarg in
             --*) longarg=$arg; sarg="--";;
-            -I) argfun="include_nixpath";;
+            -d*) longarg="$longarg --description";;
+            -v*) longarg="$longarg --value";;
+            -l*) longarg="$longarg --lookup";;
             -*) usage;;
           esac
           # remove the first letter option
@@ -38,6 +42,9 @@ for arg; do
     esac
     for larg in $longarg; do
       case $larg in
+        --description) desc=true;;
+        --value) value=true;;
+        --lookup) defs=true;;
         --xml) xml=true;;
         --verbose) verbose=true;;
         --help) usage;;
@@ -55,13 +62,20 @@ for arg; do
         var=$(echo $argfun | sed 's,^set_,,')
         eval $var=$arg
         ;;
-      include_nixpath)
-        nixPath="-I $arg $nixPath"
-        ;;
     esac
     argfun=""
   fi
 done
+
+if $xml; then
+  value=true
+  desc=true
+  defs=true
+fi
+
+if ! $defs && ! $desc; then
+  value=true
+fi
 
 if $verbose; then
   set -x
@@ -74,114 +88,19 @@ fi
 #############################
 
 evalNix(){
-  result=$(nix-instantiate ${nixPath:+$nixPath} - --eval-only "$@" 2>&1)
-  if test $? -eq 0; then
-      cat <<EOF
-$result
-EOF
-      return 0;
-  else
-      sed -n '
-  /^error/ { s/, at (string):[0-9]*:[0-9]*//; p; };
-  /^warning: Nix search path/ { p; };
-' <<EOF
-$result
-EOF
-      return 1;
-  fi
+  nix-instantiate - --eval-only "$@"
 }
-
-header="let
-  nixos = import <nixpkgs/nixos> {};
-  nixpkgs = import <nixpkgs> {};
-in with nixpkgs.lib;
-"
-
-# This function is used for converting the option definition path given by
-# the user into accessors for reaching the definition and the declaration
-# corresponding to this option.
-generateAccessors(){
-  if result=$(evalNix --strict --show-trace <<EOF
-$header
-
-let
-  path = "${option:+$option}";
-  pathList = splitString "." path;
-
-  walkOptions = attrsNames: result:
-    if attrsNames == [] then
-      result
-    else
-      let name = head attrsNames; rest = tail attrsNames; in
-      if isOption result.options then
-        walkOptions rest {
-          options = result.options.type.getSubOptions "";
-          opt = ''(\${result.opt}.type.getSubOptions "")'';
-          cfg = ''\${result.cfg}."\${name}"'';
-        }
-      else
-        walkOptions rest {
-          options = result.options.\${name};
-          opt = ''\${result.opt}."\${name}"'';
-          cfg = ''\${result.cfg}."\${name}"'';
-        }
-    ;
-
-  walkResult = (if path == "" then x: x else walkOptions pathList) {
-    options = nixos.options;
-    opt = ''nixos.options'';
-    cfg = ''nixos.config'';
-  };
-
-in
-  ''let option = \${walkResult.opt}; config = \${walkResult.cfg}; in''
-EOF
-)
-  then
-      echo $result
-  else
-      # In case of error we want to ignore the error message roduced by the
-      # script above, as it is iterating over each attribute, which does not
-      # produce a nice error message.  The following code is a fallback
-      # solution which is cause a nicer error message in the next
-      # evaluation.
-      echo "\"let option = nixos.options${option:+.$option}; config = nixos.config${option:+.$option}; in\""
-  fi
-}
-
-header="$header
-$(eval echo $(generateAccessors))
-"
 
 evalAttr(){
   local prefix="$1"
   local strict="$2"
   local suffix="$3"
-
-  # If strict is set, then set it to "true".
-  test -n "$strict" && strict=true
-
-  evalNix ${strict:+--strict} <<EOF
-$header
-
-let
-  value = $prefix${suffix:+.$suffix};
-  strict = ${strict:-false};
-  cleanOutput = x: with nixpkgs.lib;
-    if isDerivation x then x.outPath
-    else if isFunction x then "<CODE>"
-    else if strict then
-      if isAttrs x then mapAttrs (n: cleanOutput) x
-      else if isList x then map cleanOutput x
-      else x
-    else x;
-in
-  cleanOutput value
-EOF
+  echo "(import <nixos> {}).$prefix${option:+.$option}${suffix:+.$suffix}" |
+    evalNix ${strict:+--strict}
 }
 
 evalOpt(){
-  evalAttr "option" "" "$@"
+  evalAttr "options" "" "$@"
 }
 
 evalCfg(){
@@ -191,11 +110,8 @@ evalCfg(){
 
 findSources(){
   local suffix=$1
-  evalNix --strict <<EOF
-$header
-
-option.$suffix
-EOF
+  echo "(import <nixos> {}).options${option:+.$option}.$suffix" |
+    evalNix --strict
 }
 
 # Given a result from nix-instantiate, recover the list of attributes it
@@ -225,12 +141,13 @@ nixMap() {
 # the output of nixos-option with other tools such as nixos-gui.
 if $xml; then
   evalNix --xml --no-location <<EOF
-$header
-
 let
+  reach = attrs: attrs${option:+.$option};
+  nixos = import <nixos> {};
+  nixpkgs = import <nixpkgs> {};
   sources = builtins.map (f: f.source);
-  opt = option;
-  cfg = config;
+  opt = reach nixos.options;
+  cfg = reach nixos.config;
 in
 
 with nixpkgs.lib;
@@ -256,7 +173,7 @@ if isOption opt then
   // optionalAttrs (opt ? default) { inherit (opt) default; }
   // optionalAttrs (opt ? example) { inherit (opt) example; }
   // optionalAttrs (opt ? description) { inherit (opt) description; }
-  // optionalAttrs (opt ? type) { typename = opt.type.description; }
+  // optionalAttrs (opt ? type) { typename = opt.type.name; }
   // optionalAttrs (opt ? options) { inherit (opt) options; }
   // {
     # to disambiguate the xml output.
@@ -272,37 +189,35 @@ EOF
 fi
 
 if test "$(evalOpt "_type" 2> /dev/null)" = '"option"'; then
-  echo "Value:"
-  evalCfg 1
+  $value && evalCfg 1
 
-  echo
+  if $desc; then
+    $value && echo;
 
-  echo "Default:"
-  if default=$(evalOpt "default" - 2> /dev/null); then
-    echo "$default"
-  else
-    echo "<None>"
+    if default=$(evalOpt "default" - 2> /dev/null); then
+      echo "Default: $default"
+    else
+      echo "Default: <None>"
+    fi
+    if example=$(evalOpt "example" - 2> /dev/null); then
+      echo "Example: $example"
+    fi
+    echo "Description:"
+    eval printf $(evalOpt "description")
   fi
-  echo
-  if example=$(evalOpt "example" - 2> /dev/null); then
-    echo "Example:"
-    echo "$example"
-    echo
+
+  if $defs; then
+    $desc || $value && echo;
+
+    printPath () { echo "  $1"; }
+
+    echo "Declared by:"
+    nixMap printPath "$(findSources "declarations")"
+    echo ""
+    echo "Defined by:"
+    nixMap printPath "$(findSources "files")"
+    echo ""
   fi
-  echo "Description:"
-  echo
-  eval printf $(evalOpt "description")
-
-  echo $desc;
-
-  printPath () { echo "  $1"; }
-
-  echo "Declared by:"
-  nixMap printPath "$(findSources "declarations")"
-  echo
-  echo "Defined by:"
-  nixMap printPath "$(findSources "files")"
-  echo
 
 else
   # echo 1>&2 "Warning: This value is not an option."

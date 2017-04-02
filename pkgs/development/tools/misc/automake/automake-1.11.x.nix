@@ -31,7 +31,6 @@ stdenv.mkDerivation rec {
   enableParallelBuilding = true;
 
   meta = {
-    branch = "1.11";
     homepage = http://www.gnu.org/software/automake/;
     description = "GNU standard-compliant makefile generator";
 
@@ -43,6 +42,6 @@ stdenv.mkDerivation rec {
 
     license = stdenv.lib.licenses.gpl2Plus;
 
-    platforms = stdenv.lib.platforms.all;
+    maintainers = [ stdenv.lib.maintainers.ludo ];
   };
 }

@@ -1,22 +1,28 @@
-{ stdenv, fetchurl, cmake, wxGTK30, openal, pkgconfig, curl, libtorrentRasterbar
-, libpng, libX11, gettext, bash, gawk, boost, libnotify, gtk2, doxygen, spring
-, makeWrapper, glib, minizip, alure, pcre, jsoncpp }:
-
+{ stdenv, fetchurl, cmake, wxGTK, openal, pkgconfig, curl, libtorrentRasterbar, libpng, libX11
+, gettext, bash, gawk, boost, libnotify, gtk, doxygen, spring, makeWrapper }:
 stdenv.mkDerivation rec {
+
   name = "springlobby-${version}";
-  version = "0.255";
+  version = "0.195";
 
   src = fetchurl {
     url = "http://www.springlobby.info/tarballs/springlobby-${version}.tar.bz2";
-    sha256 = "12iv6h1mz998lzxc2jwkza0m1yvaaq8h05k36i85xyp7g90197jw";
+    sha256 = "0hxxm97c74rvm78vlfn2byn0zjlrhankxdrs2hz73rdq6451h10b";
   };
 
   buildInputs = [
-    cmake wxGTK30 openal pkgconfig curl gettext libtorrentRasterbar pcre jsoncpp
-    boost libpng libX11 libnotify gtk2 doxygen makeWrapper glib minizip alure
+    cmake wxGTK openal pkgconfig curl gettext libtorrentRasterbar boost libpng libX11
+    libnotify gtk doxygen makeWrapper
   ];
 
-  patches = [ ./revert_58b423e.patch ]; # Allows springLobby to continue using system installed spring until #707 is fixed
+  prePatch = ''
+    substituteInPlace tools/regen_config_header.sh --replace "#!/usr/bin/env bash" "#!${bash}/bin/bash"
+    substituteInPlace tools/test-susynclib.awk --replace "#!/usr/bin/awk" "#!${gawk}/bin/awk"
+    substituteInPlace CMakeLists.txt --replace "boost_system-mt" "boost_system"
+  '';
+
+  # for now sound is disabled as it causes a linker error with alure i can't resolve (qknight)
+  cmakeFlags = "-DOPTION_SOUND:BOOL=OFF"; 
 
   enableParallelBuilding = true;
 
@@ -31,7 +37,7 @@ stdenv.mkDerivation rec {
     repositories.git = git://github.com/springlobby/springlobby.git;
     description = "Cross-platform lobby client for the Spring RTS project";
     license = licenses.gpl2;
-    maintainers = with maintainers; [ phreedom qknight domenkozar ];
+    maintainers = with maintainers; [ phreedom qknight iElectric ];
     platforms = platforms.linux;
   };
 }

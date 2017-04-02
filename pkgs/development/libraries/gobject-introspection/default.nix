@@ -1,51 +1,38 @@
 { stdenv, fetchurl, glib, flex, bison, pkgconfig, libffi, python
-, libintlOrEmpty, cctools
-, substituteAll, nixStoreDir ? builtins.storeDir
-}:
+, libintlOrEmpty, autoconf, automake, otool }:
 # now that gobjectIntrospection creates large .gir files (eg gtk3 case)
 # it may be worth thinking about using multiple derivation outputs
 # In that case its about 6MB which could be separated
 
 let
-  ver_maj = "1.50";
+  ver_maj = "1.40";
   ver_min = "0";
 in
-with stdenv.lib;
 stdenv.mkDerivation rec {
   name = "gobject-introspection-${ver_maj}.${ver_min}";
 
   src = fetchurl {
     url = "mirror://gnome/sources/gobject-introspection/${ver_maj}/${name}.tar.xz";
-    sha256 = "1c6597c666f543c70ef3d7c893ab052968afae620efdc080c36657f4226337c5";
+    sha256 = "162flbzwzz0b8axab2gimc4dglpaw88fh1d177zfg0whczlpbsln";
   };
 
-  outputs = [ "out" "dev" ];
-  outputBin = "dev";
-  outputMan = "dev"; # tiny pages
-
-  buildInputs = [ flex bison pkgconfig python setupHook/*move .gir*/ ]
+  buildInputs = [ flex bison glib pkgconfig python ]
     ++ libintlOrEmpty
-    ++ stdenv.lib.optional stdenv.isDarwin cctools;
-  propagatedBuildInputs = [ libffi glib ];
+    ++ stdenv.lib.optional stdenv.isDarwin otool;
+  propagatedBuildInputs = [ libffi ];
 
-  preConfigure = ''
-    sed 's|/usr/bin/env ||' -i tools/g-ir-tool-template.in
-  '';
+  # Tests depend on cairo, which is undesirable (it pulls in lots of
+  # other dependencies).
+  configureFlags = [ "--disable-tests" ];
 
-  # outputs TODO: share/gobject-introspection-1.0/tests is needed during build
-  # by pygobject3 (and maybe others), but it's only searched in $out
+  postInstall = "rm -rf $out/share/gtk-doc";
 
   setupHook = ./setup-hook.sh;
-
-  patches = stdenv.lib.singleton (substituteAll {
-    src = ./absolute_shlib_path.patch;
-    inherit nixStoreDir;
-  });
 
   meta = with stdenv.lib; {
     description = "A middleware layer between C libraries and language bindings";
     homepage    = http://live.gnome.org/GObjectIntrospection;
-    maintainers = with maintainers; [ lovek323 lethalman ];
+    maintainers = with maintainers; [ lovek323 urkud ];
     platforms   = platforms.unix;
 
     longDescription = ''

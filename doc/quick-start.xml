@@ -55,18 +55,18 @@ $ git add pkgs/development/libraries/libfoo/default.nix</screen>
       <itemizedlist>
 
         <listitem>
-          <para>GNU Hello: <link
-          xlink:href="https://github.com/NixOS/nixpkgs/blob/master/pkgs/applications/misc/hello/default.nix"><filename>pkgs/applications/misc/hello/default.nix</filename></link>.
-          Trivial package, which specifies some <varname>meta</varname>
-          attributes which is good practice.</para>
+          <para>GNU cpio: <link
+          xlink:href="https://github.com/NixOS/nixpkgs/blob/master/pkgs/tools/archivers/cpio/default.nix"><filename>pkgs/tools/archivers/cpio/default.nix</filename></link>.
+          The simplest possible package.  The generic builder in
+          <varname>stdenv</varname> does everything for you.  It has
+          no dependencies beyond <varname>stdenv</varname>.</para>
         </listitem>
 
         <listitem>
-          <para>GNU cpio: <link
-          xlink:href="https://github.com/NixOS/nixpkgs/blob/master/pkgs/tools/archivers/cpio/default.nix"><filename>pkgs/tools/archivers/cpio/default.nix</filename></link>.
-          Also a simple package. The generic builder in
-          <varname>stdenv</varname> does everything for you. It has
-          no dependencies beyond <varname>stdenv</varname>.</para>
+          <para>GNU Hello: <link
+          xlink:href="https://github.com/NixOS/nixpkgs/blob/master/pkgs/applications/misc/hello/ex-2/default.nix"><filename>pkgs/applications/misc/hello/ex-2/default.nix</filename></link>.
+          Also trivial, but it specifies some <varname>meta</varname>
+          attributes which is good practice.</para>
         </listitem>
 
         <listitem>
@@ -90,6 +90,17 @@ $ git add pkgs/development/libraries/libfoo/default.nix</screen>
           A bunch of optional features, variable substitutions in the
           configure flags, a post-install hook, and miscellaneous
           hackery.</para>
+        </listitem>
+
+        <listitem>
+          <para>BitTorrent (wxPython-based): <link
+          xlink:href="https://github.com/NixOS/nixpkgs/blob/master/pkgs/tools/networking/p2p/bittorrent/default.nix"><filename>pkgs/tools/networking/p2p/bittorrent/default.nix</filename></link>.
+          Uses an external <link
+          xlink:href="https://github.com/NixOS/nixpkgs/blob/master/pkgs/tools/networking/p2p/bittorrent/builder.sh">build
+          script</link>, which can be useful if you have lots of code
+          that you don’t want cluttering up the Nix expression.  But
+          external builders are mostly obsolete.
+          </para>
         </listitem>
 
         <listitem>

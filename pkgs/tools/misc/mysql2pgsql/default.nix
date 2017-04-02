@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, perl }:
+{ stdenv, fetchurl, perl, shebangfix }:
 
 # The homepage says this script is mature..
 stdenv.mkDerivation {
@@ -9,17 +9,20 @@ stdenv.mkDerivation {
     sha256 = "0dpbxf3kdvpihz9cisx6wi3zzd0cnifaqvjxavrbwm4k4sz1qamp";
   };
 
-  buildInputs = [ perl ];
+  phases = "unpackPhase installPhase";
+
+  buildInputs = [ perl shebangfix ];
 
   installPhase = ''
-    mkdir -p $out/bin
+    mkdir -p $out/bin;
+    shebangfix mysql2psql
+    chmod +x mysql2psql
     mv {,$out/bin/}mysql2psql
   '';
 
-  meta = {
-    description = "Convert MySQL dump files to PostgreSQL-loadable files";
+  meta = { 
+    description = "converts mysql dump files to psql loadable files ";
     homepage = http://pgfoundry.org/projects/mysql2pgsql/;
-    license = stdenv.lib.licenses.bsdOriginal;
-    platforms = stdenv.lib.platforms.unix;
+    license = "BSD-Original";
   };
 }

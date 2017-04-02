@@ -1,5 +1,4 @@
 url http://download.gluster.org/pub/gluster/glusterfs/
-version_link '/[0-9.]+/$'
-version_link '/[0-9.]+/$'
-version_link 'glusterfs-[0-9.]+[.]tar[.]'
-minimize_overwrite
+version_link '[0-9.]+/$'
+version_link '[0-9.]+/$'
+version_link '[.]tar[.]'

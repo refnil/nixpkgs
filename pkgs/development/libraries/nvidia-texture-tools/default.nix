@@ -1,41 +1,41 @@
-{ stdenv, fetchFromGitHub, cmake }:
+{ stdenv, fetchsvn, cmake, libpng, ilmbase, libtiff, zlib, libjpeg
+, mesa, libX11
+}:
 
 stdenv.mkDerivation rec {
-  name = "nvidia-texture-tools-${version}";
-  version = "2.1.0";
+  # No support yet for cg, cuda, glew, glut, openexr.
 
-  src = fetchFromGitHub {
-    owner = "castano";
-    repo = "nvidia-texture-tools";
-    rev = version;
-    sha256 = "0p8ja0k323nkgm07z0qlslg6743vimy9rf3wad2968az0vwzjjyx";
+  name = "nvidia-texture-tools";
+
+  src = fetchsvn {
+    url = "http://nvidia-texture-tools.googlecode.com/svn/trunk";
+    rev = "1388";
+    sha256 = "0pwxqx5l16nqidzm6mwd3rd4gbbknkz6q8cxnvf7sggjpbcvm2d6";
   };
 
-  nativeBuildInputs = [ cmake ];
+  buildInputs = [ cmake libpng ilmbase libtiff zlib libjpeg mesa libX11 ];
 
-  outputs = [ "out" "dev" "lib" ];
+  patchPhase = ''
+    # Fix build due to missing dependnecies.
+    echo 'target_link_libraries(bc7 nvmath)' >> src/nvtt/bc7/CMakeLists.txt
+    echo 'target_link_libraries(bc6h nvmath)' >> src/nvtt/bc6h/CMakeLists.txt
 
-  postPatch = ''
     # Make a recently added pure virtual function just virtual,
     # to keep compatibility.
     sed -i 's/virtual void endImage() = 0;/virtual void endImage() {}/' src/nvtt/nvtt.h
+
+    # Fix building shared libraries.
+    sed -i 's/SET(NVIMAGE_SHARED TRUE)/SET(NVIMAGE_SHARED TRUE)\nSET(NVTHREAD_SHARED TRUE)/' CMakeLists.txt
   '';
 
   cmakeFlags = [
     "-DNVTT_SHARED=TRUE"
   ];
 
-  postInstall = ''
-    moveToOutput include "$dev"
-    moveToOutput lib "$lib"
-  '';
-
-  enableParallelBuilding = true;
-
-  meta = with stdenv.lib; {
+  meta = {
     description = "A set of cuda-enabled texture tools and compressors";
-    homepage = "https://github.com/castano/nvidia-texture-tools";
-    license = licenses.mit;
-    platforms = platforms.linux;
+    homepage = "http://developer.nvidia.com/object/texture_tools.html";
+    license = "MIT";
+    platforms = stdenv.lib.platforms.linux;
   };
 }

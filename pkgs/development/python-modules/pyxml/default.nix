@@ -1,22 +1,22 @@
-{lib, fetchurl, python, buildPythonPackage, makeWrapper}:
+{stdenv, fetchurl, python, makeWrapper}:
 
-buildPythonPackage rec {
+stdenv.mkDerivation rec {
   name = "PyXML-0.8.4";
-  format = "other";
   src = fetchurl {
     url = "mirror://sourceforge/pyxml/${name}.tar.gz";
     sha256 = "04wc8i7cdkibhrldy6j65qp5l75zjxf5lx6qxdxfdf2gb3wndawz";
   };
 
-  buildInputs = [ makeWrapper ];
-  buildPhase = "${python.interpreter} ./setup.py build";
+  buildInputs = [python makeWrapper];
+  buildPhase = "python ./setup.py build";
   installPhase = ''
-    ${python.interpreter} ./setup.py install --prefix="$out" || exit 1
+    python ./setup.py install --prefix="$out" || exit 1
 
     for i in "$out/bin/"*
     do
+      # FIXME: We're assuming Python 2.4.
       wrapProgram "$i" --prefix PYTHONPATH :  \
-       "$out/${python.sitePackages}" ||  \
+       "$out/lib/python2.4/site-packages" ||  \
         exit 2
     done
   '';

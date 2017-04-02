@@ -1,31 +1,41 @@
-{ stdenv, fetchurl }:
+{stdenv, fetchurl }:
+
+let
+  version = "936";
+  pname = "picosat";
+
+in
 
 stdenv.mkDerivation rec {
-  name    = "picosat-${version}";
-  version = "965";
+  name = "${pname}-${version}";
 
   src = fetchurl {
     url = "http://fmv.jku.at/picosat/${name}.tar.gz";
-    sha256 = "0m578rpa5rdn08d10kr4lbsdwp4402hpavrz6n7n53xs517rn5hm";
+    sha256 = "02hq68fmfjs085216wsj13ff6i1rhc652yscl16w9jzpfqzly91n";
   };
 
-  configurePhase = "./configure.sh --shared --trace";
+  dontAddPrefix = true;
+
+  # configureFlags = "--shared"; the ./configure file is broken and doesn't accept this parameter :(
+  patchPhase = ''
+   sed -e 's/^shared=no/shared=yes/' -i configure
+  '';
 
   installPhase = ''
-   mkdir -p $out/bin $out/lib $out/include/picosat
-   cp picomus picomcs picosat picogcnf "$out"/bin
-
+   mkdir -p "$out"/bin
+   cp picomus "$out"/bin
+   cp picosat "$out"/bin
+   mkdir -p "$out"/lib
    cp libpicosat.a "$out"/lib
    cp libpicosat.so "$out"/lib
-
+   mkdir -p "$out"/include/picosat
    cp picosat.h "$out"/include/picosat
   '';
 
   meta = {
+    homepage = http://fmv.jku.at/picosat/;
     description = "SAT solver with proof and core support";
-    homepage    = http://fmv.jku.at/picosat/;
-    license     = stdenv.lib.licenses.mit;
-    platforms   = stdenv.lib.platforms.unix;
-    maintainers = with stdenv.lib.maintainers; [ roconnor thoughtpolice ];
+    license = stdenv.lib.licenses.mit;
+    maintainers = [ stdenv.lib.maintainers.roconnor ];
   };
 }

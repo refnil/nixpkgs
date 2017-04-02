@@ -24,6 +24,5 @@ stdenv.mkDerivation rec {
     homepage = http://www.recherche.enac.fr/log/facile;
     license = "LGPL";
     description = "A Functional Constraint Library";
-    platforms = stdenv.lib.platforms.unix;
   };
 }

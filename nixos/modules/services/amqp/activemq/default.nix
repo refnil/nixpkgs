@@ -12,7 +12,7 @@ let
     phases = [ "installPhase" ];
     buildInputs = [ jdk ];
     installPhase = ''
-      mkdir -p $out/lib
+      ensureDir $out/lib
       source ${activemq}/lib/classpath.env
       export CLASSPATH
       ln -s "${./ActiveMQBroker.java}" ActiveMQBroker.java

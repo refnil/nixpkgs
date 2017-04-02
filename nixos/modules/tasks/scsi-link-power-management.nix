@@ -2,19 +2,18 @@
 
 with lib;
 
-let cfg = config.powerManagement.scsiLinkPolicy; in
-
 {
   ###### interface
 
   options = {
 
     powerManagement.scsiLinkPolicy = mkOption {
-      default = null;
-      type = types.nullOr (types.enum [ "min_power" "max_performance" "medium_power" ]);
+      default = "";
+      example = "min_power";
+      type = types.str;
       description = ''
-        SCSI link power management policy. The kernel default is
-        "max_performance".
+        Configure the SCSI link power management policy. By default,
+        the kernel configures "max_performance".
       '';
     };
 
@@ -23,10 +22,25 @@ let cfg = config.powerManagement.scsiLinkPolicy; in
 
   ###### implementation
 
-  config = mkIf (cfg != null) {
-    services.udev.extraRules = ''
-      SUBSYSTEM=="scsi_host", ACTION=="add", KERNEL=="host*", ATTR{link_power_management_policy}="${cfg}"
-    '';
+  config = mkIf (config.powerManagement.scsiLinkPolicy != "") {
+
+    jobs."scsi-link-pm" =
+      { description = "SCSI Link Power Management Policy";
+
+        startOn = "stopped udevtrigger";
+
+        task = true;
+
+        unitConfig.ConditionPathIsReadWrite = "/sys/class/scsi_host";
+
+        script = ''
+          shopt -s nullglob
+          for x in /sys/class/scsi_host/host*/link_power_management_policy; do
+            echo ${config.powerManagement.scsiLinkPolicy} > $x
+          done
+        '';
+      };
+
   };
 
 }

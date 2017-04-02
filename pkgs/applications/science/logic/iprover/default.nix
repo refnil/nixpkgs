@@ -1,19 +1,35 @@
-{ stdenv, fetchurl, ocaml, eprover }:
+x@{builderDefsPackage
+  , ocaml, eprover
+  , ...}:
+builderDefsPackage
+(a :
+let
+  helperArgNames = ["stdenv" "fetchurl" "builderDefsPackage"] ++
+    [];
 
-stdenv.mkDerivation rec {
-  name = "iprover-${version}";
-  version = "0.8.1";
-
-  src = fetchurl {
-    url = "http://iprover.googlecode.com/files/iprover_v${version}.tar.gz";
-    sha256 = "15qn523w4l296np5rnkwi50a5x2xqz0kaza7bsh9bkazph7jma7w";
+  buildInputs = map (n: builtins.getAttr n x)
+    (builtins.attrNames (builtins.removeAttrs x helperArgNames));
+  sourceInfo = rec {
+    baseName="iprover";
+    version="0.8.1";
+    name="${baseName}_v${version}";
+    url="http://${baseName}.googlecode.com/files/${name}.tar.gz";
+    hash="15qn523w4l296np5rnkwi50a5x2xqz0kaza7bsh9bkazph7jma7w";
+  };
+in
+rec {
+  src = a.fetchurl {
+    url = sourceInfo.url;
+    sha256 = sourceInfo.hash;
   };
 
-  buildInputs = [ ocaml eprover ];
+  name = "${sourceInfo.baseName}-${sourceInfo.version}";
+  inherit buildInputs;
 
-  preConfigure = ''patchShebangs .'';
-
-  installPhase = ''
+  /* doConfigure should be removed if not needed */
+  phaseNames = ["doConfigure" "doMake" "doDeploy"];
+  configureCommand = "sh configure";
+  doDeploy = a.fullDepEntry (''
     mkdir -p "$out/bin"
     cp iproveropt "$out/bin"
 
@@ -21,16 +37,22 @@ stdenv.mkDerivation rec {
     cp *.p "$out/share/${name}"
     echo -e "#! /bin/sh\\n$out/bin/iproveropt --clausifier \"${eprover}/bin/eprover\" --clausifier_options \" --tstp-format --silent --cnf \" \"\$@\"" > "$out"/bin/iprover
     chmod a+x  "$out"/bin/iprover
-  '';
+  '') ["defEnsureDir" "minInit" "doMake"];
 
-  meta = with stdenv.lib; {
+  meta = {
     description = "An automated first-order logic theorem prover";
-    maintainers = with maintainers;
+    maintainers = with a.lib.maintainers;
     [
       raskin
     ];
-    platforms = platforms.linux;
-    license = licenses.gpl3;
-    downloadPage = "http://code.google.com/p/iprover/downloads/list";
+    platforms = with a.lib.platforms;
+      linux;
+    license = with a.lib.licenses;
+      gpl3;
   };
-}
+  passthru = {
+    updateInfo = {
+      downloadPage = "http://code.google.com/p/iprover/downloads/list";
+    };
+  };
+}) x

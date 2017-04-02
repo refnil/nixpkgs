@@ -9,7 +9,7 @@ let
   cgi = pkgs.stdenv.mkDerivation {
     name = "mercurial-cgi";
     buildCommand = ''
-      mkdir -p $out
+      ensureDir $out
       cp -v ${mercurial}/share/cgi-bin/hgweb.cgi $out
       sed -i "s|/path/to/repo/or/config|$out/hgweb.config|" $out/hgweb.cgi
       echo "

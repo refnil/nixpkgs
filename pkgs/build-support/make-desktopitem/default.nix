@@ -9,15 +9,14 @@
 , genericName
 , mimeType ? ""
 , categories ? "Application;Other;"
-, startupNotify ? null
-, extraEntries ? ""
+, encoding ? "UTF-8"
 }:
 
 stdenv.mkDerivation {
-  name = "${name}.desktop";
+  inherit name;
   buildCommand = ''
     mkdir -p $out/share/applications
-    cat > $out/share/applications/${name}.desktop <<EOF
+    cat > $out/share/applications/$name.desktop <<EOF
     [Desktop Entry]
     Type=${type}
     Exec=${exec}
@@ -28,9 +27,7 @@ stdenv.mkDerivation {
     GenericName=${genericName}
     MimeType=${mimeType}
     Categories=${categories}
-    ${extraEntries}
-    ${if startupNotify == null then ''EOF'' else ''
-    StartupNotify=${startupNotify}
-    EOF''}
+    Encoding=${encoding}
+    EOF
   '';
 }

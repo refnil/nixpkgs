@@ -1,28 +1,25 @@
 { fetchurl, stdenv, pkgconfig, intltool, gettext, glib, libxml2, zlib, bzip2
-, python, perl, gdk_pixbuf, libiconv, libintlOrEmpty }:
+, python, gdk_pixbuf, libiconvOrEmpty, libintlOrEmpty }:
 
-let inherit (stdenv.lib) optionals; in
+with { inherit (stdenv.lib) optionals; };
 
 stdenv.mkDerivation rec {
-  name = "libgsf-1.14.41";
+  name = "libgsf-1.14.30";
 
   src = fetchurl {
     url    = "mirror://gnome/sources/libgsf/1.14/${name}.tar.xz";
-    sha256 = "1lq87wnrsjbjafpk3c8xwd56gqx319fhck9xkg2da88hd9c9h2qm";
+    sha256 = "0w2v1a9sxsymd1mcy4mwsz4r6za9iwq69rj86nb939p41d4c6j6b";
   };
 
   nativeBuildInputs = [ pkgconfig intltool ];
 
-  buildInputs = [ gettext bzip2 zlib python ]
-    ++ stdenv.lib.optional doCheck perl;
+  buildInputs = [ gettext bzip2 zlib python ];
 
-  propagatedBuildInputs = [ libxml2 glib gdk_pixbuf libiconv ]
+  propagatedBuildInputs = [ libxml2 glib gdk_pixbuf ]
+    ++ libiconvOrEmpty
     ++ libintlOrEmpty;
 
-  outputs = [ "out" "dev" ];
-
   doCheck = true;
-  preCheck = "patchShebangs ./tests/";
 
   NIX_LDFLAGS = stdenv.lib.optionalString stdenv.isDarwin "-lintl";
 

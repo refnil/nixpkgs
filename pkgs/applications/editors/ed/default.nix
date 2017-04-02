@@ -1,22 +1,11 @@
 { fetchurl, stdenv }:
 
 stdenv.mkDerivation rec {
-  name = "ed-${version}";
-  version = "1.14.1";
+  name = "ed-1.9";
 
   src = fetchurl {
-    # gnu only provides *.lz tarball, which is unfriendly for stdenv bootstrapping
-    #url = "mirror://gnu/ed/${name}.tar.gz";
-    # When updating, please make sure the sources pulled match those upstream by
-    # Unpacking both tarballs and running `find . -type f -exec sha256sum \{\} \; | sha256sum`
-    # in the resulting directory
-    urls = let file_sha512 = "84396fe4e4f0bf0b591037277ff8679a08b2883207628aaa387644ad83ca5fbdaa74a581f33310e28222d2fea32a0b8ba37e579597cc7d6145df6eb956ea75db";
-      in [
-        ("http://pkgs.fedoraproject.org/repo/extras/ed"
-          + "/${name}.tar.bz2/sha512/${file_sha512}/${name}.tar.bz2")
-        "http://fossies.org/linux/privat/${name}.tar.bz2"
-      ];
-    sha256 = "1pk6qa4sr7qc6vgm34hjx44hsh8x2bwaxhdi78jhsacnn4zwi7bw";
+    url = "mirror://gnu/ed/${name}.tar.gz";
+    sha256 = "122syihsx2hwzj75mkf5a9ssiky2xby748kp4cc00wzhmp7p5cym";
   };
 
   /* FIXME: Tests currently fail on Darwin:
@@ -35,7 +24,7 @@ stdenv.mkDerivation rec {
   };
 
   meta = {
-    description = "An implementation of the standard Unix editor";
+    description = "GNU ed, an implementation of the standard Unix editor";
 
     longDescription = ''
       GNU ed is a line-oriented text editor.  It is used to create,
@@ -53,6 +42,5 @@ stdenv.mkDerivation rec {
     homepage = http://www.gnu.org/software/ed/;
 
     maintainers = [ ];
-    platforms = stdenv.lib.platforms.unix;
   };
 }

@@ -24,7 +24,7 @@ let
       http_address = mkOption {
         default = "localhost:8080";
         type = types.string;
-        description = "Give a port and address for the HTTP server.";
+        description = "Give a port and adress for the HTTP server.";
       };
 
       user = mkOption {
@@ -74,28 +74,28 @@ in
 
     services.zope2.instances = mkOption {
       default = {};
-      type = with types; attrsOf (submodule zope2Opts);
-      example = literalExample ''
-        {
-          plone01 = {
-            http_address = "127.0.0.1:8080";
-            extra =
-              '''
-              <zodb_db main>
-                mount-point /
-                cache-size 30000
-                <blobstorage>
-                    blob-dir /var/lib/zope2/plone01/blobstorage
-                    <filestorage>
-                    path /var/lib/zope2/plone01/filestorage/Data.fs
-                    </filestorage>
-                </blobstorage>
-              </zodb_db>
-              ''';
-          };
-        }
-      '';
+      type = types.loaOf types.optionSet;
+      example = {
+        plone01 = {
+          http_address = "127.0.0.1:8080";
+          extra =
+            ''
+            <zodb_db main>
+              mount-point /
+              cache-size 30000
+              <blobstorage>
+                  blob-dir /var/lib/zope2/plone01/blobstorage
+                  <filestorage>
+                  path /var/lib/zope2/plone01/filestorage/Data.fs
+                  </filestorage>
+              </blobstorage>
+            </zodb_db>
+            '';
+
+        };
+      };
       description = "zope2 instances to be created automaticaly by the system.";
+      options = [ zope2Opts ];
     };
   };
 

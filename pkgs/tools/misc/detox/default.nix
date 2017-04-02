@@ -10,10 +10,7 @@ stdenv.mkDerivation {
 
   buildInputs = [flex];
 
-  hardeningDisable = [ "format" ];
-
-  meta = with stdenv.lib; {
-    homepage = http://detox.sourceforge.net/;
+  meta = {
     description = "Utility designed to clean up filenames";
     longDescription = ''
       Detox is a utility designed to clean up filenames. It replaces
@@ -21,8 +18,7 @@ stdenv.mkDerivation {
       equivalents. It will also clean up filenames with UTF-8 or Latin-1
       (or CP-1252) characters in them.
     '';
-    license = licenses.bsd3;
-    platforms = platforms.linux;
-    maintainers = with maintainers; [ jgeerds ];
+    homepage = "http://detox.sourceforge.net/";
+    license = stdenv.lib.licenses.bsd3;
   };
 }

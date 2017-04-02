@@ -1,5 +1,5 @@
 { fetchurl, stdenv, libtool, readline, gmp, pkgconfig, boehmgc, libunistring
-, libffi, gawk, makeWrapper, fetchpatch, coverageAnalysis ? null, gnu ? null }:
+, libffi, gawk, makeWrapper, coverageAnalysis ? null, gnu ? null }:
 
 # Do either a coverage analysis build or a standard build.
 (if coverageAnalysis != null
@@ -7,16 +7,12 @@
  else stdenv.mkDerivation)
 
 (rec {
-  name = "guile-${version}";
-  version = "2.2.0";
+  name = "guile-2.0.9";
 
   src = fetchurl {
     url = "mirror://gnu/guile/${name}.tar.xz";
-    sha256 = "05dmvhd1y135x7w5qfw4my42cfp6l8bbhjfxvchcc1cbdvzri0f1";
+    sha256 = "0nw9y8vjyz4r61v06p9msks5lm58pd91irmzg4k487vmv743h2pp";
   };
-
-  outputs = [ "out" "dev" "info" ];
-  setOutputFlags = false; # $dev gets into the library otherwise
 
   nativeBuildInputs = [ makeWrapper gawk pkgconfig ];
   buildInputs = [ readline libtool libunistring libffi ];
@@ -33,9 +29,7 @@
 
   enableParallelBuilding = true;
 
-  patches = [
-    ./eai_system.patch
-  ] ++
+  patches = [ ./disable-gc-sensitive-tests.patch ./eai_system.patch ] ++
     (stdenv.lib.optional (coverageAnalysis != null) ./gcov-file-name.patch);
 
   # Explicitly link against libgcc_s, to work around the infamous
@@ -44,40 +38,22 @@
   # don't have "libgcc_s.so.1" on darwin
   LDFLAGS = stdenv.lib.optionalString (!stdenv.isDarwin) "-lgcc_s";
 
-  configureFlags = [ "--with-libreadline-prefix=${readline.dev}" ]
-    ++ stdenv.lib.optionals stdenv.isSunOS [
-      # Make sure the right <gmp.h> is found, and not the incompatible
-      # /usr/include/mp.h from OpenSolaris.  See
-      # <https://lists.gnu.org/archive/html/hydra-users/2012-08/msg00000.html>
-      # for details.
-      "--with-libgmp-prefix=${gmp.dev}"
-
-      # Same for these (?).
-      "--with-libunistring-prefix=${libunistring}"
-
-      # See below.
-      "--without-threads"
-    ];
-
   postInstall = ''
     wrapProgram $out/bin/guile-snarf --prefix PATH : "${gawk}/bin"
 
     # XXX: See http://thread.gmane.org/gmane.comp.lib.gnulib.bugs/18903 for
     # why `--with-libunistring-prefix' and similar options coming from
     # `AC_LIB_LINKFLAGS_BODY' don't work on NixOS/x86_64.
-    sed -i "$out/lib/pkgconfig/guile-2.2.pc"    \
-        -e "s|-lunistring|-L${libunistring}/lib -lunistring|g ;
+    sed -i "$out/lib/pkgconfig/guile-2.0.pc"    \
+        -e 's|-lunistring|-L${libunistring}/lib -lunistring|g ;
             s|^Cflags:\(.*\)$|Cflags: -I${libunistring}/include \1|g ;
-            s|-lltdl|-L${libtool.lib}/lib -lltdl|g ;
-            s|includedir=$out|includedir=$dev|g
-            "
+            s|-lltdl|-L${libtool}/lib -lltdl|g'
   '';
 
   # make check doesn't work on darwin
-  # On Linuxes+Hydra the tests are flaky; feel free to investigate deeper.
-  doCheck = false;
+  doCheck = !stdenv.isDarwin;
 
-  setupHook = ./setup-hook-2.2.sh;
+  setupHook = ./setup-hook-2.0.sh;
 
   crossAttrs.preConfigure =
     stdenv.lib.optionalString (stdenv.cross.config == "i586-pc-gnu")
@@ -89,10 +65,10 @@
 
 
   meta = {
-    description = "Embeddable Scheme implementation";
+    description = "GNU Guile 2.0, an embeddable Scheme implementation";
     homepage    = http://www.gnu.org/software/guile/;
     license     = stdenv.lib.licenses.lgpl3Plus;
-    maintainers = with stdenv.lib.maintainers; [ ludo lovek323 vrthra ];
+    maintainers = with stdenv.lib.maintainers; [ ludo lovek323 ];
     platforms   = stdenv.lib.platforms.all;
 
     longDescription = ''
@@ -105,5 +81,33 @@
       processing.
     '';
   };
+}
+
+//
+
+(stdenv.lib.optionalAttrs stdenv.isSunOS {
+  # TODO: Move me above.
+  configureFlags =
+    [
+      # Make sure the right <gmp.h> is found, and not the incompatible
+      # /usr/include/mp.h from OpenSolaris.  See
+      # <https://lists.gnu.org/archive/html/hydra-users/2012-08/msg00000.html>
+      # for details.
+      "--with-libgmp-prefix=${gmp}"
+
+      # Same for these (?).
+      "--with-libreadline-prefix=${readline}"
+      "--with-libunistring-prefix=${libunistring}"
+
+      # See below.
+      "--without-threads"
+    ];
 })
 
+//
+
+(stdenv.lib.optionalAttrs (!stdenv.isLinux) {
+  # Work around <http://bugs.gnu.org/14201>.
+  SHELL = "/bin/sh";
+  CONFIG_SHELL = "/bin/sh";
+}))

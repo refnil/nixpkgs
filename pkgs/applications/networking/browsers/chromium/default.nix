@@ -1,42 +1,47 @@
-{ newScope, stdenv, makeWrapper, makeDesktopItem, ed
+{ newScope, stdenv, makeWrapper, makeDesktopItem
 
 # package customization
 , channel ? "stable"
+, enableSELinux ? false
 , enableNaCl ? false
-, enableHotwording ? false
-, gnomeSupport ? false, gnome ? null
+, useOpenSSL ? false
+, gnomeSupport ? false
 , gnomeKeyringSupport ? false
 , proprietaryCodecs ? true
 , enablePepperFlash ? false
-, enableWideVine ? false
-, cupsSupport ? true
+, enablePepperPDF ? false
+, cupsSupport ? false
 , pulseSupport ? false
-, commandLineArgs ? ""
 }:
 
 let
   callPackage = newScope chromium;
 
   chromium = {
-    upstream-info = (callPackage ./update.nix {}).getChannel channel;
-
-    mkChromiumDerivation = callPackage ./common.nix {
-      inherit enableNaCl enableHotwording gnomeSupport gnome
-              gnomeKeyringSupport proprietaryCodecs cupsSupport pulseSupport
-              enableWideVine;
+    source = callPackage ./source {
+      inherit channel;
+      # XXX: common config
+      inherit useOpenSSL;
     };
 
-    browser = callPackage ./browser.nix { inherit channel; };
+    mkChromiumDerivation = callPackage ./common.nix {
+      inherit enableSELinux enableNaCl useOpenSSL gnomeSupport
+              gnomeKeyringSupport proprietaryCodecs cupsSupport
+              pulseSupport;
+    };
+
+    browser = callPackage ./browser.nix { };
+    sandbox = callPackage ./sandbox.nix { };
 
     plugins = callPackage ./plugins.nix {
-      inherit enablePepperFlash enableWideVine;
+      inherit enablePepperFlash enablePepperPDF;
     };
   };
 
   desktopItem = makeDesktopItem {
     name = "chromium";
-    exec = "chromium %U";
-    icon = "chromium";
+    exec = "chromium";
+    icon = "${chromium.browser}/share/icons/hicolor/48x48/apps/chromium.png";
     comment = "An open source web browser from Google";
     desktopName = "Chromium";
     genericName = "Web browser";
@@ -49,69 +54,33 @@ let
       "x-scheme-handler/ftp"
       "x-scheme-handler/mailto"
       "x-scheme-handler/webcal"
-      "x-scheme-handler/about"
-      "x-scheme-handler/unknown"
     ];
     categories = "Network;WebBrowser";
-    extraEntries = ''
-      StartupWMClass=chromium-browser
-    '';
   };
 
-  suffix = if channel != "stable" then "-" + channel else "";
-
-  sandboxExecutableName = chromium.browser.passthru.sandboxExecutableName;
-
 in stdenv.mkDerivation {
-  name = "chromium${suffix}-${chromium.browser.version}";
+  name = "chromium-${channel}-${chromium.browser.version}";
 
-  buildInputs = [ makeWrapper ed ];
-
-  outputs = ["out" "sandbox"];
+  buildInputs = [ makeWrapper ];
 
   buildCommand = let
     browserBinary = "${chromium.browser}/libexec/chromium/chromium";
-    getWrapperFlags = plugin: "$(< \"${plugin}/nix-support/wrapper-flags\")";
-  in with stdenv.lib; ''
-    mkdir -p "$out/bin"
+    sandboxBinary = "${chromium.sandbox}/bin/chromium-sandbox";
+  in ''
+    ensureDir "$out/bin" "$out/share/applications"
 
-    eval makeWrapper "${browserBinary}" "$out/bin/chromium" \
-      ${commandLineArgs} \
-      ${concatMapStringsSep " " getWrapperFlags chromium.plugins.enabled}
+    ln -s "${chromium.browser}/share" "$out/share"
+    makeWrapper "${browserBinary}" "$out/bin/chromium" \
+      --set CHROMIUM_SANDBOX_BINARY_PATH "${sandboxBinary}" \
+      --add-flags "${chromium.plugins.flagsEnabled}"
 
-    ed -v -s "$out/bin/chromium" << EOF
-    2i
-
-    if [ -x "/run/wrappers/bin/${sandboxExecutableName}" ]
-    then
-      export CHROME_DEVEL_SANDBOX="/run/wrappers/bin/${sandboxExecutableName}"
-    else
-      export CHROME_DEVEL_SANDBOX="$sandbox/bin/${sandboxExecutableName}"
-    fi
-
-    # libredirect causes chromium to deadlock on startup
-    export LD_PRELOAD="\$(echo -n "\$LD_PRELOAD" | tr ':' '\n' | grep -v /lib/libredirect\\\\.so$ | tr '\n' ':')"
-
-    .
-    w
-    EOF
-
-    ln -sv "${chromium.browser.sandbox}" "$sandbox"
-
-    ln -s "$out/bin/chromium" "$out/bin/chromium-browser"
-
-    mkdir -p "$out/share/applications"
-    for f in '${chromium.browser}'/share/*; do
-      ln -s -t "$out/share/" "$f"
-    done
+    ln -s "${chromium.browser}/share/icons" "$out/share/icons"
     cp -v "${desktopItem}/share/applications/"* "$out/share/applications"
   '';
 
-  inherit (chromium.browser) meta packageName version;
+  inherit (chromium.browser) meta packageName;
 
   passthru = {
-    inherit (chromium) upstream-info browser;
     mkDerivation = chromium.mkChromiumDerivation;
-    inherit sandboxExecutableName;
   };
 }

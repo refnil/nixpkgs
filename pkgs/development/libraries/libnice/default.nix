@@ -1,16 +1,14 @@
-{ stdenv, fetchurl, pkgconfig, glib, gupnp_igd, gst_all_1 }:
+{ stdenv, fetchurl, pkgconfig, glib, gupnp_igd, gstreamer, gst_plugins_base }:
 
 stdenv.mkDerivation rec {
-  name = "libnice-0.1.13";
+  name = "libnice-0.1.4";
 
   src = fetchurl {
     url = "http://nice.freedesktop.org/releases/${name}.tar.gz";
-    sha256 = "1q8rhklbz1zla67r4mw0f7v3m5b32maj0prnr0kshcz97fgjs4b1";
+    sha256 = "0mxzr3y91hkjxdz1mzhxwi59la86hw2rzmd3y9c32801kkg1gra4";
   };
 
-  nativeBuildInputs = [ pkgconfig ];
-  buildInputs = [ gst_all_1.gstreamer gst_all_1.gst-plugins-base ];
-  propagatedBuildInputs = [ glib gupnp_igd ];
+  buildInputs = [ pkgconfig glib gupnp_igd gstreamer gst_plugins_base ];
 
   meta = {
     homepage = http://nice.freedesktop.org/wiki/;
@@ -22,6 +20,5 @@ stdenv.mkDerivation rec {
 
       It provides a GLib-based library, libnice and a Glib-free library,
       libstun as well as GStreamer elements.'';
-    platforms = stdenv.lib.platforms.linux;
   };
 }

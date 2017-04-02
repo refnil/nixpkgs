@@ -17,7 +17,7 @@ in
 
     enable = mkOption {
       default = false;
-      type = types.bool;
+      type = types.uniq types.bool;
       description = ''
         If true, enable gitweb in lighttpd. Access it at http://yourserver/gitweb
       '';
@@ -43,9 +43,6 @@ in
   };
 
   config = mkIf cfg.enable {
-
-    # declare module dependencies
-    services.lighttpd.enableModules = [ "mod_cgi" "mod_redirect" "mod_alias" "mod_setenv" ];
 
     services.lighttpd.extraConfig = ''
       $HTTP["url"] =~ "^/gitweb" {

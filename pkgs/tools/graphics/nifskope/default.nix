@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, qt4, qmake4Hook }:
+{ stdenv, fetchurl, qt4 }:
 
 stdenv.mkDerivation rec {
   name = "nifskope-1.1.3";
@@ -10,20 +10,16 @@ stdenv.mkDerivation rec {
 
   buildInputs = [ qt4 ];
 
-  nativeBuildInputs = [ qmake4Hook ];
-
-  preConfigure =
+  configurePhase =
     ''
       for i in *.cpp gl/*.cpp widgets/*.cpp; do
         substituteInPlace $i --replace /usr/share/nifskope $out/share/nifskope
       done
-    '';
 
-  qmakeFlags = [ "-after TARGET=nifskope" ];
+      qmake -after TARGET=nifskope
+    ''; # */
 
   enableParallelBuilding = true;
-
-  hardeningDisable = [ "format" ];
 
   # Inspired by linux-install/nifskope.spec.in.
   installPhase =

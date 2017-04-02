@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, xorg, pkgconfig, ncurses }:
+{ stdenv, fetchurl, xlibs, pkgconfig, ncurses }:
 stdenv.mkDerivation rec {
 
   name = "xrestop-${version}";
@@ -9,9 +9,5 @@ stdenv.mkDerivation rec {
     sha256 = "0mz27jpij8am1s32i63mdm58znfijcpfhdqq1npbmvgclyagrhk7";
   };
 
-  buildInputs = [ pkgconfig xorg.libX11 xorg.libXres xorg.libXext ncurses ];
-
-  meta = {
-    platforms = stdenv.lib.platforms.unix;
-  };
+  buildInputs = [ pkgconfig xlibs.libX11 xlibs.libXres xlibs.libXext ncurses ];
 }

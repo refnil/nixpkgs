@@ -1,11 +1,11 @@
-{ stdenv, fetchurl, gettext, bzip2 }:
-
+{ stdenv, fetchurl, gettext }:
+   
 stdenv.mkDerivation rec {
-  name = "sysstat-11.2.5";
-
+  name = "sysstat-10.1.1";
+   
   src = fetchurl {
-    url = "http://perso.orange.fr/sebastien.godard/${name}.tar.xz";
-    sha256 = "1r7869pnylamjry5f5l5m1jn68v61js9wdkz8yn37a9a2bcrqp2d";
+    url = "http://perso.orange.fr/sebastien.godard/${name}.tar.bz2";
+    sha256 = "1ig6k4yjkkazddjr90hykiapl30s9r9c1gy1h8hqzn2c3xgkm7p3";
   };
 
   buildInputs = [ gettext ];
@@ -13,14 +13,10 @@ stdenv.mkDerivation rec {
   preConfigure = ''
     export PATH_CP=$(type -tp cp)
     export PATH_CHKCONFIG=/no-such-program
-    export BZIP=${bzip2.bin}/bin/bzip2
-    export SYSTEMCTL=systemctl
+    makeFlagsArray=(SA_DIR=/var/log/sa SYSCONFIG_DIR=$out/etc CHOWN=true IGNORE_MAN_GROUP=y)
   '';
 
-  makeFlags = "SYSCONFIG_DIR=$(out)/etc IGNORE_FILE_ATTRIBUTES=y CHOWN=true";
-  installTargets = "install_base install_nls install_man";
-
-  patches = [ ./install.patch ];
+  patches = [ ./no-install-statedir.patch ];
 
   meta = {
     homepage = http://sebastien.godard.pagesperso-orange.fr/;

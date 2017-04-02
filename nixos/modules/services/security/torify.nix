@@ -5,13 +5,13 @@ let
   cfg = config.services.tor;
 
   torify = pkgs.writeTextFile {
-    name = "tsocks";
+    name = "torify";
     text = ''
         #!${pkgs.stdenv.shell}
-        TSOCKS_CONF_FILE=${pkgs.writeText "tsocks.conf" cfg.tsocks.config} LD_PRELOAD="${pkgs.tsocks}/lib/libtsocks.so $LD_PRELOAD" "$@"
+        TSOCKS_CONF_FILE=${pkgs.writeText "tsocks.conf" cfg.torify.config} LD_PRELOAD="${pkgs.tsocks}/lib/libtsocks.so $LD_PRELOAD" "$@"
     '';
     executable = true;
-    destination = "/bin/tsocks";
+    destination = "/bin/torify";
   };
 
 in
@@ -19,23 +19,15 @@ in
 {
 
   ###### interface
-
+  
   options = {
-
-    services.tor.tsocks = {
+  
+    services.tor.torify = {
 
       enable = mkOption {
-        default = false;
+        default = cfg.client.enable;
         description = ''
-          Whether to build tsocks wrapper script to relay application traffic via Tor.
-
-          <important>
-            <para>You shouldn't use this unless you know what you're
-            doing because your installation of Tor already comes with
-            its own superior (doesn't leak DNS queries)
-            <literal>torsocks</literal> wrapper which does pretty much
-            exactly the same thing as this.</para>
-          </important>
+          Whether to build torify scipt to relay application traffic via TOR.
         '';
       };
 
@@ -61,13 +53,13 @@ in
 
   ###### implementation
 
-  config = mkIf cfg.tsocks.enable {
+  config = mkIf cfg.torify.enable {
 
     environment.systemPackages = [ torify ];  # expose it to the users
 
-    services.tor.tsocks.config = ''
-      server = ${toString(head (splitString ":" cfg.tsocks.server))}
-      server_port = ${toString(tail (splitString ":" cfg.tsocks.server))}
+    services.tor.torify.config = ''
+      server = ${toString(head (splitString ":" cfg.torify.server))}
+      server_port = ${toString(tail (splitString ":" cfg.torify.server))}
 
       local = 127.0.0.0/255.128.0.0
       local = 127.128.0.0/255.192.0.0

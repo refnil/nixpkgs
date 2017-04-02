@@ -26,7 +26,6 @@ stdenv.mkDerivation {
   meta = {
     homepage = http://code.google.com/p/slimrat/;
     description = "Linux Rapidshare downloader";
-    license = stdenv.lib.licenses.mit;
-    platforms = stdenv.lib.platforms.unix;
+    license = "BSD";
   };
 }

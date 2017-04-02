@@ -24,7 +24,6 @@ in
 
       enable = mkOption {
         default = false;
-        type = types.bool;
         description = ''
           Whether to create symlinks to the system generations under
           <literal>/boot</literal>.  When enabled,
@@ -43,11 +42,10 @@ in
 
       copyKernels = mkOption {
         default = false;
-        type = types.bool;
-        description = ''
+        description = "
           Whether copy the necessary boot files into /boot, so
           /nix/store is not needed by the boot loader.
-        '';
+        ";
       };
 
     };

@@ -104,6 +104,5 @@ in stdenv.mkDerivation rec {
     homepage = http://sc2.sourceforge.net/;
     license = stdenv.lib.licenses.gpl2;
     maintainers = with maintainers; [ jcumming aszlig ];
-    platforms = with platforms; linux;
   };
 }

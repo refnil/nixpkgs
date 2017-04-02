@@ -1,36 +1,24 @@
 {stdenv, fetchurl, openssl, perl}:
 
 stdenv.mkDerivation rec {
-  pname = "ldns";
-  version = "1.7.0";
-
-  name = "${pname}-${version}";
+  name = "ldns-1.6.16";
 
   src = fetchurl {
-    url = "https://www.nlnetlabs.nl/downloads/ldns/${name}.tar.gz";
-    sha1 = "ceeeccf8a27e61a854762737f6ee02f44662c1b8";
+    url = "http://www.nlnetlabs.nl/downloads/ldns/${name}.tar.gz";
+    sha256 = "15gn9m95r6sq2n55dw4r87p2aljb5lvy1w0y0br70wbr0p5zkci4";
   };
 
   patchPhase = ''
-    patchShebangs doc/doxyparse.pl
+    sed -i 's,\$(srcdir)/doc/doxyparse.pl,perl $(srcdir)/doc/doxyparse.pl,' Makefile.in
   '';
 
-  outputs = [ "out" "dev" "man" ];
+  buildInputs = [ openssl perl ];
 
-  nativeBuildInputs = [ perl ];
-  buildInputs = [ openssl ];
+  configureFlags = [ "--with-ssl=${openssl}" "--with-drill" ];
 
-  configureFlags = [ "--with-ssl=${openssl.dev}" "--with-drill"];
-
-  postInstall = ''
-    moveToOutput "bin/ldns-config" "$dev"
-  '';
-
-  meta = with stdenv.lib; {
+  meta = {
     description = "Library with the aim of simplifying DNS programming in C";
-    license = licenses.bsd3;
+    license = "BSD";
     homepage = "http://www.nlnetlabs.nl/projects/ldns/";
-    platforms = platforms.linux;
-    maintainers = with maintainers; [ jgeerds ];
   };
 }

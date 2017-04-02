@@ -3,7 +3,7 @@
 # of the virtual consoles.  The latter is useful for the installation
 # CD.
 
-{ config, lib, pkgs, baseModules, ... }:
+{ config, lib, pkgs, baseModules, ... } @ extraArgs:
 
 with lib;
 
@@ -11,37 +11,26 @@ let
 
   cfg = config.services.nixosManual;
 
-  /* For the purpose of generating docs, evaluate options with each derivation
-    in `pkgs` (recursively) replaced by a fake with path "\${pkgs.attribute.path}".
-    It isn't perfect, but it seems to cover a vast majority of use cases.
-    Caveat: even if the package is reached by a different means,
-    the path above will be shown and not e.g. `${config.services.foo.package}`. */
-  manual = import ../../../doc/manual {
-    inherit pkgs config;
-    version = config.system.nixosRelease;
-    revision = "release-${config.system.nixosRelease}";
-    options =
-      let
-        scrubbedEval = evalModules {
-          modules = [ { nixpkgs.system = config.nixpkgs.system; } ] ++ baseModules;
-          args = (config._module.args) // { modules = [ ]; };
-          specialArgs = { pkgs = scrubDerivations "pkgs" pkgs; };
-        };
-        scrubDerivations = namePrefix: pkgSet: mapAttrs
-          (name: value:
-            let wholeName = "${namePrefix}.${name}"; in
-            if isAttrs value then
-              scrubDerivations wholeName value
-              // (optionalAttrs (isDerivation value) { outPath = "\${${wholeName}}"; })
-            else value
-          )
-          pkgSet;
-      in scrubbedEval.options;
+  versionModule =
+    { system.nixosVersionSuffix = config.system.nixosVersionSuffix;
+      system.nixosRevision = config.system.nixosRevision;
+    };
+
+  eval = evalModules {
+    modules = [ versionModule ] ++ baseModules;
+    args = (removeAttrs extraArgs ["config" "options"]) // { modules = [ ]; };
   };
 
-  entry = "${manual.manual}/share/doc/nixos/index.html";
+  manual = import ../../../doc/manual {
+    inherit pkgs;
+    version = config.system.nixosVersion;
+    revision = config.system.nixosRevision;
+    options = eval.options;
+  };
 
-  helpScript = pkgs.writeScriptBin "nixos-help"
+  entry = "${manual.manual}/share/doc/nixos/manual.html";
+
+  help = pkgs.writeScriptBin "nixos-help"
     ''
       #! ${pkgs.stdenv.shell} -e
       browser="$BROWSER"
@@ -58,15 +47,6 @@ let
       exec "$browser" ${entry}
     '';
 
-  desktopItem = pkgs.makeDesktopItem {
-    name = "nixos-manual";
-    desktopName = "NixOS Manual";
-    genericName = "View NixOS documentation in a web browser";
-    # TODO: find a better icon (Nix logo + help overlay?)
-    icon = "system-help";
-    exec = "${helpScript}/bin/nixos-help";
-    categories = "System";
-  };
 in
 
 {
@@ -91,8 +71,7 @@ in
     };
 
     services.nixosManual.ttyNumber = mkOption {
-      type = types.int;
-      default = 8;
+      default = "8";
       description = ''
         Virtual console on which to show the manual.
       '';
@@ -100,7 +79,7 @@ in
 
     services.nixosManual.browser = mkOption {
       type = types.path;
-      default = "${pkgs.w3m-nox}/bin/w3m";
+      default = "${pkgs.w3m}/bin/w3m";
       description = ''
         Browser used to show the manual.
       '';
@@ -113,12 +92,9 @@ in
 
     system.build.manual = manual;
 
-    environment.systemPackages =
-      [ manual.manual helpScript ]
-      ++ optional config.services.xserver.enable desktopItem
-      ++ optional config.programs.man.enable manual.manpages;
+    environment.systemPackages = [ manual.manpages help ];
 
-    boot.extraTTYs = mkIf cfg.showManual ["tty${toString cfg.ttyNumber}"];
+    boot.extraTTYs = mkIf cfg.showManual ["tty${cfg.ttyNumber}"];
 
     systemd.services = optionalAttrs cfg.showManual
       { "nixos-manual" =
@@ -128,7 +104,7 @@ in
             { ExecStart = "${cfg.browser} ${entry}";
               StandardInput = "tty";
               StandardOutput = "tty";
-              TTYPath = "/dev/tty${toString cfg.ttyNumber}";
+              TTYPath = "/dev/tty${cfg.ttyNumber}";
               TTYReset = true;
               TTYVTDisallocate = true;
               Restart = "always";

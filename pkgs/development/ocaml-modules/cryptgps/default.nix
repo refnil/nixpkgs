@@ -1,8 +1,12 @@
 {stdenv, fetchurl, ocaml, findlib}:
 
-stdenv.mkDerivation rec {
-  name = "ocaml-cryptgps-${version}";
+let
+  ocaml_version = (builtins.parseDrvName ocaml.name).version;
   version = "0.2.1";
+in
+
+stdenv.mkDerivation {
+  name = "ocaml-cryptgps-${version}";
 
   src = fetchurl {
     url = "http://download.camlcity.org/download/cryptgps-0.2.1.tar.gz";
@@ -25,7 +29,7 @@ stdenv.mkDerivation rec {
       itself.
     '';
     license = stdenv.lib.licenses.mit;
-    platforms = ocaml.meta.platforms or [];
+    platforms = ocaml.meta.platforms;
     maintainers = [
       stdenv.lib.maintainers.z77z
     ];

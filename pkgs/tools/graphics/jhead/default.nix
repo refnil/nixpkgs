@@ -1,41 +1,25 @@
-{ stdenv, fetchurl, libjpeg }:
+{stdenv, fetchurl}:
 
-stdenv.mkDerivation rec {
-  name = "jhead-${version}";
-  version = "3.00";
+stdenv.mkDerivation {
+  name = "jhead-2.87";
 
   src = fetchurl {
-    url = "http://www.sentex.net/~mwandel/jhead/${name}.tar.gz";
-    sha256 = "0pl9s9ssb2a9di82f3ypin2hd098ns8kzdsxw3i2y94f07d03k48";
+    url = http://www.sentex.net/~mwandel/jhead/jhead-2.87.tar.gz;
+    sha256 = "0vpp5jz49w5qzjzq3vllrbff7fr906jy8a8sq12yq8kw6qwbjjsl";
   };
 
-  buildInputs = [ libjpeg ];
-
   patchPhase = ''
-    substituteInPlace makefile \
-      --replace /usr/local/bin $out/bin
-
-    substituteInPlace jhead.c \
-      --replace "\"   Compiled: \"__DATE__" "" \
-      --replace "jpegtran -trim" "${libjpeg.bin}/bin/jpegtran -trim"
+    sed -i s@/usr/bin@$out/bin@ makefile
   '';
 
-  installPhase = ''
-    mkdir -p \
-      $out/bin \
-      $out/man/man1 \
-      $out/share/doc/${name}
-
-    cp -v jhead $out/bin
-    cp -v jhead.1 $out/man/man1
-    cp -v *.txt $out/share/doc/${name}
+  preInstall = ''
+    mkdir -p $out/bin
   '';
 
-  meta = with stdenv.lib; {
+  meta = {
     homepage = http://www.sentex.net/~mwandel/jhead/;
     description = "Exif Jpeg header manipulation tool";
-    license = licenses.publicDomain;
-    maintainers = with maintainers; [ viric rycee ];
-    platforms = platforms.all;
+    license = "free";
+    maintainers = with stdenv.lib.maintainers; [viric];
   };
 }

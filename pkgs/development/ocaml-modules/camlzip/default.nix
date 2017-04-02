@@ -1,54 +1,35 @@
 {stdenv, fetchurl, zlib, ocaml, findlib}:
 
 let
-  param =
-    if stdenv.lib.versionAtLeast ocaml.version "4.02"
-    then {
-      version = "1.07";
-      url = "https://github.com/xavierleroy/camlzip/archive/rel107.tar.gz";
-      sha256 = "1pdz3zyiczm6c46zfgag2frwq3ljlq044p3a2y4wm2wb4pgz8k9g";
-      patches = [];
-      installTargets = "install-findlib";
-    } else {
-      version = "1.05";
-      download_id = "1037";
-      url = "http://forge.ocamlcore.org/frs/download.php/${param.download_id}/camlzip-${param.version}.tar.gz";
-      sha256 = "930b70c736ab5a7ed1b05220102310a0a2241564786657abe418e834a538d06b";
-      patches = [./makefile_1_05.patch];
-      installTargets = "install";
-    };
+  ocaml_version = (builtins.parseDrvName ocaml.name).version;
+  version = "1.05";
 in
 
 stdenv.mkDerivation {
-  name = "camlzip-${param.version}";
+  name = "camlzip-${version}";
 
   src = fetchurl {
-    inherit (param) url;
-    inherit (param) sha256;
+    url = "http://forge.ocamlcore.org/frs/download.php/1037/" +
+          "camlzip-${version}.tar.gz";
+    sha256 = "930b70c736ab5a7ed1b05220102310a0a2241564786657abe418e834a538d06b";
   };
 
-  buildInputs = [ocaml findlib];
+  buildInputs = [zlib ocaml findlib];
 
-  propagatedBuildInputs = [zlib];
-
-  inherit (param) patches;
+  patches = [ ./makefile.patch ];
 
   createFindlibDestdir = true;
 
   postPatch = ''
-    substitute ${./META} META --subst-var-by VERSION "${param.version}"
+    substitute ${./META} META --subst-var-by VERSION "${version}"
     substituteInPlace Makefile \
-      --subst-var-by ZLIB_LIBDIR "${zlib.out}/lib" \
-      --subst-var-by ZLIB_INCLUDE "${zlib.dev}/include"
+      --subst-var-by ZLIB_LIBDIR "${zlib}/lib" \
+      --subst-var-by ZLIB_INCLUDE "${zlib}/include"
   '';
 
   buildFlags = "all allopt";
 
-  inherit (param) installTargets;
-
-  postInstall = ''
-    ln -s $out/lib/ocaml/${ocaml.version}/site-lib/{,caml}zip
-  '';
+  installTargets = "install";
 
   meta = {
     homepage = "http://cristal.inria.fr/~xleroy/software.html#camlzip";
@@ -59,7 +40,7 @@ stdenv.mkDerivation {
       for reading from and writing to compressed files in these formats.
     '';
     license = "LGPL+linking exceptions";
-    platforms = ocaml.meta.platforms or [];
+    platforms = ocaml.meta.platforms;
     maintainers = [
       stdenv.lib.maintainers.z77z
     ];

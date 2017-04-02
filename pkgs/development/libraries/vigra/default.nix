@@ -1,34 +1,28 @@
-{ stdenv, fetchurl, boost, cmake, doxygen, fftw, fftwSinglePrec, hdf5, ilmbase
-, libjpeg, libpng, libtiff, openexr, python2Packages }:
-
-let
-  inherit (python2Packages) python numpy;
-  # Might want to use `python2.withPackages(ps: [ps.numpy]);` here...
-in stdenv.mkDerivation rec {
-  name = "vigra-${version}";
-  version = "1.10.0";
+{ stdenv, fetchurl, cmake, libtiff, libpng, libjpeg, doxygen, python,
+  fftw, fftwSinglePrec, hdf5, boost, numpy }:
+stdenv.mkDerivation rec {
+  name = "vigra-1.9.0";
 
   src = fetchurl {
-    url = "https://github.com/ukoethe/vigra/archive/Version-${stdenv.lib.replaceChars ["."] ["-"] version}.tar.gz";
-    sha256 = "1y3yii8wnyz68n0mzcmjylwd6jchqa3l913v39l2zsd2rv5nyvs0";
+    urls = [
+      "${meta.homepage}/${name}-src.tar.gz"
+      "${meta.homepage}-old-versions/${name}-src.tar.gz"
+      ];
+    sha256 = "00fg64da6dj9k42d90dz6y7x91xw1xqppcla14im74m4afswrgcg";
   };
 
-  NIX_CFLAGS_COMPILE = "-I${ilmbase.dev}/include/OpenEXR";
-
-  buildInputs = [ boost cmake fftw fftwSinglePrec hdf5 ilmbase libjpeg libpng
-                  libtiff numpy openexr python ];
+  buildInputs = [ cmake fftw fftwSinglePrec libtiff libpng libjpeg python boost
+    numpy hdf5 ];
 
   preConfigure = "cmakeFlags+=\" -DVIGRANUMPY_INSTALL_DIR=$out/lib/${python.libPrefix}/site-packages\"";
+  cmakeFlags = stdenv.lib.optionals (stdenv.system == "x86_64-linux")
+      [ "-DCMAKE_CXX_FLAGS=-fPIC" "-DCMAKE_C_FLAGS=-fPIC" ];
 
-  cmakeFlags = [ "-DWITH_OPENEXR=1" ]
-            ++ stdenv.lib.optionals (stdenv.system == "x86_64-linux")
-                  [ "-DCMAKE_CXX_FLAGS=-fPIC" "-DCMAKE_C_FLAGS=-fPIC" ];
-
-  meta = with stdenv.lib; {
+  meta = {
     description = "Novel computer vision C++ library with customizable algorithms and data structures";
     homepage = http://hci.iwr.uni-heidelberg.de/vigra;
-    license = licenses.mit;
-    maintainers = [ maintainers.viric ];
-    platforms = platforms.linux;
+    license = stdenv.lib.licenses.mit;
+    maintainers = with stdenv.lib.maintainers; [viric];
+    platforms = with stdenv.lib.platforms; linux;
   };
 }

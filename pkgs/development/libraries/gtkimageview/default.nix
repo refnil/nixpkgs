@@ -1,4 +1,4 @@
-{ fetchurl, stdenv, pkgconfig, gtk2 }:
+{ fetchurl, stdenv, pkgconfig, gtk }:
 
 stdenv.mkDerivation rec {
   name = "gtkimageview-1.6.4";
@@ -8,19 +8,14 @@ stdenv.mkDerivation rec {
     sha256 = "1if3yh5z6nkv5wnkk0qyy9pkk03vn5rqbfk23q87kj39pqscgr37";
   };
 
-  buildInputs = [ pkgconfig gtk2 ];
-
-  preConfigure = ''
-    sed '/DEPRECATED_FLAGS/d' -i configure
-    sed 's/-Wall -Werror//' -i configure
-  '';
+  buildInputs = [ pkgconfig gtk ];
 
   doCheck = true;
 
   meta = {
     homepage = http://trac.bjourne.webfactional.com/;
 
-    description = "Image viewer widget for GTK+";
+    description = "The GtkImageView image viewer widget for GTK+";
 
     longDescription =
       '' GtkImageView is a simple image viewer widget for GTK+.  Similar to
@@ -33,6 +28,5 @@ stdenv.mkDerivation rec {
     license = stdenv.lib.licenses.lgpl2Plus;
 
     maintainers = [ ];
-    platforms = stdenv.lib.platforms.linux;
   };
 }

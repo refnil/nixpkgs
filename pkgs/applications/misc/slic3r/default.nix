@@ -1,22 +1,25 @@
 { stdenv, fetchgit, perl, makeWrapper, makeDesktopItem
-, which, perlPackages
+# Perl modules:
+, EncodeLocale, MathClipper, ExtUtilsXSpp, BoostGeometryUtils
+, MathConvexHullMonotoneChain, MathGeometryVoronoi, MathPlanePath, Moo
+, IOStringy, ClassXSAccessor, Wx, GrowlGNTP, NetDBus
 }:
 
 stdenv.mkDerivation rec {
-  version = "1.2.9";
+  version = "0.9.10b";
   name = "slic3r-${version}";
 
+  # Slic3r doesn't put out tarballs, only a git repository is available
   src = fetchgit {
     url = "git://github.com/alexrj/Slic3r";
     rev = "refs/tags/${version}";
-    sha256 = "1z8h11k29b7z49z5k8ikyfiijyycy1q3krlzi8hfd0vdybvymw21";
+    sha256 = "0j06h0z65qn4kyb2b7pnq6bcn4al60q227iz9jlrin0ffx3l0ra7";
   };
 
-  buildInputs = with perlPackages; [ perl makeWrapper which
-    EncodeLocale MathClipper ExtUtilsXSpp threads
+  buildInputs = [ perl makeWrapper
+    EncodeLocale MathClipper ExtUtilsXSpp BoostGeometryUtils
     MathConvexHullMonotoneChain MathGeometryVoronoi MathPlanePath Moo
-    IOStringy ClassXSAccessor Wx GrowlGNTP NetDBus ImportInto XMLSAX
-    ExtUtilsMakeMaker OpenGL WxGLCanvas ModuleBuild LWP
+    IOStringy ClassXSAccessor Wx GrowlGNTP NetDBus
   ];
 
   desktopItem = makeDesktopItem {
@@ -29,27 +32,13 @@ stdenv.mkDerivation rec {
     categories = "Application;Development;";
   };
 
-  buildPhase = ''
-    export SLIC3R_NO_AUTO=true
-    export PERL5LIB="./xs/blib/arch/:./xs/blib/lib:$PERL5LIB"
-
-    substituteInPlace Build.PL \
-      --replace "0.9918" "0.9923" \
-      --replace "eval" ""
-
-    pushd xs
-      perl Build.PL
-      perl Build
-    popd
-
-    perl Build.PL --gui
-  '';
+  # Nothing to do here
+  buildPhase = "true";
 
   installPhase = ''
     mkdir -p "$out/share/slic3r/"
     cp -r * "$out/share/slic3r/"
-    wrapProgram "$out/share/slic3r/slic3r.pl" \
-      --prefix PERL5LIB : "$out/share/slic3r/xs/blib/arch:$out/share/slic3r/xs/blib/lib:$PERL5LIB"
+    wrapProgram "$out/share/slic3r/slic3r.pl" --prefix PERL5LIB : $PERL5LIB
     mkdir -p "$out/bin"
     ln -s "$out/share/slic3r/slic3r.pl" "$out/bin/slic3r"
     mkdir -p "$out/share/pixmaps/"
@@ -68,6 +57,6 @@ stdenv.mkDerivation rec {
     homepage = http://slic3r.org/;
     license = licenses.agpl3;
     platforms = platforms.linux;
-    maintainers = with maintainers; [ bjornfor the-kenny ];
+    maintainers = [ maintainers.bjornfor ];
   };
 }

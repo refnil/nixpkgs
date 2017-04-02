@@ -10,8 +10,6 @@ stdenv.mkDerivation rec {
 
   buildInputs = [cmake libcap zlib bzip2];
 
-  hardeningDisable = [ "format" ];
-
   # efi-boot-patch extracted from http://arm.koji.fedoraproject.org/koji/rpminfo?rpmID=174244
   patches = [ ./include-path.patch ./cdrkit-1.1.9-efi-boot.patch ];
 
@@ -39,6 +37,5 @@ stdenv.mkDerivation rec {
     
     homepage = http://cdrkit.org/;
     license = stdenv.lib.licenses.gpl2;
-    platforms = stdenv.lib.platforms.linux;
   };
 }

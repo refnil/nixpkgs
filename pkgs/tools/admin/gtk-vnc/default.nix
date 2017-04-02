@@ -1,36 +1,33 @@
 { stdenv, fetchurl, gobjectIntrospection
-, gnutls, cairo, libtool, glib, pkgconfig, libtasn1
-, libffi, cyrus_sasl, intltool, perl, perlPackages, libpulseaudio
-, kbproto, libX11, libXext, xextproto, libgcrypt, gtk3, vala_0_32
-, libogg, libgpgerror, pythonPackages }:
+, python, gtk, pygtk, gnutls, cairo, libtool, glib, pkgconfig, libtasn1
+, libffi, cyrus_sasl, intltool, perl, perlPackages, pulseaudio
+, kbproto, libX11, libXext, xextproto, pygobject, libgcrypt, gtk3, vala
+, pygobject3, libogg, enableGTK3 ? false }:
 
-let
-  inherit (pythonPackages) pygobject3 python;
-in stdenv.mkDerivation rec {
+stdenv.mkDerivation rec {
   name = "gtk-vnc-${version}";
-  version = "0.7.0";
+  version = "0.5.3";
 
   src = fetchurl {
-    url = "mirror://gnome/sources/gtk-vnc/${stdenv.lib.strings.substring 0 3 version}/${name}.tar.xz";
-    sha256 = "0gj8dpy3sj4dp810gy67spzh5f0jd8aqg69clcwqjcskj1yawbiw";
+    url = "mirror://gnome/sources/gtk-vnc/0.5/${name}.tar.xz";
+    sha256 = "1bww2ihxb3zzvifdrcsy1lifr664pvikq17hmr1hsm8fyk4ad46l";
   };
 
   buildInputs = [
     python gnutls cairo libtool pkgconfig glib libffi libgcrypt
-    intltool cyrus_sasl libpulseaudio perl perlPackages.TextCSV
-    gobjectIntrospection libogg libgpgerror
-    gtk3 vala_0_32 pygobject3 ];
+    intltool cyrus_sasl pulseaudio perl perlPackages.TextCSV
+    gobjectIntrospection libogg
+  ] ++ (if enableGTK3 then [ gtk3 vala pygobject3 ] else [ gtk pygtk pygobject ]);
 
   NIX_CFLAGS_COMPILE = "-fstack-protector-all";
   configureFlags = [
     "--with-python"
     "--with-examples"
+    (if enableGTK3 then "--with-gtk=3.0" else "--with-gtk=2.0")
   ];
 
-  # Fix broken .la files
-  preFixup = ''
-    sed 's,-lgpg-error,-L${libgpgerror.out}/lib -lgpg-error,' -i $out/lib/*.la
-  '';
+  makeFlags = stdenv.lib.optionalString (!enableGTK3)
+    "CODEGENDIR=${pygobject}/share/pygobject/2.0/codegen/ DEFSDIR=${pygtk}/share/pygtk/2.0/defs/";
 
   meta = with stdenv.lib; {
     description = "A GTK VNC widget";

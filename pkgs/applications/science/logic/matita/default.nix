@@ -1,8 +1,10 @@
 {stdenv, fetchurl, ocaml, findlib, gdome2, ocaml_expat, gmetadom, ocaml_http, lablgtk, lablgtkmathview, ocaml_mysql, ocaml_sqlite3, ocamlnet, ulex08, camlzip, ocaml_pcre }:
 
 let
+  ocaml_version = (builtins.parseDrvName ocaml.name).version;
   version = "0.5.8";
   pname = "matita";
+
 in
 
 stdenv.mkDerivation {
@@ -45,7 +47,7 @@ stdenv.mkDerivation {
 
   meta = {
     homepage = http://matita.cs.unibo.it/;
-    description = "Experimental, interactive theorem prover";
+    description = "Matita is an experimental, interactive theorem prover";
     license = stdenv.lib.licenses.gpl2Plus;
     maintainers = [ stdenv.lib.maintainers.roconnor ];
   };

@@ -1,12 +1,11 @@
-{ stdenv, fetchurl }:
+{stdenv, fetchurl}:
 
-stdenv.mkDerivation rec {
-  version = "1.0.6";
-  name = "libaal-${version}";
+stdenv.mkDerivation {
+  name = "libaal-1.0.5";
 
   src = fetchurl {
-    url = "mirror://sourceforge/reiser4/${name}.tar.gz";
-    sha256 = "176f2sns6iyxv3h9zyirdinjwi05gdak48zqarhib2s38rvm98di";
+    url = http://chichkin_i.zelnet.ru/namesys/libaal-1.0.5.tar.gz;
+    sha256 = "109f464hxwms90mpczc7h7lmrdlcmlglabkzh86h25xrlxxdn6pz";
   };
 
   preInstall = ''
@@ -16,8 +15,5 @@ stdenv.mkDerivation rec {
   meta = {
     homepage = http://www.namesys.com/;
     description = "Support library for Reiser4";
-    license = stdenv.lib.licenses.gpl2;
-    maintainers = with stdenv.lib.maintainers; [ fuuzetsu ];
-    platforms = with stdenv.lib.platforms; linux;
   };
 }

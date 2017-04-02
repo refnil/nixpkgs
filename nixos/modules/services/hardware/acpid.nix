@@ -4,38 +4,56 @@ with lib;
 
 let
 
-  canonicalHandlers = {
-    powerEvent = {
-      event = "button/power.*";
-      action = config.services.acpid.powerEventCommands;
-    };
-
-    lidEvent = {
-      event = "button/lid.*";
-      action = config.services.acpid.lidEventCommands;
-    };
-
-    acEvent = {
-      event = "ac_adapter.*";
-      action = config.services.acpid.acEventCommands;
-    };
-  };
-
   acpiConfDir = pkgs.runCommand "acpi-events" {}
     ''
-      mkdir -p $out
+      ensureDir $out
       ${
         # Generate a configuration file for each event. (You can't have
         # multiple events in one config file...)
-        let f = name: handler:
+        let f = event:
           ''
-            fn=$out/${name}
-            echo "event=${handler.event}" > $fn
-            echo "action=${pkgs.writeScript "${name}.sh" (concatStringsSep "\n" [ "#! ${pkgs.bash}/bin/sh" handler.action ])}" >> $fn
+            fn=$out/${event.name}
+            echo "event=${event.event}" > $fn
+            echo "action=${pkgs.writeScript "${event.name}.sh" event.action}" >> $fn
           '';
-        in concatStringsSep "\n" (mapAttrsToList f (canonicalHandlers // config.services.acpid.handlers))
+        in lib.concatMapStrings f events
       }
     '';
+
+  events = [powerEvent lidEvent acEvent];
+
+  # Called when the power button is pressed.
+  powerEvent =
+    { name = "power-button";
+      event = "button/power.*";
+      action =
+        ''
+          #! ${pkgs.bash}/bin/sh
+          ${config.services.acpid.powerEventCommands}
+        '';
+    };
+
+  # Called when the laptop lid is opened/closed.
+  lidEvent =
+    { name = "lid";
+      event = "button/lid.*";
+      action =
+        ''
+          #! ${pkgs.bash}/bin/sh
+          ${config.services.acpid.lidEventCommands}
+        '';
+    };
+
+  # Called when the AC power is connected or disconnected.
+  acEvent =
+    { name = "ac-power";
+      event = "ac_adapter.*";
+      action =
+        ''
+          #! ${pkgs.bash}/bin/sh
+          ${config.services.acpid.acEventCommands}
+        '';
+    };
 
 in
 
@@ -51,29 +69,6 @@ in
         type = types.bool;
         default = false;
         description = "Whether to enable the ACPI daemon.";
-      };
-
-      handlers = mkOption {
-        type = types.attrsOf (types.submodule {
-          options = {
-            event = mkOption {
-              type = types.str;
-              example = [ "button/power.*" "button/lid.*" "ac_adapter.*" "button/mute.*" "button/volumedown.*" "cd/play.*" "cd/next.*" ];
-              description = "Event type.";
-            };
-
-            action = mkOption {
-              type = types.lines;
-              description = "Shell commands to execute when the event is triggered.";
-            };
-          };
-        });
-
-        description = "Event handlers.";
-        default = {};
-        example = { mute = { event = "button/mute.*"; action = "amixer set Master toggle"; }; };
-
-
       };
 
       powerEventCommands = mkOption {
@@ -103,25 +98,21 @@ in
 
   config = mkIf config.services.acpid.enable {
 
-    systemd.services.acpid = {
-      description = "ACPI Daemon";
+    jobs.acpid =
+      { description = "ACPI Daemon";
 
-      wantedBy = [ "multi-user.target" ];
-      after = [ "systemd-udev-settle.service" ];
+        wantedBy = [ "multi-user.target" ];
+        after = [ "systemd-udev-settle.service" ];
 
-      path = [ pkgs.acpid ];
+        path = [ pkgs.acpid ];
 
-      serviceConfig = {
-        Type = "forking";
+        daemonType = "fork";
+
+        exec = "acpid --confdir ${acpiConfDir}";
+
+        unitConfig.ConditionVirtualization = "!systemd-nspawn";
+        unitConfig.ConditionPathExists = [ "/proc/acpi" ];
       };
-
-      unitConfig = {
-        ConditionVirtualization = "!systemd-nspawn";
-        ConditionPathExists = [ "/proc/acpi" ];
-      };
-
-      script = "acpid --confdir ${acpiConfDir}";
-    };
 
   };
 

@@ -3,7 +3,6 @@ package Logger;
 use strict;
 use Thread::Queue;
 use XML::Writer;
-use Encode qw(decode encode);
 
 sub new {
     my ($class) = @_;
@@ -57,8 +56,7 @@ sub nest {
 sub sanitise {
     my ($s) = @_;
     $s =~ s/[[:cntrl:]\xff]//g;
-    $s = decode('UTF-8', $s, Encode::FB_DEFAULT);
-    return encode('UTF-8', $s, Encode::FB_CROAK);
+    return $s;
 }
 
 sub log {

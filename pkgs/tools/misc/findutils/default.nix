@@ -1,30 +1,23 @@
-{ stdenv, fetchurl, coreutils }:
+{stdenv, fetchurl, coreutils}:
 
 stdenv.mkDerivation rec {
-  name = "findutils-4.6.0";
+  name = "findutils-4.4.2";
 
   src = fetchurl {
     url = "mirror://gnu/findutils/${name}.tar.gz";
-    sha256 = "178nn4dl7wbcw499czikirnkniwnx36argdnqgz4ik9i6zvwkm6y";
+    sha256 = "0amn0bbwqvsvvsh6drfwz20ydc2czk374lzw5kksbh6bf78k4ks3";
   };
 
-  patches = [ ./memory-leak.patch ./no-install-statedir.patch ];
+  nativeBuildInputs = [coreutils];
 
-  buildInputs = [ coreutils ]; # bin/updatedb script needs to call sort
+  patches = [ ./findutils-path.patch ./change_echo_path.patch ];
 
-  # Since glibc-2.25 the i686 tests hang reliably right after test-sleep.
-  doCheck = !stdenv.isDarwin && (stdenv.system != "i686-linux");
-
-  outputs = [ "out" "info" ];
-
-  configureFlags = [ "--localstatedir=/var/cache" ];
+  doCheck = true;
 
   crossAttrs = {
-    # Fix the 'buildInputs = [ coreutils ]' above - that adds the cross coreutils to PATH :(
-    propagatedBuildInputs = [ ];
+    # http://osdir.com/ml/bug-findutils-gnu/2009-08/msg00026.html
+    configureFlags = [ "gl_cv_func_wcwidth_works=yes" ];
   };
-
-  enableParallelBuilding = true;
 
   meta = {
     homepage = http://www.gnu.org/software/findutils/;
@@ -44,8 +37,6 @@ stdenv.mkDerivation rec {
           * updatedb - update a file name database;
           * xargs - build and execute command lines from standard input.
     '';
-
-    platforms = stdenv.lib.platforms.all;
 
     license = stdenv.lib.licenses.gpl3Plus;
   };

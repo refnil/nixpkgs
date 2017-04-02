@@ -1,66 +1,49 @@
-{ stdenv, lib, fetchurl, zip, unzip, makeWrapper
-, jzmq, jdk, python
-, logsDir ? "", confFile ? "", extraLibraryPaths ? [], extraJars ? [] }:
+{ stdenv, fetchurl, zip, unzip, jzmq, jdk, lib, python, logsDir ? "", confFile ? "", extraLibraryPaths ? [], extraJars ? [] }:
 
-stdenv.mkDerivation rec {
-  name = "apache-storm-" + version;
-  version = "1.0.1";
+stdenv.mkDerivation {
+  name = "storm-0.8.2";
   src = fetchurl {
-    url =
-    "mirror://apache/storm/${name}/${name}.tar.gz";
-    sha256 = "1gr00s0fhf8ci0faf3x5dinkiw9mlnc1x1vqki8cfszvij6w0x0m";
+    url = https://dl.dropbox.com/u/133901206/storm-0.8.2.zip;
+    sha256 = "8761aea0b54e5bab4a68b259bbe6b5b2f8226204488b5559eba57a0c458b2bbc";
   };
 
   buildInputs = [ zip unzip jzmq ];
 
   installPhase = ''
-    mkdir -p $out/share/${name}
-    mv public $out/docs
-    mv examples $out/share/${name}/.
+    # Remove junk
+    rm -f lib/jzmq*
+    mkdir -p $out/bin
+    mv bin/storm $out/bin/
+    rm -R bin conf logs
 
-    rm -f lib/jzmq* || exit 1
-    mv lib $out/.
-    mv external extlib* $out/lib/.
-    mv conf bin $out/.
-    mv log4j2 $out/conf/.
-  '';
+    # Fix shebang header for python scripts
+    sed -i -e "s|#!/usr/bin/.*python|#!${python}/bin/python|" $out/bin/storm;
 
-  fixupPhase = ''
-    # Fix python reference
-    sed -i \
-      -e '19iPYTHON=${python}/bin/python' \
-      -e 's|#!/usr/bin/.*python|#!${python}/bin/python|' \
-      $out/bin/storm
-    sed -i \
-      -e 's|#!/usr/bin/.*python|#!${python}/bin/python|' \
-      -e "s|STORM_CONF_DIR = .*|STORM_CONF_DIR = os.getenv('STORM_CONF_DIR','$out/conf')|" \
-      -e 's|STORM_LOG4J2_CONF_DIR =.*|STORM_LOG4J2_CONF_DIR = os.path.join(STORM_CONF_DIR, "log4j2")|' \
-        $out/bin/storm.py
-    # Default jdk location
-    sed -i -e 's|#.*export JAVA_HOME=.*|export JAVA_HOME="${jdk.home}"|' \
-           $out/conf/storm-env.sh
-    unzip  $out/lib/storm-core-${version}.jar defaults.yaml;
-    zip -d $out/lib/storm-core-${version}.jar defaults.yaml;
-    sed -i \
-       -e 's|java.library.path: .*|java.library.path: "${jzmq}/lib:${lib.concatStringsSep ":" extraLibraryPaths}"|' \
-       -e 's|storm.log4j2.conf.dir: .*|storm.log4j2.conf.dir: "conf/log4j2"|' \
-      defaults.yaml
+    mkdir -p $out/conf
+    cp -av * $out
+
+    cd $out;
+    ${if logsDir  != "" then ''ln -s ${logsDir} logs'' else ""}
+
+    # Extract, delete from zip; and optionally append to defaults.yaml
+    unzip  storm-*.jar defaults.yaml;
+    zip -d storm-*.jar defaults.yaml;
+    echo 'java.library.path: "${jzmq}/lib:${lib.concatStringsSep ":" extraLibraryPaths}"' >> defaults.yaml;
     ${if confFile != "" then ''cat ${confFile} >> defaults.yaml'' else ""}
-    mv defaults.yaml $out/conf;
+    mv defaults.yaml conf;
 
     # Link to jzmq jar and extra jars
-    cd $out/lib;
+    cd lib;
     ln -s ${jzmq}/share/java/*.jar;
     ${lib.concatMapStrings (jar: "ln -s ${jar};\n") extraJars}
   '';
 
   dontStrip = true;
 
-  meta = with stdenv.lib; {
-    homepage = "http://storm.apache.org";
+  meta = {
+    homepage = "http://storm-project.net";
     description = "Distributed realtime computation system";
-    license = licenses.asl20;
-    maintainers = with maintainers; [ edwtjo vizanto ];
-    platforms = with platforms; unix;
+    license = "Eclipse Public License 1.0";
+    maintainers = [ lib.maintainers.vizanto ];
   };
 }

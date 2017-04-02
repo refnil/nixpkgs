@@ -1,11 +1,11 @@
-{stdenv, fetchurl, autoreconfHook, texinfo, buggyBiosCDSupport ? true}:
+{stdenv, fetchurl, autoconf, automake, buggyBiosCDSupport ? true}:
 
 stdenv.mkDerivation {
   name = "grub-0.97-patch-1.12";
 
   src = fetchurl {
     url = ftp://alpha.gnu.org/gnu/grub/grub-0.97.tar.gz;
-    sha256 = "02r6b52r0nsp6ryqfiqchnl7r1d9smm80sqx24494gmx5p8ia7af";
+    md5 = "cd3f3eb54446be6003156158d51f4884";
   };
 
   # Lots of patches from Gentoo, in particular splash screen support
@@ -33,10 +33,8 @@ stdenv.mkDerivation {
 
   ] ++ (stdenv.lib.optional buggyBiosCDSupport ./buggybios.patch);
 
-  # autoreconfHook required for the splashimage patch.
-  buildInputs = [ autoreconfHook texinfo ];
-
-  hardeningDisable = [ "stackprotector" ];
+  # Autoconf/automake required for the splashimage patch.
+  buildInputs = [autoconf automake];
 
   prePatch = ''
     unpackFile $gentooPatches
@@ -47,9 +45,7 @@ stdenv.mkDerivation {
     done
   '';
 
-  passthru.grubTarget = "";
-
-  meta = {
-    platforms = stdenv.lib.platforms.linux;
-  };
+  preConfigure = ''
+    autoreconf
+  '';
 }

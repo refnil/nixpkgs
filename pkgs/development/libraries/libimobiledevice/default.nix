@@ -1,27 +1,19 @@
-{ stdenv, fetchurl, fetchpatch, python2, pkgconfig, usbmuxd, glib, libgcrypt,
-  libtasn1, libplist, readline, libusbmuxd, openssl }:
+{ stdenv, fetchurl, python, pkgconfig, usbmuxd, glib, gnutls, libgcrypt,
+  libtasn1, libplist, readline }:
 
 stdenv.mkDerivation rec {
-  name = "libimobiledevice-1.2.0";
+  name = "libimobiledevice-1.0.7";
 
-  nativeBuildInputs = [ python2 libplist.swig pkgconfig ];
+  nativeBuildInputs = [ python libplist.swig pkgconfig ];
   buildInputs = [ readline ];
-  propagatedBuildInputs = [ libusbmuxd glib libgcrypt libtasn1 libplist openssl ];
+  propagatedBuildInputs = [ usbmuxd glib gnutls libgcrypt libtasn1 libplist ];
 
-  patches = [
-    ./disable_sslv3.patch
-    (fetchpatch { # CVE-2016-5104
-      url = "https://github.com/libimobiledevice/libimobiledevice/commit/df1f5c4d70d0c19ad40072f5246ca457e7f9849e.patch";
-      sha256 = "06ygb9aqcvm4v08wrldsddjgyqv5bkpq6lxzq2a1nwqp9mq4a4k1";
-    })
-  ];
-
-  postPatch = ''sed -e 's@1\.3\.21@@' -i configure'';
+  patchPhase = ''sed -e 's@1\.3\.21@@' -i configure'';
   passthru.swig = libplist.swig;
 
   src = fetchurl {
     url = "${meta.homepage}/downloads/${name}.tar.bz2";
-    sha256 = "0dqhy4qwj30mw8pwckvjmgnj1qqrh6p8c6jknmhvylshhzh0ssvq";
+    sha256 = "15jznqc52yfwkbw19hgv3r1qd4gcymakbfkyizmr6v4n0sn27n0f";
   };
 
   meta = {

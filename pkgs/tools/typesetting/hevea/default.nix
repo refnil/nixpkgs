@@ -1,22 +1,9 @@
-{ stdenv, fetchurl, ocaml }:
-
-stdenv.mkDerivation rec {
-  name = "hevea-2.29";
-
+{stdenv, fetchurl, ocaml}: stdenv.mkDerivation {
+  name = "hevea-1.07";
+  builder = ./builder.sh;
   src = fetchurl {
-    url = "http://pauillac.inria.fr/~maranget/hevea/distri/${name}.tar.gz";
-    sha256 = "1i7qkar6gjpsxqgdm90xxgp15z7gfyja0rn62n23a9aahc0hpgq6";
+    url = http://pauillac.inria.fr/~maranget/hevea/distri/hevea-1.07.tar.gz;
+    md5 = "561d7a2c10ea9e6a5b352c24d9b65998";
   };
-
-  buildInputs = [ ocaml ];
-
-  makeFlags = "PREFIX=$(out)";
-
-  meta = with stdenv.lib; {
-    description = "A quite complete and fast LATEX to HTML translator";
-    homepage = http://pauillac.inria.fr/~maranget/hevea/;
-    license = licenses.qpl;
-    maintainers = with maintainers; [ pSub ];
-    platforms = with platforms; linux;
-  };
+  buildInputs = [ocaml];
 }

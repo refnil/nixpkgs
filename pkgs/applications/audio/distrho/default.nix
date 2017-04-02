@@ -1,13 +1,16 @@
-{ stdenv, fetchgit, alsaLib, fftwSinglePrec, freetype, libjack2
-, libxslt, lv2, pkgconfig, premake3, xorg, ladspa-sdk }:
+{ stdenv, fetchgit, alsaLib, fftwSinglePrec, freetype, jack2
+, libxslt, lv2, pkgconfig, premake3, xlibs }:
 
+let
+  rev = "99efbf0b";
+in
 stdenv.mkDerivation rec {
-  name = "distrho-ports-unstable-2016-06-26";
+  name = "distrho-${rev}";
 
   src = fetchgit {
-    url = "https://github.com/DISTRHO/DISTRHO-Ports.git";
-    rev = "e3969853ec9ba897c50ac060f0167313e2a18b29";
-    sha256 = "0id4p8dlnlv5271yvmyawfr754nzah7xhvjkj633lw5yr3mq707m";
+    url = "https://github.com/falkTX/DISTRHO.git";
+    inherit rev;
+    sha256 = "ed26a6edca19ebb8260b3dc042f69c32162e1d91179fb9d22da42ec7131936f9";
   };
 
   patchPhase = ''
@@ -15,18 +18,20 @@ stdenv.mkDerivation rec {
   '';
 
   buildInputs = [
-    alsaLib fftwSinglePrec freetype libjack2 pkgconfig premake3
-    xorg.libX11 xorg.libXcomposite xorg.libXcursor xorg.libXext
-    xorg.libXinerama xorg.libXrender ladspa-sdk
+    alsaLib fftwSinglePrec freetype jack2 pkgconfig premake3
+    xlibs.libX11 xlibs.libXcomposite xlibs.libXcursor xlibs.libXext
+    xlibs.libXinerama xlibs.libXrender
   ];
 
   buildPhase = ''
     sh ./scripts/premake-update.sh linux
+    make standalone
     make lv2
   '';
 
   installPhase = ''
     mkdir -p $out/bin
+    cp bin/standalone/* $out/bin/
     mkdir -p $out/lib/lv2
     cp -a bin/lv2/* $out/lib/lv2/
   '';
@@ -36,12 +41,12 @@ stdenv.mkDerivation rec {
     description = "A collection of cross-platform audio effects and plugins";
     longDescription = ''
       Includes:
-      Dexed  drowaudio-distortion drowaudio-distortionshaper drowaudio-flanger
-      drowaudio-reverb drowaudio-tremolo drumsynt EasySSP  eqinox
-      JuceDemoPlugin klangfalter LUFSMeter luftikus obxd pitchedDelay
-      stereosourceseparation TAL-Dub-3 TAL-Filter TAL-Filter-2 TAL-NoiseMaker
-      TAL-Reverb TAL-Reverb-2 TAL-Reverb-3 TAL-Vocoder-2 TheFunction
-      ThePilgrim Vex Wolpertinger
+      3BandEQ bitmangler drowaudio-distortion drowaudio-flanger
+      drowaudio-tremolo eqinox juce_pitcher sDelay TAL-Filter
+      TAL-NoiseMaker TAL-Reverb-2 TAL-Vocoder-2 ThePilgrim
+      Wolpertinger argotlunar capsaicin drowaudio-distortionshaper
+      drowaudio-reverb drumsynth highlife JuceDemoPlugin PingPongPan
+      TAL-Dub-3 TAL-Filter-2 TAL-Reverb TAL-Reverb-3 TheFunction vex
     '';
     maintainers = [ maintainers.goibhniu ];
     platforms = platforms.linux;

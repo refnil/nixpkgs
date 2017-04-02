@@ -15,7 +15,7 @@ stdenv.mkDerivation rec {
     install -Dm555 ovpn-learnaddress $out/libexec/openvpn/openvpn-learnaddress
 
     wrapProgram $out/libexec/openvpn/openvpn-learnaddress \
-        --prefix PATH : ${stdenv.lib.makeBinPath [ coreutils gawk utillinux ]}
+        --prefix PATH : ${coreutils}/bin:${gawk}/bin:${utillinux}/bin
   '';
 
   meta = {

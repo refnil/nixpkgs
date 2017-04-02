@@ -13,7 +13,7 @@ let
     };
     buildInputs = [ python ];
     installPhase = ''
-      mkdir -p $out/bin
+      ensureDir $out/bin
       # Make it work for kernels 3.x, not so different than 2.6
       sed -i 's/2\.6/4.0/' system_health.py
       cp system_health.py $out/bin

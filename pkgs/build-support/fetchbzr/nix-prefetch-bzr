@@ -26,7 +26,8 @@ repoName=$(echo $url | sed '
   s,.*/\([^/]\+\)/tags/\([^/]\+\)/*$,\1-\2,;t
   s,.*/\([^/]\+\)/*$,\1,;t
 ')
-dstFile="bzr-export"
+dstFile=$repoName-r$rev
+test -n "$rev" || dstFile=$repoName
 
 # If the hash was given, a file with that hash may already be in the
 # store.
@@ -42,10 +43,11 @@ fi
 # If we don't know the hash or a path with that hash doesn't exist,
 # download the file and add it to the store.
 if test -z "$finalPath"; then
-    tmpPath="$(mktemp -d "${TMPDIR:-/tmp}/bzr-checkout-tmp-XXXXXXXX")"
-    trap "rm -rf \"$tmpPath\"" EXIT
+    tmpPath=/tmp/bzr-checkout-tmp-$$
+    tmpFile=$tmpPath/$dstFile
+    mkdir $tmpPath
 
-    tmpFile="$tmpPath/$dstFile"
+    trap "rm -rf $tmpPath" EXIT
 
     # Perform the checkout.
     bzr -Ossl.cert_reqs=none export $revarg --format=dir "$tmpFile" "$url"

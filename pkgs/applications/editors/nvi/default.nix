@@ -17,10 +17,9 @@ stdenv.mkDerivation rec {
   # nvi tries to write to a usual tmp directory (/var/tmp),
   # so we will force it to use /tmp.
   patchPhase = ''
-    sed -i build/configure \
+    sed -i -e s/-lcurses/-lncurses/ \
       -e s@vi_cv_path_preserve=no@vi_cv_path_preserve=/tmp/vi.recover@ \
-      -e s@/var/tmp@@ \
-      -e s@-lcurses@-lncurses@
+      -e s@/var/tmp@@ build/configure
   '';
 
   configurePhase = ''
@@ -50,6 +49,6 @@ stdenv.mkDerivation rec {
   meta = {
     homepage = http://www.bostic.com/vi/;
     description = "The Berkeley Vi Editor";
-    license = stdenv.lib.licenses.free;
+    license = "free";
   };
 }

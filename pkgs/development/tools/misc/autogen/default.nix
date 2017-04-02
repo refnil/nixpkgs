@@ -1,45 +1,55 @@
-{ stdenv, fetchurl, which, pkgconfig, perl, guile, libxml2 }:
+{ fetchurl, stdenv, guile, which, libffi }:
 
-stdenv.mkDerivation rec {
-  name = "autogen-${version}";
-  version = "5.18.12";
+let version = "5.18"; in
 
-  src = fetchurl {
-    url = "mirror://gnu/autogen/rel${version}/autogen-${version}.tar.xz";
-    sha256 = "1n5zq4872sakvz9c7ncsdcfp0z8rsybsxvbmhkpbd19ii0pacfxy";
-  };
+  stdenv.mkDerivation {
+    name = "autogen-${version}";
 
-  outputs = [ "bin" "dev" "lib" "out" "man" "info" ];
+    src = fetchurl {
+      url = "mirror://gnu/autogen/rel${version}/autogen-${version}.tar.gz";
+      sha256 = "1h2d3wpzkla42igxyisaqh2nwpq01vwad1wp9671xmm5ahvkw5f7";
+    };
 
-  nativeBuildInputs = [ which pkgconfig perl ];
-  buildInputs = [ guile libxml2 ];
+    buildInputs = [ guile which libffi ];
 
-  postPatch = ''
-    # Fix a broken sed expression used for detecting the minor
-    # version of guile we are using
-    sed -i "s,sed '.*-I.*',sed 's/\\\(^\\\| \\\)-I/\\\1/g',g" configure
+    patchPhase =
+      '' for i in $(find -name \*.in)
+         do
+           sed -i "$i" -e's|/usr/bin/||g'
+         done
+      '';
 
-    substituteInPlace pkg/libopts/mklibsrc.sh --replace /tmp $TMPDIR
-  '';
+    # The tests rely on being able to find `libopts.a'.
+    configureFlags = "--enable-static";
 
-  postInstall = ''
-    mkdir -p $dev/bin
-    mv $bin/bin/autoopts-config $dev/bin
+    #doCheck = true; # 2 tests fail because of missing /dev/tty
 
-    for f in $lib/lib/autogen/tpl-config.tlib $out/share/autogen/tpl-config.tlib; do
-      sed -e "s|$dev/include|/no-such-autogen-include-path|" -i $f
-      sed -e "s|$bin/bin|/no-such-autogen-bin-path|" -i $f
-      sed -e "s|$lib/lib|/no-such-autogen-lib-path|" -i $f
-    done
-  '';
+    meta = {
+      description = "Automated text and program generation tool";
 
-  #doCheck = true; # 2 tests fail because of missing /dev/tty
+      longDescription = ''
+        AutoGen is a tool designed to simplify the creation and maintenance
+        of programs that contain large amounts of repetitious text.  It is
+        especially valuable in programs that have several blocks of text that
+        must be kept synchronized.
 
-  meta = with stdenv.lib; {
-    description = "Automated text and program generation tool";
-    license = with licenses; [ gpl3Plus lgpl3Plus ];
-    homepage = http://www.gnu.org/software/autogen/;
-    platforms = platforms.all;
-    maintainers = [ ];
-  };
-}
+        AutoGen can now accept XML files as definition input, in addition to
+        CGI data (for producing dynamic HTML) and traditional AutoGen
+        definitions.
+
+        A common example where this would be useful is in creating and
+        maintaining the code required for processing program options.
+        Processing options requires multiple constructs to be maintained in
+        parallel in different places in your program.  Options maintenance
+        needs to be done countless times.  So, AutoGen comes with an add-on
+        package named AutoOpts that simplifies the maintenance and
+        documentation of program options.
+      '';
+
+      license = ["GPLv3+" "LGPLv3+" ];
+
+      homepage = http://www.gnu.org/software/autogen/;
+
+      maintainers = [ stdenv.lib.maintainers.ludo ];
+    };
+  }

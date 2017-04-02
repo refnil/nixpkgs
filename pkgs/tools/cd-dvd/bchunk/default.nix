@@ -22,6 +22,5 @@ stdenv.mkDerivation rec {
   meta = {
     homepage = http://he.fi/bchunk/;
     description = "A program that converts CD-ROM images in BIN/CUE format into a set of ISO and CDR tracks";
-    platforms = stdenv.lib.platforms.linux;
   };
 }

@@ -33,7 +33,7 @@ stdenv.mkDerivation rec {
     It also provides ways of converting non-ASCII characters to
     similar ASCII characters, e.g. by stripping diacritics.
     '';
-    maintainers = with stdenv.lib.maintainers; [ goibhniu ];
+    maintainers = [ "cillian.deroiste@gmail.com" ];
     platforms = stdenv.lib.platforms.linux;
   };
 }

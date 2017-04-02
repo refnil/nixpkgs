@@ -1,19 +1,16 @@
 { stdenv, fetchurl, pkgconfig, libnfnetlink, libmnl }:
 
 stdenv.mkDerivation rec {
-  name = "libnetfilter_conntrack-${version}";
-  version = "1.0.6";
+  name = "libnetfilter_conntrack-1.0.4";
 
   src = fetchurl {
     url = "http://netfilter.org/projects/libnetfilter_conntrack/files/${name}.tar.bz2";
-    sha256 = "1svzyf3rq9nbrcw1jsricgyhh7x1am8iqn6kjr6mzrw42810ik7g";
+    sha256 = "0zcwjav1qgr7ikmvfmy7g3nc7s1kj4j4939d18mpyha9mwy4mv6r";
   };
 
-  buildInputs = [ libmnl ];
-  propagatedBuildInputs = [ libnfnetlink ];
-  nativeBuildInputs = [ pkgconfig ];
+  buildInputs = [ pkgconfig libnfnetlink libmnl ];
 
-  meta = with stdenv.lib; {
+  meta = {
     description = "Userspace library providing an API to the in-kernel connection tracking state table";
     longDescription = ''
       libnetfilter_conntrack is a userspace library providing a programming interface (API) to the
@@ -22,8 +19,8 @@ stdenv.mkDerivation rec {
       by conntrack-tools among many other applications
     '';
     homepage = http://netfilter.org/projects/libnetfilter_conntrack/;
-    license = licenses.gpl2Plus;
-    platforms = platforms.linux;
-    maintainers = with maintainers; [ nckx ];
+    license = stdenv.lib.licenses.gpl2Plus;
+
+    platforms = stdenv.lib.platforms.linux;
   };
 }

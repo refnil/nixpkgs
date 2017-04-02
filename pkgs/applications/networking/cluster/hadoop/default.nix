@@ -15,8 +15,7 @@ stdenv.mkDerivation rec {
     for n in "bin/"* "sbin/"*; do
       sed -i $n -e "s|#!/usr/bin/env bash|#! ${bash}/bin/bash|"
     done
-  '' + stdenv.lib.optionalString (!stdenv.isDarwin) ''
-    patchelf --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" bin/container-executor;
+    patchelf --set-interpreter "$(cat $NIX_GCC/nix-support/dynamic-linker)" bin/container-executor
   '';
 
   installPhase = ''
@@ -25,13 +24,13 @@ stdenv.mkDerivation rec {
     mv * $out
 
     for n in $out/{bin,sbin}"/"*; do
-      wrapProgram $n --prefix PATH : "${stdenv.lib.makeBinPath [ which jre bash ]}" --set JAVA_HOME "${jre}" --set HADOOP_PREFIX "$out"
+      wrapProgram $n --prefix PATH : "${which}/bin:${jre}/bin:${bash}/bin" --set JAVA_HOME "${jre}" --set HADOOP_PREFIX "$out"
     done
   '';
 
   meta = {
     homepage = "http://hadoop.apache.org/";
-    description = "Framework for distributed processing of large data sets across clusters of computers";
+    description = "framework for distributed processing of large data sets across clusters of computers";
     license = stdenv.lib.licenses.asl20;
 
     longDescription = ''
@@ -47,5 +46,6 @@ stdenv.mkDerivation rec {
     '';
 
     platforms = stdenv.lib.platforms.linux;
+    maintainers = [ stdenv.lib.maintainers.simons ];
   };
 }

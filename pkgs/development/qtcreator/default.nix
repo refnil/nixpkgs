@@ -1,55 +1,42 @@
-{ stdenv, fetchurl, makeWrapper
-, qtbase, makeQtWrapper, qtquickcontrols, qtscript, qtdeclarative, qmakeHook
-, withDocumentation ? false
-}:
+{ stdenv, fetchurl, qtLib, sdkBuild ? false }:
 
 with stdenv.lib;
 
 let
-  baseVersion = "4.2";
-  revision = "1";
+  baseVersion = "3.1";
+  revision = "0";
+  version = "${baseVersion}.${revision}";
 in
 
 stdenv.mkDerivation rec {
-  name = "qtcreator-${version}";
-  version = "${baseVersion}.${revision}";
+  # The package name depends on wether we are just building the QtCreator package or the whole Qt SDK
+  # If we are building the QtCreator package: qtcreator-version
+  # If we are building the QtSDK package, the Qt version is also included: qtsdk-version-qt-version
+  name = "qt${if sdkBuild then "sdk" else "creator"}-${version}"
+    + optionalString sdkBuild "-qt-${qtLib.version}";
 
   src = fetchurl {
     url = "http://download.qt-project.org/official_releases/qtcreator/${baseVersion}/${version}/qt-creator-opensource-src-${version}.tar.gz";
-    sha256 = "0f2slaf579q2anflf524lbhmpwrwy3hzjfxzs10n44r7s7yc4dr5";
+    sha256 = "c8c648f4988b707393e0f1958a8868718f27e59263f05f3b6599fa62290c2bbf";
   };
 
-  buildInputs = [ qtbase qtscript qtquickcontrols qtdeclarative ];
+  # This property can be used in a nix development environment to refer to the Qt package
+  # eg: export QTDIR=${qtSDK.qt}
+  qt = qtLib;
 
-  nativeBuildInputs = [ qmakeHook makeQtWrapper makeWrapper ];
+  # We must only propagate Qt (including qmake) when building the QtSDK
+  propagatedBuildInputs = if sdkBuild then [ qtLib ] else [];
+  buildInputs = if sdkBuild == false then [ qtLib ] else [];
 
-  doCheck = true;
+  doCheck = false;
 
   enableParallelBuilding = true;
 
-  buildFlags = optional withDocumentation "docs";
-
-  installFlags = [ "INSTALL_ROOT=$(out)" ] ++ optional withDocumentation "install_docs";
-
-  preBuild = optional withDocumentation ''
-    ln -s ${qtbase}/share/doc $NIX_QT5_TMP/share
+  preConfigure = ''
+    qmake -spec linux-g++ "QT_PRIVATE_HEADERS=${qtLib}/include" qtcreator.pro
   '';
 
-  postInstall = ''
-    # Install desktop file
-    mkdir -p "$out/share/applications"
-    cat > "$out/share/applications/qtcreator.desktop" << __EOF__
-    [Desktop Entry]
-    Exec=$out/bin/qtcreator
-    Name=Qt Creator
-    GenericName=Cross-platform IDE for Qt
-    Icon=QtProject-qtcreator.png
-    Terminal=false
-    Type=Application
-    Categories=Qt;Development;IDE;
-    __EOF__
-    wrapQtProgram $out/bin/qtcreator
-  '';
+  installFlags = "INSTALL_ROOT=$(out)";
 
   meta = {
     description = "Cross-platform IDE tailored to the needs of Qt developers";
@@ -58,9 +45,9 @@ stdenv.mkDerivation rec {
       tailored to the needs of Qt developers. It includes features such as an
       advanced code editor, a visual debugger and a GUI designer.
     '';
-    homepage = "https://wiki.qt.io/Category:Tools::QtCreator";
+    homepage = "http://qt-project.org/wiki/Category:Tools::QtCreator";
     license = "LGPL";
-    maintainers = [ maintainers.akaWolf ];
+    maintainers = [ maintainers.bbenoist ];
     platforms = platforms.all;
   };
 }

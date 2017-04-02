@@ -36,8 +36,6 @@ $pcMap{"libudev"} = "udev";
 $pcMap{"gl"} = "mesa";
 $pcMap{"\$PIXMAN"} = "pixman";
 $pcMap{"\$RENDERPROTO"} = "renderproto";
-$pcMap{"\$DRI3PROTO"} = "dri3proto";
-$pcMap{"\$DRI2PROTO"} = "dri2proto";
 
 
 my $downloadCache = "./download-cache";
@@ -61,7 +59,7 @@ while (<>) {
       #next unless $pkg eq "xcbutil";
     }
 
-    $tarball =~ /\/([^\/]*)\.tar\.(bz2|gz|xz)$/;
+    $tarball =~ /\/([^\/]*)\.tar\.bz2$/;
     my $pkgName = $1;
 
     print "  $pkg $pkgName\n";
@@ -82,7 +80,7 @@ while (<>) {
     print "\nunpacking $path\n";
     system "rm -rf '$tmpDir'";
     mkdir $tmpDir, 0700;
-    system "cd '$tmpDir' && tar xf '$path'";
+    system "cd '$tmpDir' && tar xfj '$path'";
     die "cannot unpack `$path'" if $? != 0;
     print "\n";
 
@@ -209,7 +207,6 @@ while (<>) {
     process \@requires, $1 while $file =~ /XDMCP_MODULES=\"(.*)\"/g;
     process \@requires, $1 while $file =~ /XORG_MODULES=\"(.*)\"/g;
     process \@requires, $1 while $file =~ /NEEDED=\"(.*)\"/g;
-    process \@requires, $1 while $file =~ /ivo_requires=\"(.*)\"/g;
     process \@requires, $1 while $file =~ /XORG_DRIVER_CHECK_EXT\([^,]*,([^\)]*)\)/g;
 
     push @requires, "libxslt" if $pkg =~ /libxcb/;
@@ -229,19 +226,9 @@ open OUT, ">default.nix";
 print OUT "";
 print OUT <<EOF;
 # THIS IS A GENERATED FILE.  DO NOT EDIT!
-args @ { clangStdenv, fetchurl, fetchgit, fetchpatch, stdenv, pkgconfig, intltool, freetype, fontconfig
-, libxslt, expat, libpng, zlib, perl, mesa_drivers, spice_protocol
-, dbus, libuuid, openssl, gperf, m4, libevdev, tradcpp, libinput, mcpp, makeWrapper, autoreconfHook
-, autoconf, automake, libtool, xmlto, asciidoc, flex, bison, python, mtdev, pixman, ... }: with args;
+args: with args;
 
 let
-
-  mkDerivation = name: attrs:
-    let newAttrs = (overrides."\${name}" or (x: x)) attrs;
-        stdenv = newAttrs.stdenv or args.stdenv;
-      in stdenv.mkDerivation ((removeAttrs newAttrs [ "stdenv" ]) // {
-        hardeningDisable = [ "bindnow" "relro" ];
-      });
 
   overrides = import ./overrides.nix {inherit args xorg;};
 
@@ -274,7 +261,7 @@ foreach my $pkg (sort (keys %pkgURLs)) {
     $extraAttrs = "" unless defined $extraAttrs;
 
     print OUT <<EOF
-  $pkg = (mkDerivation "$pkg" {
+  $pkg = (stdenv.mkDerivation ((if overrides ? $pkg then overrides.$pkg else x: x) {
     name = "$pkgNames{$pkg}";
     builder = ./builder.sh;
     src = fetchurl {
@@ -282,8 +269,7 @@ foreach my $pkg (sort (keys %pkgURLs)) {
       sha256 = "$pkgHashes{$pkg}";
     };
     buildInputs = [pkgconfig $inputs];$extraAttrs
-    meta.platforms = stdenv.lib.platforms.unix;
-  }) // {inherit $inputs;};
+  })) // {inherit $inputs;};
 
 EOF
 }

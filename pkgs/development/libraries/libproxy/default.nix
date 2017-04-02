@@ -1,27 +1,14 @@
-{ stdenv, lib, fetchFromGitHub, pkgconfig, cmake
-, dbus, networkmanager, spidermonkey_1_8_5 }:
+{ stdenv, fetchurl, pkgconfig, cmake, zlib, glib }:
 
 stdenv.mkDerivation rec {
-  name = "libproxy-${version}";
-  version = "0.4.13";
-
-  src = fetchFromGitHub {
-    owner = "libproxy";
-    repo = "libproxy";
-    rev = version;
-    sha256 = "0yg4wr44ync6x3p107ic00m1l04xqhni9jn1vzvkw3nfjd0k6f92";
+  name = "libproxy-0.4.11";
+  src = fetchurl {
+    url = "http://libproxy.googlecode.com/files/${name}.tar.gz";
+    sha256 = "0jw6454gxjykmbnbh544axi8hzz9gmm4jz1y5gw1hdqnakg36gyw";
   };
-
-  outputs = [ "out" "dev" ]; # to deal with propagatedBuildInputs
 
   nativeBuildInputs = [ pkgconfig cmake ];
-
-  buildInputs = [ dbus networkmanager spidermonkey_1_8_5 ];
-
-  meta = with stdenv.lib; {
-    platforms = platforms.linux;
-    license = licenses.lgpl21;
-    homepage = "http://libproxy.github.io/libproxy/";
-    description = "A library that provides automatic proxy configuration management";
-  };
+  propagatedBuildInputs = [ zlib ]
+    # now some optional deps, but many more are possible
+    ++ [ glib ];
 }

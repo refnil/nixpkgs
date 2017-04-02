@@ -1,21 +1,18 @@
 { stdenv, fetchurl, flex, cracklib }:
 
 stdenv.mkDerivation rec {
-  name = "linux-pam-${version}";
-  version = "1.2.1";
+  name = "linux-pam-1.1.8";
 
   src = fetchurl {
-    url = "http://www.linux-pam.org/library/Linux-PAM-${version}.tar.bz2";
-    sha256 = "1n9lnf9gjs72kbj1g354v1xhi2j27aqaah15vykh7cnkq08i4arl";
+    url = http://www.linux-pam.org/library/Linux-PAM-1.1.8.tar.bz2;
+    sha256 = "0m8ygb40l1c13nsd4hkj1yh4p1ldawhhg8pyjqj9w5kd4cxg5cf4";
   };
 
-  outputs = [ "out" "doc" "man" /* "modules" */ ];
+  patches = [ ./CVE-2014-2583.patch ];
 
   nativeBuildInputs = [ flex ];
 
   buildInputs = [ cracklib ];
-
-  enableParallelBuilding = true;
 
   crossAttrs = {
     propagatedBuildInputs = [ flex.crossDrv cracklib.crossDrv ];
@@ -34,15 +31,8 @@ stdenv.mkDerivation rec {
 
   postInstall = ''
     mv -v $out/sbin/unix_chkpwd{,.orig}
-    ln -sv /run/wrappers/bin/unix_chkpwd $out/sbin/unix_chkpwd
-  ''; /*
-    rm -rf $out/etc
-    mkdir -p $modules/lib
-    mv $out/lib/security $modules/lib/
-  '';*/
-  # don't move modules, because libpam needs to (be able to) find them,
-  # which is done by dlopening $out/lib/security/pam_foo.so
-  # $out/etc was also missed: pam_env(login:session): Unable to open config file
+    ln -sv /var/setuid-wrappers/unix_chkpwd $out/sbin/unix_chkpwd
+  '';
 
   preConfigure = ''
     configureFlags="$configureFlags --includedir=$out/include/security"

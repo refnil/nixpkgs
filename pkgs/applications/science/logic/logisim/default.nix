@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, jre, makeWrapper }:
+{ stdenv, fetchurl, jre }:
 
 let version = "2.7.1"; in
 
@@ -11,18 +11,22 @@ stdenv.mkDerivation {
   };
   
   phases = [ "installPhase" ];
-
-  nativeBuildInputs = [makeWrapper];
-
+  
   installPhase = ''
     mkdir -pv $out/bin
-    makeWrapper ${jre}/bin/java $out/bin/logisim --add-flags "-jar $src"
+    cp -v $src $out/logisim.jar
+    
+    cat > $out/bin/logisim << EOF
+    #!${stdenv.shell}
+    ${jre}/bin/java -jar $out/logisim.jar
+    EOF
+    
+    chmod +x $out/bin/logisim
   '';
   
   meta = {
     homepage = "http://ozark.hendrix.edu/~burch/logisim";
     description = "Educational tool for designing and simulating digital logic circuits";
     license = stdenv.lib.licenses.gpl2Plus;
-    platforms = stdenv.lib.platforms.unix;
   };
 }

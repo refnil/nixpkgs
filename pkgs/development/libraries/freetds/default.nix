@@ -1,21 +1,12 @@
-{ stdenv, fetchurl
-, odbcSupport ? false, unixODBC ? null }:
+{ stdenv, fetchurl }:
 
-assert odbcSupport -> unixODBC != null;
-
-stdenv.mkDerivation rec {
+stdenv.mkDerivation {
   name = "freetds-0.91";
 
   src = fetchurl {
-    url = "http://mirrors.ibiblio.org/freetds/stable/${name}.tar.gz";
+    url = ftp://ftp.astron.com/pub/freetds/stable/freetds-stable.tgz;
     sha256 = "0r946axzxs0czsmr7283w7vmk5jx3jnxxc32d2ncxsrsh2yli0ba";
   };
-
-  hardeningDisable = [ "format" ];
-
-  buildInputs = stdenv.lib.optional odbcSupport [ unixODBC ];
-
-  configureFlags = stdenv.lib.optionalString odbcSupport "--with-odbc=${unixODBC}";
 
   doDist = true;
 
@@ -32,3 +23,4 @@ stdenv.mkDerivation rec {
     platforms = stdenv.lib.platforms.all;
   };
 }
+

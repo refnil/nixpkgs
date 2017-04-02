@@ -35,9 +35,7 @@ in
       powerUpCommands = mkOption {
         type = types.lines;
         default = "";
-        example = literalExample ''
-          "''${pkgs.hdparm}/sbin/hdparm -B 255 /dev/sda"
-        '';
+        example = "${pkgs.hdparm}/sbin/hdparm -B 255 /dev/sda";
         description =
           ''
             Commands executed when the machine powers up.  That is,
@@ -49,9 +47,7 @@ in
       powerDownCommands = mkOption {
         type = types.lines;
         default = "";
-        example = literalExample ''
-          "''${pkgs.hdparm}/sbin/hdparm -B 255 /dev/sda"
-        '';
+        example = "${pkgs.hdparm}/sbin/hdparm -B 255 /dev/sda";
         description =
           ''
             Commands executed when the machine powers down.  That is,
@@ -69,8 +65,9 @@ in
 
   config = mkIf cfg.enable {
 
-    # Leftover for old setups, should be set by nixos-generate-config now
+    # FIXME: Implement powersave governor for sandy bridge or later Intel CPUs
     powerManagement.cpuFreqGovernor = mkDefault "ondemand";
+    powerManagement.scsiLinkPolicy = mkDefault "min_power";
 
     systemd.targets.post-resume = {
       description = "Post-Resume Actions";
@@ -97,7 +94,6 @@ in
         after = [ "suspend.target" "hibernate.target" "hybrid-sleep.target" ];
         script =
           ''
-            ${config.systemd.package}/bin/systemctl try-restart post-resume.target
             ${cfg.resumeCommands}
             ${cfg.powerUpCommands}
           '';

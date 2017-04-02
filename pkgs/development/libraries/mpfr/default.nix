@@ -1,25 +1,22 @@
 { stdenv, fetchurl, gmp }:
 
 stdenv.mkDerivation rec {
-  name = "mpfr-3.1.3";
+  name = "mpfr-3.1.2";
 
   src = fetchurl {
     url = "mirror://gnu/mpfr/${name}.tar.bz2";
-    sha256 = "1z8akfw9wbmq91vrx04bw86mmnxw2sw5qm5cr8ix5b3w2mcv8fzn";
+    sha256 = "0sqvpfkzamxdr87anzakf9dhkfh15lfmm5bsqajk02h1mxh3zivr";
   };
 
-  patches = [ ./upstream.patch ];
-
-  outputs = [ "out" "dev" "doc" ];
-
-  # mpfr.h requires gmp.h
-  propagatedBuildInputs = [ gmp ];
-
-  # FIXME needs gcc 4.9 in bootstrap tools
-  hardeningDisable = [ "stackprotector" ];
+  buildInputs = [ gmp ];
 
   configureFlags =
-    stdenv.lib.optional stdenv.isSunOS "--disable-thread-safe" ++
+    /* Work around a FreeBSD bug that otherwise leads to segfaults in the test suite:
+          http://hydra.bordeaux.inria.fr/build/34862
+          http://websympa.loria.fr/wwsympa/arc/mpfr/2011-10/msg00015.html
+          http://www.freebsd.org/cgi/query-pr.cgi?pr=161344
+      */
+    stdenv.lib.optional (stdenv.isSunOS or stdenv.isFreeBSD) "--disable-thread-safe" ++
     stdenv.lib.optional stdenv.is64bit "--with-pic";
 
   doCheck = true;
@@ -28,7 +25,7 @@ stdenv.mkDerivation rec {
 
   meta = {
     homepage = http://www.mpfr.org/;
-    description = "Library for multiple-precision floating-point arithmetic";
+    description = "GNU MPFR, a library for multiple-precision floating-point arithmetic";
 
     longDescription = ''
       The GNU MPFR library is a C library for multiple-precision
@@ -44,7 +41,7 @@ stdenv.mkDerivation rec {
 
     license = stdenv.lib.licenses.lgpl2Plus;
 
-    maintainers = [ ];
+    maintainers = [ stdenv.lib.maintainers.ludo ];
     platforms = stdenv.lib.platforms.all;
   };
 }

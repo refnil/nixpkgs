@@ -56,15 +56,16 @@ with lib;
       { name = endpointUser;
         uid = config.ids.uids.fourstorehttp;
         description = "4Store SPARQL endpoint user";
+#        home = stateDir;
       };
 
     services.avahi.enable = true;
 
-    systemd.services."4store-endpoint" = {
-      after = [ "network.target" ];
-      wantedBy = [ "multi-user.target" ];
+    jobs.fourStoreEndpoint = {
+      name = "4store-endpoint";
+      startOn = "filesystem";
 
-      script = ''
+      exec = ''
         ${run} '${pkgs.rdf4store}/bin/4s-httpd -D ${cfg.options} ${if cfg.listenAddress!=null then "-H ${cfg.listenAddress}" else "" } -p ${toString cfg.port} ${cfg.database}'
       '';
     };

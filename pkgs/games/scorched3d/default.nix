@@ -1,18 +1,17 @@
-{ stdenv, fetchurl, mesa, glew, pkgconfig, openalSoft, freealut, wxGTK, libogg
-, freetype, libvorbis, fftwSinglePrec, SDL, SDL_net, expat, libjpeg, libpng }:
+{stdenv, fetchurl, mesa, openal, autoconf, automake, libtool, freealut, wxGTK,
+freetype, fftwSinglePrec, SDL, SDL_net, zlib, libpng, libjpeg, pkgconfig, libogg,
+libvorbis} :
 
-stdenv.mkDerivation rec {
-  version = "44";
-  name = "scorched3d-${version}";
+stdenv.mkDerivation {
+  name = "scorched3d-43.2a";
   src = fetchurl {
-    url = "mirror://sourceforge/scorched3d/Scorched3D-${version}-src.tar.gz";
-    sha256 = "1fldi9pn7cz6hc9h70pacgb7sbykzcac44yp3pkhn0qh4axj10qw";
+    url = mirror://sourceforge/scorched3d/Scorched3D-43.2a-src.tar.gz;
+    sha256 = "1hv1mnfb7y51hqmg95l8rx00j66ff32ddxxi5zgfyw92hsvahgxi";
   };
 
   buildInputs =
-    [ mesa glew openalSoft freealut wxGTK libogg freetype libvorbis
-      SDL SDL_net expat libjpeg libpng fftwSinglePrec
-    ];
+    [ mesa openal freealut wxGTK freetype fftwSinglePrec SDL_net zlib libpng libjpeg
+    libogg libvorbis ];
 
   nativeBuildInputs = [ pkgconfig ];
 
@@ -20,15 +19,20 @@ stdenv.mkDerivation rec {
 
   sourceRoot = "scorched";
 
-  configureFlags = [ "--with-fftw=${fftwSinglePrec.dev}" ];
+  configureFlags = "--with-fftw=${fftwSinglePrec}";
 
-  NIX_LDFLAGS = [ "-lopenal" ];
+# Fake openal-config
+  preConfigure =
+    ''
+      mkdir -pv mybin
+      export PATH=$PATH:$PWD/mybin
+      echo -e "#!/bin/sh\npkg-config openal \"$@\"" > mybin/openal-config
+      chmod +x mybin/openal-config
+    '';
 
-  meta = with stdenv.lib; {
-    homepage = "http://scorched3d.co.uk/";
+  meta = {
+    homepage = http://scorched3d.co.uk/;
     description = "3D Clone of the classic Scorched Earth";
-    license = licenses.gpl2Plus;
-    platforms = platforms.linux; # maybe more
-    maintainers = with maintainers; [ abbradar ];
+    license = stdenv.lib.licenses.gpl2Plus;
   };
 }

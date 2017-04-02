@@ -10,8 +10,4 @@ stdenv.mkDerivation rec {
 
   buildInputs = [ glib openssl ];
   nativeBuildInputs = [ pkgconfig ];
-
-  meta = {
-    platforms = stdenv.lib.platforms.linux;
-  };
 }

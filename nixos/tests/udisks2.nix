@@ -11,9 +11,6 @@ in
 
 {
   name = "udisks2";
-  meta = with pkgs.stdenv.lib.maintainers; {
-    maintainers = [ eelco chaoflow ];
-  };
 
   machine =
     { config, pkgs, ... }:

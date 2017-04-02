@@ -1,58 +1,45 @@
 { stdenv, fetchurl, pkgconfig, bc, perl, pam, libXext, libXScrnSaver, libX11
-, libXrandr, libXmu, libXxf86vm, libXrender, libXxf86misc, libjpeg, mesa, gtk2
-, libxml2, libglade, intltool, xorg, makeWrapper, gle
-, forceInstallAllHacks ? false
+, libXrandr, libXmu, libXxf86vm, libXrender, libXxf86misc, libjpeg, mesa, gtk
+, libxml2, libglade, intltool
 }:
 
 stdenv.mkDerivation rec {
-  version = "5.36";
+  version = "5.29";
   name = "xscreensaver-${version}";
 
   src = fetchurl {
     url = "http://www.jwz.org/xscreensaver/${name}.tar.gz";
-    sha256 = "0v60mdhvv42jla5hljp77igng11kxpah5fs9j7ci65kz0hw552vb";
+    sha256 = "157jy1mh84h6p4mpzsgcadv6c660c212rmjgdpgpidcn0rsza664";
   };
 
   buildInputs =
-    [ pkgconfig bc perl libjpeg mesa gtk2 libxml2 libglade pam
+    [ pkgconfig bc perl libjpeg mesa gtk libxml2 libglade pam
       libXext libXScrnSaver libX11 libXrandr libXmu libXxf86vm libXrender
-      libXxf86misc intltool xorg.appres makeWrapper gle
+      libXxf86misc intltool
     ];
 
-  preConfigure =
+  patchPhase =
     ''
-      # Fix installation paths for GTK resources.
+      # Fix build error in version 5.18. Remove this patch when updating
+      # to a later version.
+      #sed -i -e '/AF_LINK/d' hacks/glx/sonar-icmp.c
+      # Fix path to GTK.
       sed -e 's%@GTK_DATADIR@%@datadir@% ; s%@PO_DATADIR@%@datadir@%' \
-          -i driver/Makefile.in po/Makefile.in.in
+	  -i driver/Makefile.in po/Makefile.in.in
     '';
 
   configureFlags =
     [ "--with-gl" "--with-pam" "--with-pixbuf" "--with-proc-interrupts"
       "--with-dpms-ext" "--with-randr-ext" "--with-xinerama-ext"
       "--with-xf86vmode-ext" "--with-xf86gamma-ext" "--with-randr-ext"
-      "--with-xshm-ext" "--with-xdbe-ext"
+      "--with-xshm-ext" "--with-xdbe-ext" "--without-readdisplay"
       "--with-x-app-defaults=\${out}/share/xscreensaver/app-defaults"
     ];
-
-  postInstall = ''
-      wrapProgram $out/bin/xscreensaver-text \
-        --prefix PATH : ${stdenv.lib.makeBinPath [xorg.appres]}
-  ''
-  + stdenv.lib.optionalString forceInstallAllHacks ''
-    make -C hacks/glx dnalogo
-    cat hacks/Makefile.in | grep -E '([a-z0-9]+):[[:space:]]*\1[.]o' | cut -d : -f 1  | xargs make -C hacks
-    cat hacks/glx/Makefile.in | grep -E '([a-z0-9]+):[[:space:]]*\1[.]o' | cut -d : -f 1  | xargs make -C hacks/glx
-    cp -f $(find hacks -type f -perm -111 "!" -name "*.*" )  "$out/libexec/xscreensaver"
-  ''
-  ;
 
   meta = {
     homepage = "http://www.jwz.org/xscreensaver/";
     description = "A set of screensavers";
-    maintainers = with stdenv.lib.maintainers; [ raskin ];
-    platforms = with stdenv.lib.platforms; allBut cygwin;
-    inherit version;
-    downloadPage = "http://www.jwz.org/xscreensaver/download.html";
-    updateWalker = true;
+    maintainers = with stdenv.lib.maintainers; [ raskin urkud ];
+    platforms = stdenv.lib.platforms.allBut "i686-cygwin";
   };
 }

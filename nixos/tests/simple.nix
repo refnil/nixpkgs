@@ -1,12 +1,7 @@
-import ./make-test.nix ({ pkgs, ...} : {
+import ./make-test.nix {
   name = "simple";
-  meta = with pkgs.stdenv.lib.maintainers; {
-    maintainers = [ eelco ];
-  };
 
-  machine = { config, pkgs, ... }: {
-    imports = [ ../modules/profiles/minimal.nix ];
-  };
+  machine = { config, pkgs, ... }: { };
 
   testScript =
     ''
@@ -14,4 +9,4 @@ import ./make-test.nix ({ pkgs, ...} : {
       $machine->waitForUnit("multi-user.target");
       $machine->shutdown;
     '';
-})
+}

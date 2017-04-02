@@ -1,14 +1,14 @@
 { stdenv, fetchurl, autoreconfHook, gettext, makeWrapper
-, alsaLib, libjack2, tk
+, alsaLib, jack2, tk
 }:
 
 stdenv.mkDerivation  rec {
   name = "puredata-${version}";
-  version = "0.47-1";
+  version = "0.45-4";
 
   src = fetchurl {
-    url = "http://msp.ucsd.edu/Software/pd-${version}.src.tar.gz";
-    sha256 = "0k5s949kqd7yw97h3m8z81bjz32bis9m4ih8df1z0ymipnafca67";
+    url = "mirror://sourceforge/pure-data/pd-${version}.src.tar.gz";
+    sha256 = "1ls2ap5yi2zxvmr247621g4jx0hhfds4j5704a050bn2n3l0va2p";
   };
 
   patchPhase = ''
@@ -17,7 +17,7 @@ stdenv.mkDerivation  rec {
 
   nativeBuildInputs = [ autoreconfHook gettext makeWrapper ];
 
-  buildInputs = [ alsaLib libjack2 ];
+  buildInputs = [ alsaLib jack2 ];
 
   configureFlags = ''
     --enable-alsa

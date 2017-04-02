@@ -1,13 +1,13 @@
-{ stdenv, fetchurl, glib, gtk2, intltool, libfm, libX11, pango, pkgconfig }:
+{ stdenv, fetchurl, glib, gtk, intltool, libfm, libX11, pango, pkgconfig }:
 
-stdenv.mkDerivation rec {
-  name = "pcmanfm-1.2.5";
+stdenv.mkDerivation {
+  name = "pcmanfm-1.2.0";
   src = fetchurl {
-    url = "mirror://sourceforge/pcmanfm/${name}.tar.xz";
-    sha256 = "0rxdh0dfzc84l85c54blq42gczygq8adhr3l9hqzy1dp530cm1hc";
+    url = "mirror://sourceforge/pcmanfm/pcmanfm-1.2.0.tar.xz";
+    sha256 = "1cmskj7dpjgrrn89z7cc1h1nsmd6qq3bakf207ldrhrxxv3fxl2j";
   };
 
-  buildInputs = [ glib gtk2 intltool libfm libX11 pango pkgconfig ];
+  buildInputs = [ glib gtk intltool libfm libX11 pango pkgconfig ];
 
   meta = with stdenv.lib; {
     homepage = "http://blog.lxde.org/?cat=28/";

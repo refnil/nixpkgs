@@ -18,7 +18,6 @@ stdenv.mkDerivation rec {
       in an Ogg container. It can carry Unicode text, images, and animate
       them.'';
     homepage = http://code.google.com/p/libkate;
-    maintainers = [ ];
-    platforms = stdenv.lib.platforms.unix;
+    maintainers = [ stdenv.lib.maintainers.urkud ];
   };
 }

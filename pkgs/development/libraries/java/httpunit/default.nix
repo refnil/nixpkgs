@@ -10,8 +10,4 @@ stdenv.mkDerivation {
   };
 
   inherit unzip;
-
-  meta = {
-    platforms = stdenv.lib.platforms.unix;
-  };
 }

@@ -1,23 +1,57 @@
-{ stdenv, fetchFromGitHub, autoreconfHook, pkgconfig }:
+x@{builderDefsPackage
+  , fetchgit
+  , autoconf, automake, libtool
+  , ...}:
+builderDefsPackage
+(a :  
+let 
+  helperArgNames = ["stdenv" "fetchurl" "builderDefsPackage"] ++ 
+    ["fetchgit"];
 
-stdenv.mkDerivation rec {
-  name="libfixposix-${version}";
-  version="0.4.1";
-
-  src = fetchFromGitHub {
-    owner = "sionescu";
-    repo = "libfixposix";
-    rev = "v${version}";
-    sha256 = "19wjb43mn16f4lin5a2dfi3ym2hy7kqibs0z631d205b16vxas15";
+  buildInputs = map (n: builtins.getAttr n x)
+    (builtins.attrNames (builtins.removeAttrs x helperArgNames));
+  sourceInfo = rec {
+    method="fetchgit";
+    baseName="libfixposix"; 
+    url="git://gitorious.org/${baseName}/${baseName}";
+    rev="30b75609d858588ea00b427015940351896867e9";
+    version="git-${rev}";
+    name="${baseName}-${version}";
+    hash="44553c90d67f839cdd57d14d37d9faa25b1b766f607408896137f3013c1c9424";
+  };
+in
+rec {
+  srcDrv = a.fetchgit {
+    url = sourceInfo.url;
+    rev = sourceInfo.rev;
+    sha256 = sourceInfo.hash;
   };
 
-  nativeBuildInputs = [ autoreconfHook pkgconfig ];
+  src = srcDrv +"/";
 
-  meta = with stdenv.lib; {
-    homepage = https://github.com/sionescu/libfixposix;
-    description = "Thin wrapper over POSIX syscalls and some replacement functionality";
-    license = licenses.boost;
-    maintainers = with maintainers; [ orivej raskin ];
-    platforms = platforms.linux;
+  inherit (sourceInfo) name version;
+  inherit buildInputs;
+
+  /* doConfigure should be removed if not needed */
+  phaseNames = ["doAutoreconf" "doConfigure" "doMakeInstall"];
+
+  doAutoreconf = a.fullDepEntry (''
+    autoreconf -i
+  '') ["doUnpack" "addInputs"];
+      
+  meta = {
+    description = "A set of workarounds for places in POSIX that get implemented differently";
+    maintainers = with a.lib.maintainers;
+    [
+      raskin
+    ];
+    platforms = with a.lib.platforms;
+      linux;
   };
-}
+  passthru = {
+    updateInfo = {
+      downloadPage = "http://gitorious.org/libfixposix/libfixposix";
+    };
+  };
+}) x
+

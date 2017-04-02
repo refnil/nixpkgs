@@ -1,11 +1,13 @@
 # Avahi daemon.
-{ config, lib, utils, pkgs, ... }:
+{ config, lib, pkgs, ... }:
 
 with lib;
 
 let
 
   cfg = config.services.avahi;
+
+  inherit (pkgs) avahi;
 
   avahiDaemonConf = with cfg; pkgs.writeText "avahi-daemon.conf" ''
     [server]
@@ -19,19 +21,12 @@ let
     browse-domains=${concatStringsSep ", " browseDomains}
     use-ipv4=${if ipv4 then "yes" else "no"}
     use-ipv6=${if ipv6 then "yes" else "no"}
-    ${optionalString (interfaces!=null) "allow-interfaces=${concatStringsSep "," interfaces}"}
-    ${optionalString (domainName!=null) "domain-name=${domainName}"}
 
     [wide-area]
     enable-wide-area=${if wideArea then "yes" else "no"}
 
     [publish]
-    disable-publishing=${if publish.enable then "no" else "yes"}
-    disable-user-service-publishing=${if publish.userServices then "no" else "yes"}
-    publish-addresses=${if publish.userServices || publish.addresses then "yes" else "no"}
-    publish-hinfo=${if publish.hinfo then "yes" else "no"}
-    publish-workstation=${if publish.workstation then "yes" else "no"}
-    publish-domain=${if publish.domain then "yes" else "no"}
+    disable-publishing=${if publishing then "no" else "yes"}
   '';
 
 in
@@ -62,17 +57,8 @@ in
         '';
       };
 
-      domainName = mkOption {
-        type = types.str;
-        default = "local";
-        description = ''
-          Domain name for all advertisements.
-        '';
-      };
-
       browseDomains = mkOption {
-        default = [ ];
-        example = [ "0pointer.de" "zeroconf.org" ];
+        default = [ "0pointer.de" "zeroconf.org" ];
         description = ''
           List of non-local DNS domains to be browsed.
         '';
@@ -88,55 +74,14 @@ in
         description = ''Whether to use IPv6'';
       };
 
-      interfaces = mkOption {
-        type = types.nullOr (types.listOf types.str);
-        default = null;
-        description = ''
-          List of network interfaces that should be used by the <command>avahi-daemon</command>.
-          Other interfaces will be ignored. If <literal>null</literal> all local interfaces
-          except loopback and point-to-point will be used.
-        '';
-      };
-
       wideArea = mkOption {
         default = true;
         description = ''Whether to enable wide-area service discovery.'';
       };
 
-      publish = {
-        enable = mkOption {
-          default = false;
-          description = ''Whether to allow publishing in general.'';
-        };
-
-        userServices = mkOption {
-          default = false;
-          description = ''Whether to publish user services. Will set <literal>addresses=true</literal>.'';
-        };
-
-        addresses = mkOption {
-          default = false;
-          description = ''Whether to register mDNS address records for all local IP addresses.'';
-        };
-
-        hinfo = mkOption {
-          default = false;
-          description = ''
-            Whether to register an mDNS HINFO record which contains information about the
-            local operating system and CPU.
-          '';
-        };
-
-        workstation = mkOption {
-          default = false;
-          description = ''Whether to register a service of type "_workstation._tcp" on the local LAN.'';
-        };
-
-        domain = mkOption {
-          default = false;
-          description = ''Whether to announce the locally used domain name for browsing by other hosts.'';
-        };
-
+      publishing = mkOption {
+        default = true;
+        description = ''Whether to allow publishing.'';
       };
 
       nssmdns = mkOption {
@@ -173,39 +118,29 @@ in
 
     system.nssModules = optional cfg.nssmdns pkgs.nssmdns;
 
-    environment.systemPackages = [ pkgs.avahi ];
+    environment.systemPackages = [ avahi ];
 
-    systemd.sockets.avahi-daemon =
-      { description = "Avahi mDNS/DNS-SD Stack Activation Socket";
-        listenStreams = [ "/var/run/avahi-daemon/socket" ];
-        wantedBy = [ "sockets.target" ];
-      };
+    jobs.avahi_daemon =
+      { name = "avahi-daemon";
 
-    systemd.services.avahi-daemon =
-      { description = "Avahi mDNS/DNS-SD Stack";
-        wantedBy = [ "multi-user.target" ];
-        requires = [ "avahi-daemon.socket" ];
-
-        serviceConfig."NotifyAccess" = "main";
-        serviceConfig."BusName" = "org.freedesktop.Avahi";
-        serviceConfig."Type" = "dbus";
-
-        path = [ pkgs.coreutils pkgs.avahi ];
-
-        preStart = "mkdir -p /var/run/avahi-daemon";
+        startOn = "ip-up";
 
         script =
           ''
+            export PATH="${avahi}/bin:${avahi}/sbin:$PATH"
+
             # Make NSS modules visible so that `avahi_nss_support ()' can
             # return a sensible value.
             export LD_LIBRARY_PATH="${config.system.nssModules.path}"
 
-            exec ${pkgs.avahi}/sbin/avahi-daemon --syslog -f "${avahiDaemonConf}"
+            mkdir -p /var/run/avahi-daemon
+
+            exec ${avahi}/sbin/avahi-daemon --syslog -f "${avahiDaemonConf}"
           '';
       };
 
     services.dbus.enable = true;
-    services.dbus.packages = [ pkgs.avahi ];
+    services.dbus.packages = [avahi];
 
     # Enabling Avahi without exposing it in the firewall doesn't make
     # sense.

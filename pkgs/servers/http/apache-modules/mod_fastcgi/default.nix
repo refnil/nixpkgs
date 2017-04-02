@@ -1,26 +1,18 @@
 { stdenv, fetchurl, apacheHttpd }:
 
-stdenv.mkDerivation rec {
+stdenv.mkDerivation {
   name = "mod_fastcgi-2.4.6";
 
   src = fetchurl {
-    url = "http://www.fastcgi.com/dist/${name}.tar.gz";
+    url = "http://www.fastcgi.com/dist/mod_fastcgi-2.4.6.tar.gz";
     sha256 = "12g6vcfl9jl8rqf8lzrkdxg2ngca310d3d6an563xqcgrkp8ga55";
   };
-
-  patches =
-    [ (fetchurl {
-        name = "compile-against-apache24.diff";
-        url = "https://projects.archlinux.org/svntogit/packages.git/plain/trunk/compile-against-apache24.diff?h=packages/mod_fastcgi&id=81c7cb99d15682df3bdb1edcaeea5259e9e43a42";
-        sha256 = "000qvrf5jb979i37rimrdivcgjijcffgrpkx38c0rn62z9jz61g4";
-      })
-    ];
 
   buildInputs = [ apacheHttpd ];
 
   preBuild = ''
     cp Makefile.AP2 Makefile
-    makeFlags="top_dir=${apacheHttpd.dev}/share prefix=$out"
+    makeFlags="top_dir=${apacheHttpd} prefix=$out"
   '';
 
   meta = {
@@ -39,6 +31,6 @@ stdenv.mkDerivation rec {
     '';
 
     platforms = stdenv.lib.platforms.linux;
-    maintainers = [ stdenv.lib.maintainers.peti ];
+    maintainers = [ stdenv.lib.maintainers.simons ];
   };
 }

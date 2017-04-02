@@ -31,15 +31,6 @@ in {
           <literal>guest</literal> by default, so you should delete
           this user if you intend to allow external access.
         '';
-        type = types.str;
-      };
-
-      port = mkOption {
-        default = 5672;
-        description = ''
-          Port on which RabbitMQ will listen for AMQP connections.
-        '';
-        type = types.int;
       };
 
       dataDir = mkOption {
@@ -65,7 +56,7 @@ in {
         type = types.str;
         description = ''
           Verbatim configuration file contents.
-          See http://www.rabbitmq.com/configure.html
+          See http://www.rabbitmq.com/configure.htm
         '';
       };
 
@@ -86,7 +77,6 @@ in {
     users.extraUsers.rabbitmq = {
       description = "RabbitMQ server user";
       home = "${cfg.dataDir}";
-      createHome = true;
       group = "rabbitmq";
       uid = config.ids.uids.rabbitmq;
     };
@@ -97,16 +87,12 @@ in {
       description = "RabbitMQ Server";
 
       wantedBy = [ "multi-user.target" ];
-      after = [ "network.target" ];
-
-      path = [ pkgs.rabbitmq_server pkgs.procps ];
+      after = [ "network-interfaces.target" ];
 
       environment = {
         RABBITMQ_MNESIA_BASE = "${cfg.dataDir}/mnesia";
         RABBITMQ_NODE_IP_ADDRESS = cfg.listenAddress;
-        RABBITMQ_NODE_PORT = toString cfg.port;
         RABBITMQ_SERVER_START_ARGS = "-rabbit error_logger tty -rabbit sasl_error_logger false";
-        RABBITMQ_PID_FILE = "${cfg.dataDir}/pid";
         SYS_PREFIX = "";
         RABBITMQ_ENABLED_PLUGINS_FILE = pkgs.writeText "enabled_plugins" ''
           [ ${concatStringsSep "," cfg.plugins} ].
@@ -115,21 +101,23 @@ in {
 
       serviceConfig = {
         ExecStart = "${pkgs.rabbitmq_server}/sbin/rabbitmq-server";
-        ExecStop = "${pkgs.rabbitmq_server}/sbin/rabbitmqctl stop";
         User = "rabbitmq";
         Group = "rabbitmq";
-        WorkingDirectory = cfg.dataDir;
+        PermissionsStartOnly = true;
       };
 
-      postStart = ''
-        rabbitmqctl wait ${cfg.dataDir}/pid
-      '';
-
       preStart = ''
+        mkdir -p ${cfg.dataDir} && chmod 0700 ${cfg.dataDir}
+        if [ "$(id -u)" = 0 ]; then chown rabbitmq:rabbitmq ${cfg.dataDir}; fi
+        
         ${optionalString (cfg.cookie != "") ''
             echo -n ${cfg.cookie} > ${cfg.dataDir}/.erlang.cookie
             chmod 400 ${cfg.dataDir}/.erlang.cookie
+            chown rabbitmq:rabbitmq ${cfg.dataDir}/.erlang.cookie
         ''}
+
+        mkdir -p /var/log/rabbitmq && chmod 0700 /var/log/rabbitmq
+        chown rabbitmq:rabbitmq /var/log/rabbitmq
       '';
     };
 

@@ -1,14 +1,11 @@
-{ stdenv, fetchFromGitHub }:
+{ stdenv, fetchurl }:
 
 stdenv.mkDerivation rec {
-  name = "dosfstools-${version}";
-  version = "3.0.28";
+  name = "dosfstools-3.0.26";
 
-  src = fetchFromGitHub {
-    owner = "dosfstools";
-    repo = "dosfstools";
-    rev = "v${version}";
-    sha256 = "0lqirpxcn8ml0anq8aqmaljfsji9h6mdzz0jrs0yqqfhgg90bkg2";
+  src = fetchurl {
+    url = "http://daniel-baumann.ch/files/software/dosfstools/${name}.tar.xz";
+    sha256 = "0x9yi6s1419k678pr9h3a5bjccbrcxxpzmjwgl262ffrikz45126";
   };
 
   makeFlags = "PREFIX=$(out)";

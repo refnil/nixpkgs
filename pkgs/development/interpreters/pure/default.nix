@@ -1,45 +1,52 @@
-{ lib, stdenv, fetchurl, makeWrapper,
-  llvm, gmp, mpfr, readline, bison, flex }:
+x@{builderDefsPackage
+  , llvm, gmp, mpfr, readline, bison, flex, makeWrapper
+  , ...}:
+builderDefsPackage
+(a :  
+let 
+  helperArgNames = ["stdenv" "fetchurl" "builderDefsPackage"] ++ 
+    [];
 
-stdenv.mkDerivation rec {
-  baseName="pure";
-  project="pure-lang";
-  version="0.66";
-  name="${baseName}-${version}";
-  extension="tar.gz";
-
-  src = fetchurl {
+  buildInputs = map (n: builtins.getAttr n x)
+    (builtins.attrNames (builtins.removeAttrs x helperArgNames));
+  sourceInfo = rec {
+    baseName="pure";
+    project="pure-lang";
+    version="0.58";
+    name="${baseName}-${version}";
+    extension="tar.gz";
     url="https://bitbucket.org/purelang/${project}/downloads/${name}.${extension}";
-    sha256="42df6832476e8bee3a7ca179671284c1edd7bc82b71062fa0de62fd2117ee676";
+    hash="180ygv8nmfy8v4696km8jdahn5cnr454sc8i1av7s6z4ss7mrxmi";
+  };
+in
+rec {
+  src = a.fetchurl {
+    url = sourceInfo.url;
+    sha256 = sourceInfo.hash;
   };
 
-  buildInputs = [ bison flex makeWrapper ];
-  propagatedBuildInputs = [ llvm gmp mpfr readline ];
+  inherit (sourceInfo) name version;
+  inherit buildInputs;
 
-  postPatch = ''
-    for f in expr.cc matcher.cc printer.cc symtable.cc parserdefs.hh; do
-      sed -i '1i\#include <stddef.h>' $f
-    done
-  '';
+  /* doConfigure should be removed if not needed */
+  phaseNames = ["doConfigure" "doMakeInstall" "doWrap"];
 
-  configureFlags = [ "--enable-release" ];
-  doCheck = true;
-  checkPhase = ''
-    LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${llvm}/lib make check
-  '';
-  postInstall = ''
-    wrapProgram $out/bin/pure --prefix LD_LIBRARY_PATH : ${llvm}/lib
-  '';
+  doWrap = a.makeManyWrappers ''$out/bin/pure'' ''--prefix LD_LIBRARY_PATH : "${llvm}/lib"'';
 
   meta = {
-    description = "A modern-style functional programming language based on term rewriting";
-    maintainers = with lib.maintainers;
+    description = "A purely functional programming language based on term rewriting";
+    maintainers = with a.lib.maintainers;
     [
       raskin
-      asppsa
     ];
-    platforms = with lib.platforms;
+    platforms = with a.lib.platforms;
       linux;
-    license = lib.licenses.gpl3Plus;
+    license = a.lib.licenses.gpl3Plus;
   };
-}
+  passthru = {
+    updateInfo = {
+      downloadPage = "https://bitbucket.org/purelang/pure-lang/downloads";
+    };
+  };
+}) x
+

@@ -1,29 +1,19 @@
-{ stdenv, fetchurl, openssl, ncurses, pkgconfig, glib, loudmouth, libotr
-, gpgme
-}:
+{stdenv, fetchurl, openssl, ncurses, pkgconfig, glib, loudmouth}:
 
-stdenv.mkDerivation rec {
-  name = "mcabber-${version}";
-  version = "1.0.5";
+stdenv.mkDerivation {
+
+  name = "mcabber-0.10.1";
 
   src = fetchurl {
-    url = "http://mcabber.com/files/mcabber-${version}.tar.bz2";
-    sha256 = "0ixdzk5b3s31a4bdfqgqrsiq7vbgdzhqr49p9pz9cq9bgn0h1wm0";
+    url = "http://mcabber.com/files/mcabber-0.10.1.tar.bz2";
+    sha256 = "1248cgci1v2ypb90wfhyipwdyp1wskn3gzh78af5ai1a4w5rrjq0";
   };
 
-  buildInputs = [ openssl ncurses pkgconfig glib loudmouth libotr gpgme ];
+  meta = { homepage = "http://mcabber.com/";
+           description = "Small Jabber console client";
+         };
 
-  configureFlags = "--with-openssl=${openssl.dev} --enable-modules --enable-otr";
+  buildInputs = [openssl ncurses pkgconfig glib loudmouth];
 
-  doCheck = true;
-
-  meta = with stdenv.lib; {
-    homepage = http://mcabber.com/;
-    description = "Small Jabber console client";
-    license = licenses.gpl2;
-    maintainers = with maintainers; [ pSub ];
-    platforms = with platforms; linux;
-    updateWalker = true;
-    downloadURLRegexp = "mcabber-[0-9.]+[.]tar[.][a-z0-9]+$";
-  };
+  configureFlags = "--with-openssl=${openssl}";
 }

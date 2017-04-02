@@ -19,7 +19,7 @@ in
       description = ''
         Configure the governor used to regulate the frequence of the
         available CPUs. By default, the kernel configures the
-        performance governor.
+        on-demand governor.
       '';
     };
 
@@ -30,7 +30,9 @@ in
 
   config = mkIf (!config.boot.isContainer && config.powerManagement.cpuFreqGovernor != null) {
 
-    boot.kernelModules = [ "cpufreq_${cfg.cpuFreqGovernor}" ];
+    boot.kernelModules = [ "acpi-cpufreq" "speedstep-lib" "pcc-cpufreq"
+      "cpufreq_${cfg.cpuFreqGovernor}"
+    ];
 
     environment.systemPackages = [ cpupower ];
 
@@ -38,7 +40,7 @@ in
       description = "CPU Frequency Governor Setup";
       after = [ "systemd-modules-load.service" ];
       wantedBy = [ "multi-user.target" ];
-      path = [ cpupower pkgs.kmod ];
+      path = [ cpupower ];
       unitConfig.ConditionVirtualization = false;
       serviceConfig = {
         Type = "oneshot";

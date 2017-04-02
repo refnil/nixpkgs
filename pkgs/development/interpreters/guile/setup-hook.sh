@@ -5,4 +5,4 @@ addGuileLibPath () {
     fi
 }
 
-envHooks+=(addGuileLibPath)
+envHooks=(${envHooks[@]} addGuileLibPath)

@@ -1,22 +1,17 @@
-{ fetchFromGitHub, stdenv, pkgconfig, exiv2, libxml2, gtk2
+{ fetchurl, stdenv, pkgconfig, exiv2, libxml2, gtk
 , libxslt, docbook_xsl, docbook_xml_dtd_42 }:
 
 stdenv.mkDerivation rec {
-  name = "gpscorrelate-${version}";
-  version = "1.6.1";
+  name = "gpscorrelate-1.6.0";
 
-  src = fetchFromGitHub {
-    owner = "freefoote";
-    repo = "gpscorrelate";
-    rev = version;
-    sha256 = "1z0fc75rx7dl6nnydksa578qv116j2c2xs1czfiijzxjghx8njdj";
+  src = fetchurl {
+    url = "http://freefoote.dview.net/linux/${name}.tar.gz";
+    sha256 = "1j0b244xkvvf0i4iivp4dw9k4xgyasx4sapd91mnwki35fy49sp0";
   };
 
-  nativeBuildInputs = [ pkgconfig ];
   buildInputs = [
-    exiv2 libxml2 gtk2
-    libxslt docbook_xsl 
-    docbook_xml_dtd_42
+    pkgconfig exiv2 libxml2 gtk
+    libxslt docbook_xsl docbook_xml_dtd_42
   ];
 
   patchPhase = ''
@@ -24,7 +19,7 @@ stdenv.mkDerivation rec {
         -es",^[[:blank:]]*prefix[[:blank:]]*=.*$,prefix = $out,g"
   '';
 
-  meta = with stdenv.lib; {
+  meta = {
     description = "A GPS photo correlation tool, to add EXIF geotags";
 
     longDescription = ''
@@ -43,8 +38,8 @@ stdenv.mkDerivation rec {
       one takes the GPS data in a different format.
     '';
 
-    license = licenses.gpl2Plus;
-    homepage = https://github.com/freefoote/gpscorrelate;
-    platforms = platforms.linux;
+    license = stdenv.lib.licenses.gpl2Plus;
+
+    homepage = http://freefoote.dview.net/linux_gpscorr.html;
   };
 }

@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, runCommand, python, perl, xorriso, pathsFromGraph
+{ stdenv, fetchurl, runCommand, python, perl, cdrkit, pathsFromGraph
 , arch ? "x86_64"
 }:
 
@@ -10,13 +10,13 @@
 let
   cygPkgList = if arch == "x86_64" then fetchurl {
     url = "${mirror}/x86_64/setup.ini";
-    sha256 = "0arrxvxbl85l82iy648snx5cl952w791p45p0dfg1xpiaf96cbkj";
+    sha256 = "0ljsxdkx9s916wp28kcvql3bjx80zzzidan6jicby7i9s3sm96n9";
   } else fetchurl {
     url = "${mirror}/x86/setup.ini";
-    sha256 = "1fayx34868vd5h2nah7chiw65sl3i9qzrwvs7lrlv2h8k412vb69";
+    sha256 = "1slyj4qha7x649ggwdski9spmyrbs04z2d46vgk8krllg0kppnjv";
   };
 
-  cygwinCross = (import ../../../../.. {
+  cygwinCross = (import ../../../../top-level/all-packages.nix {
     inherit (stdenv) system;
     crossSystem = {
       libc = "msvcrt";
@@ -25,24 +25,23 @@ let
       inherit arch;
       config = "${arch}-w64-mingw32";
     };
-  }).windows.cygwinSetup;
+  }).windows.cygwinSetup.crossDrv;
 
   makeCygwinClosure = { packages, packageList }: let
     expr = import (runCommand "cygwin.nix" { buildInputs = [ python ]; } ''
       python ${./mkclosure.py} "${packages}" ${toString packageList} > "$out"
     '');
-    gen = { url, hash }: {
+    gen = { url, md5 }: {
       source = fetchurl {
         url = "${mirror}/${url}";
-        sha512 = hash;
+        inherit md5;
       };
       target = url;
     };
   in map gen expr;
 
-in import ../../../../../nixos/lib/make-iso9660-image.nix {
-  inherit stdenv perl xorriso pathsFromGraph;
-  syslinux = null;
+in import <nixpkgs/nixos/lib/make-iso9660-image.nix> {
+  inherit stdenv perl cdrkit pathsFromGraph;
   contents = [
     { source = "${cygwinCross}/bin/setup.exe";
       target = "setup.exe";

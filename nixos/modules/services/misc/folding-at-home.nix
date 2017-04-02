@@ -49,20 +49,26 @@ in {
         home = stateDir;
       };
 
-    systemd.services.foldingathome = {
-      after = [ "network.target" ];
-      wantedBy = [ "multi-user.target" ];
-      preStart = ''
-        mkdir -m 0755 -p ${stateDir}
-        chown ${fahUser} ${stateDir}
-        cp -f ${pkgs.writeText "client.cfg" cfg.config} ${stateDir}/client.cfg
-      '';
-      script = "${pkgs.su}/bin/su -s ${pkgs.stdenv.shell} ${fahUser} -c 'cd ${stateDir}; ${pkgs.foldingathome}/bin/fah6'";
-    };
+    jobs.foldingAtHome =
+      { name = "foldingathome";
 
-    services.foldingAtHome.config = ''
-        [settings]
-        username=${cfg.nickname}
-    '';
+        startOn = "started network-interfaces";
+        stopOn = "stopping network-interfaces";
+
+        preStart =
+          ''
+            mkdir -m 0755 -p ${stateDir}
+            chown ${fahUser} ${stateDir}
+            cp -f ${pkgs.writeText "client.cfg" cfg.config} ${stateDir}/client.cfg
+          '';
+        exec = "${pkgs.su}/bin/su -s ${pkgs.stdenv.shell} ${fahUser} -c 'cd ${stateDir}; ${pkgs.foldingathome}/bin/fah6'";
+      };
+
+      services.foldingAtHome.config = ''
+          [settings]
+          username=${cfg.nickname}
+      '';
+
   };
+
 }

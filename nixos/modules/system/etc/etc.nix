@@ -8,13 +8,12 @@ let
 
   etc' = filter (f: f.enable) (attrValues config.environment.etc);
 
-  etc = pkgs.stdenvNoCC.mkDerivation {
+  etc = pkgs.stdenv.mkDerivation {
     name = "etc";
 
     builder = ./make-etc.sh;
 
     preferLocalBuild = true;
-    allowSubstitutes = false;
 
     /* !!! Use toXML. */
     sources = map (x: x.source) etc';
@@ -33,9 +32,10 @@ in
   options = {
 
     environment.etc = mkOption {
+      type = types.loaOf types.optionSet;
       default = {};
       example = literalExample ''
-        { example-configuration-file =
+        { hosts =
             { source = "/nix/store/.../etc/dir/file.conf.example";
               mode = "0440";
             };
@@ -46,8 +46,7 @@ in
         Set of files that have to be linked in <filename>/etc</filename>.
       '';
 
-      type = with types; loaOf (submodule (
-        { name, config, ... }:
+      options = singleton ({ name, config, ... }:
         { options = {
 
             enable = mkOption {
@@ -112,12 +111,11 @@ in
 
           config = {
             target = mkDefault name;
-            source = mkIf (config.text != null) (
-              let name' = "etc-" + baseNameOf name;
-              in mkDefault (pkgs.writeText name' config.text));
+            source = mkIf (config.text != null)
+              (mkDefault (pkgs.writeText "etc-file" config.text));
           };
 
-        }));
+        });
 
     };
 

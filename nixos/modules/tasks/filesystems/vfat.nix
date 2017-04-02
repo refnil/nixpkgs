@@ -17,7 +17,7 @@ in
 
     boot.initrd.extraUtilsCommands = mkIf inInitrd
       ''
-        copy_bin_and_libs ${pkgs.dosfstools}/sbin/dosfsck
+        cp -v ${pkgs.dosfstools}/sbin/dosfsck $out/bin
         ln -sv dosfsck $out/bin/fsck.vfat
       '';
 

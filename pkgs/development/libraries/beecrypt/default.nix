@@ -8,8 +8,4 @@ stdenv.mkDerivation {
   };
   buildInputs = [m4];
   configureFlags = "--disable-optimized --enable-static";
-
-  meta = {
-    platforms = stdenv.lib.platforms.linux;
-  };
 }

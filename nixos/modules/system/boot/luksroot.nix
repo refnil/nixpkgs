@@ -5,7 +5,7 @@ with lib;
 let
   luks = config.boot.initrd.luks;
 
-  openCommand = name': { name, device, header, keyFile, keyFileSize, allowDiscards, yubikey, ... }: assert name' == name; ''
+  openCommand = { name, device, keyFile, keyFileSize, allowDiscards, yubikey, ... }: ''
     # Wait for luksRoot to appear, e.g. if on a usb drive.
     # XXX: copied and adapted from stage-1-init.sh - should be
     # available as a function.
@@ -32,12 +32,8 @@ let
     ''}
 
     open_normally() {
-        echo luksOpen ${device} ${name} ${optionalString allowDiscards "--allow-discards"} \
-          ${optionalString (header != null) "--header=${header}"} \
-          ${optionalString (keyFile != null) "--key-file=${keyFile} ${optionalString (keyFileSize != null) "--keyfile-size=${toString keyFileSize}"}"} \
-          > /.luksopen_args
-        cryptsetup-askpass
-        rm /.luksopen_args
+        cryptsetup luksOpen ${device} ${name} ${optionalString allowDiscards "--allow-discards"} \
+          ${optionalString (keyFile != null) "--key-file=${keyFile} ${optionalString (keyFileSize != null) "--keyfile-size=${toString keyFileSize}"}"}
     }
 
     ${optionalString (luks.yubikeySupport && (yubikey != null)) ''
@@ -192,8 +188,9 @@ let
     ''}
   '';
 
-  preLVM = filterAttrs (n: v: v.preLVM) luks.devices;
-  postLVM = filterAttrs (n: v: !v.preLVM) luks.devices;
+  isPreLVM = f: f.preLVM;
+  preLVM = filter isPreLVM luks.devices;
+  postLVM = filter (f: !(isPreLVM f)) luks.devices;
 
 in
 {
@@ -206,7 +203,7 @@ in
       description = ''
         Unless enabled, encryption keys can be easily recovered by an attacker with physical
         access to any machine with PCMCIA, ExpressCard, ThunderBolt or FireWire port.
-        More information is available at <link xlink:href="http://en.wikipedia.org/wiki/DMA_attack"/>.
+        More information: http://en.wikipedia.org/wiki/DMA_attack
 
         This option blacklists FireWire drivers, but doesn't remove them. You can manually
         load the drivers if you need to use a FireWire device, but don't forget to unload them!
@@ -214,7 +211,7 @@ in
     };
 
     boot.initrd.luks.cryptoModules = mkOption {
-      type = types.listOf types.str;
+      type = types.listOf types.string;
       default =
         [ "aes" "aes_generic" "blowfish" "twofish"
           "serpent" "cbc" "xts" "lrw" "sha1" "sha256" "sha512"
@@ -227,174 +224,164 @@ in
     };
 
     boot.initrd.luks.devices = mkOption {
-      default = { };
-      example = { "luksroot".device = "/dev/disk/by-uuid/430e9eff-d852-4f68-aa3b-2fa3599ebe08"; };
+      default = [ ];
+      example = [ { name = "luksroot"; device = "/dev/sda3"; preLVM = true; } ];
       description = ''
-        The encrypted disk that should be opened before the root
-        filesystem is mounted. Both LVM-over-LUKS and LUKS-over-LVM
-        setups are sypported. The unencrypted devices can be accessed as
-        <filename>/dev/mapper/<replaceable>name</replaceable></filename>.
+        The list of devices that should be decrypted using LUKS before trying to mount the
+        root partition. This works for both LVM-over-LUKS and LUKS-over-LVM setups.
+
+        The devices are decrypted to the device mapper names defined.
+
+        Make sure that initrd has the crypto modules needed for decryption.
       '';
 
-      type = with types; loaOf (submodule (
-        { name, ... }: { options = {
+      type = types.listOf types.optionSet;
 
-          name = mkOption {
-            visible = false;
-            default = name;
-            example = "luksroot";
-            type = types.str;
-            description = "Name of the unencrypted device in <filename>/dev/mapper</filename>.";
-          };
+      options = {
 
-          device = mkOption {
-            example = "/dev/disk/by-uuid/430e9eff-d852-4f68-aa3b-2fa3599ebe08";
-            type = types.str;
-            description = "Path of the underlying encrypted block device.";
-          };
+        name = mkOption {
+          example = "luksroot";
+          type = types.string;
+          description = "Named to be used for the generated device in /dev/mapper.";
+        };
 
-          header = mkOption {
-            default = null;
-            example = "/root/header.img";
-            type = types.nullOr types.str;
-            description = ''
-              The name of the file or block device that
-              should be used as header for the encrypted device.
-            '';
-          };
+        device = mkOption {
+          example = "/dev/sda2";
+          type = types.string;
+          description = "Path of the underlying block device.";
+        };
 
-          keyFile = mkOption {
-            default = null;
-            example = "/dev/sdb1";
-            type = types.nullOr types.str;
-            description = ''
-              The name of the file (can be a raw device or a partition) that
-              should be used as the decryption key for the encrypted device. If
-              not specified, you will be prompted for a passphrase instead.
-            '';
-          };
+        keyFile = mkOption {
+          default = null;
+          example = "/dev/sdb1";
+          type = types.nullOr types.string;
+          description = ''
+            The name of the file (can be a raw device or a partition) that
+            should be used as the decryption key for the encrypted device. If
+            not specified, you will be prompted for a passphrase instead.
+          '';
+        };
 
-          keyFileSize = mkOption {
-            default = null;
-            example = 4096;
-            type = types.nullOr types.int;
-            description = ''
-              The size of the key file. Use this if only the beginning of the
-              key file should be used as a key (often the case if a raw device
-              or partition is used as key file). If not specified, the whole
-              <literal>keyFile</literal> will be used decryption, instead of just
-              the first <literal>keyFileSize</literal> bytes.
-            '';
-          };
+        keyFileSize = mkOption {
+          default = null;
+          example = 4096;
+          type = types.nullOr types.int;
+          description = ''
+            The size of the key file. Use this if only the beginning of the
+            key file should be used as a key (often the case if a raw device
+            or partition is used as key file). If not specified, the whole
+            <literal>keyFile</literal> will be used decryption, instead of just
+            the first <literal>keyFileSize</literal> bytes.
+          '';
+        };
 
-          # FIXME: get rid of this option.
-          preLVM = mkOption {
-            default = true;
-            type = types.bool;
-            description = "Whether the luksOpen will be attempted before LVM scan or after it.";
-          };
+        preLVM = mkOption {
+          default = true;
+          type = types.bool;
+          description = "Whether the luksOpen will be attempted before LVM scan or after it.";
+        };
 
-          allowDiscards = mkOption {
-            default = false;
-            type = types.bool;
-            description = ''
-              Whether to allow TRIM requests to the underlying device. This option
-              has security implications; please read the LUKS documentation before
-              activating it.
-            '';
-          };
+        allowDiscards = mkOption {
+          default = false;
+          type = types.bool;
+          description = ''
+            Whether to allow TRIM requests to the underlying device. This option
+            has security implications, please read the LUKS documentation before
+            activating in.
+          '';
+        };
 
-          yubikey = mkOption {
-            default = null;
-            description = ''
-              The options to use for this LUKS device in Yubikey-PBA.
-              If null (the default), Yubikey-PBA will be disabled for this device.
-            '';
+        yubikey = mkOption {
+          default = null;
+          type = types.nullOr types.optionSet;
+          description = ''
+            The options to use for this LUKS device in Yubikey-PBA.
+            If null (the default), Yubikey-PBA will be disabled for this device.
+          '';
 
-            type = with types; nullOr (submodule {
+          options = {
+            twoFactor = mkOption {
+              default = true;
+              type = types.bool;
+              description = "Whether to use a passphrase and a Yubikey (true), or only a Yubikey (false)";
+            };
+
+            slot = mkOption {
+              default = 2;
+              type = types.int;
+              description = "Which slot on the Yubikey to challenge";
+            };
+
+            saltLength = mkOption {
+              default = 16;
+              type = types.int;
+              description = "Length of the new salt in byte (64 is the effective maximum)";
+            };
+
+            keyLength = mkOption {
+              default = 64;
+              type = types.int;
+              description = "Length of the LUKS slot key derived with PBKDF2 in byte";
+            };
+
+            iterationStep = mkOption {
+              default = 0;
+              type = types.int;
+              description = "How much the iteration count for PBKDF2 is increased at each successful authentication";
+            };
+
+            gracePeriod = mkOption {
+              default = 2;
+              type = types.int;
+              description = "Time in seconds to wait before attempting to find the Yubikey";
+            };
+
+            ramfsMountPoint = mkOption {
+              default = "/crypt-ramfs";
+              type = types.string;
+              description = "Path where the ramfs used to update the LUKS key will be mounted in stage-1";
+            };
+
+            storage = mkOption {
+              type = types.optionSet;
+              description = "Options related to the storing the salt";
+
               options = {
-                twoFactor = mkOption {
-                  default = true;
-                  type = types.bool;
-                  description = "Whether to use a passphrase and a Yubikey (true), or only a Yubikey (false).";
+                device = mkOption {
+                  default = /dev/sda1;
+                  type = types.path;
+                  description = ''
+                    An unencrypted device that will temporarily be mounted in stage-1.
+                    Must contain the current salt to create the challenge for this LUKS device.
+                  '';
                 };
 
-                slot = mkOption {
-                  default = 2;
-                  type = types.int;
-                  description = "Which slot on the Yubikey to challenge.";
+                fsType = mkOption {
+                  default = "vfat";
+                  type = types.string;
+                  description = "The filesystem of the unencrypted device";
                 };
 
-                saltLength = mkOption {
-                  default = 16;
-                  type = types.int;
-                  description = "Length of the new salt in byte (64 is the effective maximum).";
+                mountPoint = mkOption {
+                  default = "/crypt-storage";
+                  type = types.string;
+                  description = "Path where the unencrypted device will be mounted in stage-1";
                 };
 
-                keyLength = mkOption {
-                  default = 64;
-                  type = types.int;
-                  description = "Length of the LUKS slot key derived with PBKDF2 in byte.";
-                };
-
-                iterationStep = mkOption {
-                  default = 0;
-                  type = types.int;
-                  description = "How much the iteration count for PBKDF2 is increased at each successful authentication.";
-                };
-
-                gracePeriod = mkOption {
-                  default = 2;
-                  type = types.int;
-                  description = "Time in seconds to wait before attempting to find the Yubikey.";
-                };
-
-                ramfsMountPoint = mkOption {
-                  default = "/crypt-ramfs";
-                  type = types.str;
-                  description = "Path where the ramfs used to update the LUKS key will be mounted during early boot.";
-                };
-
-                /* TODO: Add to the documentation of the current module:
-
-                   Options related to the storing the salt.
-                */
-                storage = {
-                  device = mkOption {
-                    default = "/dev/sda1";
-                    type = types.path;
-                    description = ''
-                      An unencrypted device that will temporarily be mounted in stage-1.
-                      Must contain the current salt to create the challenge for this LUKS device.
-                    '';
-                  };
-
-                  fsType = mkOption {
-                    default = "vfat";
-                    type = types.str;
-                    description = "The filesystem of the unencrypted device.";
-                  };
-
-                  mountPoint = mkOption {
-                    default = "/crypt-storage";
-                    type = types.str;
-                    description = "Path where the unencrypted device will be mounted during early boot.";
-                  };
-
-                  path = mkOption {
-                    default = "/crypt-storage/default";
-                    type = types.str;
-                    description = ''
-                      Absolute path of the salt on the unencrypted device with
-                      that device's root directory as "/".
-                    '';
-                  };
+                path = mkOption {
+                  default = "/crypt-storage/default";
+                  type = types.string;
+                  description = ''
+                    Absolute path of the salt on the unencrypted device with
+                    that device's root directory as "/".
+                  '';
                 };
               };
-            });
+            };
           };
+        };
 
-        }; }));
+      };
     };
 
     boot.initrd.luks.yubikeySupport = mkOption {
@@ -408,7 +395,7 @@ in
     };
   };
 
-  config = mkIf (luks.devices != {}) {
+  config = mkIf (luks.devices != []) {
 
     # actually, sbp2 driver is the one enabling the DMA attack, but this needs to be tested
     boot.blacklistedKernelModules = optionals luks.mitigateDMAAttacks
@@ -419,38 +406,34 @@ in
 
     # copy the cryptsetup binary and it's dependencies
     boot.initrd.extraUtilsCommands = ''
-      copy_bin_and_libs ${pkgs.cryptsetup}/bin/cryptsetup
+      cp -pdv ${pkgs.cryptsetup}/sbin/cryptsetup $out/bin
 
-      cat > $out/bin/cryptsetup-askpass <<EOF
-      #!$out/bin/sh -e
-      if [ -e /.luksopen_args ]; then
-        cryptsetup \$(cat /.luksopen_args)
-        killall cryptsetup
-      else
-        echo "Passphrase is not requested now"
-        exit 1
-      fi
-      EOF
-      chmod +x $out/bin/cryptsetup-askpass
+      cp -pdv ${pkgs.libgcrypt}/lib/libgcrypt*.so.* $out/lib
+      cp -pdv ${pkgs.libgpgerror}/lib/libgpg-error*.so.* $out/lib
+      cp -pdv ${pkgs.cryptsetup}/lib/libcryptsetup*.so.* $out/lib
+      cp -pdv ${pkgs.popt}/lib/libpopt*.so.* $out/lib
 
       ${optionalString luks.yubikeySupport ''
-        copy_bin_and_libs ${pkgs.yubikey-personalization}/bin/ykchalresp
-        copy_bin_and_libs ${pkgs.yubikey-personalization}/bin/ykinfo
-        copy_bin_and_libs ${pkgs.openssl.bin}/bin/openssl
+      cp -pdv ${pkgs.ykpers}/bin/ykchalresp $out/bin
+      cp -pdv ${pkgs.ykpers}/bin/ykinfo $out/bin
+      cp -pdv ${pkgs.openssl}/bin/openssl $out/bin
 
-        cc -O3 -I${pkgs.openssl.dev}/include -L${pkgs.openssl.out}/lib ${./pbkdf2-sha512.c} -o pbkdf2-sha512 -lcrypto
-        strip -s pbkdf2-sha512
-        copy_bin_and_libs pbkdf2-sha512
+      cc -O3 -I${pkgs.openssl}/include -L${pkgs.openssl}/lib ${./pbkdf2-sha512.c} -o $out/bin/pbkdf2-sha512 -lcrypto
+      strip -s $out/bin/pbkdf2-sha512
 
-        mkdir -p $out/etc/ssl
-        cp -pdv ${pkgs.openssl.out}/etc/ssl/openssl.cnf $out/etc/ssl
+      cp -pdv ${pkgs.libusb1}/lib/libusb*.so.* $out/lib
+      cp -pdv ${pkgs.ykpers}/lib/libykpers*.so.* $out/lib
+      cp -pdv ${pkgs.libyubikey}/lib/libyubikey*.so.* $out/lib
+      cp -pdv ${pkgs.openssl}/lib/libssl*.so.* $out/lib
+      cp -pdv ${pkgs.openssl}/lib/libcrypto*.so.* $out/lib
 
-        cat > $out/bin/openssl-wrap <<EOF
-        #!$out/bin/sh
-        export OPENSSL_CONF=$out/etc/ssl/openssl.cnf
-        $out/bin/openssl "\$@"
-        EOF
-        chmod +x $out/bin/openssl-wrap
+      mkdir -p $out/etc/ssl
+      cp -pdv ${pkgs.openssl}/etc/ssl/openssl.cnf $out/etc/ssl
+
+      cat > $out/bin/openssl-wrap <<EOF
+#!$out/bin/sh
+EOF
+      chmod +x $out/bin/openssl-wrap
       ''}
     '';
 
@@ -459,12 +442,17 @@ in
       ${optionalString luks.yubikeySupport ''
         $out/bin/ykchalresp -V
         $out/bin/ykinfo -V
+        cat > $out/bin/openssl-wrap <<EOF
+#!$out/bin/sh
+export OPENSSL_CONF=$out/etc/ssl/openssl.cnf
+$out/bin/openssl "\$@"
+EOF
         $out/bin/openssl-wrap version
       ''}
     '';
 
-    boot.initrd.preLVMCommands = concatStrings (mapAttrsToList openCommand preLVM);
-    boot.initrd.postDeviceCommands = concatStrings (mapAttrsToList openCommand postLVM);
+    boot.initrd.preLVMCommands = concatMapStrings openCommand preLVM;
+    boot.initrd.postDeviceCommands = concatMapStrings openCommand postLVM;
 
     environment.systemPackages = [ pkgs.cryptsetup ];
   };

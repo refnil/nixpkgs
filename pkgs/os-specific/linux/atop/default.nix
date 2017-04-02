@@ -1,12 +1,12 @@
 {stdenv, fetchurl, zlib, ncurses}:
 
 stdenv.mkDerivation rec {
-  version = "2.2-3";
+  version = "2.0.2";
   name = "atop-${version}";
 
   src = fetchurl {
     url = "http://www.atoptool.nl/download/atop-${version}.tar.gz";
-    sha256 = "0p85isn6zih3xfprjym5xanqzazwqjj8x2mmwqyqpqjv6nibi1f7";
+    sha256 = "029lfa2capz1lg3m3rnyrgb8v6jm4znin84vjh2f0zkwvvhdn856";
   };
 
   buildInputs = [zlib ncurses];
@@ -27,11 +27,6 @@ stdenv.mkDerivation rec {
     sed -e '/chkconfig/d' -i Makefile
   '';
 
-  preInstall = ''
-    mkdir -p "$out"/{bin,sbin}
-    make systemdinstall $makeFlags
-  '';
-
   meta = {
     platforms = stdenv.lib.platforms.linux;
     maintainers = with stdenv.lib.maintainers; [raskin];
@@ -42,5 +37,6 @@ stdenv.mkDerivation rec {
     '';
     inherit version;
     downloadPage = http://atoptool.nl/downloadatop.php;
+    updateWalker = true;
   };
 }

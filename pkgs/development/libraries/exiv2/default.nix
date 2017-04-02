@@ -1,22 +1,22 @@
-{ stdenv, fetchurl, fetchpatch, zlib, expat, gettext }:
+{stdenv, fetchurl, zlib, expat}:
 
 stdenv.mkDerivation rec {
-  name = "exiv2-0.25";
-
+  name = "exiv2-0.24";
+  
   src = fetchurl {
     url = "http://www.exiv2.org/${name}.tar.gz";
-    sha256 = "197g6vgcpyf9p2cwn5p5hb1r714xsk1v4p96f5pv1z8mi9vzq2y8";
+    sha256 = "13pgvz14kyapxl89pxjaq3274k56d5lzfckpg1g9z7gvqzk4797l";
   };
-  postPatch = "patchShebangs ./src/svn_version.sh";
-
-  outputs = [ "out" "dev" ];
-
-  nativeBuildInputs = [ gettext ];
-  propagatedBuildInputs = [ zlib expat ];
+  
+  propagatedBuildInputs = [zlib expat];
+  
+# configure script finds zlib&expat but it thinks that they're in /usr
+  configureFlags = "--with-zlib=${zlib} --with-expat=${expat}";
 
   meta = {
     homepage = http://www.exiv2.org/;
     description = "A library and command-line utility to manage image metadata";
+    maintainers = [stdenv.lib.maintainers.urkud];
     platforms = stdenv.lib.platforms.all;
   };
 }

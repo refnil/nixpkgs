@@ -1,47 +1,61 @@
-{ stdenv, fetchurl, python2Packages, intltool, file
-, wrapGAppsHook, virtinst, gtkvnc, vte, avahi, dconf
-, gobjectIntrospection, libvirt-glib, system-libvirt
-, gsettings_desktop_schemas, glib, libosinfo, gnome3
-, spiceSupport ? true, spice_gtk ? null
+{ stdenv, fetchurl, pythonPackages, intltool, libxml2Python, curl, python
+, makeWrapper, virtinst, pyGtkGlade, pythonDBus, gnome_python, gtkvnc, vte
+, gtk3, gobjectIntrospection, libvirt-glib, gsettings_desktop_schemas, glib
+, avahi, dconf, spiceSupport ? true, spice_gtk
 }:
 
 with stdenv.lib;
+with pythonPackages;
 
-python2Packages.buildPythonApplication rec {
+buildPythonPackage rec {
   name = "virt-manager-${version}";
-  version = "1.4.1";
+  version = "1.0.1";
   namePrefix = "";
 
   src = fetchurl {
     url = "http://virt-manager.org/download/sources/virt-manager/${name}.tar.gz";
-    sha256 = "0i1rkxz730vw1nqghrp189jhhp53pw81k0h71hhxmyqlkyclkig6";
+    sha256 = "1n248kack1fni8y17ysgq5xhvffcgy4l62hnd0zvr4kjw0579qq8";
   };
 
-  nativeBuildInputs = [ wrapGAppsHook intltool file ];
-
-  buildInputs =
-    [ libvirt-glib vte virtinst dconf gtkvnc gnome3.defaultIconTheme avahi
-      gsettings_desktop_schemas libosinfo
+  propagatedBuildInputs =
+    [ eventlet greenlet gflags netaddr sqlalchemy carrot routes
+      paste_deploy m2crypto ipy boto_1_9 twisted sqlalchemy_migrate
+      distutils_extra simplejson readline glance cheetah lockfile httplib2
+      urlgrabber virtinst pyGtkGlade pythonDBus gnome_python pygobject3
+      libvirt libxml2Python ipaddr vte
     ] ++ optional spiceSupport spice_gtk;
 
-  propagatedBuildInputs = with python2Packages;
-    [ eventlet greenlet gflags netaddr carrot routes PasteDeploy
-      m2crypto ipy twisted distutils_extra simplejson glanceclient
-      cheetah lockfile httplib2 urlgrabber pyGtkGlade dbus-python
-      pygobject3 ipaddr mox libvirt libxml2
+  buildInputs =
+    [ mox
+      intltool
+      gtkvnc
+      gtk3
+      libvirt-glib
+      avahi
+      glib
+      gobjectIntrospection
     ];
 
-  patchPhase = ''
-    sed -i 's|/usr/share/libvirt/cpu_map.xml|${system-libvirt}/share/libvirt/cpu_map.xml|g' virtinst/capabilities.py
-    sed -i "/'install_egg_info'/d" setup.py
+  configurePhase = ''
+    sed -i 's/from distutils.core/from setuptools/g' setup.py
+    sed -i 's/from distutils.command.install/from setuptools.command.install/g' setup.py
+    python setup.py configure --prefix=$out
   '';
 
-  postConfigure = ''
-    ${python2Packages.python.interpreter} setup.py configure --prefix=$out
-  '';
+  buildPhase = "true";
 
   postInstall = ''
-    ${glib.dev}/bin/glib-compile-schemas "$out"/share/glib-2.0/schemas
+    # GI_TYPELIB_PATH is needed at runtime for GObject stuff to work
+    for file in "$out"/bin/*; do
+        wrapProgram "$file" \
+            --prefix GI_TYPELIB_PATH : $GI_TYPELIB_PATH \
+            --prefix GIO_EXTRA_MODULES : "${dconf}/lib/gio/modules" \
+            --prefix GSETTINGS_SCHEMA_DIR : $out/share/glib-2.0/schemas \
+            --prefix LD_LIBRARY_PATH : ${gtk3}/lib/:${libvirt-glib}/lib/:${vte}/lib:${gtkvnc}/lib${optionalString spiceSupport ":${spice_gtk}/lib"} \
+            --prefix XDG_DATA_DIRS : "$out/share:${gsettings_desktop_schemas}/share:${gtk3}/share:$GSETTINGS_SCHEMAS_PATH:\$XDG_DATA_DIRS"
+    done
+
+    ${glib}/bin/glib-compile-schemas "$out"/share/glib-2.0/schemas
   '';
 
   # Failed tests
@@ -56,6 +70,6 @@ python2Packages.buildPythonApplication rec {
       manages Xen and LXC (linux containers).
     '';
     license = licenses.gpl2;
-    maintainers = with maintainers; [ qknight offline fpletz ];
+    maintainers = with maintainers; [qknight offline];
   };
 }

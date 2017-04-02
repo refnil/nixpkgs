@@ -1,20 +1,17 @@
-{ stdenv, fetchFromGitHub, cmake, qt4 }:
+{ stdenv, fetchurl, cmake, qt4 }:
 
 stdenv.mkDerivation rec {
-  version = "0.8.1";
-  name = "qjson-${version}";
+  name = "qjson-0.8.1";
 
-  src = fetchFromGitHub {
-    owner = "flavio";
-    repo = "qjson";
-    rev = "${version}";
-    sha256 = "1rb3ydrhyd4bczqzfv0kqpi2mx4hlpq1k8jvnwpcmvyaypqpqg59";
+  src = fetchurl {
+    url = "mirror://sourceforge/qjson/${name}.tar.bz2";
+    sha256 = "1n8lr2ph08yhcgimf4q1pnkd4z15v895bsf3m68ljz14aswvakfd";
   };
 
   buildInputs = [ cmake qt4 ];
 
   meta = {
-    maintainers = [ ];
+    maintainers = [ stdenv.lib.maintainers.urkud ];
     inherit (qt4.meta) platforms;
   };
 }

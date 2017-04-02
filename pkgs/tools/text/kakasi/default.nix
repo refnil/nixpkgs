@@ -13,6 +13,7 @@ stdenv.mkDerivation rec {
     homepage    = "http://kakasi.namazu.org/";
     license     = licenses.gpl2Plus;
     platforms   = platforms.linux;
+    maintainers = with maintainers; [ iyzsong ];
   };
 
   src = fetchurl {

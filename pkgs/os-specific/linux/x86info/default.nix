@@ -9,17 +9,12 @@ stdenv.mkDerivation rec {
     sha256 = "0a4lzka46nabpsrg3n7akwr46q38f96zfszd73xcback1s2hjc7y";
   };
 
-  preConfigure = ''
-    patchShebangs .
-
-    # ignore warnings
-    sed -i 's/-Werror -Wall//' Makefile
-  '';
+  preConfigure = "patchShebangs .";
 
   buildInputs = [ pciutils python ];
 
   installPhase = ''
-    mkdir -p $out/bin
+    ensureDir $out/bin
     cp x86info lsmsr $out/bin
   '';
 

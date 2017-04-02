@@ -1,20 +1,15 @@
-{ stdenv, fetchurl, writeText, sbclBootstrap
-, sbclBootstrapHost ? "${sbclBootstrap}/bin/sbcl --disable-debugger --no-userinit --no-sysinit"
-, threadSupport ? (stdenv.isi686 || stdenv.isx86_64)
-  # Meant for sbcl used for creating binaries portable to non-NixOS via save-lisp-and-die.
-  # Note that the created binaries still need `patchelf --set-interpreter ...`
-  # to get rid of ${glibc} dependency.
-, purgeNixReferences ? false
-}:
+{ stdenv, fetchurl, sbclBootstrap, clisp}:
 
 stdenv.mkDerivation rec {
   name    = "sbcl-${version}";
-  version = "1.3.15";
+  version = "1.2.0";
 
   src = fetchurl {
-    url    = "mirror://sourceforge/project/sbcl/sbcl/${version}/${name}-source.tar.bz2";
-    sha256 = "11db8pkv3i8ajyb295dh9nl0niyrkh9gjqv4vlaa1dl1vzck5ddi";
+    url    = mirror://sourceforge/project/sbcl/sbcl/1.2.0/sbcl-1.2.0-source.tar.bz2;
+    sha256 = "13k20sys1v4lvgis8cnbczww6zs93rw176vz07g4jx06418k53x2";
   };
+
+  buildInputs = [ sbclBootstrap ] ++ stdenv.lib.optional stdenv.isLinux clisp;
 
   patchPhase = ''
     echo '"${version}.nixos"' > version.lisp-expr
@@ -24,11 +19,7 @@ stdenv.mkDerivation rec {
                (pushnew x features))
              (disable (x)
                (setf features (remove x features))))
-    ''
-    + (if threadSupport then "(enable :sb-thread)" else "(disable :sb-thread)")
-    + stdenv.lib.optionalString stdenv.isArm "(enable :arm)"
-    + ''
-      )) " > customize-target-features.lisp
+        (enable :sb-thread))) " > customize-target-features.lisp
 
     pwd
 
@@ -53,52 +44,31 @@ stdenv.mkDerivation rec {
 
     sed -e '5,$d' -i contrib/sb-bsd-sockets/tests.lisp
     sed -e '5,$d' -i contrib/sb-simple-streams/*test*.lisp
-
-    # Use whatever `cc` the stdenv provides
-    substituteInPlace src/runtime/Config.x86-64-darwin --replace gcc cc
-
-    substituteInPlace src/runtime/Config.x86-64-darwin \
-      --replace mmacosx-version-min=10.4 mmacosx-version-min=10.5
-  ''
-  + (if purgeNixReferences
-    then
-      # This is the default location to look for the core; by default in $out/lib/sbcl
-      ''
-        sed 's@^\(#define SBCL_HOME\) .*$@\1 "/no-such-path"@' \
-          -i src/runtime/runtime.c
-      ''
-    else
-      # Fix software version retrieval
-      ''
-        sed -e "s@/bin/uname@$(command -v uname)@g" -i src/code/*-os.lisp
-      ''
-    );
-
+  '';
 
   preBuild = ''
     export INSTALL_ROOT=$out
-    mkdir -p test-home
+    ensureDir test-home
     export HOME=$PWD/test-home
   '';
 
-  buildPhase = ''
-    sh make.sh --prefix=$out --xc-host="${sbclBootstrapHost}"
-  '';
+  buildPhase = if stdenv.isLinux
+    then ''
+      sh make.sh clisp --prefix=$out
+    ''
+    else ''
+      sh make.sh --prefix=$out --xc-host='${sbclBootstrap}/bin/sbcl --core ${sbclBootstrap}/share/sbcl/sbcl.core --disable-debugger --no-userinit --no-sysinit'
+    '';
 
   installPhase = ''
     INSTALL_ROOT=$out sh install.sh
   '';
 
-  # Specifying $SBCL_HOME is only truly needed with `purgeNixReferences = true`.
-  setupHook = writeText "setupHook.sh" ''
-    envHooks+=(_setSbclHome)
-    _setSbclHome() {
-      export SBCL_HOME='@out@/lib/sbcl/'
-    }
-  '';
-
-  meta = sbclBootstrap.meta // {
-    inherit version;
-    updateWalker = true;
+  meta = {
+    description = "Lisp compiler";
+    homepage = http://www.sbcl.org;
+    license = stdenv.lib.licenses.bsd3;
+    maintainers = [stdenv.lib.maintainers.raskin];
+    platforms = stdenv.lib.platforms.all;
   };
 }

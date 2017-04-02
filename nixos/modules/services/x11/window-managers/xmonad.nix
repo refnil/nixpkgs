@@ -1,24 +1,27 @@
 {pkgs, lib, config, ...}:
 
-with lib;
 let
   inherit (lib) mkOption mkIf optionals literalExample;
   cfg = config.services.xserver.windowManager.xmonad;
-  xmonad = pkgs.xmonad-with-packages.override {
-    ghcWithPackages = cfg.haskellPackages.ghcWithPackages;
-    packages = self: cfg.extraPackages self ++
-                     optionals cfg.enableContribAndExtras
-                     [ self.xmonad-contrib self.xmonad-extras ];
-  };
+  xmonadEnv = cfg.haskellPackages.ghcWithPackages(self: [
+    self.xmonad
+  ] ++ optionals cfg.enableContribAndExtras [ self.xmonadContrib self.xmonadExtras]
+    ++ optionals (cfg.extraPackages != null) (cfg.extraPackages self));
+  xmessage = pkgs.xlibs.xmessage;
 in
 {
   options = {
     services.xserver.windowManager.xmonad = {
-      enable = mkEnableOption "xmonad";
+      enable = mkOption {
+        default = false;
+        example = true;
+        description = "Enable the xmonad window manager.";
+      };
+
       haskellPackages = mkOption {
         default = pkgs.haskellPackages;
         defaultText = "pkgs.haskellPackages";
-        example = literalExample "pkgs.haskell.packages.ghc784";
+        example = literalExample "pkgs.haskellPackages_ghc701";
         description = ''
           haskellPackages used to build Xmonad and other packages.
           This can be used to change the GHC version used to build
@@ -28,22 +31,23 @@ in
       };
 
       extraPackages = mkOption {
-        default = self: [];
+        default = null;
         example = literalExample ''
           haskellPackages: [
-            haskellPackages.xmonad-contrib
-            haskellPackages.monad-logger
+            haskellPackages.xmonadContrib
+            haskellPackages.monadLogger
           ]
         '';
         description = ''
           Extra packages available to ghc when rebuilding Xmonad. The
           value must be a function which receives the attrset defined
-          in <varname>haskellPackages</varname> as the sole argument.
+          in <varname>haskellpackages</varname> as the sole argument.
         '';
       };
 
       enableContribAndExtras = mkOption {
         default = false;
+        example = true;
         type = lib.types.bool;
         description = "Enable xmonad-{contrib,extras} in Xmonad.";
       };
@@ -54,12 +58,12 @@ in
       session = [{
         name = "xmonad";
         start = ''
-          ${xmonad}/bin/xmonad &
+          XMONAD_GHC=${xmonadEnv}/bin/ghc XMONAD_XMESSAGE=${xmessage}/bin/xmessage xmonad &
           waitPID=$!
         '';
       }];
     };
 
-    environment.systemPackages = [ xmonad ];
+    environment.systemPackages = [ cfg.haskellPackages.xmonad ];
   };
 }

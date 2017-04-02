@@ -8,14 +8,14 @@ rec {
 
 
   # Override the compiler in stdenv for specific packages.
-  overrideCC = stdenv: cc: stdenv.override { allowedRequisites = null; cc = cc; };
+  overrideGCC = stdenv: gcc: stdenv.override { inherit gcc; };
 
 
   # Add some arbitrary packages to buildInputs for specific packages.
   # Used to override packages in stdenv like Make.  Should not be used
   # for other dependencies.
   overrideInStdenv = stdenv: pkgs:
-    stdenv.override (prev: { allowedRequisites = null; extraBuildInputs = prev.extraBuildInputs or [] ++ pkgs; });
+    stdenv.override (prev: { extraBuildInputs = prev.extraBuildInputs or [] ++ pkgs; });
 
 
   # Override the setup script of stdenv.  Useful for testing new
@@ -27,6 +27,63 @@ rec {
   #     stdenv = overrideSetup stdenv ../stdenv/generic/setup-latest.sh;
   #   };
   overrideSetup = stdenv: setupScript: stdenv.override { inherit setupScript; };
+
+
+  # Return a modified stdenv that uses dietlibc to create small
+  # statically linked binaries.
+  useDietLibC = stdenv: stdenv //
+    { mkDerivation = args: stdenv.mkDerivation (args // {
+        NIX_CFLAGS_LINK = "-static";
+
+        # libcompat.a contains some commonly used functions.
+        NIX_LDFLAGS = "-lcompat";
+
+        # These are added *after* the command-line flags, so we'll
+        # always optimise for size.
+        NIX_CFLAGS_COMPILE =
+          args.NIX_CFLAGS_COMPILE or ""
+          + " -Os -s -D_BSD_SOURCE=1";
+
+        configureFlags =
+          args.configureFlags or ""
+          + " --disable-shared"; # brrr...
+
+        NIX_GCC = import ../build-support/gcc-wrapper {
+          inherit stdenv;
+          libc = pkgs.dietlibc;
+          inherit (stdenv.gcc) gcc binutils nativeTools nativePrefix;
+          nativeLibc = false;
+        };
+      });
+      isDietLibC = true;
+    };
+
+
+  # Return a modified stdenv that uses klibc to create small
+  # statically linked binaries.
+  useKlibc = stdenv: klibc: stdenv //
+    { mkDerivation = args: stdenv.mkDerivation (args // {
+        NIX_CFLAGS_LINK = "-static";
+
+        # These are added *after* the command-line flags, so we'll
+        # always optimise for size.
+        NIX_CFLAGS_COMPILE =
+          args.NIX_CFLAGS_COMPILE or "" + " -Os -s";
+
+        configureFlags =
+          args.configureFlags or "" + " --disable-shared"; # brrr...
+
+        NIX_GCC = pkgs.runCommand "klibc-wrapper" {} ''
+          mkdir -p $out/bin
+          ln -s ${klibc}/bin/klcc $out/bin/gcc
+          ln -s ${klibc}/bin/klcc $out/bin/cc
+          mkdir -p $out/nix-support
+          echo 'PATH=$PATH:${stdenv.gcc.binutils}/bin' > $out/nix-support/setup-hook
+        '';
+      });
+      isKlibc = true;
+      isStatic = true;
+    };
 
 
   # Return a modified stdenv that tries to build statically linked
@@ -56,60 +113,65 @@ rec {
 
   # Return a modified stdenv that adds a cross compiler to the
   # builds.
-  makeStdenvCross = stdenv: cross: binutilsCross: gccCross: stdenv // {
+  makeStdenvCross = stdenv: cross: binutilsCross: gccCross: stdenv //
+    { mkDerivation = {name ? "", buildInputs ? [], nativeBuildInputs ? [],
+            propagatedBuildInputs ? [], propagatedNativeBuildInputs ? [],
+            selfNativeBuildInput ? false, ...}@args: let
 
-    mkDerivation =
-      { name ? "", buildInputs ? [], nativeBuildInputs ? []
-      , propagatedBuildInputs ? [], propagatedNativeBuildInputs ? []
-      , selfNativeBuildInput ? false, ...
-      } @ args:
+            # *BuildInputs exists temporarily as another name for
+            # *HostInputs.
 
-      let
-        # *BuildInputs exists temporarily as another name for
-        # *HostInputs.
+            # In nixpkgs, sometimes 'null' gets in as a buildInputs element,
+            # and we handle that through isAttrs.
+            getNativeDrv = drv: drv.nativeDrv or drv;
+            getCrossDrv = drv: drv.crossDrv or drv;
+            nativeBuildInputsDrvs = map getNativeDrv nativeBuildInputs;
+            buildInputsDrvs = map getCrossDrv buildInputs;
+            buildInputsDrvsAsBuildInputs = map getNativeDrv buildInputs;
+            propagatedBuildInputsDrvs = map getCrossDrv propagatedBuildInputs;
+            propagatedNativeBuildInputsDrvs = map getNativeDrv propagatedNativeBuildInputs;
 
-        # The base stdenv already knows that nativeBuildInputs and
-        # buildInputs should be built with the usual gcc-wrapper
-        # And the same for propagatedBuildInputs.
-        nativeDrv = stdenv.mkDerivation args;
+            # The base stdenv already knows that nativeBuildInputs and
+            # buildInputs should be built with the usual gcc-wrapper
+            # And the same for propagatedBuildInputs.
+            nativeDrv = stdenv.mkDerivation args;
 
-        # Temporary expression until the cross_renaming, to handle the
-        # case of pkgconfig given as buildInput, but to be used as
-        # nativeBuildInput.
-        hostAsNativeDrv = drv:
-            builtins.unsafeDiscardStringContext drv.nativeDrv.drvPath
-            == builtins.unsafeDiscardStringContext drv.crossDrv.drvPath;
-        buildInputsNotNull = stdenv.lib.filter
-            (drv: builtins.isAttrs drv && drv ? nativeDrv) buildInputs;
-        nativeInputsFromBuildInputs = stdenv.lib.filter hostAsNativeDrv buildInputsNotNull;
-      in
-        stdenv.mkDerivation (args // {
-          name = name + "-" + cross.config;
-          nativeBuildInputs = nativeBuildInputs
-            ++ nativeInputsFromBuildInputs
-            ++ [ gccCross binutilsCross ]
-            ++ stdenv.lib.optional selfNativeBuildInput nativeDrv
-              # without proper `file` command, libtool sometimes fails
-              # to recognize 64-bit DLLs
-            ++ stdenv.lib.optional (cross.config  == "x86_64-w64-mingw32") pkgs.file
-            ++ stdenv.lib.optional (cross.config  == "aarch64-linux-gnu") pkgs.updateAutotoolsGnuConfigScriptsHook
-            ;
+            # Temporary expression until the cross_renaming, to handle the
+            # case of pkgconfig given as buildInput, but to be used as
+            # nativeBuildInput.
+            hostAsNativeDrv = drv:
+                builtins.unsafeDiscardStringContext drv.nativeDrv.drvPath
+                == builtins.unsafeDiscardStringContext drv.crossDrv.drvPath;
+            buildInputsNotNull = stdenv.lib.filter
+                (drv: builtins.isAttrs drv && drv ? nativeDrv) buildInputs;
+            nativeInputsFromBuildInputs = stdenv.lib.filter hostAsNativeDrv buildInputsNotNull;
 
-          # Cross-linking dynamic libraries, every buildInput should
-          # be propagated because ld needs the -rpath-link to find
-          # any library needed to link the program dynamically at
-          # loader time. ld(1) explains it.
-          buildInputs = [];
-          propagatedBuildInputs = propagatedBuildInputs ++ buildInputs;
-          propagatedNativeBuildInputs = propagatedNativeBuildInputs;
+            # We should overwrite the input attributes in crossDrv, to overwrite
+            # the defaults for only-native builds in the base stdenv
+            crossDrv = if cross == null then nativeDrv else
+                stdenv.mkDerivation (args // {
+                    name = name + "-" + cross.config;
+                    nativeBuildInputs = nativeBuildInputsDrvs
+                      ++ nativeInputsFromBuildInputs
+                      ++ [ gccCross binutilsCross ] ++
+                      stdenv.lib.optional selfNativeBuildInput nativeDrv;
 
-          crossConfig = cross.config;
-        } // args.crossAttrs or {});
+                    # Cross-linking dynamic libraries, every buildInput should
+                    # be propagated because ld needs the -rpath-link to find
+                    # any library needed to link the program dynamically at
+                    # loader time. ld(1) explains it.
+                    buildInputs = [];
+                    propagatedBuildInputs = propagatedBuildInputsDrvs ++ buildInputsDrvs;
+                    propagatedNativeBuildInputs = propagatedNativeBuildInputsDrvs;
 
-    inherit gccCross binutilsCross;
-    ccCross = gccCross;
-
-  };
+                    crossConfig = cross.config;
+                } // args.crossAttrs or {});
+        in nativeDrv // {
+          inherit crossDrv nativeDrv;
+        };
+    } // {
+      inherit cross gccCross binutilsCross;
+    };
 
 
   /* Modify a stdenv so that the specified attributes are added to
@@ -183,7 +245,7 @@ rec {
 
      This adapter can be defined on the defaultStdenv definition.  You can
      use it by patching the all-packages.nix file or by using the override
-     feature of ~/.config/nixpkgs/config.nix .
+     feature of ~/.nixpkgs/config.nix .
   */
   validateLicenses = licensePred: stdenv: stdenv //
     { mkDerivation = args:
@@ -218,15 +280,23 @@ rec {
   keepDebugInfo = stdenv: stdenv //
     { mkDerivation = args: stdenv.mkDerivation (args // {
         dontStrip = true;
-        NIX_CFLAGS_COMPILE = toString (args.NIX_CFLAGS_COMPILE or "") + " -ggdb -Og";
+        NIX_CFLAGS_COMPILE = toString (args.NIX_CFLAGS_COMPILE or "") + " -g -O0";
       });
     };
 
 
-  /* Modify a stdenv so that it uses the Gold linker. */
-  useGoldLinker = stdenv: stdenv //
-    { mkDerivation = args: stdenv.mkDerivation (args // {
-        NIX_CFLAGS_LINK = toString (args.NIX_CFLAGS_LINK or "") + " -fuse-ld=gold";
-      });
-    };
+  /* Modify a stdenv so that it uses the Gold linker. FIXME: should
+     use -fuse-ld=gold instead, but then the ld-wrapper won't be
+     invoked. */
+  useGoldLinker = stdenv:
+    let
+      binutils = stdenv.gcc.binutils;
+      binutils' = pkgs.runCommand "${binutils.name}-gold" { }
+        ''
+          mkdir -p $out/bin
+          ln -s ${binutils}/bin/* $out/bin/
+          ln -sfn ${binutils}/bin/ld.gold $out/bin/ld
+        ''; # */
+    in overrideGCC stdenv (stdenv.gcc.override { binutils = binutils'; });
+
 }

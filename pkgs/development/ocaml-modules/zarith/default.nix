@@ -1,42 +1,32 @@
 { stdenv, fetchurl, ocaml, findlib, pkgconfig, gmp, perl }:
 
-assert stdenv.lib.versionAtLeast ocaml.version "3.12.1";
-
-let param =
-  if stdenv.lib.versionAtLeast ocaml.version "4.02"
-  then {
-    version = "1.4.1";
-    url = http://forge.ocamlcore.org/frs/download.php/1574/zarith-1.4.1.tgz;
-    sha256 = "0l36hzmfbvdai2kcgynh13vfdim5x2grnaw61fxqalyjm90c3di3";
-  } else {
-    version = "1.3";
-    url = http://forge.ocamlcore.org/frs/download.php/1471/zarith-1.3.tgz;
-    sha256 = "1mx3nxcn5h33qhx4gbg0hgvvydwlwdvdhqcnvfwnmf9jy3b8frll";
-  };
+let
+  ocaml_version = (builtins.parseDrvName ocaml.name).version;
 in
-
 stdenv.mkDerivation rec {
   name = "zarith-${version}";
-  inherit (param) version;
+  version = "1.2.1";
 
   src = fetchurl {
-    inherit (param) url sha256;
+    url = "http://forge.ocamlcore.org/frs/download.php/1199/${name}.tgz";
+    sha256 = "0i21bsx41br0jgw8xmlpnky5zamzqkpbykrq0z53z7ar77602s4i";
   };
 
-  buildInputs = [ ocaml findlib pkgconfig perl ];
-  propagatedBuildInputs = [ gmp ];
+  buildInputs = [ ocaml findlib pkgconfig gmp perl ];
 
-  patchPhase = "patchShebangs ./z_pp.pl";
-  configurePhase = ''
-    ./configure -installdir $out/lib/ocaml/${ocaml.version}/site-lib
+  patchPhase = ''
+    substituteInPlace ./z_pp.pl --replace '/usr/bin/perl' '${perl}/bin/perl'
   '';
-  preInstall = "mkdir -p $out/lib/ocaml/${ocaml.version}/site-lib";
+  configurePhase = ''
+    ./configure -installdir $out/lib/ocaml/${ocaml_version}/site-lib
+  '';
+  preInstall = "mkdir -p $out/lib/ocaml/${ocaml_version}/site-lib";
 
-  meta = with stdenv.lib; {
-    description = "Fast, arbitrary precision OCaml integers";
+  meta = {
+    description = "fast, arbitrary precision OCaml integers";
     homepage    = "http://forge.ocamlcore.org/projects/zarith";
-    license     = licenses.lgpl2;
-    platforms   = ocaml.meta.platforms or [];
-    maintainers = with maintainers; [ thoughtpolice vbgl ];
+    license     = stdenv.lib.licenses.lgpl2;
+    platforms   = ocaml.meta.platforms;
+    maintainers = [ stdenv.lib.maintainers.thoughtpolice ];
   };
 }

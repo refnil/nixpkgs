@@ -1,11 +1,11 @@
 { stdenv, fetchurl, hunspell, pkgconfig, perl }:
 
 stdenv.mkDerivation rec {
-  name = "mythes-1.2.4";
+  name = "mythes-1.2.3";
 
   src = fetchurl {
     url = "mirror://sourceforge/hunspell/${name}.tar.gz";
-    sha256 = "0prh19wy1c74kmzkkavm9qslk99gz8h8wmjvwzjc6lf8v2az708y";
+    sha256 = "0f5q7yiwg9bw4a5zxg0dapqdfc2grfb4ss34ifir3mhhy4q3jf4j";
   };
 
   buildInputs = [ hunspell ];

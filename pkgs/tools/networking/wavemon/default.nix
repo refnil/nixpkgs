@@ -1,20 +1,48 @@
-{stdenv, fetchgit, ncurses, libnl, pkgconfig}:
-stdenv.mkDerivation rec {
-  version = "0.7.6.20151001";
-  baseName="wavemon";
-  name="${baseName}-${version}";
-  buildInputs = [ncurses libnl pkgconfig];
-  src = fetchgit {
-    url = https://github.com/uoaerg/wavemon.git ;
-    rev = "05753aed2ec5a786d602c7903c89fc6a230f8d42";
-    sha256 = "13y4bi4qz4596f11ng6zaqir5j234wv64z4670q3pzh3fqmzmpm4";
+x@{builderDefsPackage
+  , ncurses
+  , ...}:
+builderDefsPackage
+(a :  
+let 
+  helperArgNames = ["stdenv" "fetchurl" "builderDefsPackage"] ++ 
+    [];
+
+  buildInputs = map (n: builtins.getAttr n x)
+    (builtins.attrNames (builtins.removeAttrs x helperArgNames));
+  sourceInfo = rec {
+    baseName="wavemon";
+    version="0.7.5";
+    name="${baseName}-${version}";
+    url="http://eden-feed.erg.abdn.ac.uk/wavemon/stable-releases/${name}.tar.bz2";
+    hash="0b1fx00aar2fsw49a10w5bpiyjpz8h8f4nrlwb1acfw36yi1pfkd";
   };
+in
+rec {
+  src = a.fetchurl {
+    url = sourceInfo.url;
+    sha256 = sourceInfo.hash;
+  };
+
+  inherit (sourceInfo) name version;
+  inherit buildInputs;
+
+  /* doConfigure should be removed if not needed */
+  phaseNames = ["doConfigure" "doMakeInstall"];
+      
   meta = {
-    inherit version;
     description = "WiFi state monitor";
-    license = stdenv.lib.licenses.gpl3Plus ;
-    maintainers = [stdenv.lib.maintainers.raskin];
-    platforms = stdenv.lib.platforms.linux;
-    downloadPage = https://github.com/uoaerg/wavemon.git ;
+    maintainers = with a.lib.maintainers;
+    [
+      raskin
+    ];
+    platforms = with a.lib.platforms;
+      linux;
+    license = a.lib.licenses.gpl2Plus;
   };
-}
+  passthru = {
+    updateInfo = {
+      downloadPage = "http://eden-feed.erg.abdn.ac.uk/wavemon/";
+    };
+  };
+}) x
+

@@ -17,12 +17,11 @@
 # };
 # This will rebuild glibc with your security patch, then copy over firefox
 # (and all of its dependencies) without rebuilding further.
-{ drv, oldDependency, newDependency, verbose ? true }:
+{ drv, oldDependency, newDependency }:
 
 with lib;
 
 let
-  warn = if verbose then builtins.trace else (x: y: y);
   references = import (runCommand "references.nix" { exportReferencesGraph = [ "graph" drv ]; } ''
     (echo {
     while read path
@@ -48,20 +47,15 @@ let
 
   oldStorepath = builtins.storePath (discard (toString oldDependency));
 
-  referencesOf = drv: references.${discard (toString drv)};
+  referencesOf = drv: getAttr (discard (toString drv)) references;
 
-  dependsOnOldMemo = listToAttrs (map
-    (drv: { name = discard (toString drv);
-            value = elem oldStorepath (referencesOf drv) ||
-                    any dependsOnOld (referencesOf drv);
-          }) (builtins.attrNames references));
-
-  dependsOnOld = drv: dependsOnOldMemo.${discard (toString drv)};
+  dependsOnOld = drv: elem oldStorepath (referencesOf drv) ||
+    any dependsOnOld (referencesOf drv);
 
   drvName = drv:
     discard (substring 33 (stringLength (builtins.baseNameOf drv)) (builtins.baseNameOf drv));
 
-  rewriteHashes = drv: hashes: runCommand (drvName drv) { nixStore = "${nix.out}/bin/nix-store"; } ''
+  rewriteHashes = drv: hashes: runCommand (drvName drv) { nixStore = "${nix}/bin/nix-store"; } ''
     $nixStore --dump ${drv} | sed 's|${baseNameOf drv}|'$(basename $out)'|g' | sed -e ${
       concatStringsSep " -e " (mapAttrsToList (name: value:
         "'s|${baseNameOf name}|${baseNameOf value}|g'"
@@ -71,13 +65,15 @@ let
 
   rewrittenDeps = listToAttrs [ {name = discard (toString oldDependency); value = newDependency;} ];
 
-  rewriteMemo = listToAttrs (map
-    (drv: { name = discard (toString drv);
-            value = rewriteHashes (builtins.storePath drv)
-              (filterAttrs (n: v: builtins.elem (builtins.storePath (discard (toString n))) (referencesOf drv)) rewriteMemo);
-          })
-    (filter dependsOnOld (builtins.attrNames references))) // rewrittenDeps;
+  rewrittenDerivations = drv:
+    if dependsOnOld drv
+      then listToAttrs [ {
+        name = discard (toString drv);
 
-  drvHash = discard (toString drv);
+        value = rewriteHashes drv (rewrittenDeps // (fold (drv: acc:
+          (rewrittenDerivations drv) // acc
+        ) {} (referencesOf drv)));
+      } ]
+      else {};
 in assert (stringLength (drvName (toString oldDependency)) == stringLength (drvName (toString newDependency)));
-rewriteMemo.${drvHash} or (warn "replace-dependency.nix: Derivation ${drvHash} does not depend on ${discard (toString oldDependency)}" drv)
+getAttr (discard (toString drv)) (rewrittenDerivations drv)

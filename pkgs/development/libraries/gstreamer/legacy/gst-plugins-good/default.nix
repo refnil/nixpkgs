@@ -1,10 +1,7 @@
-{ fetchurl, stdenv, lib, pkgconfig, gst-plugins-base, aalib, cairo
+{ fetchurl, stdenv, pkgconfig, gst_plugins_base, aalib, cairo
 , flac, libjpeg, zlib, speex, libpng, libdv, libcaca, libvpx
-, libiec61883, libavc1394, taglib, libpulseaudio, gdk_pixbuf, orc
-, glib, gstreamer, bzip2, libsoup, libshout, ncurses, libintlOrEmpty
-, # Whether to build no plugins that have external dependencies
-  # (except the PulseAudio plugin).
-  minimalDeps ? false
+, libiec61883, libavc1394, taglib, pulseaudio, gdk_pixbuf, orc
+, glib, gstreamer, bzip2
 }:
 
 stdenv.mkDerivation rec {
@@ -18,26 +15,17 @@ stdenv.mkDerivation rec {
     sha256 = "1ijswgcrdp243mfsyza31fpzq6plz40p4b83vkr2x4x7807889vy";
   };
 
-  patches = [ ./v4l.patch ./linux-headers-3.9.patch ];
+  patches = [ ./v4l.patch ];
 
-  configureFlags = [ "--enable-experimental" "--disable-oss" ];
+  configureFlags = "--disable-oss";
 
   buildInputs =
-    [ pkgconfig glib gstreamer gst-plugins-base ]
-    ++ lib.optional stdenv.isLinux libpulseaudio
-    ++ libintlOrEmpty
-    ++ lib.optionals (!minimalDeps)
-      [ aalib libcaca cairo libdv flac libjpeg libpng speex
-        taglib bzip2 libvpx gdk_pixbuf orc libsoup libshout ];
-
-  NIX_LDFLAGS = if stdenv.isDarwin then "-lintl" else null;
+    [ pkgconfig glib gstreamer gst_plugins_base libavc1394 libiec61883
+      aalib libcaca cairo libdv flac libjpeg libpng pulseaudio speex
+      taglib bzip2 libvpx gdk_pixbuf orc
+    ];
 
   enableParallelBuilding = true;
-
-  postInstall = lib.optionalString (!minimalDeps) ''
-    substituteInPlace $out/lib/gstreamer-0.10/libgstaasink.la \
-      --replace "${ncurses.dev}/lib" "${ncurses.out}/lib"
-  '';
 
   meta = {
     homepage = http://gstreamer.freedesktop.org;
@@ -45,7 +33,7 @@ stdenv.mkDerivation rec {
     description = "`Good' plug-ins for GStreamer";
 
     maintainers = [stdenv.lib.maintainers.raskin];
-    platforms = stdenv.lib.platforms.unix;
+    platforms = stdenv.lib.platforms.linux;
 
     license = stdenv.lib.licenses.lgpl2Plus;
   };

@@ -1,27 +1,55 @@
-{ stdenv, fetchurl, libX11, xproto, libXt, libICE, libSM, libXext }:
+x@{builderDefsPackage
+  , libX11, xproto, libXt, libICE
+  , libSM, libXext
+  , ...}:
+builderDefsPackage
+(a :  
+let 
+  helperArgNames = ["stdenv" "fetchurl" "builderDefsPackage"] ++ 
+    [];
 
-stdenv.mkDerivation rec {
-  name = "xdaliclock-${version}";
-  version = "2.43";
-
-  src = fetchurl {
-    url="http://www.jwz.org/xdaliclock/${name}.tar.gz";
-    sha256 = "194zzp1a989k2v8qzfr81gdknr8xiz16d6fdl63jx9r3mj5klmvb";
+  buildInputs = map (n: builtins.getAttr n x)
+    (builtins.attrNames (builtins.removeAttrs x helperArgNames));
+  sourceInfo = rec {
+    baseName="xdaliclock";
+    version="2.40";
+    name="${baseName}-${version}";
+    project="${baseName}";
+    url="http://www.jwz.org/${project}/${name}.tar.gz";
+    hash="03i8vwi9vz3gr938wr4miiymwv283mg11wgfaf2jhl6aqbmz4id7";
+  };
+in
+rec {
+  src = a.fetchurl {
+    url = sourceInfo.url;
+    sha256 = sourceInfo.hash;
   };
 
-  sourceRoot = "${name}/X11";
+  inherit (sourceInfo) name version;
+  inherit buildInputs;
 
-  buildInputs = [ libX11 xproto libXt libICE libSM libXext ];
+  /* doConfigure should be removed if not needed */
+  phaseNames = ["doConfigure" "prepareDirs" "doMakeInstall"];
 
-  preInstall = ''
-    mkdir -vp $out/bin $out/share/man/man1
-  '';
+  prepareDirs = a.fullDepEntry ''
+    mkdir -p "$out/bin" "$out/share" "$out/share/man/man1"
+  '' ["minInit" "defEnsureDir"];
 
-  meta = with stdenv.lib; {
+  goSrcDir = "cd X11";
+      
+  meta = {
     description = "A clock application that morphs digits when they are changed";
-    maintainers = with maintainers; [ raskin rycee ];
-    platforms = with platforms; linux ++ freebsd;
-    license = licenses.free; #TODO BSD on Gentoo, looks like MIT
-    downloadPage = http://www.jwz.org/xdaliclock/;
+    maintainers = with a.lib.maintainers;
+    [
+      raskin
+    ];
+    platforms = with a.lib.platforms;
+      linux ++ freebsd;
+    license = "free"; #TODO BSD on Gentoo, looks like MIT
   };
-}
+  passthru = {
+    updateInfo = {
+      downloadPage = "http://www.jwz.org/xdaliclock/";
+    };
+  };
+}) x

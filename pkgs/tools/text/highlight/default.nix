@@ -1,33 +1,21 @@
-{ stdenv, fetchurl, getopt, lua, boost, pkgconfig, gcc }:
-
-with stdenv.lib;
-
+{ stdenv, fetchurl, getopt, lua, boost }:
+        
 stdenv.mkDerivation rec {
-  name = "highlight-${version}";
-  version = "3.35";
+  name = "highlight-3.9";
 
   src = fetchurl {
     url = "http://www.andre-simon.de/zip/${name}.tar.bz2";
-    sha256 = "8a14b49f5e0c07daa9f40b4ce674baa00bb20061079473a5d386656f6d236d05";
+    sha256 = "1vysj34zz8gk5yhlzm7g6lbphb8y6zfbd9smfgsgwkyawfargrja";
   };
-
-  nativeBuildInputs = [ pkgconfig ] ++ optional stdenv.isDarwin  gcc ;
 
   buildInputs = [ getopt lua boost ];
 
-  prePatch = stdenv.lib.optionalString stdenv.cc.isClang ''
-    substituteInPlace src/makefile \
-        --replace 'CXX=g++' 'CXX=clang++'
-  '';
+  makeFlags = [
+    "PREFIX=$(out)"
+    "conf_dir=$(out)/etc/highlight/"
+  ];
 
-  preConfigure = ''
-    makeFlags="PREFIX=$out conf_dir=$out/etc/highlight/"
-  '';
-
-  meta = with stdenv.lib; {
+  meta = {
     description = "Source code highlighting tool";
-    homepage = "http://www.andre-simon.de/doku/highlight/en/highlight.php";
-    platforms = platforms.unix;
-    maintainers = [ maintainers.ndowens ];
   };
 }

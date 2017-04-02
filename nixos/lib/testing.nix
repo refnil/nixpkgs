@@ -1,6 +1,6 @@
-{ system, minimal ? false, config ? {} }:
+{ system, minimal ? false }:
 
-with import ./build-vms.nix { inherit system minimal config; };
+with import ./build-vms.nix { inherit system minimal; };
 with pkgs;
 
 rec {
@@ -15,8 +15,6 @@ rec {
 
     unpackPhase = "true";
 
-    preferLocalBuild = true;
-
     installPhase =
       ''
         mkdir -p $out/bin
@@ -29,8 +27,8 @@ rec {
         cp ${./test-driver/Logger.pm} $libDir/Logger.pm
 
         wrapProgram $out/bin/nixos-test-driver \
-          --prefix PATH : "${lib.makeBinPath [ qemu vde2 netpbm coreutils ]}" \
-          --prefix PERL5LIB : "${with perlPackages; lib.makePerlPath [ TermReadLineGnu XMLWriter IOTty FileSlurp ]}:$out/lib/perl5/site_perl"
+          --prefix PATH : "${pkgs.qemu_kvm}/bin:${pkgs.vde2}/bin:${imagemagick}/bin:${coreutils}/bin" \
+          --prefix PERL5LIB : "${lib.makePerlPath [ perlPackages.TermReadLineGnu perlPackages.XMLWriter perlPackages.IOTty ]}:$out/lib/perl5/site_perl"
       '';
   };
 
@@ -43,20 +41,18 @@ rec {
 
       requiredSystemFeatures = [ "kvm" "nixos-test" ];
 
-      buildInputs = [ libxslt ];
+      buildInputs = [ pkgs.libxslt ];
 
       buildCommand =
         ''
           mkdir -p $out/nix-support
 
-          LOGFILE=$out/log.xml tests='eval $ENV{testScript}; die $@ if $@;' ${driver}/bin/nixos-test-driver
+          LOGFILE=$out/log.xml tests='eval $ENV{testScript}; die $@ if $@;' ${driver}/bin/nixos-test-driver || failed=1
 
           # Generate a pretty-printed log.
           xsltproc --output $out/log.html ${./test-driver/log2html.xsl} $out/log.xml
           ln -s ${./test-driver/logfile.css} $out/logfile.css
           ln -s ${./test-driver/treebits.js} $out/treebits.js
-          ln -s ${jquery}/js/jquery.min.js $out/
-          ln -s ${jquery-ui}/js/jquery-ui.min.js $out/
 
           touch $out/nix-support/hydra-build-products
           echo "report testlog $out log.html" >> $out/nix-support/hydra-build-products
@@ -65,17 +61,14 @@ rec {
             mkdir -p $out/coverage-data
             mv $i $out/coverage-data/$(dirname $(dirname $i))
           done
+
+          [ -z "$failed" ] || touch $out/nix-support/failed
         ''; # */
     };
 
 
   makeTest =
-    { testScript
-    , makeCoverageReport ? false
-    , enableOCR ? false
-    , name ? "unnamed"
-    , ...
-    } @ t:
+    { testScript, makeCoverageReport ? false, name ? "unnamed", ... } @ t:
 
     let
       testDriverName = "nixos-test-driver-${name}";
@@ -93,8 +86,6 @@ rec {
 
       vms = map (m: m.config.system.build.vm) (lib.attrValues nodes);
 
-      ocrProg = tesseract;
-
       # Generate onvenience wrappers for running the test driver
       # interactively with the specified network, and for starting the
       # VMs from the command line.
@@ -108,32 +99,26 @@ rec {
           mkdir -p $out/bin
           echo "$testScript" > $out/test-script
           ln -s ${testDriver}/bin/nixos-test-driver $out/bin/
-          vms=($(for i in ${toString vms}; do echo $i/bin/run-*-vm; done))
+          vms="$(for i in ${toString vms}; do echo $i/bin/run-*-vm; done)"
           wrapProgram $out/bin/nixos-test-driver \
-            --add-flags "''${vms[*]}" \
-            ${lib.optionalString enableOCR "--prefix PATH : '${ocrProg}/bin'"} \
+            --add-flags "$vms" \
             --run "testScript=\"\$(cat $out/test-script)\"" \
-            --set testScript '$testScript' \
-            --set VLANS '${toString vlans}'
+            --set testScript '"$testScript"' \
+            --set VLANS '"${toString vlans}"'
           ln -s ${testDriver}/bin/nixos-test-driver $out/bin/nixos-run-vms
           wrapProgram $out/bin/nixos-run-vms \
-            --add-flags "''${vms[*]}" \
-            ${lib.optionalString enableOCR "--prefix PATH : '${ocrProg}/bin'"} \
-            --set tests 'startAll; joinAll;' \
-            --set VLANS '${toString vlans}' \
+            --add-flags "$vms" \
+            --set tests '"startAll; joinAll;"' \
+            --set VLANS '"${toString vlans}"' \
             ${lib.optionalString (builtins.length vms == 1) "--set USE_SERIAL 1"}
         ''; # "
 
-      passMeta = drv: drv // lib.optionalAttrs (t ? meta) {
-        meta = (drv.meta or {}) // t.meta;
-      };
+      test = runTests driver;
 
-      test = passMeta (runTests driver);
-      report = passMeta (releaseTools.gcovReport { coverageRuns = [ test ]; });
+      report = releaseTools.gcovReport { coverageRuns = [ test ]; };
 
-    in (if makeCoverageReport then report else test) // { 
-      inherit nodes driver test; 
-    };
+    in (if makeCoverageReport then report else test) // { inherit driver test; };
+
 
   runInMachine =
     { drv
@@ -157,35 +142,24 @@ rec {
         ${coreutils}/bin/mkdir -p $TMPDIR
         cd $TMPDIR
 
-        exec $origBuilder $origArgs
+        $origBuilder $origArgs
+
+        exit $?
       '';
 
       testScript = ''
         startAll;
         $client->waitForUnit("multi-user.target");
         ${preBuild}
-        $client->succeed("env -i ${bash}/bin/bash ${buildrunner} /tmp/xchg/saved-env >&2");
+        $client->succeed("env -i ${pkgs.bash}/bin/bash ${buildrunner} /tmp/xchg/saved-env >&2");
         ${postBuild}
         $client->succeed("sync"); # flush all data before pulling the plug
       '';
 
       vmRunCommand = writeText "vm-run" ''
-        xchg=vm-state-client/xchg
         ${coreutils}/bin/mkdir $out
-        ${coreutils}/bin/mkdir -p $xchg
-
-        for i in $passAsFile; do
-          i2=''${i}Path
-          _basename=$(${coreutils}/bin/basename ''${!i2})
-          ${coreutils}/bin/cp ''${!i2} $xchg/$_basename
-          eval $i2=/tmp/xchg/$_basename
-          ${coreutils}/bin/ls -la $xchg
-        done
-
-        unset i i2 _basename
-        export | ${gnugrep}/bin/grep -v '^xchg=' > $xchg/saved-env
-        unset xchg
-
+        ${coreutils}/bin/mkdir -p vm-state-client/xchg
+        export > vm-state-client/xchg/saved-env
         export tests='${testScript}'
         ${testDriver}/bin/nixos-test-driver ${vm.config.system.build.vm}/bin/run-*-vm
       ''; # */

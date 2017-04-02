@@ -1,22 +1,20 @@
-{ stdenv, fetchurl, chromaprint, fftw, flac, libid3tag, libmad
-, libopus, libshout, libsndfile, libusb1, libvorbis, pkgconfig
-, portaudio, portmidi, protobuf, qt4, rubberband, scons, sqlite
-, taglib, vampSDK
+{ stdenv, fetchurl, scons, pkgconfig, qt4, portaudio, portmidi, libusb1
+, libmad, protobuf, libvorbis, taglib, libid3tag, flac, libsndfile, libshout
+, fftw, vampSDK
 }:
 
 stdenv.mkDerivation rec {
   name = "mixxx-${version}";
-  version = "2.0.0";
+  version = "1.11.0";
 
   src = fetchurl {
     url = "http://downloads.mixxx.org/${name}/${name}-src.tar.gz";
-    sha256 = "0vb71w1yq0xwwsclrn2jj9bk8w4n14rfv5c0aw46c11mp8xz7f71";
+    sha256 = "0c833gf4169xvpfn7car9vzvwfwl9d3xwmbfsy36cv8ydifip5h0";
   };
 
   buildInputs = [
-    chromaprint fftw flac libid3tag libmad libopus libshout libsndfile
-    libusb1 libvorbis pkgconfig portaudio portmidi protobuf qt4
-    rubberband scons sqlite taglib vampSDK
+    scons pkgconfig qt4 portaudio portmidi libusb1 libmad protobuf libvorbis
+    taglib libid3tag flac libsndfile libshout fftw vampSDK
   ];
 
   sconsFlags = [
@@ -24,9 +22,13 @@ stdenv.mkDerivation rec {
     "qtdir=${qt4}"
   ];
 
+  postPatch = ''
+    sed -i -e 's/"which /"type -P /' build/depends.py
+  '';
+
   buildPhase = ''
     runHook preBuild
-    mkdir -p "$out"
+    ensureDir "$out"
     scons \
       -j$NIX_BUILD_CORES -l$NIX_BUILD_CORES \
       $sconsFlags "prefix=$out"
@@ -39,11 +41,11 @@ stdenv.mkDerivation rec {
     runHook postInstall
   '';
 
-  meta = with stdenv.lib; {
-    homepage = http://mixxx.org;
+  meta = {
+    homepage = "http://mixxx.org/";
     description = "Digital DJ mixing software";
-    license = licenses.gpl2Plus;
-    maintainers = [ maintainers.aszlig maintainers.goibhniu ];
-    platforms = platforms.linux;
+    license = stdenv.lib.licenses.gpl2Plus;
+    maintainers = [ stdenv.lib.maintainers.aszlig ];
+    platforms = stdenv.lib.platforms.linux;
   };
 }

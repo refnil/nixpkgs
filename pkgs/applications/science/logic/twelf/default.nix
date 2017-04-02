@@ -17,24 +17,20 @@ stdenv.mkDerivation rec {
   '';
 
   installPhase = ''
-    mkdir -p $out/bin
-    rsync -av bin/{*,.heap} $out/bin/
-    bin/.mkexec ${smlnj}/bin/sml $out/ twelf-server twelf-server
+    ensureDir $out/bin
+    rsync -av bin/* $out/bin/
 
-    substituteInPlace emacs/twelf-init.el \
-      --replace '(concat twelf-root "emacs")' '(concat twelf-root "share/emacs/site-lisp/twelf")'
-
-    mkdir -p $out/share/emacs/site-lisp/twelf/
+    ensureDir $out/share/emacs/site-lisp/twelf/
     rsync -av emacs/ $out/share/emacs/site-lisp/twelf/
 
-    mkdir -p $out/share/twelf/examples
+    ensureDir $out/share/twelf/examples
     rsync -av examples/ $out/share/twelf/examples/
-    mkdir -p $out/share/twelf/vim
+    ensureDir $out/share/twelf/vim
     rsync -av vim/ $out/share/twelf/vim/
   '';
 
   meta = {
-    description = "Logic proof assistant";
+    description = "Twelf logic proof assistant";
     longDescription = ''
       Twelf is a language used to specify, implement, and prove properties of
       deductive systems such as programming languages and logics. Large
@@ -43,7 +39,7 @@ stdenv.mkDerivation rec {
       Standard ML.
     '';
     homepage = http://twelf.org/wiki/Main_Page;
-    license = stdenv.lib.licenses.mit;
+    license = "MIT";
     maintainers = with stdenv.lib.maintainers; [ jwiegley ];
     platforms = stdenv.lib.platforms.unix;
   };

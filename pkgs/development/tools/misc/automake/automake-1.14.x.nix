@@ -25,7 +25,6 @@ stdenv.mkDerivation rec {
   dontPatchShebangs = true;
 
   meta = {
-    branch = "1.14";
     homepage = "http://www.gnu.org/software/automake/";
     description = "GNU standard-compliant makefile generator";
     license = stdenv.lib.licenses.gpl2Plus;
@@ -36,6 +35,6 @@ stdenv.mkDerivation rec {
       Standards.  Automake requires the use of Autoconf.
     '';
 
-    platforms = stdenv.lib.platforms.all;
+    maintainers = [ stdenv.lib.maintainers.ludo stdenv.lib.maintainers.simons ];
   };
 }

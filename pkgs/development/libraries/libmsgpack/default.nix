@@ -1,12 +1,31 @@
-{ callPackage, fetchFromGitHub, ... } @ args:
+{ stdenv, fetchurl, autoconf, automake, libtool, ruby, scatterOutputHook }:
 
-callPackage ./generic.nix (args // rec {
-  version = "2.0.0";
+stdenv.mkDerivation rec {
+  version = "0.5.8";
+  name = "libmsgpack-${version}";
 
-  src = fetchFromGitHub {
-    owner = "msgpack";
-    repo = "msgpack-c";
-    rev = "cpp-${version}";
-    sha256 = "189m44pwpcpf7g4yhzfla4djqyp2kl54wxmwfaj94gwgj5s370i7";
+  src = fetchurl {
+    url = "https://github.com/msgpack/msgpack-c/archive/cpp-${version}.tar.gz";
+    sha256 = "1h6k9kdbfavmw3by5kk3raszwa64hn9k8yw9rdhvl5m8g2lks89k";
   };
-})
+
+  nativeBuildInputs = [ scatterOutputHook ];
+  buildInputs = [ autoconf automake libtool ruby ];
+
+  outputs = [ "out" "bin" ];
+
+  preConfigure = ''
+    sed -i s,glibtoolize,libtoolize, ./bootstrap
+    ./bootstrap
+  '';
+
+  enableParallelBuilding = true;
+
+  meta = with stdenv.lib; {
+    description = "MessagePack implementation for C and C++";
+    homepage = http://msgpack.org;
+    maintainers = [ maintainers.redbaron ];
+    license = licenses.asl20;
+    platforms = platforms.all;
+  };
+}

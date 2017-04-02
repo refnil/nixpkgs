@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, ocaml, findlib, ocamlbuild }:
+{stdenv, fetchurl, ocaml, findlib, ounit}:
 
 stdenv.mkDerivation {
   name = "ocamlify-0.0.2";
@@ -8,18 +8,16 @@ stdenv.mkDerivation {
     sha256 = "1f0fghvlbfryf5h3j4as7vcqrgfjb4c8abl5y0y5h069vs4kp5ii";
   };
 
-  buildInputs = [ ocaml findlib ocamlbuild ];
+  buildInputs = [ocaml findlib ounit];
 
   configurePhase = "ocaml setup.ml -configure --prefix $out";
   buildPhase     = "ocaml setup.ml -build";
   installPhase   = "ocaml setup.ml -install";
 
-  dontStrip = true;
-
   meta = {
     homepage = http://forge.ocamlcore.org/projects/ocamlmod/ocamlmod;
     description = "Generate OCaml modules from source files";
-    platforms = ocaml.meta.platforms or [];
+    platforms = ocaml.meta.platforms;
     license = stdenv.lib.licenses.lgpl21;
     maintainers = with stdenv.lib.maintainers; [
       z77z

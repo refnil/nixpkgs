@@ -1,29 +1,28 @@
-{ stdenv, fetchurl, bison, pkgconfig
-, glib, gtk2, libxml2, gettext, zlib, binutils, gnutls }:
+{stdenv, fetchurl, pkgconfig, glib, gtk, libxml2, bison, gettext, zlib}:
 
 let
   name = "gtk-gnutella";
-  version = "1.1.9";
+  version = "1.0.1";
 in
 stdenv.mkDerivation {
   name = "${name}-${version}";
 
   src = fetchurl {
     url = "mirror://sourceforge/${name}/${name}-${version}.tar.bz2";
-    sha256 = "1zvadgsskmpm82id9mbj24a2lyq38qv768ixv7nmfjl3d4wr2biv";
+    sha256 = "010gzk2xqqkm309qnj5k28ghh9i92vvpnn8ly9apzb5gh8bqfm0g";
   };
 
-  nativeBuildInputs = [ bison binutils gettext pkgconfig ];
-  buildInputs = [ glib gnutls gtk2 libxml2 zlib ];
+  buildInputs = [pkgconfig glib gtk libxml2 bison gettext zlib];
 
-  hardeningDisable = [ "bindnow" "fortify" "pic" "relro" ];
+  NIX_LDFLAGS = "-rpath ${zlib}/lib";
+  configureScript = "./Configure";
+  dontAddPrefix = true;
+  configureFlags = "-d -e -D prefix=$out -D gtkversion=2 -D official=true";
 
-  configureScript = "./build.sh --configure-only";
-
-  meta = with stdenv.lib; {
-    homepage = http://gtk-gnutella.sourceforge.net/;
-    description = "Server/client for Gnutella";
-    license = licenses.gpl2;
-    platforms = platforms.unix;
+  meta = {
+    homepage = "http://gtk-gnutella.sourceforge.net/";
+    description = "a server/client for Gnutella";
+    license = stdenv.lib.licenses.gpl2;
+    broken = true;
   };
 }

@@ -1,35 +1,32 @@
 {stdenv, fetchurl}:
 
 stdenv.mkDerivation rec {
-  name = "lzo-2.09";
+  name = "lzo-2.06";
 
   src = fetchurl {
     url = "${meta.homepage}/download/${name}.tar.gz";
-    sha256 = "0k5kpj3jnsjfxqqkblpfpx0mqcy86zs5fhjhgh2kq1hksg7ag57j";
+    sha256 = "0wryshs446s7cclrbjykyj766znhcpnr7s3cxy33ybfn6vwfcygz";
   };
 
   configureFlags = [ "--enable-shared" ];
 
-  enableParallelBuilding = true;
-
   doCheck = true;
 
-  meta = with stdenv.lib; {
-    description = "Real-time data (de)compression library";
-    longDescription = ''
-      LZO is a portable lossless data compression library written in ANSI C.
-      Both the source code and the compressed data format are designed to be
-      portable across platforms.
-      LZO offers pretty fast compression and *extremely* fast decompression.
-      While it favours speed over compression ratio, it includes slower
-      compression levels achieving a quite competitive compression ratio
-      while still decompressing at this very high speed.
-    '';
+  meta = {
+    description = "A data compresion library suitable for real-time data de-/compression";
+    longDescription =
+      '' LZO is a data compression library which is suitable for data
+	 de-/compression in real-time.  This means it favours speed over
+	 compression ratio.
+
+	 LZO is written in ANSI C.  Both the source code and the compressed
+	 data format are designed to be portable across platforms.
+      '';
 
     homepage = http://www.oberhumer.com/opensource/lzo;
-    license = licenses.gpl2Plus;
+    license = stdenv.lib.licenses.gpl2Plus;
 
-    platforms = platforms.all;
-    maintainers = with maintainers; [ nckx ];
+    platforms = stdenv.lib.platforms.all;
+    maintainers = [ ];
   };
 }

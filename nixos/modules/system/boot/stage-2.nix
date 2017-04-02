@@ -7,27 +7,27 @@ let
   kernel = config.boot.kernelPackages.kernel;
   activateConfiguration = config.system.activationScripts.script;
 
-  readonlyMountpoint = pkgs.stdenv.mkDerivation {
-    name = "readonly-mountpoint";
-    unpackPhase = "true";
-    installPhase = ''
-      mkdir -p $out/bin
-      cc -O3 ${./readonly-mountpoint.c} -o $out/bin/readonly-mountpoint
-    '';
-  };
+  readonlyMountpoint = pkgs.runCommand "readonly-mountpoint" {} ''
+    mkdir -p $out/bin
+    cc -O3 ${./readonly-mountpoint.c} -o $out/bin/readonly-mountpoint
+    strip -s $out/bin/readonly-mountpoint
+  '';
 
   bootStage2 = pkgs.substituteAll {
     src = ./stage-2-init.sh;
     shellDebug = "${pkgs.bashInteractive}/bin/bash";
     isExecutable = true;
+    inherit (config.boot) devShmSize runSize cleanTmpDir;
     inherit (config.nix) readOnlyStore;
     inherit (config.networking) useHostResolvConf;
-    inherit (config.system.build) earlyMountScript;
+    ttyGid = config.ids.gids.tty;
     path =
       [ pkgs.coreutils
         pkgs.utillinux
+        pkgs.sysvtools
         pkgs.openresolv
-      ] ++ optional config.nix.readOnlyStore readonlyMountpoint;
+      ] ++ (optional config.boot.cleanTmpDir pkgs.findutils)
+      ++ optional config.nix.readOnlyStore readonlyMountpoint;
     postBootCommands = pkgs.writeText "local-cmds"
       ''
         ${config.boot.postBootCommands}
@@ -78,6 +78,15 @@ in
         description = ''
           Size limit for the /run tmpfs. Look at mount(8), tmpfs size option,
           for the accepted syntax.
+        '';
+      };
+
+      # FIXME: should replace this with something that uses systemd-tmpfiles.
+      cleanTmpDir = mkOption {
+        type = types.bool;
+        default = false;
+        description = ''
+          Whether to delete all files in <filename>/tmp</filename> during boot.
         '';
       };
 

@@ -1,59 +1,37 @@
-{ stdenv, fetchurl, pkgconfig, perl, utillinux, keyutils, nss, nspr, python2, pam
-, intltool, makeWrapper, coreutils, bash, gettext, cryptsetup, lvm2, rsync, which, lsof }:
+{ stdenv, fetchurl, pkgconfig, perl, keyutils, nss, nspr, python, pam
+, intltool, makeWrapper, coreutils, gettext, cryptsetup, lvm2, rsync, which }:
 
-stdenv.mkDerivation rec {
-  name = "ecryptfs-${version}";
-  version = "111";
+stdenv.mkDerivation {
+  name = "ecryptfs-104";
 
   src = fetchurl {
-    url = "http://launchpad.net/ecryptfs/trunk/${version}/+download/ecryptfs-utils_${version}.orig.tar.gz";
-    sha256 = "0zwq19siiwf09h7lwa7n7mgmrr8cxifp45lmwgcfr8c1gviv6b0i";
+    url = http://launchpad.net/ecryptfs/trunk/104/+download/ecryptfs-utils_104.orig.tar.gz;
+    sha256 = "0f3lzpjw97vcdqzzgii03j3knd6pgwn1y0lpaaf46iidaiv0282a";
   };
 
-  # TODO: replace wrapperDir below with from <nixos> config.security.wrapperDir;
-  wrapperDir = "/run/wrappers/bin";
-
-  postPatch = ''
-    FILES="$(grep -r '/bin/sh' src/utils -l; find src -name \*.c)"
-    for file in $FILES; do
-      substituteInPlace "$file" \
-        --replace /bin/mount ${utillinux}/bin/mount \
-        --replace /bin/umount ${utillinux}/bin/umount \
-        --replace /sbin/mount.ecryptfs_private ${wrapperDir}/mount.ecryptfs_private \
-        --replace /sbin/umount.ecryptfs_private ${wrapperDir}/umount.ecryptfs_private \
-        --replace /sbin/mount.ecryptfs $out/sbin/mount.ecryptfs \
-        --replace /sbin/umount.ecryptfs $out/sbin/umount.ecryptfs \
-        --replace /usr/bin/ecryptfs-rewrite-file $out/bin/ecryptfs-rewrite-file \
-        --replace /usr/bin/ecryptfs-mount-private $out/bin/ecryptfs-mount-private \
-        --replace /usr/bin/ecryptfs-setup-private $out/bin/ecryptfs-setup-private \
-        --replace /sbin/cryptsetup ${cryptsetup}/sbin/cryptsetup \
-        --replace /sbin/dmsetup ${lvm2}/sbin/dmsetup \
-        --replace /sbin/unix_chkpwd ${wrapperDir}/unix_chkpwd \
-        --replace /bin/bash ${bash}/bin/bash
-    done
-  '';
-
-  buildInputs = [ pkgconfig perl nss nspr python2 pam intltool makeWrapper ];
+  buildInputs = [ pkgconfig perl nss nspr python pam intltool makeWrapper ];
   propagatedBuildInputs = [ coreutils gettext cryptsetup lvm2 rsync keyutils which ];
 
   postInstall = ''
-    FILES="$(grep -r '/bin/sh' $out/bin -l)"
+    FILES="$(grep -r '/bin/sh' $out/bin | sed 's,:.*,,' | uniq)"
     for file in $FILES; do
+      sed -i $file -e "s,\(/sbin/u\?mount.ecryptfs\(_private\)\?\),$out\1," \
+        -e "s,\(/sbin/cryptsetup\),${cryptsetup}\1," \
+        -e "s,\(/sbin/dmsetup\),${lvm2}\1," \
+        -e 's,/sbin/\(unix_chkpwd\),\1,'
       wrapProgram $file \
         --prefix PATH ":" "${coreutils}/bin" \
         --prefix PATH ":" "${gettext}/bin" \
         --prefix PATH ":" "${rsync}/bin" \
         --prefix PATH ":" "${keyutils}/bin" \
         --prefix PATH ":" "${which}/bin" \
-        --prefix PATH ":" "${lsof}/bin" \
         --prefix PATH ":" "$out/bin"
     done
   '';
 
   meta = with stdenv.lib; {
     description = "Enterprise-class stacked cryptographic filesystem";
-    license     = licenses.gpl2Plus;
-    maintainers = with maintainers; [ obadz ];
-    platforms   = platforms.linux;
+    license = licenses.gpl2Plus;
+    platforms = platforms.linux;
   };
 }

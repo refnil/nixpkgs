@@ -1,22 +1,27 @@
-{ stdenv, fetchurl, autoreconfHook, libselinux, libuuid, pkgconfig }:
+{ stdenv, fetchgit, autoconf, automake, libtool, pkgconfig, libuuid }:
 
 stdenv.mkDerivation rec {
   name = "f2fs-tools-${version}";
-  version = "1.7.0";
+  version = "1.3.0";
 
-  src = fetchurl {
-    url = "http://git.kernel.org/cgit/linux/kernel/git/jaegeuk/f2fs-tools.git/snapshot/${name}.tar.gz";
-    sha256 = "1m6bn1ibq0p53m0n97il91xqgjgn2pzlz74lb5bfzassx7159m1k";
+  src = fetchgit {
+    url = git://git.kernel.org/pub/scm/linux/kernel/git/jaegeuk/f2fs-tools.git;
+    rev = "refs/tags/v${version}";
+    sha256 = "1r97k91qaf42jz623jqy0wm97yjq1ym034q4fdhfirq27s46sn6i";
   };
 
-  nativeBuildInputs = [ autoreconfHook ];
-  buildInputs = [ libselinux libuuid pkgconfig ];
+  buildInputs = [ autoconf automake libtool pkgconfig libuuid ];
 
-  meta = with stdenv.lib; {
+  preConfigure = ''
+    sed -i '/AC_SUBST/d' configure.ac
+    autoreconf --install
+  '';
+
+  meta = {
     homepage = "http://git.kernel.org/cgit/linux/kernel/git/jaegeuk/f2fs-tools.git/";
     description = "Userland tools for the f2fs filesystem";
-    license = licenses.gpl2;
-    platforms = platforms.linux;
-    maintainers = with maintainers; [ ehmry jagajaga ];
+    license = stdenv.lib.licenses.gpl2;
+    platforms = stdenv.lib.platforms.linux;
+    maintainers = [ stdenv.lib.maintainers.emery ];
   };
 }

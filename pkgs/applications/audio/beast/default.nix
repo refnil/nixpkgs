@@ -1,16 +1,16 @@
 { stdenv, fetchurl, zlib, guile, libart_lgpl, pkgconfig, intltool
-, gtk2, glib, libogg, libvorbis, libgnomecanvas, gettext, perl }:
+, gtk, glib, libogg, libvorbis, libgnomecanvas, gettext, perl }:
 
-stdenv.mkDerivation rec {
+stdenv.mkDerivation {
   name = "beast-0.7.1";
 
   src = fetchurl {
-    url = "http://ftp.gtk.org/pub/beast/v0.7/${name}.tar.bz2";
+    url = ftp://beast.gtk.org/pub/beast/v0.7/beast-0.7.1.tar.bz2;
     sha256 = "0jyl1i1918rsn4296w07fsf6wx3clvad522m3bzgf8ms7gxivg5l";
   };
 
   buildInputs =
-    [ zlib guile libart_lgpl pkgconfig intltool gtk2 glib
+    [ zlib guile libart_lgpl pkgconfig intltool gtk glib
       libogg libvorbis libgnomecanvas gettext
     ];
 
@@ -29,10 +29,9 @@ stdenv.mkDerivation rec {
       ./patch.patch # patches taken from gentoo
     ];
 
-  meta = with stdenv.lib; {
-    description = "A music composition and modular synthesis application";
+  meta = { 
+    description = "BEAST - the Bedevilled Sound Engine";
     homepage = http://beast.gtk.org;
-    license = with licenses; [ gpl2 lgpl21 ];
-    broken = true;
+    license = ["GPL-2" "LGPL-2.1"];
   };
 }

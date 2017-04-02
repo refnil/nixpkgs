@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, qt4, ncurses }:
+{ stdenv, fetchurl, qt4, ncurses}:
 
 stdenv.mkDerivation rec {
   name = "i7z-0.27.2";
@@ -8,7 +8,7 @@ stdenv.mkDerivation rec {
     sha256 = "1wa7ix6m75wl3k2n88sz0x8cckvlzqklja2gvzqfw5rcfdjjvxx7";
   };
 
-  buildInputs = [ qt4 ncurses ];
+  buildInputs = [qt4 ncurses];
 
   buildPhase = ''
     make
@@ -20,7 +20,7 @@ stdenv.mkDerivation rec {
   '';
 
   installPhase = ''
-    mkdir -p $out/sbin
+    ensureDir $out/sbin
     make install prefix=$out
     install -Dm755 GUI/i7z_GUI $out/sbin/i7z-gui
   '';
@@ -31,6 +31,5 @@ stdenv.mkDerivation rec {
     repositories.git = https://github.com/ajaiantilal/i7z.git;
     license = stdenv.lib.licenses.gpl2;
     maintainers = [ stdenv.lib.maintainers.bluescreen303 ];
-    platforms = stdenv.lib.platforms.linux;
   };
 }

@@ -1,17 +1,16 @@
-{ stdenv, fetchFromGitHub, cmake, qt4, qmake4Hook, libupnp, gpgme, gnome3, glib, libssh, pkgconfig, protobuf, bzip2
-, libXScrnSaver, speex, curl, libxml2, libxslt, sqlcipher, libmicrohttpd, opencv }:
+{ stdenv, fetchsvn, cmake, qt, libupnp, gpgme, gnome3, glib, libssh, pkgconfig, protobuf, bzip2
+, libXScrnSaver, speex, curl, libxml2, libxslt, sqlcipher }:
 
 stdenv.mkDerivation {
-  name = "retroshare-0.6-git-fabc3a3";
+  name = "retroshare-0.6-svn-7445";
 
-  src = fetchFromGitHub {
-    owner = "RetroShare";
-    repo = "RetroShare";
-    rev = "fabc3a398536565efe77fb1b1ef37bd484dc7d4a";
-    sha256 = "189qndkfq9kgv3qi3wx8ivla4j8fxr4iv7c8y9rjrjaz8jwdkn5x";
+  src = fetchsvn {
+    url = svn://svn.code.sf.net/p/retroshare/code/trunk;
+    rev = 7445;
+    sha256 = "1dqh65bn21g7ix752ddrr10kijjdwjgjipgysyxnm90zjmdlx3cc";
   };
 
-  NIX_CFLAGS_COMPILE = [ "-I${glib.dev}/include/glib-2.0" "-I${glib.dev}/lib/glib-2.0/include" "-I${libxml2.dev}/include/libxml2" "-I${sqlcipher}/include/sqlcipher" ];
+  NIX_CFLAGS_COMPILE = "-I${glib}/include/glib-2.0 -I${glib}/lib/glib-2.0/include -I${libxml2}/include/libxml2 -I${sqlcipher}/include/sqlcipher";
 
   patchPhase = ''
     # Fix build error
@@ -29,15 +28,12 @@ stdenv.mkDerivation {
   #    retroshare-gui/src/retroshare-gui.pro \
   #    retroshare-nogui/src/retroshare-nogui.pro
 
-  buildInputs = [ speex qt4 libupnp gpgme gnome3.libgnome_keyring glib libssh pkgconfig qmake4Hook
-                  protobuf bzip2 libXScrnSaver curl libxml2 libxslt sqlcipher libmicrohttpd opencv ];
+  buildInputs = [ speex qt libupnp gpgme gnome3.libgnome_keyring glib libssh pkgconfig
+                  protobuf bzip2 libXScrnSaver curl libxml2 libxslt sqlcipher ];
 
-  preConfigure = ''
-    qmakeFlags="$qmakeFlags DESTDIR=$out"
+  configurePhase = ''
+    qmake PREFIX=$out DESTDIR=$out RetroShare.pro
   '';
-
-  # gui/settings/PluginsPage.h:25:28: fatal error: ui_PluginsPage.h: No such file or directory
-  enableParallelBuilding = false;
 
   postInstall = ''
     mkdir -p $out/bin
@@ -57,6 +53,6 @@ stdenv.mkDerivation {
     homepage = http://retroshare.sourceforge.net/;
     #license = licenses.bsd2;
     platforms = platforms.linux;
-    maintainers = [ maintainers.domenkozar ];
+    maintainers = [ maintainers.iElectric ];
   };
 }

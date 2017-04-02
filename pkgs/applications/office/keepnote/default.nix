@@ -1,6 +1,6 @@
-{ stdenv, fetchurl, python2Packages }:
+{ stdenv, fetchurl, buildPythonPackage, pythonPackages, pygtk }:
 
-python2Packages.buildPythonApplication {
+buildPythonPackage {
   name = "keepnote-0.7.8";
   namePrefix = "";
 
@@ -9,7 +9,7 @@ python2Packages.buildPythonApplication {
     sha256 = "0nhkkv1n0lqf3zn17pxg5cgryv1wwlj4hfmhixwd76rcy8gs45dh";
   };
 
-  propagatedBuildInputs = with python2Packages; [ pyGtkGlade ];
+  propagatedBuildInputs = [ pythonPackages.sqlite3 pygtk ];
 
   # Testing fails.
   doCheck = false;

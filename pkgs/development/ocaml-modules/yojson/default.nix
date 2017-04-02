@@ -1,20 +1,19 @@
-{ stdenv, fetchzip, ocaml, findlib, cppo, easy-format, biniou }:
+{stdenv, fetchurl, ocaml, findlib, cppo, easy-format, biniou}:
 let
   pname = "yojson";
-  version = "1.2.3";
+  version = "1.1.8";
+  webpage = "http://mjambon.com/${pname}.html";
 in
-stdenv.mkDerivation {
+stdenv.mkDerivation rec {
 
-  name = "ocaml-${pname}-${version}";
+  name = "${pname}-${version}";
 
-  src = fetchzip {
-    url = "https://github.com/mjambon/${pname}/archive/v${version}.tar.gz";
-    sha256 = "10dvkndgwanvw4agbjln7kgb1n9s6lii7jw82kwxczl5rd1sgmvl";
+  src = fetchurl {
+    url = "http://mjambon.com/releases/${pname}/${name}.tar.gz";
+    sha256 = "0ayx17dimnpavdfyq6dk9xv2x1fx69by85vc6vl3nqxjkcv5d2rv";
   };
 
-  buildInputs = [ ocaml findlib ];
-
-  propagatedBuildInputs = [ cppo easy-format biniou ];
+  buildInputs = [ ocaml findlib cppo easy-format biniou ];
 
   createFindlibDestdir = true;
 
@@ -24,11 +23,10 @@ stdenv.mkDerivation {
     mkdir $out/bin
   '';
 
-  meta = with stdenv.lib; {
+  meta = {
     description = "An optimized parsing and printing library for the JSON format";
-    homepage = "http://mjambon.com/${pname}.html";
-    license = licenses.bsd3;
-    maintainers = [ maintainers.vbgl ];
-    platforms = ocaml.meta.platforms or [];
+    homepage = "${webpage}";
+    license = stdenv.lib.licenses.bsd3;
+    platforms = ocaml.meta.platforms;
   };
 }

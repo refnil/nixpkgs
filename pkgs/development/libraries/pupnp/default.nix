@@ -1,19 +1,12 @@
-{ fetchFromGitHub, stdenv, autoreconfHook }:
+{ fetchurl, stdenv }:
 
 stdenv.mkDerivation rec {
-  name = "libupnp-${version}";
-  version = "1.6.21";
+  name = "libupnp-1.6.19";
 
-  src = fetchFromGitHub {
-    owner = "mrjimenez";
-    repo = "pupnp";
-    rev = "release-${version}";
-    sha256 = "07ksfhadinaa20542gblrxi9pqz0v6y70a836hp3qr4037id4nm9";
+  src = fetchurl {
+    url = "mirror://sourceforge/pupnp/${name}.tar.bz2";
+    sha256 = "0amjv4lypvclmi4vim2qdyw5xa6v4x50zjgf682vahqjc0wjn55k";
   };
-
-  nativeBuildInputs = [ autoreconfHook ];
-
-  hardeningDisable = [ "fortify" ];
 
   meta = {
     description = "libupnp, an open source UPnP development kit for Linux";
@@ -28,6 +21,5 @@ stdenv.mkDerivation rec {
     license = "BSD-style";
 
     homepage = http://pupnp.sourceforge.net/;
-    platforms = stdenv.lib.platforms.unix;
   };
 }

@@ -1,56 +1,40 @@
-{ stdenv, fetchFromGitHub, pkgconfig, autoconf, automake, libiconv
-, drake, ruby, docbook_xsl, file, xdg_utils, gettext, expat, qt5, boost
-, libebml, zlib, libmatroska, libogg, libvorbis, flac, libxslt
-, withGUI ? true
+{ stdenv, fetchurl
+, libmatroska
+, flac
+, libvorbis
+, file
+, boost
+, xdg_utils
+, expat
+, wxGTK
+, zlib
+, ruby
+, gettext
+, pkgconfig
+, curl
 }:
 
-assert withGUI -> qt5 != null;
-
-with stdenv.lib;
-
 stdenv.mkDerivation rec {
-  name = "mkvtoolnix-${version}";
-  version = "9.9.0";
+  name = "mkvtoolnix-6.5.0";
 
-  src = fetchFromGitHub {
-    owner = "mbunkus";
-    repo = "mkvtoolnix";
-    rev = "release-${version}";
-    sha256 = "1jiz23s52l3gpl84yx4yw3w445jqzcimvnvibvrv3a21k29hyik1";
+  src = fetchurl {
+    url = "http://www.bunkus.org/videotools/mkvtoolnix/sources/${name}.tar.xz";
+    sha256 = "0a3h878bsjbpb2r7b528xzyqzl8r82yhrniry9bnhmw7rcl53bd8";
   };
 
-  nativeBuildInputs = [ pkgconfig autoconf automake gettext drake ruby docbook_xsl libxslt ];
+  buildInputs = [ libmatroska flac libvorbis file boost xdg_utils expat wxGTK zlib ruby gettext pkgconfig curl ];
 
-  buildInputs = [
-    expat file xdg_utils boost libebml zlib libmatroska libogg
-    libvorbis flac
-  ]
-  ++ optional stdenv.isDarwin libiconv
-  ++ optional withGUI qt5.qtbase;
+  configureFlags = "--with-boost-libdir=${boost}/lib";
+  buildPhase = ''
+    ruby ./drake
+  '';
 
-  preConfigure = "./autogen.sh; patchShebangs .";
-  buildPhase   = "drake -j $NIX_BUILD_CORES";
-  installPhase = "drake install -j $NIX_BUILD_CORES";
+  installPhase = ''
+    ruby ./drake install
+  '';
 
-  configureFlags = [
-    "--enable-magic"
-    "--enable-optimization"
-    "--with-boost-libdir=${boost.out}/lib"
-    "--disable-debug"
-    "--disable-profiling"
-    "--disable-precompiled-headers"
-    "--disable-static-qt"
-    "--with-gettext"
-    "--with-docbook-xsl-root=${docbook_xsl}/share/xml/docbook-xsl"
-    (enableFeature withGUI "qt")
-  ];
-
-  meta = with stdenv.lib; {
+  meta = {
     description = "Cross-platform tools for Matroska";
-    homepage    = http://www.bunkus.org/videotools/mkvtoolnix/;
-    license     = licenses.gpl2;
-    maintainers = with maintainers; [ codyopel fuuzetsu rnhmjoj ];
-    platforms   = platforms.linux
-      ++ optionals (!withGUI) platforms.darwin;
+    homepage = http://www.bunkus.org/videotools/mkvtoolnix/;
   };
 }

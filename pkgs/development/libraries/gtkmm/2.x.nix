@@ -1,19 +1,17 @@
-{ stdenv, fetchurl, pkgconfig, gtk2, glibmm, cairomm, pangomm, atkmm }:
+{ stdenv, fetchurlGnome, pkgconfig, gtk, glibmm, cairomm, pangomm, atkmm }:
 
 stdenv.mkDerivation rec {
-  name = "gtkmm-${minVer}.5";
-  minVer = "2.24";
+  name = src.pkgname;
 
-  src = fetchurl {
-    url = "mirror://gnome/sources/gtkmm/${minVer}/${name}.tar.xz";
-    sha256 = "0680a53b7bf90b4e4bf444d1d89e6df41c777e0bacc96e9c09fc4dd2f5fe6b72";
+  src = fetchurlGnome {
+    project = "gtkmm";
+    major = "2"; minor = "24"; patchlevel = "4"; extension = "xz";
+    sha256 = "1vpmjqv0aqb1ds0xi6nigxnhlr0c74090xzi15b92amlzkrjyfj4";
   };
-
-  outputs = [ "out" "dev" ];
 
   nativeBuildInputs = [pkgconfig];
 
-  propagatedBuildInputs = [ glibmm gtk2 atkmm cairomm pangomm ];
+  propagatedBuildInputs = [ glibmm gtk atkmm cairomm pangomm ];
 
   doCheck = true;
 
@@ -35,6 +33,6 @@ stdenv.mkDerivation rec {
     license = stdenv.lib.licenses.lgpl2Plus;
 
     maintainers = with stdenv.lib.maintainers; [ raskin vcunat ];
-    platforms = stdenv.lib.platforms.unix;
+    platforms = stdenv.lib.platforms.linux;
   };
 }

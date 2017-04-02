@@ -8,7 +8,6 @@ in
 {
   options = {
     services.minecraft-server = {
-
       enable = mkOption {
         type = types.bool;
         default = false;
@@ -16,23 +15,7 @@ in
           If enabled, start a Minecraft Server. The listening port for
           the server is always <literal>25565</literal>. The server
           data will be loaded from and saved to
-          <literal>${cfg.dataDir}</literal>.
-        '';
-      };
-
-      dataDir = mkOption {
-        type = types.path;
-        default = "/var/lib/minecraft";
-        description = ''
-          Directory to store minecraft database and other state/data files.
-        '';
-      };
-
-      openFirewall = mkOption {
-        type = types.bool;
-        default = false;
-        description = ''
-          Whether to open ports in the firewall (if enabled) for the server.
+          <literal>/var/lib/minecraft</literal>.
         '';
       };
 
@@ -47,7 +30,7 @@ in
   config = mkIf cfg.enable {
     users.extraUsers.minecraft = {
       description     = "Minecraft Server Service user";
-      home            = cfg.dataDir;
+      home            = "/var/lib/minecraft";
       createHome      = true;
       uid             = config.ids.uids.minecraft;
     };
@@ -60,14 +43,9 @@ in
       serviceConfig.Restart = "always";
       serviceConfig.User    = "minecraft";
       script = ''
-        cd ${cfg.dataDir}
+        cd /var/lib/minecraft
         exec ${pkgs.minecraft-server}/bin/minecraft-server ${cfg.jvmOpts}
       '';
-    };
-
-    networking.firewall = mkIf cfg.openFirewall {
-      allowedUDPPorts = [ 25565 ];
-      allowedTCPPorts = [ 25565 ];
     };
   };
 }

@@ -1,7 +1,7 @@
 { stdenv, fetchurl, pkgconfig, perl, glib, libintlOrEmpty, gobjectIntrospection }:
 
 let
-  ver_maj = "2.22";
+  ver_maj = "2.12";
   ver_min = "0";
 in
 stdenv.mkDerivation rec {
@@ -9,12 +9,8 @@ stdenv.mkDerivation rec {
 
   src = fetchurl {
     url = "mirror://gnome/sources/atk/${ver_maj}/${name}.tar.xz";
-    sha256 = "d349f5ca4974c9c76a4963e5b254720523b0c78672cbc0e1a3475dbd9b3d44b6";
+    sha256 = "13zijfcmx7sda83qkryzsmr9hw0r3b73xkagq9cmm733fhcl7a28";
   };
-
-  enableParallelBuilding = true;
-
-  outputs = [ "out" "dev" ];
 
   buildInputs = libintlOrEmpty;
 
@@ -22,7 +18,9 @@ stdenv.mkDerivation rec {
 
   propagatedBuildInputs = [ glib gobjectIntrospection /*ToDo: why propagate*/ ];
 
-  #doCheck = true; # no checks in there (2.22.0)
+  #doCheck = true; # no checks in there (2.10.0)
+
+  postInstall = "rm -rf $out/share/gtk-doc";
 
   meta = {
     description = "Accessibility toolkit";
@@ -39,7 +37,7 @@ stdenv.mkDerivation rec {
 
     license = stdenv.lib.licenses.lgpl2Plus;
 
-    maintainers = with stdenv.lib.maintainers; [ raskin ];
+    maintainers = with stdenv.lib.maintainers; [ raskin urkud ];
     platforms = stdenv.lib.platforms.linux ++ stdenv.lib.platforms.darwin;
   };
 

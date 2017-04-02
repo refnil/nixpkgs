@@ -15,7 +15,7 @@ stdenv.mkDerivation rec {
   #doCheck = true;
 
   meta = {
-    description = "The GNU documentation system";
+    description = "GNU Texinfo, the GNU documentation system";
 
     longDescription = ''
       Texinfo is the official documentation format of the GNU project.
@@ -36,7 +36,5 @@ stdenv.mkDerivation rec {
     license = stdenv.lib.licenses.gpl3Plus;
 
     homepage = http://www.gnu.org/software/texinfo/;
-    branch = "4.13";
-    platforms = stdenv.lib.platforms.unix;
   };
 }

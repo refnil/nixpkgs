@@ -1,21 +1,21 @@
-{ fetchurl, stdenv, openssl, pkgconfig, db, cyrus_sasl }:
+{ fetchurl, stdenv, openssl, pkgconfig, db }:
 
 stdenv.mkDerivation rec {
-  name = "isync-1.2.1";
+  name = "isync-1.1.0";
 
   src = fetchurl {
     url = "mirror://sourceforge/isync/${name}.tar.gz";
-    sha256 = "1bij6nm06ghkg98n2pdyacam2fyg5y8f7ajw0d5653m0r4ldw5p7";
+    sha256 = "51f5618c239013fb770f98ae269f24ee417214efaaf7e22821b4a27cf9a9213c";
   };
 
-  buildInputs = [ openssl pkgconfig db cyrus_sasl ];
+  buildInputs = [ openssl pkgconfig db ];
 
-  meta = with stdenv.lib; {
+  meta = {
     homepage = http://isync.sourceforge.net/;
     description = "Free IMAP and MailDir mailbox synchronizer";
-    license = licenses.gpl2Plus;
+    license = [ "GPLv2+" ];
 
-    maintainers = with maintainers; [ the-kenny viric ];
-    platforms = platforms.unix;
+    maintainers = [ stdenv.lib.maintainers.viric ];
+    platforms = stdenv.lib.platforms.linux;
   };
 }

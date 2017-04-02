@@ -56,6 +56,5 @@ stdenv.mkDerivation rec {
         file.'';
     license = licenses.lgpl21;
     maintainers = with maintainers; [ cstrahan ];
-    platforms = with platforms; linux;
   };
 }

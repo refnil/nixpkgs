@@ -29,34 +29,28 @@ let
         done
 
         ${cfg.up}
-        ${optionalString cfg.updateResolvConf
-           "${pkgs.update-resolv-conf}/libexec/openvpn/update-resolv-conf"}
       '';
 
       downScript = ''
         #! /bin/sh
         export PATH=${path}
-        ${optionalString cfg.updateResolvConf
-           "${pkgs.update-resolv-conf}/libexec/openvpn/update-resolv-conf"}
         ${cfg.down}
       '';
 
       configFile = pkgs.writeText "openvpn-config-${name}"
         ''
           errors-to-stderr
-          ${optionalString (cfg.up != "" || cfg.down != "" || cfg.updateResolvConf) "script-security 2"}
+          ${optionalString (cfg.up != "" || cfg.down != "") "script-security 2"}
           ${cfg.config}
-          ${optionalString (cfg.up != "" || cfg.updateResolvConf)
-              "up ${pkgs.writeScript "openvpn-${name}-up" upScript}"}
-          ${optionalString (cfg.down != "" || cfg.updateResolvConf)
-              "down ${pkgs.writeScript "openvpn-${name}-down" downScript}"}
+          ${optionalString (cfg.up != "") "up ${pkgs.writeScript "openvpn-${name}-up" upScript}"}
+          ${optionalString (cfg.down != "") "down ${pkgs.writeScript "openvpn-${name}-down" downScript}"}
         '';
 
     in {
       description = "OpenVPN instance ‘${name}’";
 
       wantedBy = optional cfg.autoStart "multi-user.target";
-      after = [ "network.target" ];
+      after = [ "network-interfaces.target" ];
 
       path = [ pkgs.iptables pkgs.iproute pkgs.nettools ];
 
@@ -72,6 +66,12 @@ in
   ###### interface
 
   options = {
+
+    /* !!! Obsolete. */
+    services.openvpn.enable = mkOption {
+      default = true;
+      description = "Whether to enable OpenVPN.";
+    };
 
     services.openvpn.servers = mkOption {
       default = {};
@@ -116,54 +116,42 @@ in
         attribute name.
       '';
 
-      type = with types; attrsOf (submodule {
+      type = types.attrsOf types.optionSet;
 
-        options = {
+      options = {
 
-          config = mkOption {
-            type = types.lines;
-            description = ''
-              Configuration of this OpenVPN instance.  See
-              <citerefentry><refentrytitle>openvpn</refentrytitle><manvolnum>8</manvolnum></citerefentry>
-              for details.
-            '';
-          };
-
-          up = mkOption {
-            default = "";
-            type = types.lines;
-            description = ''
-              Shell commands executed when the instance is starting.
-            '';
-          };
-
-          down = mkOption {
-            default = "";
-            type = types.lines;
-            description = ''
-              Shell commands executed when the instance is shutting down.
-            '';
-          };
-
-          autoStart = mkOption {
-            default = true;
-            type = types.bool;
-            description = "Whether this OpenVPN instance should be started automatically.";
-          };
-
-          updateResolvConf = mkOption {
-            default = false;
-            type = types.bool;
-            description = ''
-              Use the script from the update-resolv-conf package to automatically
-              update resolv.conf with the DNS information provided by openvpn. The
-              script will be run after the "up" commands and before the "down" commands.
-            '';
-          };
-
+        config = mkOption {
+          type = types.lines;
+          description = ''
+            Configuration of this OpenVPN instance.  See
+            <citerefentry><refentrytitle>openvpn</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+            for details.
+          '';
         };
 
-      });
+        up = mkOption {
+          default = "";
+          type = types.lines;
+          description = ''
+            Shell commands executed when the instance is starting.
+          '';
+        };
+
+        down = mkOption {
+          default = "";
+          type = types.lines;
+          description = ''
+            Shell commands executed when the instance is shutting down.
+          '';
+        };
+
+        autoStart = mkOption {
+          default = true;
+          type = types.bool;
+          description = "Whether this OpenVPN instance should be started automatically.";
+        };
+
+      };
 
     };
 

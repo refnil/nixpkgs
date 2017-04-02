@@ -1,27 +1,28 @@
-{ fetchurl, stdenv, perl, makeWrapper, procps }:
+{ fetchurl, stdenv, perl }:
 
 stdenv.mkDerivation rec {
-  name = "parallel-20170122";
+  name = "parallel-20140222";
 
   src = fetchurl {
     url = "mirror://gnu/parallel/${name}.tar.bz2";
-    sha256 = "19maf889vj1c4zakqwap58f44hgypyb5mzzwfsliir9gvvcq6zj1";
+    sha256 = "0zb3hg92br6a53jn0pzfl16ffc1hfw81jk7nzw5spkshsdrcqx3y";
   };
 
-  nativeBuildInputs = [ makeWrapper ];
+  patchPhase =
+    '' sed -i "src/parallel" -e's|/usr/bin/perl|${perl}/bin/perl|g'
+    '';
 
-  preFixup = ''
-    sed -i 's,#![ ]*/usr/bin/env[ ]*perl,#!${perl}/bin/perl,' $out/bin/*
+  preBuild =
+    # The `sem' program wants to write to `~/.parallel'.
+    '' export HOME="$PWD"
+    '';
 
-    wrapProgram $out/bin/parallel \
-      ${if stdenv.isLinux then ("--prefix PATH \":\" ${procps}/bin") else ""} \
-      --prefix PATH : "${perl}/bin" \
-  '';
-
+  buildInputs = [ perl ];
   doCheck = true;
 
-  meta = with stdenv.lib; {
-    description = "Shell tool for executing jobs in parallel";
+  meta = {
+    description = "GNU Parallel, a shell tool for executing jobs in parallel";
+
     longDescription =
       '' GNU Parallel is a shell tool for executing jobs in parallel.  A job
          is typically a single command or a small script that has to be run
@@ -39,9 +40,12 @@ stdenv.mkDerivation rec {
          it possible to use output from GNU Parallel as input for other
          programs.
       '';
+
     homepage = http://www.gnu.org/software/parallel/;
-    license = licenses.gpl3Plus;
-    platforms = platforms.all;
-    maintainers = with maintainers; [ pSub vrthra ];
+
+    license = stdenv.lib.licenses.gpl3Plus;
+
+    platforms = stdenv.lib.platforms.all;
+    maintainers = [ ];
   };
 }

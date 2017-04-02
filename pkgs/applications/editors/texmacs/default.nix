@@ -1,4 +1,4 @@
-{stdenv, fetchurl, guile_1_8, qt4, zlib, xmodmap, which, makeWrapper, freetype,
+{stdenv, fetchurl, guile, libX11, libXext, xmodmap, which, makeWrapper, freetype,
  tex ? null,
  aspell ? null,
  ghostscriptX ? null,
@@ -9,7 +9,7 @@
 
 let 
   pname = "TeXmacs";
-  version = "1.99.2";
+  version = "1.0.7.11";
   extraFontsSrc = fetchurl {
     url = "ftp://ftp.texmacs.org/pub/TeXmacs/fonts/TeXmacs-extra-fonts-1.0-noarch.tar.gz";
     sha256 = "0hylgjmd95y9yahbblmawkkw0i71vb145xxv2xqrmff81301n6k7";
@@ -39,11 +39,11 @@ stdenv.mkDerivation rec {
   name = "${pname}-${version}";
 
   src = fetchurl {
-    url = "http://www.texmacs.org/Download/ftp/tmftp/source/TeXmacs-${version}-src.tar.gz";
-    sha256 = "0l48g9746igiaxw657shm8g3xxk565vzsviajlrxqyljbh6py0fs";
+    url = "ftp://ftp.texmacs.org/pub/${pname}/targz/${name}-src.tar.gz";
+    sha256 = "0x1r9417dzbrxf785faq1vjszqdj94ig2lzwm8sd92bxcxr6knfa";
   };
 
-  buildInputs = [ guile_1_8 qt4 makeWrapper ghostscriptX freetype ];
+  buildInputs = [ guile libX11 libXext makeWrapper ghostscriptX freetype ];
 
   patchPhase = (if tex == null then ''
     gunzip < ${fullFontsSrc} | (cd TeXmacs && tar xvf -)
@@ -66,14 +66,8 @@ stdenv.mkDerivation rec {
         (if tex == null then "" else "${tex}/bin:") +
         "${xmodmap}/bin:${which}/bin";
 
-  postFixup = ''
-    bin="$out/libexec/TeXmacs/bin/texmacs.bin"
-    rpath=$(patchelf --print-rpath "$bin")
-    patchelf --set-rpath "$rpath:${zlib.out}/lib" "$bin"
-  '';
-
   meta = {
-    description = "WYSIWYW editing platform with special features for scientists";
+    description = "GNU TeXmacs, a free WYSIWYW editing platform with special features for scientists";
     longDescription =
       '' GNU TeXmacs is a free wysiwyw (what you see is what you want)
          editing platform with special features for scientists.  The software

@@ -16,10 +16,10 @@ stdenv.mkDerivation rec {
 
   installPhase =
     ''
-       mkdir -p "$out/share/doc/${name}"
+       ensureDir "$out/share/doc/${name}"
        cp -v readme.md "$out/share/doc/${name}"
 
-       mkdir -p "$out/share/emacs/site-lisp/"
+       ensureDir "$out/share/emacs/site-lisp/"
        cp *.el "$out/share/emacs/site-lisp/"
     '';
 

@@ -14,7 +14,7 @@ stdenv.mkDerivation rec {
   preConfigure = '' autoconf '';
 
   meta = {
-    description = "Network traffic visualizer";
+    description = "Jnettop, a network traffic visualizer";
 
     longDescription = ''
       Jnettop is a traffic visualiser, which captures traffic going
@@ -24,6 +24,5 @@ stdenv.mkDerivation rec {
 
     homepage = http://jnettop.kubs.info/;
     license = stdenv.lib.licenses.gpl2Plus;
-    platforms = stdenv.lib.platforms.unix;
   };
 }

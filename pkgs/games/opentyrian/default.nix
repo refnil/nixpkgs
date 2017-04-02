@@ -1,35 +1,36 @@
-{stdenv, fetchurl, fetchzip, SDL, SDL_net}:
+{stdenv, fetchhg, fetchurl, unzip, SDL, SDL_net}:
 
 stdenv.mkDerivation rec {
   name = "opentyrian-${version}";
-  version = "2.1.20130907";
+  version = "0.0.955";
 
-  src = fetchurl {
-    url = "https://bitbucket.org/opentyrian/opentyrian/get/${version}.tar.gz";
-    sha256 = "1jnrkq616pc4dhlbd4n30d65vmn25q84w6jfv9383l9q20cqf2ph";
+  src = fetchhg {
+    url = "https://opentyrian.googlecode.com/hg/";
+    rev = "13ef8ce47362";
+    md5 = "95c8f9e7ff3d4207f1c692c7cec6c9b0";
   };
 
-  data = fetchzip {
+  data = fetchurl {
     url = http://sites.google.com/a/camanis.net/opentyrian/tyrian/tyrian21.zip;
-    sha256 = "1biz6hf6s7qrwn8ky0g6p8w7yg715w7yklpn6258bkks1s15hpdb";
+    md5 = "2a3b206a6de25ed4b771af073f8ca904";
   };
 
-  buildInputs = [SDL SDL_net];
+  buildInputs = [SDL SDL_net unzip];
 
   patchPhase = "
     substituteInPlace src/file.c --replace /usr/share $out/share
   ";
   buildPhase = "make release";
   installPhase = "
-    mkdir -p $out/bin
+    ensureDir $out/bin
     cp ./opentyrian $out/bin
-    mkdir -p $out/share/opentyrian/data
-    cp -r $data/* $out/share/opentyrian/data
+    ensureDir $out/share/opentyrian/data
+    unzip -j $data -d $out/share/opentyrian/data
   ";
 
   meta = {
-    description = ''Open source port of the game "Tyrian"'';
-    homepage = https://bitbucket.org/opentyrian/opentyrian;
+    description = ''OpenTyrian is an open source port of the game "Tyrian".'';
+    homepage = https://opentyrian.googlecode.com/;
     # This does not account of Tyrian data.
     # license = stdenv.lib.licenses.gpl2;
   };

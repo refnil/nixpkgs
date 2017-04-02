@@ -1,11 +1,11 @@
 { stdenv, fetchurl, ed }:
 
 stdenv.mkDerivation rec {
-  name = "patch-2.7.5";
+  name = "patch-2.7.1";
 
   src = fetchurl {
-    url = "mirror://gnu/patch/${name}.tar.xz";
-    sha256 = "16d2r9kpivaak948mxzc0bai45mqfw73m113wrkmbffnalv1b5gx";
+    url = "mirror://gnu/patch/${name}.tar.gz";
+    sha256 = "1m9r83b5c154xnxbvgjg4lfff58xjapanj6dmmivqx1liik2hpy0";
   };
 
   buildInputs = stdenv.lib.optional doCheck ed;
@@ -13,6 +13,8 @@ stdenv.mkDerivation rec {
   crossAttrs = {
     configureFlags = [ "ac_cv_func_strnlen_working=yes" ];
   };
+
+  patches = [ ./bashishms.patch ];
 
   doCheck = true;
 

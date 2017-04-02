@@ -1,28 +1,20 @@
-{ stdenv, fetchurl, pkgconfig, darwin, lib
-, zlib, ghostscript, imagemagick, plotutils, gd
-, libjpeg, libwebp, libiconv
-}:
+{ stdenv, fetchurl, pkgconfig, ghostscript, gd, zlib, plotutils }:
 
-stdenv.mkDerivation rec {
-  name = "pstoedit-3.70";
+stdenv.mkDerivation {
+  name = "pstoedit-3.62";
 
   src = fetchurl {
-    url = "mirror://sourceforge/pstoedit/${name}.tar.gz";
-    sha256 = "130kz0ghsrggdn70kygrmsy3n533hwd948q69vyvqz44yw9n3f06";
+    url = mirror://sourceforge/pstoedit/pstoedit-3.62.tar.gz;
+    sha256 = "0j410dm9nqwa7n03yiyz0jwvln0jlqc3n9iv4nls33yl6x3c8x40";
   };
 
-  outputs = [ "out" "dev" ];
-  nativeBuildInputs = [ pkgconfig ];
-  buildInputs = [ zlib ghostscript imagemagick plotutils gd libjpeg libwebp ] 
-  ++ lib.optionals stdenv.isDarwin (with darwin.apple_sdk.frameworks; [
-    libiconv ApplicationServices
-  ]);
+  buildInputs = [ pkgconfig ghostscript gd zlib plotutils ];
 
-  meta = with stdenv.lib; {
-    description = "Translates PostScript and PDF graphics into other vector formats";
-    homepage = https://sourceforge.net/projects/pstoedit/;
-    license = licenses.gpl2;
-    maintainers = [ maintainers.marcweber ];
-    platforms = platforms.unix;
+  meta = { 
+    description = "translates PostScript and PDF graphics into other vector formats";
+    homepage = http://www.helga-glunz.homepage.t-online.de/pstoedit;
+    license = stdenv.lib.licenses.gpl2;
+    maintainers = [ stdenv.lib.maintainers.marcweber ];
+    platforms = stdenv.lib.platforms.linux;
   };
 }

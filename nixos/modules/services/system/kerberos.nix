@@ -4,7 +4,7 @@ let
 
   inherit (lib) mkOption mkIf singleton;
 
-  inherit (pkgs) heimdalFull;
+  inherit (pkgs) heimdal;
 
   stateDir = "/var/heimdal";
 in
@@ -33,7 +33,7 @@ in
 
   config = mkIf config.services.kerberos_server.enable {
 
-    environment.systemPackages = [ heimdalFull ];
+    environment.systemPackages = [ heimdal ];
 
     services.xinetd.enable = true;
     services.xinetd.services = lib.singleton
@@ -42,23 +42,30 @@ in
         protocol = "tcp";
         user = "root";
         server = "${pkgs.tcp_wrappers}/sbin/tcpd";
-        serverArgs = "${pkgs.heimdalFull}/sbin/kadmind";
+        serverArgs = "${pkgs.heimdal}/sbin/kadmind";
       };
 
-    systemd.services.kdc = {
-      description = "Key Distribution Center daemon";
-      wantedBy = [ "multi-user.target" ];
-      preStart = ''
-        mkdir -m 0755 -p ${stateDir}
-      '';
-      script = "${heimdalFull}/sbin/kdc";
-    };
+    jobs.kdc =
+      { description = "Kerberos Domain Controller daemon";
 
-    systemd.services.kpasswdd = {
-      description = "Kerberos Password Changing daemon";
-      wantedBy = [ "multi-user.target" ];
-      script = "${heimdalFull}/sbin/kpasswdd";
-    };
+        startOn = "ip-up";
+
+        preStart =
+          ''
+            mkdir -m 0755 -p ${stateDir}
+          '';
+
+        exec = "${heimdal}/sbin/kdc";
+
+      };
+
+    jobs.kpasswdd =
+      { description = "Kerberos Domain Controller daemon";
+
+        startOn = "ip-up";
+
+        exec = "${heimdal}/sbin/kpasswdd";
+      };
   };
 
 }

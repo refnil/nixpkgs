@@ -4,12 +4,7 @@
 { config, lib, pkgs, ... }:
 
 with lib;
-let
-  mergeHook = pkgs.writeScript "rdnssd-merge-hook" ''
-    #! ${pkgs.stdenv.shell} -e
-    ${pkgs.openresolv}/bin/resolvconf -u
-  '';
-in
+
 {
 
   ###### interface
@@ -35,39 +30,18 @@ in
 
   config = mkIf config.services.rdnssd.enable {
 
-    systemd.services.rdnssd = {
-      description = "RDNSS daemon";
-      after = [ "network.target" ];
-      wantedBy = [ "multi-user.target" ];
+    jobs.rdnssd =
+      { description = "RDNSS daemon";
 
-      preStart = ''
-        # Create the proper run directory
-        mkdir -p /run/rdnssd
-        touch /run/rdnssd/resolv.conf
-        chown -R rdnssd /run/rdnssd
+        # Start before the network interfaces are brought up so that
+        # the daemon receives RDNSS advertisements from the kernel.
+        startOn = "starting network-interfaces";
 
-        # Link the resolvconf interfaces to rdnssd
-        rm -f /run/resolvconf/interfaces/rdnssd
-        ln -s /run/rdnssd/resolv.conf /run/resolvconf/interfaces/rdnssd
-        ${mergeHook}
-      '';
+        # !!! Should write to /var/run/rdnssd/resolv.conf and run the daemon under another uid.
+        exec = "${pkgs.ndisc6}/sbin/rdnssd --resolv-file /etc/resolv.conf -u root";
 
-      postStop = ''
-        rm -f /run/resolvconf/interfaces/rdnssd
-        ${mergeHook}
-      '';
-
-      serviceConfig = {
-        ExecStart = "@${pkgs.ndisc6}/bin/rdnssd rdnssd -p /run/rdnssd/rdnssd.pid -r /run/rdnssd/resolv.conf -u rdnssd -H ${mergeHook}";
-        Type = "forking";
-        PIDFile = "/run/rdnssd/rdnssd.pid";
+        daemonType = "fork";
       };
-    };
-
-    users.extraUsers.rdnssd = {
-      description = "RDNSSD Daemon User";
-      uid = config.ids.uids.rdnssd;
-    };
 
   };
 

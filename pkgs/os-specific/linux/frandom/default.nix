@@ -11,8 +11,6 @@ stdenv.mkDerivation rec {
     sha256 = "15rgyk4hfawqg7z1spk2xlk1nn6rcdls8gdhc70f91shrc9pvlls";
   };
 
-  hardeningDisable = [ "pic" ];
-
   preBuild = ''
     kernelVersion=${kernel.modDirVersion}
     substituteInPlace Makefile \
@@ -22,10 +20,10 @@ stdenv.mkDerivation rec {
  
   installPhase = ''
     kernelVersion=${kernel.modDirVersion}
-    mkdir -p $out/lib/modules/$kernelVersion/misc
+    ensureDir $out/lib/modules/$kernelVersion/misc
     cp frandom.ko $out/lib/modules/$kernelVersion/misc
 
-    mkdir -p $out/lib/udev/rules.d
+    ensureDir $out/lib/udev/rules.d
     tee $out/lib/udev/rules.d/10-frandom.rules <<-EOF
     #
     # These are the rules for the frandom devices. In theory, we could let

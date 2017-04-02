@@ -18,8 +18,6 @@
 , prePhases ? []
 , postPhases ? []
 , buildInputs ? []
-, preHook ? ""
-, postHook ? ""
 , ... } @ args:
 
 let
@@ -91,8 +89,7 @@ stdenv.mkDerivation (
     postHook = ''
       . ${./functions.sh}
       origSrc=$src
-      src=$(findTarball $src)
-      ${postHook}
+      src=$(findTarballs $src | head -1)
     '';
 
     preHook = ''
@@ -108,8 +105,6 @@ stdenv.mkDerivation (
         shopt -s expand_aliases
         alias make="scan-build -o _clang_analyze_$name --html-title='Scan results for $name' make"
       fi
-
-      ${preHook}
     '';
 
     # Clean up after analysis
@@ -137,7 +132,7 @@ stdenv.mkDerivation (
     buildInputs =
       buildInputs ++
       (stdenv.lib.optional doCoverageAnalysis args.makeGCOVReport) ++
-      (stdenv.lib.optional doClangAnalysis args.clang-analyzer) ++
+      (stdenv.lib.optional doClangAnalysis args.clangAnalyzer) ++
       (stdenv.lib.optional doCoverityAnalysis args.cov-build) ++
       (stdenv.lib.optional doCoverityAnalysis args.xz);
 

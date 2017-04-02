@@ -1,8 +1,6 @@
 #!/bin/sh -e
 
 cat > sysimages.nix << "EOF"
-# This file is generated from generate-sysimages.sh. DO NOT EDIT.
-# Execute generate-sysimages.sh or fetch.sh to update the file.
 {stdenv, fetchurl, unzip}:
 
 let
@@ -19,7 +17,9 @@ in
 {
 EOF
 
-xsltproc generate-sysimages.xsl sys-img.xml >> sysimages.nix
+xsltproc generate-sysimages.xsl repository-8.xml >> sysimages.nix
+xsltproc --stringparam abi x86 generate-sysimages-others.xsl sys-img-x86.xml >> sysimages.nix
+xsltproc --stringparam abi mips generate-sysimages-others.xsl sys-img-mips.xml >> sysimages.nix
 
 cat >> sysimages.nix << "EOF"
 }

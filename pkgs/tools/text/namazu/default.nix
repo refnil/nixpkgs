@@ -27,7 +27,7 @@ stdenv.mkDerivation rec {
   doCheck = !stdenv.isLinux;
 
   meta = {
-    description = "Full-text search engine";
+    description = "Namazu, a full-text search engine";
 
     longDescription = ''
       Namazu is a full-text search engine intended for easy use.  Not
@@ -40,6 +40,5 @@ stdenv.mkDerivation rec {
 
     platforms = stdenv.lib.platforms.gnu;  # arbitrary choice
     maintainers = [ ];
-    broken = true; # File-MMagic is not compatible with our Perl version
   };
 }

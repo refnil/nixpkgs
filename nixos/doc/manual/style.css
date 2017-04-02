@@ -262,6 +262,7 @@ table.simplelist
     margin-bottom: 1em;
 }
 
-div.navheader table, div.navfooter table {
-    box-shadow: none;
+div.affiliation
+{
+    font-style: italic;
 }

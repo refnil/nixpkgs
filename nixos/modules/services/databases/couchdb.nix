@@ -4,29 +4,20 @@ with lib;
 
 let
   cfg = config.services.couchdb;
-  useVersion2 = strings.versionAtLeast (strings.getVersion cfg.package) "2.0";
-  configFile = pkgs.writeText "couchdb.ini" (
+  configFile = pkgs.writeText "couchdb.ini"
     ''
       [couchdb]
       database_dir = ${cfg.databaseDir}
       uri_file = ${cfg.uriFile}
       view_index_dir = ${cfg.viewIndexDir}
-    '' + (if useVersion2 then
-    ''
-      [chttpd]
-    '' else
-    ''
+
       [httpd]
-    '') +
-    ''
       port = ${toString cfg.port}
       bind_address = ${cfg.bindAddress}
 
       [log]
       file = ${cfg.logFile}
-    '');
-  executable = if useVersion2 then "${cfg.package}/bin/couchdb"
-    else ''${cfg.package}/bin/couchdb -a ${configFile} -a ${pkgs.writeText "couchdb-extra.ini" cfg.extraConfig} -a ${cfg.configFile}'';
+    '';
 
 in {
 
@@ -47,7 +38,6 @@ in {
       package = mkOption {
         type = types.package;
         default = pkgs.couchdb;
-        defaultText = "pkgs.couchdb";
         example = literalExample "pkgs.couchdb";
         description = ''
           CouchDB package to use.
@@ -139,9 +129,10 @@ in {
 
       configFile = mkOption {
         type = types.string;
+        default = "/var/lib/couchdb/couchdb.ini";
         description = ''
-          Configuration file for persisting runtime changes. File
-          needs to be readable and writable from couchdb user/group.
+          Custom configuration file. File needs to be readable and writable
+          from couchdb user/group.
         '';
       };
 
@@ -155,9 +146,6 @@ in {
 
     environment.systemPackages = [ cfg.package ];
 
-    services.couchdb.configFile = mkDefault
-      (if useVersion2 then "/var/lib/couchdb/local.ini" else "/var/lib/couchdb/couchdb.ini");
-
     systemd.services.couchdb = {
       description = "CouchDB Server";
       wantedBy = [ "multi-user.target" ];
@@ -169,32 +157,20 @@ in {
         mkdir -p ${cfg.databaseDir};
         mkdir -p ${cfg.viewIndexDir};
         touch ${cfg.configFile}
-        touch -a ${cfg.logFile}
 
         if [ "$(id -u)" = 0 ]; then
-          chown ${cfg.user}:${cfg.group} `dirname ${cfg.uriFile}`;
-          (test -f ${cfg.uriFile} && chown ${cfg.user}:${cfg.group} ${cfg.uriFile}) || true
+          chown ${cfg.user}:${cfg.group} ${cfg.uriFile}
           chown ${cfg.user}:${cfg.group} ${cfg.databaseDir}
           chown ${cfg.user}:${cfg.group} ${cfg.viewIndexDir}
           chown ${cfg.user}:${cfg.group} ${cfg.configFile}
-          chown ${cfg.user}:${cfg.group} ${cfg.logFile}
         fi
         '';
-
-      environment = mkIf useVersion2 {
-        # we are actually specifying 4 configuration files:
-        # 1. the preinstalled default.ini
-        # 2. the module configuration
-        # 3. the extraConfig from the module options
-        # 4. the locally writable config file, which couchdb itself writes to
-        ERL_FLAGS= ''-couch_ini ${cfg.package}/etc/default.ini ${configFile} ${pkgs.writeText "couchdb-extra.ini" cfg.extraConfig} ${cfg.configFile}'';
-      };
 
       serviceConfig = {
         PermissionsStartOnly = true;
         User = cfg.user;
         Group = cfg.group;
-        ExecStart = executable;
+        ExecStart = "${cfg.package}/bin/couchdb -a ${configFile} -a ${pkgs.writeText "couchdb-extra.ini" cfg.extraConfig} -a ${cfg.configFile}";
       };
     };
 

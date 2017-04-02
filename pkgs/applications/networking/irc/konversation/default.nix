@@ -1,82 +1,26 @@
-{ kdeDerivation
-, lib
-, fetchurl
-, extra-cmake-modules
-, kbookmarks
-, karchive
-, kconfig
-, kconfigwidgets
-, kcoreaddons
-, kdbusaddons
-, kdeWrapper
-, kdoctools
-, kemoticons
-, kglobalaccel
-, ki18n
-, kiconthemes
-, kidletime
-, kitemviews
-, knotifications
-, knotifyconfig
-, kio
-, kparts
-, kwallet
-, makeQtWrapper
-, solid
-, sonnet
-, phonon
-}:
+{ stdenv, fetchurl, cmake, qt4, perl, gettext, libXScrnSaver
+, kdelibs, kdepimlibs, automoc4, phonon, qca2}:
 
 let
-  unwrapped = let
-    pname = "konversation";
-    version = "1.6.2";
-  in kdeDerivation rec {
-    name = "${pname}-${version}";
+  pn = "konversation";
+  v = "1.5";
+in
 
-    src = fetchurl {
-      url = "mirror://kde/stable/${pname}/${version}/src/${name}.tar.xz";
-      sha256 = "1798sslwz7a3h1v524ra33p0j5iqvcg0v1insyvb5qp4kv11slmn";
-    };
+stdenv.mkDerivation rec {
+  name = "${pn}-${v}";
 
-    buildInputs = [
-      kbookmarks
-      karchive
-      kconfig
-      kconfigwidgets
-      kcoreaddons
-      kdbusaddons
-      kdoctools
-      kemoticons
-      kglobalaccel
-      ki18n
-      kiconthemes
-      kidletime
-      kitemviews
-      knotifications
-      knotifyconfig
-      kio
-      kparts
-      kwallet
-      solid
-      sonnet
-      phonon
-    ];
-
-    nativeBuildInputs = [
-      extra-cmake-modules
-      kdoctools
-    ];
-
-    meta = {
-      description = "Integrated IRC client for KDE";
-      license = with lib.licenses; [ gpl2 ];
-      maintainers = with lib.maintainers; [ fridh ];
-      homepage = https://konversation.kde.org;
-    };
+  src = fetchurl {
+    url = "mirror://kde/stable/${pn}/${v}/src/${name}.tar.xz";
+    sha256 = "0vsl34kiar7kbsgncycwd7f66f493fip6d635qlprqn1gqhycb9q";
   };
-in kdeWrapper {
-  inherit unwrapped;
-  targets = [ "bin/konversation" ];
-}
 
+  buildInputs = [ cmake qt4 perl gettext libXScrnSaver kdelibs kdepimlibs
+    automoc4 phonon qca2 ];
+
+  meta = with stdenv.lib; {
+    description = "Integrated IRC client for KDE";
+    repositories.git = git://anongit.kde.org/konversation;
+    license = "GPL";
+    inherit (kdelibs.meta) maintainers platforms;
+  };
+}

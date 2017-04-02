@@ -1,4 +1,4 @@
-{stdenv, fetchurl, xlibsWrapper}:
+{stdenv, fetchurl, x11}:
 
 stdenv.mkDerivation {
   name = "unclutter-8";
@@ -7,9 +7,7 @@ stdenv.mkDerivation {
     sha256 = "33a78949a7dedf2e8669ae7b5b2c72067896497820292c96afaa60bb71d1f2a6";
   };
 
-  buildInputs = [xlibsWrapper];
-
-  buildFlags = [ "CC=cc" ];
+  buildInputs = [x11];
 
   installPhase = ''
     mkdir -pv "$out/bin"
@@ -23,15 +21,14 @@ stdenv.mkDerivation {
     longDescription = ''
       Unclutter hides your X mouse cursor when you do not need it, to prevent
       it from getting in the way. You have only to move the mouse to restore
-      the mouse cursor. Unclutter is very useful in tiling wm's where you do
+      the mouse cursor. Unclutter is very usefull in tiling wm's where you do
       not need the mouse often.
 
       Just run it from your .bash_profile like that:
 
           unclutter -idle 1 &
     '';
-    maintainers = with maintainers; [ domenkozar ];
+    maintainers = with maintainers; [ iElectric ];
     platforms = platforms.unix;
-    license = stdenv.lib.licenses.publicDomain;
   };
 }

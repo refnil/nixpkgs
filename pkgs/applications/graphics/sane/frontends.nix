@@ -1,18 +1,18 @@
-{ stdenv, fetchurl, sane-backends, libX11, gtk2, pkgconfig, libusb ? null}:
+{ stdenv, fetchurl, saneBackends, libX11, gtk, pkgconfig, libusb ? null}:
 
 stdenv.mkDerivation rec {
   name = "sane-frontends-1.0.14";
 
   src = fetchurl {
-    url = "https://alioth.debian.org/frs/download.php/file/1140/${name}.tar.gz";
-    sha256 = "1ad4zr7rcxpda8yzvfkq1rfjgx9nl6lan5a628wvpdbh3fn9v0z7";
+    url = "ftp://ftp.sane-project.org/pub/sane/sane-frontends-1.0.14/${name}.tar.gz";
+    md5 = "c63bf7b0bb5f530cf3c08715db721cd3";
   };
 
   preConfigure = ''
     sed -e '/SANE_CAP_ALWAYS_SETTABLE/d' -i src/gtkglue.c
   '';
 
-  buildInputs = [sane-backends libX11 gtk2 pkgconfig] ++
+  buildInputs = [saneBackends libX11 gtk pkgconfig] ++
 	(if libusb != null then [libusb] else []);
 
   meta = {
@@ -20,7 +20,7 @@ stdenv.mkDerivation rec {
     description = "Scanner Access Now Easy";
     license = stdenv.lib.licenses.gpl2Plus;
 
-    maintainers = [ stdenv.lib.maintainers.peti ];
+    maintainers = [ stdenv.lib.maintainers.simons ];
     platforms = stdenv.lib.platforms.linux;
   };
 }

@@ -2,14 +2,14 @@
 
 let
   name    = "wxmaxima";
-  version = "15.04.0";
+  version = "13.04.2";
 in
 stdenv.mkDerivation {
   name = "${name}-${version}";
 
   src = fetchurl {
-    url = "mirror://sourceforge/${name}/wxMaxima/${version}/wxmaxima-${version}.tar.gz";
-    sha256 = "1fm47ah4aw5qdjqhkz67w5fwhy8yfffa5z896crp0d3hk2bh4180";
+    url = "mirror://sourceforge/${name}/wxMaxima/${version}/wxMaxima-${version}.tar.gz";
+    sha256 = "1sylvr0kfdzxxc3qsb0c6ff3lg0bzm1ib5xh78wjgzykbnvjsd99";
   };
 
   buildInputs = [wxGTK maxima makeWrapper];
@@ -30,6 +30,6 @@ stdenv.mkDerivation {
     license = stdenv.lib.licenses.gpl2;
     homepage = http://wxmaxima.sourceforge.net;
     platforms = stdenv.lib.platforms.linux;
-    maintainers = [ stdenv.lib.maintainers.peti ];
+    maintainers = [ stdenv.lib.maintainers.simons ];
   };
 }

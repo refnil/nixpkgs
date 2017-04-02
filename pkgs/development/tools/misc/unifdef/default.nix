@@ -1,31 +1,24 @@
 { fetchurl, stdenv }:
 
-stdenv.mkDerivation rec {
-  name = "unifdef-2.6";
+stdenv.mkDerivation {
+  name = "unifdef-1.0";
 
   src = fetchurl {
-    url    = "https://github.com/fanf2/unifdef/archive/${name}.tar.gz";
-    sha256 = "1p5wr5ms9w8kijy9h7qs1mz36dlavdj6ngz2bks588w7a20kcqxj";
+    url = http://www.cs.cmu.edu/~ajw/public/dist/unifdef-1.0.tar.gz;
+    sha256 = "1bcxq7qgf6r98m6l277fx6s0gn9sr4vn7f3s0r5mwx79waqk0k6i";
   };
 
-  postUnpack = ''
-    substituteInPlace $sourceRoot/unifdef.c \
-      --replace '#include "version.h"' ""
-
-    substituteInPlace $sourceRoot/Makefile \
-      --replace "unifdef.c: version.h" "unifdef.c:"
+  buildPhase = ''
+    make unifdef
   '';
 
-  preBuild = ''
-    unset HOME
-    export DESTDIR=$out
+  installPhase = ''
+    mkdir -p $out/bin
+    cp unifdef $out/bin
   '';
 
-  meta = with stdenv.lib; {
-    homepage = "http://dotat.at/prog/unifdef/";
-    description = "Selectively remove C preprocessor conditionals";
-    license = licenses.bsd2;
-    platforms = platforms.unix;
-    maintainers = [ maintainers.vrthra ];
+  meta = {
+    description = "useful for removing #ifdef'ed lines from a file while otherwise leaving the file alone";
+
   };
 }

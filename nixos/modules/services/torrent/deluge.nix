@@ -5,34 +5,26 @@ with lib;
 let
   cfg = config.services.deluge;
   cfg_web = config.services.deluge.web;
-  openFilesLimit = 4096;
-
 in {
   options = {
-    services = {
-      deluge = {
-        enable = mkOption {
-          default = false;
-          description = "Start the Deluge daemon";
-        };
+    services.deluge = {
+      enable = mkOption {
+        default = false;
+        example = true;
+        description = ''
+          Start Deluge daemon.
+        ''; 
+      };  
+    };
 
-        openFilesLimit = mkOption {
-          default = openFilesLimit;
-          example = 8192;
-          description = ''
-            Number of files to allow deluged to open.
-          '';
-        };
-      };
-
-      deluge.web = {
-        enable = mkOption {
-          default = false;
-          description = ''
-            Start Deluge Web daemon.
-          '';
-        };
-      };
+    services.deluge.web = {
+      enable = mkOption {
+        default = false;
+        example = true;
+        description = ''
+          Start Deluge Web daemon.
+        ''; 
+      };  
     };
   };
 
@@ -43,14 +35,9 @@ in {
       description = "Deluge BitTorrent Daemon";
       wantedBy = [ "multi-user.target" ];
       path = [ pkgs.pythonPackages.deluge ];
-      serviceConfig = {
-        ExecStart = "${pkgs.pythonPackages.deluge}/bin/deluged -d";
-        # To prevent "Quit & shutdown daemon" from working; we want systemd to manage it!
-        Restart = "on-success";
-        User = "deluge";
-        Group = "deluge";
-        LimitNOFILE = cfg.openFilesLimit;
-      };
+      serviceConfig.ExecStart = "${pkgs.pythonPackages.deluge}/bin/deluged -d";
+      serviceConfig.User = "deluge";
+      serviceConfig.Group = "deluge";
     };
 
     systemd.services.delugeweb = mkIf cfg_web.enable {

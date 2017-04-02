@@ -2,13 +2,13 @@
 
 stdenv.mkDerivation rec
 {
-  version = "5.0.7";
+  version = "3.0.4";
   name = "seafile-client-${version}";
 
   src = fetchurl
   {
     url = "https://github.com/haiwen/seafile-client/archive/v${version}.tar.gz";
-    sha256 = "ae6975bc1adf45d09cf9f6332ceac7cf285f8191f6cf50c6291ed45f8cf4ffa5";
+    sha256 = "10iz45y8j5f9smi0srxw62frb97vhr0w938v8w3rsjcw9qq366a2";
   };
 
   buildInputs = [ pkgconfig cmake qt4 seafile-shared makeWrapper ];
@@ -25,7 +25,7 @@ stdenv.mkDerivation rec
     make install
 
     wrapProgram $out/bin/seafile-applet \
-      --suffix PATH : ${stdenv.lib.makeBinPath [ ccnet seafile-shared ]}
+      --suffix PATH : ${ccnet}/bin:${seafile-shared}/bin
     '';
 
   meta =

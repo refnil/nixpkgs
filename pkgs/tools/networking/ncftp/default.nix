@@ -23,12 +23,10 @@ stdenv.mkDerivation {
     sed 's@/bin/rm@${coreutils}/bin/rm@g' -i configure
   '';
 
-  configureFlags = [ "--mandir=$out/share/man/" ];
-
   meta = with stdenv.lib; {
     description = "Command line FTP (File Transfer Protocol) client";
     homepage = http://www.ncftp.com/ncftp/;
-    platforms = platforms.unix;
+    platforms = platforms.linux;
     maintainers = [ maintainers.bjornfor ];
   };
 }

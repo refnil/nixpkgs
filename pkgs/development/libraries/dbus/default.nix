@@ -1,92 +1,103 @@
-{ stdenv, lib, fetchurl, pkgconfig, expat, systemd
-, libX11 ? null, libICE ? null, libSM ? null, x11Support ? (stdenv.isLinux || stdenv.isDarwin) }:
-
-assert x11Support -> libX11 != null
-                  && libICE != null
-                  && libSM != null;
+{ stdenv, fetchurl, pkgconfig, autoconf, automake, libtool
+, expat, systemd, glib, dbus_glib, python
+, libX11, libICE, libSM, useX11 ? (stdenv.isLinux || stdenv.isDarwin) }:
 
 let
-  version = "1.10.16";
-  sha256 = "121kqkjsd3vgf8vca8364xl44qa5086h7qy5zs5f1l78ldpbmc57";
+  version = "1.8.4";
+  sha256 = "1y0zcmd4jsf2gq5yymz9gcnwxijh0vxbmxz73q3l440is343vxiy";
 
-self = stdenv.mkDerivation {
-    name = "dbus-${version}";
-    inherit version;
+  inherit (stdenv) lib;
+
+  buildInputsX = lib.optionals useX11 [ libX11 libICE libSM ];
+
+  # also other parts than "libs" need this statically linked lib
+  makeInternalLib = "(cd dbus && make libdbus-internal.la)";
+
+  systemdOrEmpty = lib.optional stdenv.isLinux systemd;
+
+  # A generic builder for individual parts (subdirs) of D-Bus
+  dbus_drv = name: subdirs: merge: stdenv.mkDerivation (lib.mergeAttrsByFuncDefaultsClean [{
+
+    name = "dbus-${name}-${version}";
 
     src = fetchurl {
       url = "http://dbus.freedesktop.org/releases/dbus/dbus-${version}.tar.gz";
       inherit sha256;
     };
 
-    patches = lib.optional stdenv.isSunOS ./implement-getgrouplist.patch;
-    postPatch = ''
-      substituteInPlace tools/Makefile.in \
-        --replace 'install-localstatelibDATA:' 'disabled:' \
-        --replace 'install-data-local:' 'disabled:' \
-        --replace 'installcheck-local:' 'disabled:'
-      substituteInPlace bus/Makefile.in \
-        --replace '$(mkinstalldirs) $(DESTDIR)$(localstatedir)/run/dbus' ':'
-    '' + /* cleanup of runtime references */ ''
-      substituteInPlace ./dbus/dbus-sysdeps-unix.c \
-        --replace 'DBUS_BINDIR "/dbus-launch"' "\"$lib/bin/dbus-launch\""
-      substituteInPlace ./tools/dbus-launch.c \
-        --replace 'DBUS_DAEMONDIR"/dbus-daemon"' '"/run/current-system/sw/bin/dbus-daemon"'
-    '';
+    patches = [
+        ./ignore-missing-includedirs.patch
+        ./ucred-dirty-hack.patch
+        ./no-create-dirs.patch
+      ]
+      ++ lib.optional (stdenv.isSunOS || stdenv.isLinux) ./implement-getgrouplist.patch
+      ;
 
-    outputs = [ "out" "dev" "lib" "doc" ];
+    # build only the specified subdirs
+    postPatch = "sed '/SUBDIRS/s/=.*/=" + subdirs + "/' -i Makefile.am\n"
+      # use already packaged libdbus instead of trying to build it again
+      + lib.optionalString (name != "libs") ''
+          for mfile in */Makefile.am; do
+            sed 's,\$(top_builddir)/dbus/\(libdbus-[0-9]\),${libs}/lib/\1,g' -i "$mfile"
+          done
+        '';
 
     nativeBuildInputs = [ pkgconfig ];
     propagatedBuildInputs = [ expat ];
-    buildInputs = lib.optional stdenv.isLinux systemd
-      ++ lib.optionals x11Support [ libX11 libICE libSM ];
-    # ToDo: optional selinux?
+    buildInputs = [ autoconf automake libtool ]; # ToDo: optional selinux?
+
+    preConfigure = ''
+      patchShebangs .
+      substituteInPlace tools/Makefile.am --replace 'install-localstatelibDATA:' 'disabled:'
+      autoreconf -fi
+    '';
 
     configureFlags = [
       "--localstatedir=/var"
       "--sysconfdir=/etc"
       "--with-session-socket-dir=/tmp"
-      "--with-system-pid-file=/run/dbus/pid"
-      "--with-system-socket=/run/dbus/system_bus_socket"
       "--with-systemdsystemunitdir=$(out)/etc/systemd/system"
-      "--with-systemduserunitdir=$(out)/etc/systemd/user"
-      "--enable-user-session"
-      "--datadir=/etc"
-      "--libexecdir=$(out)/libexec"
-    ] ++ lib.optional (!x11Support) "--without-x";
-
-    # Enable X11 autolaunch support in libdbus. This doesn't actually depend on X11
-    # (it just execs dbus-launch in dbus.tools), contrary to what the configure script demands.
-    # problems building without x11Support so disabled in that case for now
-    NIX_CFLAGS_COMPILE = lib.optionalString x11Support "-DDBUS_ENABLE_X11_AUTOLAUNCH=1";
-    NIX_CFLAGS_LINK = lib.optionalString (!stdenv.isDarwin) "-Wl,--as-needed";
+    ];
 
     enableParallelBuilding = true;
 
     doCheck = true;
 
-    installFlags = [ "sysconfdir=$(out)/etc" "datadir=$(out)/share" ];
+    installFlags = "sysconfdir=$(out)/etc";
 
-    postInstall = ''
-      mkdir -p "$out/share/xml/dbus"
-      cp doc/*.dtd "$out/share/xml/dbus"
-    '';
+  } merge ]);
 
-    # it's executed from $lib by absolute path
-    postFixup = ''
-      moveToOutput bin/dbus-launch "$lib"
-      ln -s "$lib/bin/dbus-launch" "$out/bin/"
-    '';
-
-    passthru = {
-      dbus-launch = "${self.lib}/bin/dbus-launch";
-      daemon = self.out;
-    };
-
-    meta = with stdenv.lib; {
-      description = "Simple interprocess messaging system";
-      homepage = http://www.freedesktop.org/wiki/Software/dbus/;
-      license = licenses.gpl2Plus; # most is also under AFL-2.1
-      platforms = platforms.unix;
-    };
+  libs = dbus_drv "libs" "dbus" {
+    # Enable X11 autolaunch support in libdbus. This doesn't actually depend on X11
+    # (it just execs dbus-launch in dbus.tools), contrary to what the configure script demands.
+    NIX_CFLAGS_COMPILE = "-DDBUS_ENABLE_X11_AUTOLAUNCH=1";
+    buildInputs = [ systemdOrEmpty ];
   };
-in self
+
+
+  attrs = rec {
+  # If you change much fix indentation
+
+  # This package has been split because most applications only need dbus.lib
+  # which serves as an interface to a *system-wide* daemon,
+  # see e.g. http://en.wikipedia.org/wiki/D-Bus#Architecture .
+
+  inherit libs;
+
+  tools = dbus_drv "tools" "tools bus" {
+    preBuild = makeInternalLib;
+    buildInputs = buildInputsX ++ systemdOrEmpty ++ [ libs ];
+    NIX_CFLAGS_LINK =
+      stdenv.lib.optionalString (!stdenv.isDarwin) "-Wl,--as-needed "
+      + "-ldbus-1";
+
+    meta.platforms = stdenv.lib.platforms.all;
+  };
+
+  daemon = tools;
+
+  docs = dbus_drv "docs" "doc" {
+    postInstall = ''rm -r "$out/lib"'';
+  };
+};
+in attrs.libs // attrs

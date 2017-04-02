@@ -1,27 +1,23 @@
-{ stdenv, fetchurl, cmake, libxml2, libxslt, pysideApiextractor, pysideGeneratorrunner, python, sphinx, qt4, isPy3k, isPy35 }:
+{ stdenv, fetchgit, cmake, pysideApiextractor, pysideGeneratorrunner, python27, python27Packages, qt4 }:
 
-# Python 3.5 is not supported: https://github.com/PySide/Shiboken/issues/77
-stdenv.mkDerivation rec {
-  name = "pyside-shiboken-${version}";
-  version = "1.2.4";
+stdenv.mkDerivation {
+  name = "pyside-shiboken-1.0.7-73-g9f110f8";
 
-  src = fetchurl {
-    url = "https://github.com/PySide/Shiboken/archive/${version}.tar.gz";
-    sha256 = "1536f73a3353296d97a25e24f9554edf3e6a48126886f8d21282c3645ecb96a4";
+  src = fetchgit {
+    url = "git://github.com/PySide/Shiboken.git";
+    rev = "9f110f83c213867e15b0141a802ebbf74f2ed9f7";
+    sha256 = "4618ed113fb20840fd9acb7d08460eb257f630cbca6d61113c16549a6bb651cd";
   };
 
   enableParallelBuilding = true;
 
-  buildInputs = [ cmake libxml2 libxslt pysideApiextractor pysideGeneratorrunner python sphinx qt4 ];
+  buildInputs = [ cmake pysideApiextractor pysideGeneratorrunner python27 python27Packages.sphinx qt4 ];
 
   preConfigure = ''
     echo "preConfigure: Fixing shiboken_generator install target."
     substituteInPlace generator/CMakeLists.txt --replace \
       \"$\{GENERATORRUNNER_PLUGIN_DIR}\" lib/generatorrunner/
   '';
-  patches = if isPy35 then [ ./shiboken_py35.patch ] else null;
-
-  cmakeFlags = if isPy3k then "-DUSE_PYTHON3=TRUE" else null;
 
   meta = {
     description = "Plugin (front-end) for pyside-generatorrunner, that generates bindings for C++ libraries using CPython source code";

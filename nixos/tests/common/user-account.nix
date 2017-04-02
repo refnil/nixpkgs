@@ -1,14 +1,12 @@
-{ lib, ... }:
+{ pkgs, ... }:
 
-{ users.extraUsers.alice =
-    { isNormalUser = true;
+{ users.extraUsers = pkgs.lib.singleton
+    { name = "alice";
       description = "Alice Foobar";
+      home = "/home/alice";
+      createHome = true;
+      useDefaultShell = true;
       password = "foobar";
-    };
-
-  users.extraUsers.bob =
-    { isNormalUser = true;
-      description = "Bob Foobar";
-      password = "foobar";
+      uid = 1000;
     };
 }

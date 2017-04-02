@@ -1,14 +1,14 @@
-{stdenv, fetchurl, gtk2, pkgconfig, perl, perlXMLParser, libxml2, gettext
+{stdenv, fetchurl, fetchurlGnome, gtk, pkgconfig, perl, perlXMLParser, libxml2, gettext
 , python, libxml2Python, docbook5, docbook_xsl, libxslt, intltool, libart_lgpl
 , withGNOME ? false, libgnomeui }:
 
 stdenv.mkDerivation rec {
-  name = "dia-${minVer}.3";
-  minVer = "0.97";
+  name = src.pkgname;
 
-  src = fetchurl {
-    url = "mirror://gnome/sources/dia/${minVer}/${name}.tar.xz";
-    sha256 = "0d3x6w0l6fwd0l8xx06y1h56xf8ss31yzia3a6xr9y28xx44x492";
+  src = fetchurlGnome {
+    project = "dia";
+    major = "0"; minor = "97"; patchlevel = "2"; extension = "xz";
+    sha256 = "1qgawm7rrf4wd1yc0fp39ywv8gbz4ry1s16k00dzg5w6p67lfqd7";
   };
 
   correctPersistence = fetchurl {
@@ -17,7 +17,7 @@ stdenv.mkDerivation rec {
   };
 
   buildInputs =
-    [ gtk2 perlXMLParser libxml2 gettext python libxml2Python docbook5
+    [ gtk perlXMLParser libxml2 gettext python libxml2Python docbook5
       libxslt docbook_xsl libart_lgpl
     ] ++ stdenv.lib.optional withGNOME libgnomeui;
 
@@ -25,7 +25,7 @@ stdenv.mkDerivation rec {
 
   configureFlags = stdenv.lib.optionalString withGNOME "--enable-gnome";
 
-  patches = [ ];
+  patches = [ ./glib-top-level-header.patch ];
 
   # This file should normally require a gtk-update-icon-cache -q /usr/share/icons/hicolor command
   # It have no reasons to exist in a redistribuable package
@@ -44,7 +44,7 @@ stdenv.mkDerivation rec {
   meta = {
     description = "Gnome Diagram drawing software";
     homepage = http://live.gnome.org/Dia;
-    maintainers = with stdenv.lib.maintainers; [raskin];
+    maintainers = with stdenv.lib.maintainers; [raskin urkud];
     platforms = stdenv.lib.platforms.linux;
   };
 }

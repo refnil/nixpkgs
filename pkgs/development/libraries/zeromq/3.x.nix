@@ -1,21 +1,18 @@
-{ stdenv, fetchurl, libuuid }:
+{stdenv, fetchurl, libuuid}:
 
 stdenv.mkDerivation rec {
-  name = "zeromq-3.2.5";
+  name = "zeromq-3.2.4";
 
   src = fetchurl {
     url = "http://download.zeromq.org/${name}.tar.gz";
-    sha256 = "0911r7q4i1x9gnfinj39vx08fnz59mf05vl75zdkws36lib3wr89";
+    sha256 = "0n9gfhwgkwq08kvvgk5zxjga08v628ij5chddk5w4ravr10s35nz";
   };
 
   buildInputs = [ libuuid ];
 
-  meta = with stdenv.lib; {
+  meta = {
     branch = "3";
     homepage = "http://www.zeromq.org";
     description = "The Intelligent Transport Layer";
-    license = licenses.gpl3;
-    platforms = platforms.all;
-    maintainers = with maintainers; [ wkennington ];
   };
 }

@@ -17,8 +17,8 @@ in
 
     boot.initrd.extraUtilsCommands = mkIf inInitrd
       ''
-        copy_bin_and_libs ${pkgs.reiserfsprogs}/sbin/reiserfsck
-        ln -s reiserfsck $out/bin/fsck.reiserfs
+        cp -v ${pkgs.reiserfsprogs}/sbin/reiserfsck $out/bin
+        ln -sv reiserfsck $out/bin/fsck.reiserfs
       '';
 
   };

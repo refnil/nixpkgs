@@ -1,21 +1,26 @@
 { stdenv, fetchurl, cmake, pkgconfig }:
 
 stdenv.mkDerivation rec {
-  name = "libdiscid-${version}";
-  version = "0.6.2";
+  name = "libdiscid-0.2.2";
 
-  nativeBuildInputs = [ cmake pkgconfig ];
-  
+  nativeBuildInputs = [ pkgconfig ];
+  buildInputs = [ cmake ];
+
   src = fetchurl {
-    url = "http://ftp.musicbrainz.org/pub/musicbrainz/libdiscid/${name}.tar.gz";
-    sha256 = "1f9irlj3dpb5gyfdnb1m4skbjvx4d4hwiz2152f83m0d9jn47r7r";
+    url = "http://users.musicbrainz.org/~matt/${name}.tar.gz";
+    sha256 = "00l4ln9rk0vqf67iccwqrgc9qx1al92i05zylh85kd1zn9d5sjwp";
   };
 
-  meta = with stdenv.lib; {
+  # developer forgot to update his version number
+  # this is propagated to pkg-config
+  preConfigure = ''
+    substituteInPlace "CMakeLists.txt" \
+      --replace "PROJECT_VERSION 0.1.1" "PROJECT_VERSION 0.2.2"
+  '';
+
+  meta = {
     description = "A C library for creating MusicBrainz DiscIDs from audio CDs";
     homepage = http://musicbrainz.org/doc/libdiscid;
-    maintainers = with maintainers; [ ehmry ];
-    license = licenses.lgpl21;
-    platforms = platforms.linux;
+    license = stdenv.lib.licenses.lgpl21;
   };
 }

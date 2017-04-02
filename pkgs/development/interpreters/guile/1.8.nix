@@ -11,9 +11,6 @@ stdenv.mkDerivation rec {
 
   patches = [ ./cpp-4.5.patch ];
 
-  outputs = [ "out" "dev" "info" ];
-  setOutputFlags = false; # $dev gets into the library otherwise
-
   # GCC 4.6 raises a number of set-but-unused warnings.
   configureFlags = [ "--disable-error-on-warning" ];
 
@@ -57,6 +54,5 @@ stdenv.mkDerivation rec {
     license = stdenv.lib.licenses.lgpl2Plus;
 
     maintainers = [ stdenv.lib.maintainers.ludo ];
-    platforms = stdenv.lib.platforms.unix;
   };
 }

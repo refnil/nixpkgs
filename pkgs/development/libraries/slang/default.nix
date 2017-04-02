@@ -1,35 +1,17 @@
-{ stdenv, fetchurl, ncurses, pcre, libpng, zlib, readline, libiconv }:
+{stdenv, fetchurl, ncurses, pcre, libpng, zlib, readline}:
 
-stdenv.mkDerivation rec {
-  name = "slang-2.3.1a";
+stdenv.mkDerivation {
+  name = "slang-2.2.1";
   src = fetchurl {
-    url = "http://www.jedsoft.org/releases/slang/${name}.tar.bz2";
-    sha256 = "0dlcy0hn0j6cj9qj5x6hpb0axifnvzzmv5jqq0wq14fygw0c7w2l";
+    url = ftp://ftp.fu-berlin.de/pub/unix/misc/slang/v2.2/slang-2.2.1.tar.bz2;
+    sha256 = "1qgfg6i5lzmw8j9aqd8pgz3vnhn80giij9bpgm5r3gmna2h0rzfj";
   };
-
-  outputs = [ "out" "dev" "doc" ];
-
   # Fix some wrong hardcoded paths
   preConfigure = ''
-    sed -i -e "s|/usr/lib/terminfo|${ncurses.out}/lib/terminfo|" configure
-    sed -i -e "s|/usr/lib/terminfo|${ncurses.out}/lib/terminfo|" src/sltermin.c
+    sed -i -e "s|/usr/lib/terminfo|${ncurses}/lib/terminfo|" configure
+    sed -i -e "s|/usr/lib/terminfo|${ncurses}/lib/terminfo|" src/sltermin.c    
     sed -i -e "s|/bin/ln|ln|" src/Makefile.in
-    sed -i -e "s|-ltermcap|-lncurses|" ./configure
   '';
-  configureFlags = "--with-png=${libpng.dev} --with-z=${zlib.dev} --with-pcre=${pcre.dev} --with-readline=${readline.dev}";
-  buildInputs = [ pcre libpng zlib readline ] ++ stdenv.lib.optionals (stdenv.isDarwin) [ libiconv ];
-  propagatedBuildInputs = [ ncurses ];
-
-  postInstall = ''
-    find "$out"/lib/ -name '*.so' -exec chmod +x "{}" \;
-    sed '/^Libs:/s/$/ -lncurses/' -i "$dev"/lib/pkgconfig/slang.pc
-  '';
-
-  meta = with stdenv.lib; {
-    description = "A multi-platform programmer's library designed to allow a developer to create robust software";
-    homepage = http://www.jedsoft.org/slang/;
-    license = licenses.gpl2Plus;
-    platforms = platforms.unix;
-    maintainers = [ maintainers.fuuzetsu ];
-  };
+  configureFlags = "--with-png=${libpng} --with-z=${zlib} --with-pcre=${pcre} --with-readline=${readline}";
+  buildInputs = [ncurses pcre libpng zlib readline];
 }

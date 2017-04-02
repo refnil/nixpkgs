@@ -1,43 +1,31 @@
 { stdenv, fetchurl, pkgconfig, intltool, file, makeWrapper
-, openssl, curl, libevent, inotify-tools, systemd, zlib
+, openssl, curl, libevent, inotifyTools, systemd
 , enableGTK3 ? false, gtk3
-, enableSystemd ? stdenv.isLinux
-, enableDaemon ? true
-, enableCli ? true
 }:
 
 let
-  version = "2.92";
+  version = "2.84";
 in
 
-let inherit (stdenv.lib) optional optionals optionalString; in
+with { inherit (stdenv.lib) optional optionals optionalString; };
 
 stdenv.mkDerivation rec {
   name = "transmission-" + optionalString enableGTK3 "gtk-" + version;
 
   src = fetchurl {
-    url = "https://transmission.cachefly.net/transmission-${version}.tar.xz";
-    sha256 = "0pykmhi7pdmzq47glbj8i2im6iarp4wnj4l1pyvsrnba61f0939s";
+    url = "http://download.transmissionbt.com/files/transmission-${version}.tar.xz";
+    sha256 = "1sxr1magqb5s26yvr5yhs1f7bmir8gl09niafg64lhgfnhv1kz59";
   };
 
-  buildInputs = [ pkgconfig intltool file openssl curl libevent zlib ]
+  buildInputs = [ pkgconfig intltool file openssl curl libevent inotifyTools ]
     ++ optionals enableGTK3 [ gtk3 makeWrapper ]
-    ++ optionals enableSystemd [ systemd ]
-    ++ optionals stdenv.isLinux [ inotify-tools ];
+    ++ optional stdenv.isLinux systemd;
 
-  postPatch = ''
-    substituteInPlace ./configure \
-      --replace "libsystemd-daemon" "libsystemd" \
-      --replace "/usr/bin/file"     "${file}/bin/file" \
-      --replace "test ! -d /Developer/SDKs/MacOSX10.5.sdk" "false"
+  preConfigure = ''
+    sed -i -e 's|/usr/bin/file|${file}/bin/file|g' configure
   '';
 
-  configureFlags = [
-      ("--enable-cli=" + (if enableCli then "yes" else "no"))
-      ("--enable-daemon=" + (if enableDaemon then "yes" else "no"))
-      "--disable-mac" # requires xcodebuild
-    ]
-    ++ optional enableSystemd "--with-systemd-daemon"
+  configureFlags = [ "--with-systemd-daemon" ]
     ++ optional enableGTK3 "--with-gtk";
 
   preFixup = optionalString enableGTK3 /* gsettings schemas for file dialogues */ ''
@@ -45,8 +33,6 @@ stdenv.mkDerivation rec {
     wrapProgram "$out/bin/transmission-gtk" \
       --prefix XDG_DATA_DIRS : "$GSETTINGS_SCHEMAS_PATH"
   '';
-
-  NIX_LDFLAGS = optionalString stdenv.isDarwin "-framework CoreFoundation";
 
   meta = with stdenv.lib; {
     description = "A fast, easy and free BitTorrent client";
@@ -64,7 +50,7 @@ stdenv.mkDerivation rec {
     homepage = http://www.transmissionbt.com/;
     license = licenses.gpl2; # parts are under MIT
     maintainers = with maintainers; [ astsmtl vcunat wizeman ];
-    platforms = platforms.unix;
+    platforms = platforms.linux;
   };
 }
 

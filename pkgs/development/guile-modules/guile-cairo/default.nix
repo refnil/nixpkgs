@@ -31,7 +31,6 @@ stdenv.mkDerivation rec {
 
     homepage = http://home.gna.org/guile-cairo/;
 
-    maintainers = [ ];
-    platforms = stdenv.lib.platforms.linux;
+    maintainers = [ stdenv.lib.maintainers.ludo ];
   };
 }

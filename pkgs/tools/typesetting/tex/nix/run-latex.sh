@@ -16,11 +16,11 @@ for i in $extraFiles; do
     if test -d $i; then
         ln -s $i/* .
     else
-        ln -s $i $(stripHash $i)
+        ln -s $i $(stripHash $i; echo $strippedName)
     fi
 done
 
-rootName=$(basename $(stripHash "$rootFile"))
+rootName=$(basename $(stripHash "$rootFile"; echo $strippedName))
 
 rootNameBase=$(echo "$rootName" | sed 's/\..*//')
 

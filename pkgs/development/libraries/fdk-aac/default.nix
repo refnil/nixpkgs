@@ -1,25 +1,19 @@
-{ stdenv, fetchurl
-, exampleSupport ? false # Example encoding program
-}:
+{ stdenv, fetchurl }:
 
-with stdenv.lib;
-stdenv.mkDerivation rec {
+let version = "0.1.3";
+in
+stdenv.mkDerivation {
   name = "fdk-aac-${version}";
-  version = "0.1.5";
 
   src = fetchurl {
-    url = "mirror://sourceforge/opencore-amr/fdk-aac/${name}.tar.gz";
-    sha256 = "1msdkcf559agmpycd4bk0scm2s2h9jyzbnnw1yrfarxlcwm5jr11";
+    url = "mirror://sourceforge/opencore-amr/fdk-aac/fdk-aac-${version}.tar.gz";
+    sha256 = "138c1l6c571289czihk0vlcfbla7qlac2jd5yyps5dyg08l8gjx9";
   };
 
-  configureFlags = [ ]
-    ++ optional exampleSupport "--enable-example";
-
-  meta = {
+  meta = with stdenv.lib; {
     description = "A high-quality implementation of the AAC codec from Android";
-    homepage    = http://sourceforge.net/projects/opencore-amr/;
-    license     = licenses.asl20;
-    maintainers = with maintainers; [ codyopel ];
-    platforms   = platforms.all;
+    homepage = "http://sourceforge.net/projects/opencore-amr/";
+    license = licenses.asl20;
+    platforms = platforms.linux;
   };
 }

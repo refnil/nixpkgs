@@ -1,21 +1,19 @@
-{ stdenv, fetchurl, zlib, openssl, libiconv }:
+{ stdenv, fetchurl, zlib, openssl }:
 
 stdenv.mkDerivation rec {
-  version = "3.48.22";
+  version = "3.48.17";
   name = "httrack-${version}";
 
   src = fetchurl {
     url = "http://mirror.httrack.com/httrack-${version}.tar.gz";
-    sha256 = "13y4m4rhvmgbbpc3lig9hzmzi86a5fkyi79sz1ckk4wfnkbim0xj";
+    sha256 = "03q8sk7qihw9x4bfgfhv6523khgj13nilqps28qy7ndpzpggw9vn";
   };
 
-  buildInputs = [ zlib openssl ] ++ stdenv.lib.optional stdenv.isDarwin libiconv;
+  buildInputs = [ zlib openssl ];
 
   meta = {
     homepage = "http://www.httrack.com";
     description = "Easy-to-use offline browser utility";
     license = stdenv.lib.licenses.gpl3;
-    maintainers = with stdenv.lib.maintainers; [ the-kenny ];
-    platforms = with stdenv.lib.platforms; unix;
   };
 }

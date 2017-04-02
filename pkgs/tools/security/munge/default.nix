@@ -1,20 +1,18 @@
-{ stdenv, fetchFromGitHub, gnused, perl, libgcrypt, zlib, bzip2 }:
+{ stdenv, fetchurl, gnused, perl, libgcrypt, zlib, bzip2 }:
 
 stdenv.mkDerivation rec {
-  name = "munge-0.5.11";
+  name = "munge-0.5.10";
 
-  src = fetchFromGitHub {
-    owner = "dun";
-    repo = "munge";
-    rev = "${name}";
-    sha256 = "02847p742nq3cb8ayf5blrdicybq72nfsnggqkxr33cpppmsfwg9";
+  src = fetchurl {
+    url = "http://munge.googlecode.com/files/${name}.tar.bz2";
+    sha256 = "1imbmpd70vkcpca8d9yd9ajkhf6ik057nr3jb1app1wm51f15q00";
   };
 
   buildInputs = [ gnused perl libgcrypt zlib bzip2 ];
 
   preConfigure = ''
     # Remove the install-data stuff, since it tries to write to /var
-    sed -i '505,511d' src/etc/Makefile.in
+    sed -i '434,465d' src/etc/Makefile.in
   '';
 
   configureFlags = [
@@ -22,10 +20,11 @@ stdenv.mkDerivation rec {
   ];
 
   meta = {
+    homepage = http://code.google.com/p/munge/;
     description = ''
       An authentication service for creating and validating credentials
     '';
     maintainers = [ stdenv.lib.maintainers.rickynils ];
-    platforms = stdenv.lib.platforms.unix;
+    platforms = stdenv.lib.platforms.linux;
   };
 }

@@ -18,6 +18,6 @@ stdenv.mkDerivation rec {
     repositories.git = https://github.com/divVerent/s2tc.git;
     license = stdenv.lib.licenses.mit;
     platforms = stdenv.lib.platforms.linux;
-    maintainers = [ stdenv.lib.maintainers.cpages ];
+    maintainers = [ stdenv.lib.maintainers.page ];
   };
 }

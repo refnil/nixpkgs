@@ -1,15 +1,11 @@
 NIX_LISP_ASDF="@asdf@"
 
-CL_SOURCE_REGISTRY="${CL_SOURCE_REGISTRY:+$CL_SOURCE_REGISTRY:}@asdf@/lib/common-lisp/asdf/:@asdf@/lib/common-lisp/asdf/uiop/"
-ASDF_OUTPUT_TRANSLATIONS="@asdf@/lib/common-lisp/:@out@/lib/common-lisp-compiled/"
+CL_SOURCE_REGISTRY="@asdf@/lib/common-lisp/asdf/:@asdf@/lib/common-lisp/asdf/uiop/"
 
 addASDFPaths () {
     for j in "$1"/lib/common-lisp/*; do
 	if [ -d "$j" ]; then
-            CL_SOURCE_REGISTRY="$j/:$CL_SOURCE_REGISTRY"
-            if [ -d "$(dirname "$(dirname "$j")")/common-lisp-compiled/$(basename "$j")" ]; then
-              ASDF_OUTPUT_TRANSLATIONS="$j:$(dirname "$(dirname "$j")")/common-lisp-compiled/$(basename "$j")${ASDF_OUTPUT_TRANSLATIONS:+:}$ASDF_OUTPUT_TRANSLATIONS"
-            fi
+            CL_SOURCE_REGISTRY="$CL_SOURCE_REGISTRY:$j/"
 	fi
     done
 }
@@ -35,9 +31,9 @@ collectNixLispLDLP () {
      fi
 }
 
-export NIX_LISP_COMMAND NIX_LISP CL_SOURCE_REGISTRY NIX_LISP_ASDF ASDF_OUTPUT_TRANSLATIONS
+export NIX_LISP_COMMAND NIX_LISP CL_SOURCE_REGISTRY NIX_LISP_ASDF
 
-envHooks+=(addASDFPaths setLisp collectNixLispLDLP)
+envHooks=(envHooks[@] addASDFPaths setLisp collectNixLispLDLP)
 
 mkdir -p "$HOME"/.cache/common-lisp || HOME="$TMP/.temp-$USER-home"
 mkdir -p "$HOME"/.cache/common-lisp

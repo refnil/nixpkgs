@@ -1,18 +1,18 @@
-{ stdenv, fetchurl, libcdio, cddiscid, wget, bash, which, vorbis-tools, id3v2, eyeD3
-, lame, flac, eject, mkcue
+{ stdenv, fetchurl, libcdio, cddiscid, wget, bash, vorbisTools, id3v2, lame, flac, eject, mkcue
 , perl, DigestSHA, MusicBrainz, MusicBrainzDiscID
 , makeWrapper }:
 
-let version = "2.7.2";
+let version = "2.5.4";
 in
   stdenv.mkDerivation {
     name = "abcde-${version}";
     src = fetchurl {
-      url = "http://abcde.einval.com/download/abcde-${version}.tar.gz";
-      sha256 = "1pakpi41k8yd780mfp0snhia6mmwjwxk9lcrq6gynimch8b8hfda";
+      url = "mirror://debian/pool/main/a/abcde/abcde_${version}.orig.tar.gz";
+      sha256 = "14g5lsgh53hza9848351kwpygc0yqpvvzp3s923aja77f2wpkdl5";
     };
 
-    # FIXME: This package does not support `distmp3', `eject', etc.
+    # FIXME: This package does not support MP3 encoding (only Ogg),
+    # nor `distmp3', `eject', etc.
 
     patches = [ ./abcde.patch ];
 
@@ -39,8 +39,6 @@ in
 
     buildInputs = [ makeWrapper ];
 
-    installFlags = [ "sysconfdir=$(out)/etc" ];
-
     postInstall = ''
     #   substituteInPlace "$out/bin/cddb-tool" \
     #      --replace '#!/bin/sh' '#!${bash}/bin/sh'
@@ -52,7 +50,7 @@ in
          --replace '#!/usr/bin/perl' '#!${perl}/bin/perl'
 
       wrapProgram "$out/bin/abcde" --prefix PATH ":" \
-        ${stdenv.lib.makeBinPath [ "$out" which libcdio cddiscid wget vorbis-tools id3v2 eyeD3 lame flac ]}
+        "$out/bin:${libcdio}/bin:${cddiscid}/bin:${wget}/bin:${vorbisTools}/bin:${id3v2}/bin:${lame}/bin"
 
       wrapProgram "$out/bin/cddb-tool" --prefix PATH ":" \
         "${wget}/bin"
@@ -62,7 +60,7 @@ in
     '';
 
     meta = {
-      homepage = http://abcde.einval.com/wiki/;
+      homepage = "http://lly.org/~rcw/abcde/page/";
       license = stdenv.lib.licenses.gpl2Plus;
       description = "Command-line audio CD ripper";
 
@@ -72,6 +70,5 @@ in
         Ogg/Vorbis, MP3, FLAC, Ogg/Speex and/or MPP/MP+ (Musepack)
         format, and tags them, all in one go.
       '';
-      platforms = stdenv.lib.platforms.linux;
     };
   }

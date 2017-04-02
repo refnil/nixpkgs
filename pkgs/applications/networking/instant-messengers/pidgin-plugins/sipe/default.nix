@@ -1,13 +1,13 @@
-{ stdenv, fetchurl, pidgin, intltool, libxml2, nss, nspr }:
+{ stdenv, fetchurl, pidgin, intltool, libxml2 }:
 
-let version = "1.22.0"; in
+let version = "1.18.1"; in
 
 stdenv.mkDerivation {
   name = "pidgin-sipe-${version}";
 
   src = fetchurl {
     url = "mirror://sourceforge/sipe/pidgin-sipe-${version}.tar.gz";
-    sha256 = "1aeb348e2ba79b82b1fd102555f86cdc42eaa6f9e761b771d74c4f9c9cf15fc3";
+    sha256 = "18ch7jpi7ki7xlpahi88xrnmnhc6dcq4hafm0z6d5nfjfp8ldal5";
   };
 
   meta = with stdenv.lib; {
@@ -19,6 +19,5 @@ stdenv.mkDerivation {
 
   postInstall = "find $out -ls; ln -s \$out/lib/purple-2 \$out/share/pidgin-sipe";
 
-  buildInputs = [ pidgin intltool libxml2 nss nspr ];
-
+  buildInputs = [pidgin intltool libxml2];
 }

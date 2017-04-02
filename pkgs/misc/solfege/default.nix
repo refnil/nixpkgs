@@ -1,12 +1,10 @@
-{ stdenv, fetchurl, pkgconfig, pythonPackages, gettext, texinfo
-, ghostscript, librsvg, gdk_pixbuf, txt2man, timidity, mpg123
-, alsaUtils, vorbis-tools, csound, lilypond
+{ stdenv, fetchurl, pkgconfig, python, pygtk, gettext, texinfo
+, ghostscript, pysqlite, librsvg, gdk_pixbuf, txt2man, timidity, mpg123
+, alsaUtils, vorbisTools, csound, lilypond
 , makeWrapper
 }:
 
-let
-  inherit (pythonPackages) python pygtk;
-in stdenv.mkDerivation rec {
+stdenv.mkDerivation rec {
   name = "solfege-3.22.2";
 
   src = fetchurl {
@@ -15,14 +13,14 @@ in stdenv.mkDerivation rec {
   };
 
   buildInputs = [ pkgconfig python pygtk gettext texinfo
-    ghostscript librsvg gdk_pixbuf txt2man makeWrapper
+    ghostscript pysqlite librsvg gdk_pixbuf txt2man makeWrapper
   ];
 
   preBuild = ''
     sed -i -e 's|wav_player=.*|wav_player=${alsaUtils}/bin/aplay|' \
            -e 's|midi_player=.*|midi_player=${timidity}/bin/timidity|' \
            -e 's|mp3_player=.*|mp3_player=${mpg123}/bin/mpg123|' \
-           -e 's|ogg_player=.*|ogg_player=${vorbis-tools}/bin/ogg123|' \
+           -e 's|ogg_player=.*|ogg_player=${vorbisTools}/bin/ogg123|' \
            -e 's|csound=.*|csound=${csound}/bin/csound|' \
            -e 's|lilypond-book=.*|lilypond-book=${lilypond}/bin/lilypond-book|' \
            default.config

@@ -2,19 +2,19 @@
 
 let
   dsoPatch = fetchurl {
-    url = "https://projects.archlinux.org/svntogit/packages.git/plain/trunk/liblua.so.patch?h=packages/lua52";
+    url = "https://projects.archlinux.org/svntogit/packages.git/plain/trunk/liblua.so.patch?h=packages/lua";
     sha256 = "1by1dy4ql61f5c6njq9ibf9kaqm3y633g2q8j54iyjr4cxvqwqz9";
     name = "lua-arch.patch";
   };
 in
 stdenv.mkDerivation rec {
   name = "lua-${version}";
-  luaversion = "5.2";
-  version = "${luaversion}.3";
+  majorVersion = "5.2";
+  version = "${majorVersion}.2";
 
   src = fetchurl {
     url = "http://www.lua.org/ftp/${name}.tar.gz";
-    sha256 = "0b8034v1s82n4dg5rzcn12067ha3nxaylp2vdp8gg08kjsbzphhk";
+    sha256 = "004zyh9p3lpvbwhyhlmrw6wwcia5abx84q4h2brkn4zdypipvmiz";
   };
 
   nativeBuildInputs = [ readline ];
@@ -24,17 +24,17 @@ stdenv.mkDerivation rec {
   configurePhase =
     if stdenv.isDarwin
     then ''
-    makeFlagsArray=( INSTALL_TOP=$out INSTALL_MAN=$out/share/man/man1 PLAT=macosx CFLAGS="-DLUA_USE_LINUX -fno-common -O2 -fPIC${if compat then " -DLUA_COMPAT_ALL" else ""}" LDFLAGS="-fPIC" V=${luaversion} R=${version} )
+    makeFlagsArray=( INSTALL_TOP=$out INSTALL_MAN=$out/share/man/man1 PLAT=macosx CFLAGS="-DLUA_USE_LINUX -fno-common -O2 -fPIC${if compat then " -DLUA_COMPAT_ALL" else ""}" LDFLAGS="-fPIC" V=${majorVersion} R=${version} )
     installFlagsArray=( TO_BIN="lua luac" TO_LIB="liblua.${version}.dylib" INSTALL_DATA='cp -d' )
   '' else ''
-    makeFlagsArray=( INSTALL_TOP=$out INSTALL_MAN=$out/share/man/man1 PLAT=linux CFLAGS="-DLUA_USE_LINUX -O2 -fPIC${if compat then " -DLUA_COMPAT_ALL" else ""}" LDFLAGS="-fPIC" V=${luaversion} R=${version} )
-    installFlagsArray=( TO_BIN="lua luac" TO_LIB="liblua.a liblua.so liblua.so.${luaversion} liblua.so.${version}" INSTALL_DATA='cp -d' )
+    makeFlagsArray=( INSTALL_TOP=$out INSTALL_MAN=$out/share/man/man1 PLAT=linux CFLAGS="-DLUA_USE_LINUX -O2 -fPIC${if compat then " -DLUA_COMPAT_ALL" else ""}" LDFLAGS="-fPIC" V=${majorVersion} R=${version} )
+    installFlagsArray=( TO_BIN="lua luac" TO_LIB="liblua.a liblua.so liblua.so.${majorVersion} liblua.so.${version}" INSTALL_DATA='cp -d' )
   '';
 
   postInstall = ''
     mkdir -p "$out/share/doc/lua" "$out/lib/pkgconfig"
     mv "doc/"*.{gif,png,css,html} "$out/share/doc/lua/"
-    rmdir $out/{share,lib}/lua/${luaversion} $out/{share,lib}/lua
+    rmdir $out/{share,lib}/lua/${majorVersion} $out/{share,lib}/lua
     mkdir -p "$out/lib/pkgconfig"
     cat >"$out/lib/pkgconfig/lua.pc" <<EOF
     prefix=$out
@@ -65,7 +65,7 @@ stdenv.mkDerivation rec {
         CC=${stdenv.cross.config}-gcc
         STRIP=:
         RANLIB=${stdenv.cross.config}-ranlib
-        V=${luaversion}
+        V=${majorVersion}
         R=${version}
         ${if isMingw then "mingw" else stdenv.lib.optionalString isDarwin ''
         AR="${stdenv.cross.config}-ar rcu"
@@ -98,5 +98,6 @@ stdenv.mkDerivation rec {
     '';
     license = stdenv.lib.licenses.mit;
     platforms = stdenv.lib.platforms.unix;
+    maintainers = [ stdenv.lib.maintainers.simons ];
   };
 }

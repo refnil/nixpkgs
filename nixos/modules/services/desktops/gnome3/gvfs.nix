@@ -1,6 +1,6 @@
 # gvfs backends
 
-{ config, lib, pkgs, ... }:
+{ config, lib, ... }:
 
 with lib;
 
@@ -36,10 +36,6 @@ in
     environment.systemPackages = [ gnome3.gvfs ];
 
     services.dbus.packages = [ gnome3.gvfs ];
-
-    systemd.packages = [ gnome3.gvfs ];
-
-    services.udev.packages = [ pkgs.libmtp.bin ];
 
   };
 

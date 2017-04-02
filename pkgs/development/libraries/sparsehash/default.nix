@@ -1,20 +1,17 @@
-{ stdenv, fetchFromGitHub }:
+{ stdenv, fetchurl }:
 
-stdenv.mkDerivation rec {
-  name = "sparsehash-2.0.3";
+stdenv.mkDerivation {
+  name = "sparsehash-2.0.2";
 
-  src = fetchFromGitHub {
-    owner = "sparsehash";
-    repo = "sparsehash";
-    rev = name;
-    sha256 = "0m3f0cnpnpf6aak52wn8xbrrdw8p0yhq8csgc8nlvf9zp8c402na";
+  src = fetchurl {
+    url = http://sparsehash.googlecode.com/files/sparsehash-2.0.2.tar.gz;
+    sha256 = "0z5qa1sbp6xx5qpdvrdjh185k5kj53sgb6h2qabw01sn2nkkkmif";
   };
 
   meta = with stdenv.lib; {
-    homepage = http://code.google.com/p/sparsehash/;
+    homepage = "http://code.google.com/p/sparsehash/";
     description = "An extremely memory-efficient hash_map implementation";
     platforms = platforms.all;
     license = licenses.bsd3;
-    maintainers = with maintainers; [ pSub ];
   };
 }

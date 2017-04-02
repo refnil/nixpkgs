@@ -1,29 +1,31 @@
-{ stdenv, fetchurl, iptables, libuuid, pkgconfig }:
+{ stdenv, fetchurl, iptables, libnfnetlink }:
 
 assert stdenv.isLinux;
 
 stdenv.mkDerivation rec {
-  name = "miniupnpd-2.0";
+  name = "miniupnpd-1.8.20140401";
 
   src = fetchurl {
     url = "http://miniupnp.free.fr/files/download.php?file=${name}.tar.gz";
-    sha256 = "1dxzhvkylrnbkd5srb9rb2g4f9ydd1zbjg5sdf190m0g1sha6snr";
-    name = "${name}.tar.gz";
+    sha256 = "1gfdbfqcw6ih830si51yzqbyymgcbwkiv9vk5dwnxs78b7xgyv88";
   };
 
-  buildInputs = [ iptables libuuid ];
-  nativeBuildInputs= [ pkgconfig ];
+  buildInputs = [ iptables libnfnetlink ];
+
+  NIX_CFLAGS_COMPILE = "-DIPTABLES_143";
+
+  NIX_CFLAGS_LINK = "-liptc -lnfnetlink";
 
   makefile = "Makefile.linux";
 
-  buildFlags = [ "miniupnpd" "genuuid" ];
+  makeFlags = "LIBS=";
 
-  installFlags = [ "PREFIX=$(out)" "INSTALLPREFIX=$(out)" ];
+  buildFlags = "miniupnpd genuuid";
 
-  meta = with stdenv.lib; {
+  installFlags = "PREFIX=$(out) INSTALLPREFIX=$(out)";
+
+  meta = {
     homepage = http://miniupnp.free.fr/;
     description = "A daemon that implements the UPnP Internet Gateway Device (IGD) specification";
-    platforms = platforms.linux;
-    maintainers = with maintainers; [ nckx ];
   };
 }

@@ -1,11 +1,11 @@
 { stdenv, fetchurl, pkgconfig, udev }:
 
 stdenv.mkDerivation rec {
-  name = "libserialport-0.1.1";
+  name = "libserialport-0.1.0";
 
   src = fetchurl {
     url = "http://sigrok.org/download/source/libserialport/${name}.tar.gz";
-    sha256 = "17ajlwgvyyrap8z7f16zcs59pksvncwbmd3mzf98wj7zqgczjaja";
+    sha256 = "1bqrldwrcsv6jbq3pmqczq27gdkrzpaxwplanqs25f6q9gb5p47c";
   };
 
   buildInputs = [ pkgconfig udev ];

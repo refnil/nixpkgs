@@ -7,9 +7,6 @@
 #   * nix-env -p /nix/var/nix/profiles/system -i <nix-expr for the configuration>
 #   * install the boot loader
 
-# Ensure a consistent umask.
-umask 0022
-
 # Re-exec ourselves in a private mount namespace so that our bind
 # mounts get cleaned up automatically.
 if [ "$(id -u)" = 0 ]; then
@@ -24,44 +21,21 @@ fi
 # Parse the command line for the -I flag
 extraBuildFlags=()
 chrootCommand=(/run/current-system/sw/bin/bash)
-buildUsersGroup="nixbld"
 
 while [ "$#" -gt 0 ]; do
     i="$1"; shift 1
     case "$i" in
-        --max-jobs|-j|--cores|-I)
-            j="$1"; shift 1
-            extraBuildFlags+=("$i" "$j")
-            ;;
-        --option)
-            j="$1"; shift 1
-            k="$1"; shift 1
-            extraBuildFlags+=("$i" "$j" "$k")
-            ;;
-        --root)
-            mountPoint="$1"; shift 1
-            ;;
-        --closure)
-            closure="$1"; shift 1
-            buildUsersGroup=""
-            ;;
-        --no-channel-copy)
-            noChannelCopy=1
-            ;;
-        --no-root-passwd)
-            noRootPasswd=1
-            ;;
-        --no-bootloader)
-            noBootLoader=1
+        -I)
+            given_path="$1"; shift 1
+            absolute_path=$(readlink -m $given_path)
+            extraBuildFlags+=("$i" "/mnt$absolute_path")
             ;;
         --show-trace)
             extraBuildFlags+=("$i")
             ;;
         --chroot)
             runChroot=1
-            if [[ "$@" != "" ]]; then
-                chrootCommand=("$@")
-            fi
+            chrootCommand=("$@")
             break
             ;;
         --help)
@@ -87,27 +61,28 @@ if ! test -e "$mountPoint"; then
     exit 1
 fi
 
+if ! grep -F -q " $mountPoint " /proc/mounts; then
+    echo "$mountPoint doesn't appear to be a mount point"
+    exit 1
+fi
+
 
 # Mount some stuff in the target root directory.
 mkdir -m 0755 -p $mountPoint/dev $mountPoint/proc $mountPoint/sys $mountPoint/etc $mountPoint/run $mountPoint/home
 mkdir -m 01777 -p $mountPoint/tmp
 mkdir -m 0755 -p $mountPoint/tmp/root
-mkdir -m 0755 -p $mountPoint/var
-mkdir -m 0700 -p $mountPoint/root
+mkdir -m 0755 -p $mountPoint/var/setuid-wrappers
 mount --rbind /dev $mountPoint/dev
 mount --rbind /proc $mountPoint/proc
 mount --rbind /sys $mountPoint/sys
 mount --rbind / $mountPoint/tmp/root
 mount -t tmpfs -o "mode=0755" none $mountPoint/run
+mount -t tmpfs -o "mode=0755" none $mountPoint/var/setuid-wrappers
 rm -rf $mountPoint/var/run
 ln -s /run $mountPoint/var/run
-for f in /etc/resolv.conf /etc/hosts; do rm -f $mountPoint/$f; [ -f "$f" ] && cp -Lf $f $mountPoint/etc/; done
-for f in /etc/passwd /etc/group;      do touch $mountPoint/$f; [ -f "$f" ] && mount --rbind -o ro $f $mountPoint/$f; done
+rm -f $mountPoint/etc/{resolv.conf,hosts}
+cp -f /etc/resolv.conf /etc/hosts $mountPoint/etc/
 
-cp -Lf "@cacert@" "$mountPoint/tmp/ca-cert.crt"
-export SSL_CERT_FILE=/tmp/ca-cert.crt
-# For Nix 1.7
-export CURL_CA_BUNDLE=/tmp/ca-cert.crt
 
 if [ -n "$runChroot" ]; then
     if ! [ -L $mountPoint/nix/var/nix/profiles/system ]; then
@@ -124,7 +99,7 @@ if test -z "$NIXOS_CONFIG"; then
     NIXOS_CONFIG=/etc/nixos/configuration.nix
 fi
 
-if [ ! -e "$mountPoint/$NIXOS_CONFIG" ] && [ -z "$closure" ]; then
+if ! test -e "$mountPoint/$NIXOS_CONFIG"; then
     echo "configuration file $mountPoint/$NIXOS_CONFIG doesn't exist"
     exit 1
 fi
@@ -135,13 +110,14 @@ fi
 mkdir -m 0755 -p \
     $mountPoint/nix/var/nix/gcroots \
     $mountPoint/nix/var/nix/temproots \
+    $mountPoint/nix/var/nix/manifests \
     $mountPoint/nix/var/nix/userpool \
     $mountPoint/nix/var/nix/profiles \
     $mountPoint/nix/var/nix/db \
     $mountPoint/nix/var/log/nix/drvs
 
 mkdir -m 1775 -p $mountPoint/nix/store
-chown @root_uid@:@nixbld_gid@ $mountPoint/nix/store
+chown root:nixbld $mountPoint/nix/store
 
 
 # There is no daemon in the chroot.
@@ -154,13 +130,18 @@ export LC_ALL=
 export LC_TIME=
 
 
-# Builds will use users that are members of this group
-extraBuildFlags+=(--option "build-users-group" "$buildUsersGroup")
+# Create a temporary Nix config file that causes the nixbld users to
+# be used.
+echo "build-users-group = nixbld" > $mountPoint/tmp/nix.conf # FIXME: remove in Nix 1.8
+binary_caches=$(@perl@/bin/perl -I @nix@/lib/perl5/site_perl/*/* -e 'use Nix::Config; Nix::Config::readConfig; print $Nix::Config::config{"binary-caches"};')
+if test -n "$binary_caches"; then
+    echo "binary-caches = $binary_caches" >> $mountPoint/tmp/nix.conf
+fi
+export NIX_CONF_DIR=/tmp
 
-
-# Inherit binary caches from the host
-binary_caches="$(@perl@/bin/perl -I @nix@/lib/perl5/site_perl/*/* -e 'use Nix::Config; Nix::Config::readConfig; print $Nix::Config::config{"binary-caches"};')"
-extraBuildFlags+=(--option "binary-caches" "$binary_caches")
+touch $mountPoint/etc/passwd $mountPoint/etc/group
+mount --bind -o ro /etc/passwd $mountPoint/etc/passwd
+mount --bind -o ro /etc/group $mountPoint/etc/group
 
 
 # Copy Nix to the Nix store on the target device, unless it's already there.
@@ -169,7 +150,7 @@ if ! NIX_DB_DIR=$mountPoint/nix/var/nix/db nix-store --check-validity @nix@ 2> /
     for i in $(@perl@/bin/perl @pathsFromGraph@ @nixClosure@); do
         echo "  $i"
         chattr -R -i $mountPoint/$i 2> /dev/null || true # clear immutable bit
-        @rsync@/bin/rsync -a $i $mountPoint/nix/store/
+        rsync -a $i $mountPoint/nix/store/
     done
 
     # Register the paths in the Nix closure as valid.  This is necessary
@@ -188,9 +169,6 @@ mkdir -m 0755 -p $mountPoint/bin
 ln -sf @shell@ $mountPoint/bin/sh
 
 
-# Build hooks likely won't function correctly in the minimal chroot; just disable them.
-unset NIX_BUILD_HOOK
-
 # Make the build below copy paths from the CD if possible.  Note that
 # /tmp/root in the chroot is the root of the CD.
 export NIX_OTHER_STORES=/tmp/root/nix:$NIX_OTHER_STORES
@@ -199,22 +177,24 @@ p=@nix@/libexec/nix/substituters
 export NIX_SUBSTITUTERS=$p/copy-from-other-stores.pl:$p/download-from-binary-cache.pl
 
 
-if [ -z "$closure" ]; then
-    # Get the absolute path to the NixOS/Nixpkgs sources.
-    nixpkgs="$(readlink -f $(nix-instantiate --find-file nixpkgs))"
+# Make manifests available in the chroot.
+rm -f $mountPoint/nix/var/nix/manifests/*
+for i in /nix/var/nix/manifests/*.nixmanifest; do
+    chroot $mountPoint @nix@/bin/nix-store -r "$(readlink -f "$i")" > /dev/null
+    cp -pd "$i" $mountPoint/nix/var/nix/manifests/
+done
 
-    nixEnvAction="-f <nixpkgs/nixos> --set -A system"
-else
-    nixpkgs=""
-    nixEnvAction="--set $closure"
-fi
+
+# Get the absolute path to the NixOS/Nixpkgs sources.
+nixpkgs="$(readlink -f $(nix-instantiate --find-file nixpkgs))"
+
 
 # Build the specified Nix expression in the target store and install
 # it into the system configuration profile.
 echo "building the system configuration..."
 NIX_PATH="nixpkgs=/tmp/root/$nixpkgs:nixos-config=$NIXOS_CONFIG" NIXOS_CONFIG= \
     chroot $mountPoint @nix@/bin/nix-env \
-    "${extraBuildFlags[@]}" -p /nix/var/nix/profiles/system $nixEnvAction
+    "${extraBuildFlags[@]}" -p /nix/var/nix/profiles/system -f '<nixpkgs/nixos>' --set -A system
 
 
 # Copy the NixOS/Nixpkgs sources to the target as the initial contents
@@ -223,7 +203,7 @@ mkdir -m 0755 -p $mountPoint/nix/var/nix/profiles
 mkdir -m 1777 -p $mountPoint/nix/var/nix/profiles/per-user
 mkdir -m 0755 -p $mountPoint/nix/var/nix/profiles/per-user/root
 srcs=$(nix-env "${extraBuildFlags[@]}" -p /nix/var/nix/profiles/per-user/root/channels -q nixos --no-name --out-path 2>/dev/null || echo -n "")
-if [ -z "$noChannelCopy" ] && [ -n "$srcs" ]; then
+if test -n "$srcs"; then
     echo "copying NixOS/Nixpkgs sources..."
     chroot $mountPoint @nix@/bin/nix-env \
         "${extraBuildFlags[@]}" -p /nix/var/nix/profiles/per-user/root/channels -i "$srcs" --quiet
@@ -233,7 +213,7 @@ ln -sfn /nix/var/nix/profiles/per-user/root/channels $mountPoint/root/.nix-defex
 
 
 # Get rid of the /etc bind mounts.
-for f in /etc/passwd /etc/group; do [ -f "$f" ] && umount $mountPoint/$f; done
+umount $mountPoint/etc/passwd $mountPoint/etc/group
 
 
 # Grub needs an mtab.
@@ -249,19 +229,18 @@ touch $mountPoint/etc/NIXOS
 # a menu default pointing at the kernel/initrd/etc of the new
 # configuration.
 echo "finalising the installation..."
-if [ -z "$noBootLoader" ]; then
-  NIXOS_INSTALL_BOOTLOADER=1 chroot $mountPoint \
-      /nix/var/nix/profiles/system/bin/switch-to-configuration boot
-fi
+NIXOS_INSTALL_GRUB=1 chroot $mountPoint \
+    /nix/var/nix/profiles/system/bin/switch-to-configuration boot
+
 
 # Run the activation script.
 chroot $mountPoint /nix/var/nix/profiles/system/activate
 
 
 # Ask the user to set a root password.
-if [ -z "$noRootPasswd" ] && chroot $mountPoint [ -x /run/wrappers/bin/passwd ] && [ -t 0 ]; then
+if [ -t 0 ] ; then
     echo "setting root password..."
-    chroot $mountPoint /run/wrappers/bin/passwd
+    chroot $mountPoint passwd
 fi
 
 

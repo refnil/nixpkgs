@@ -1,7 +1,6 @@
-{ stdenv, fetchgit, libuuid, python2, iasl }:
+{ stdenv, fetchgit, libuuid, pythonFull, iasl }:
 
 let
-  pythonEnv = python2.withPackages(ps: [ps.tkinter]);
 
 targetArch = if stdenv.isi686 then
   "IA32"
@@ -11,19 +10,19 @@ else
   throw "Unsupported architecture";
 
 edk2 = stdenv.mkDerivation {
-  name = "edk2-2014-12-10";
-
+  name = "edk2-2014-02-01";
+  
   src = fetchgit {
     url = git://github.com/tianocore/edk2;
-    rev = "684a565a04";
-    sha256 = "0s9ywb8w7xzlnmm4kwzykxkrdaw53b7pky121cc9wjkllzqwyxrb";
+    rev = "2818c158de6a164d012e6afb0fc145656aed4e4b";
+    sha256 = "a756b5de3a3e71d82ce1de8c7832bc69d2affb98d704894b26540571f9f5e214";
   };
 
-  buildInputs = [ libuuid pythonEnv];
+  buildInputs = [ libuuid pythonFull ];
 
-  makeFlags = "-C BaseTools";
-
-  hardeningDisable = [ "format" "fortify" ];
+  buildPhase = ''
+    make -C BaseTools
+  '';
 
   installPhase = ''
     mkdir -vp $out
@@ -34,20 +33,21 @@ edk2 = stdenv.mkDerivation {
 
   meta = {
     description = "Intel EFI development kit";
-    homepage = http://sourceforge.net/projects/edk2/;
-    license = stdenv.lib.licenses.bsd2;
+    homepage = http://sourceforge.net/apps/mediawiki/tianocore/index.php?title=EDK2;
+    license = "BSD";
+    maintainers = [ stdenv.lib.maintainers.shlevy ];
     platforms = ["x86_64-linux" "i686-linux"];
   };
 
   passthru = {
     setup = projectDscPath: attrs: {
-      buildInputs = [ pythonEnv ] ++
+      buildInputs = [ pythonFull ] ++
         stdenv.lib.optionals (attrs ? buildInputs) attrs.buildInputs;
 
       configurePhase = ''
         mkdir -v Conf
         sed -e 's|Nt32Pkg/Nt32Pkg.dsc|${projectDscPath}|' -e \
-          's|MYTOOLS|GCC49|' -e 's|IA32|${targetArch}|' -e 's|DEBUG|RELEASE|'\
+          's|MYTOOLS|GCC48|' -e 's|IA32|${targetArch}|' -e 's|DEBUG|RELEASE|'\
           < ${edk2}/BaseTools/Conf/target.template > Conf/target.txt
         sed -e 's|DEFINE GCC48_IA32_PREFIX       = /usr/bin/|DEFINE GCC48_IA32_PREFIX       = ""|' \
           -e 's|DEFINE GCC48_X64_PREFIX        = /usr/bin/|DEFINE GCC48_X64_PREFIX        = ""|' \

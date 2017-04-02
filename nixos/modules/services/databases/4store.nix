@@ -52,9 +52,9 @@ with lib;
 
     services.avahi.enable = true;
 
-    systemd.services."4store" = {
-      after = [ "network.target" ];
-      wantedBy = [ "multi-user.target" ];
+    jobs.fourStore = {
+      name = "4store";
+      startOn = "filesystem";
 
       preStart = ''
         mkdir -p ${stateDir}/
@@ -64,9 +64,11 @@ with lib;
         fi
       '';
 
-      script = ''
+      exec = ''
         ${run} -c '${pkgs.rdf4store}/bin/4s-backend -D ${cfg.options} ${cfg.database}'
       '';
     };
+
   };
+
 }

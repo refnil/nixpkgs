@@ -2,10 +2,10 @@
 
 # ViTE 1.1 has several bugs, so use the SVN version.
 let
-  rev = "1543";
+  rev = "1143";
   externals = fetchsvn {
     url = "svn://scm.gforge.inria.fr/svn/vite/externals";
-    sha256 = "1a422n3dp72v4visq5b1i21cf8sj12903sgg5v2hah3sgk02dnyz";
+    sha256 = "0wg3yh5q8gx7189rvkd8achld7bzp0i7qqn6c77pg767b4b8dh1a";
     inherit rev;
   };
 in
@@ -14,14 +14,16 @@ stdenv.mkDerivation {
 
   src = fetchsvn {
     url = "svn://scm.gforge.inria.fr/svn/vite/trunk";
-    sha256 = "02479dv96h29d0w0svp42mjjrxhmv8lkkqp30w7mlx5gr2g0v7lf";
+    sha256 = "0cy9b6isiwqwnv9gk0cg97x370fpwyccljadds4a118k5gh58zw4";
     inherit rev;
   };
 
-  preConfigure = ''
-    rm -rv externals
-    ln -sv "${externals}" externals
-  '';
+  preConfigure =
+    '' rm -v externals
+       ln -sv "${externals}" externals
+    '';
+
+  patches = [ ./larger-line-buffer.patch ];
 
   buildInputs = [ cmake qt4 mesa ];
 
@@ -30,15 +32,19 @@ stdenv.mkDerivation {
   meta = {
     description = "Visual Trace Explorer (ViTE), a tool to visualize execution traces";
 
-    longDescription = ''
-      ViTE is a trace explorer. It is a tool to visualize execution
-      traces in Pajé or OTF format for debugging and profiling
-      parallel or distributed applications.
-    '';
+    longDescription =
+      '' ViTE is a trace explorer. It is a tool to visualize execution traces
+         in Pajé or OTF format for debugging and profiling parallel or
+         distributed applications.
+      '';
 
     homepage = http://vite.gforge.inria.fr/;
-    license = stdenv.lib.licenses.cecill20;
-    maintainers = with stdenv.lib.maintainers; [ fuuzetsu ];
-    platforms = stdenv.lib.platforms.linux;
+
+    license = "CeCILL-A";
+
+    maintainers = [ stdenv.lib.maintainers.ludo ];
+    platforms = stdenv.lib.platforms.gnu;  # arbitrary choice
+
+    broken = true;
   };
 }

@@ -1,40 +1,27 @@
-{ stdenv, fetchgit, boost, ganv, glibmm, gtkmm2, libjack2, lilv
-, lv2, makeWrapper, pkgconfig, python, raul, rdflib, serd, sord, sratom
-, suil
+{ stdenv, fetchsvn, boost, ganv, glibmm, gtk, gtkmm, jack2, lilv
+, lv2, pkgconfig, python, raul, serd, sord, sratom, suil
 }:
 
 stdenv.mkDerivation  rec {
-  name = "ingen-unstable-${rev}";
-  rev = "2017-01-18";
+  name = "ingen-svn-${rev}";
+  rev = "5317";
 
-  src = fetchgit {
-    url = "http://git.drobilla.net/cgit.cgi/ingen.git";
-    rev = "02ae3e9d8bf3f6a5e844706721aad8c0ac9f4340";
-    sha256 = "15s8nrzn68hc2s6iw0zshbz3lfnsq0mr6gflq05xm911b7xbp74k";
+  src = fetchsvn {
+    url = "http://svn.drobilla.net/lad/trunk/ingen";
+    rev = rev;
+    sha256 = "0zm3wbv9qsingjyr95nwin3khmnf3wq3fz2xa6p420dpcy6qnl4x";
   };
 
   buildInputs = [
-    boost ganv glibmm gtkmm2 libjack2 lilv lv2 makeWrapper pkgconfig
-    python raul serd sord sratom suil
+    boost ganv glibmm gtk gtkmm jack2 lilv lv2 pkgconfig python
+    raul serd sord sratom suil
   ];
 
-  configurePhase = ''
-    sed -e "s@{PYTHONDIR}/'@out/'@" -i wscript
-    ${python.interpreter} waf configure --prefix=$out
-  '';
+  configurePhase = "python waf configure --prefix=$out";
 
-  propagatedBuildInputs = [ rdflib ];
+  buildPhase = "python waf";
 
-  buildPhase = "${python.interpreter} waf";
-
-  installPhase = ''
-    ${python.interpreter} waf install
-    for program in ingenams ingenish
-    do
-      wrapProgram $out/bin/$program \
-        --prefix PYTHONPATH : $out/lib/python${python.majorVersion}/site-packages:$PYTHONPATH
-    done
-  '';
+  installPhase = "python waf install";
 
   meta = with stdenv.lib; {
     description = "A modular audio processing system using JACK and LV2 or LADSPA plugins";

@@ -1,29 +1,22 @@
-{ stdenv, fetchurl, pkgconfig, xorg, mesa_noglu }:
+{ stdenv, fetchurl, pkgconfig, xlibs }:
 
 stdenv.mkDerivation rec {
-  name = "libvdpau-1.1.1";
+  name = "libvdpau-0.7";
 
   src = fetchurl {
-    url = "http://people.freedesktop.org/~aplattner/vdpau/${name}.tar.bz2";
-    sha256 = "857a01932609225b9a3a5bf222b85e39b55c08787d0ad427dbd9ec033d58d736";
+    url = "http://people.freedesktop.org/~aplattner/vdpau/${name}.tar.gz";
+    sha256 = "1q5wx6fmqg2iiw57wxwh5vv4yszqs4nlvlzhzdn9vig8gi30ip14";
   };
 
-  outputs = [ "out" "dev" ];
+  buildInputs = with xlibs; [ pkgconfig dri2proto libXext ];
 
-  buildInputs = with xorg; [ pkgconfig dri2proto libXext ];
+  propagatedBuildInputs = [ xlibs.libX11 ];
 
-  propagatedBuildInputs = [ xorg.libX11 ];
+  configureFlags = stdenv.lib.optional stdenv.isDarwin [ "--build=x86_64" ];
 
-  configureFlags = stdenv.lib.optional stdenv.isLinux
-    "--with-module-dir=${mesa_noglu.driverLink}/lib/vdpau";
-
-  installFlags = [ "moduledir=$(out)/lib/vdpau" ];
-
-  meta = with stdenv.lib; {
+  meta = {
     homepage = http://people.freedesktop.org/~aplattner/vdpau/;
     description = "Library to use the Video Decode and Presentation API for Unix (VDPAU)";
-    license = licenses.mit; # expat version
-    platforms = platforms.unix;
-    maintainers = [ maintainers.vcunat ];
+    license = "bsd";
   };
 }

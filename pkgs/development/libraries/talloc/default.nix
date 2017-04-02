@@ -1,38 +1,24 @@
-{ stdenv, fetchurl, python, pkgconfig, readline, libxslt
-, docbook_xsl, docbook_xml_dtd_42
-}:
+{ fetchurl, stdenv }:
 
 stdenv.mkDerivation rec {
-  name = "talloc-2.1.8";
+  name = "talloc-2.0.1";
 
   src = fetchurl {
-    url = "mirror://samba/talloc/${name}.tar.gz";
-    sha256 = "0c3ihyb0jd8mhvi7gg2mr5w1zl2habx6jlkbyxzyckad2q8lkl92";
+    url = "http://samba.org/ftp/talloc/${name}.tar.gz";
+    md5 = "c6e736540145ca58cb3dcb42f91cf57b";
   };
 
-  buildInputs = [
-    python pkgconfig readline libxslt docbook_xsl docbook_xml_dtd_42
-  ];
+  configureFlags = "--enable-talloc-compat1 --enable-largefile";
+  
+  # https://bugzilla.samba.org/show_bug.cgi?id=7000
+  postConfigure = if stdenv.isDarwin then ''
+    substituteInPlace "Makefile" --replace "SONAMEFLAG = #" "SONAMEFLAG = -install_name"
+  '' else "";
 
-  preConfigure = ''
-    sed -i 's,#!/usr/bin/env python,#!${python}/bin/python,g' buildtools/bin/waf
-  '';
-
-  configureFlags = [
-    "--enable-talloc-compat1"
-    "--bundled-libraries=NONE"
-    "--builtin-libraries=replace"
-  ];
-
-  postInstall = ''
-    ar q $out/lib/libtalloc.a bin/default/talloc_[0-9]*.o
-  '';
-
-  meta = with stdenv.lib; {
-    description = "Hierarchical pool based memory allocator with destructors";
+  meta = {
+    description = "talloc is a hierarchical pool based memory allocator with destructors";
     homepage = http://tdb.samba.org/;
-    license = licenses.gpl3;
-    maintainers = with maintainers; [ wkennington ];
-    platforms = platforms.all;
+    license = stdenv.lib.licenses.gpl3;
+    platforms = stdenv.lib.platforms.all;
   };
 }

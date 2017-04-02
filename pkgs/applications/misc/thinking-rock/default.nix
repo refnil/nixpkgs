@@ -1,7 +1,7 @@
 { stdenv, fetchurl }:
 
 stdenv.mkDerivation {
-  name = "thinkingrock-binary-2.2.1";
+  name = "thinkingrock-2.2.1-binary";
 
   src = fetchurl {
     url = mirror://sourceforge/thinkingrock/ThinkingRock/TR%202.2.1/tr-2.2.1.tar.gz;
@@ -36,6 +36,5 @@ stdenv.mkDerivation {
     description = "Task management system";
     homepage = http://www.thinkingrock.com.au/;
     license = "CDDL"; # Common Development and Distribution License
-    platforms = stdenv.lib.platforms.unix;
   };
 }

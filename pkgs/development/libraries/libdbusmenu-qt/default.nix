@@ -23,7 +23,7 @@ stdenv.mkDerivation {
   meta = with stdenv.lib; {
     description = "Provides a Qt implementation of the DBusMenu spec";
     inherit homepage;
-    maintainers = [ ];
+    maintainers = [ maintainers.urkud ];
     inherit (qt4.meta) platforms;
   };
 }

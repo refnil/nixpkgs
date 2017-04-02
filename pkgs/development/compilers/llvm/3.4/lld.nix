@@ -1,4 +1,4 @@
-{ stdenv, fetch, cmake, llvm, ncurses, zlib, python2, version }:
+{ stdenv, fetch, cmake, llvm, ncurses, zlib, python, version }:
 
 stdenv.mkDerivation {
   name = "lld-${version}";
@@ -11,9 +11,10 @@ stdenv.mkDerivation {
     export cmakeFlags="$cmakeFlags -DLLD_PATH_TO_LLVM_SOURCE="`ls -d $PWD/llvm-*`
   '';
 
-  buildInputs = [ cmake ncurses zlib python2 ];
+  buildInputs = [ cmake ncurses zlib python ];
 
   cmakeFlags = [
+    "-DCMAKE_BUILD_TYPE=Release"
     "-DCMAKE_CXX_FLAGS=-std=c++11"
     "-DLLD_PATH_TO_LLVM_BUILD=${llvm}"
   ];
@@ -23,7 +24,8 @@ stdenv.mkDerivation {
   meta = {
     description = "A set of modular code for creating linker tools";
     homepage    = http://llvm.org/;
-    license     = stdenv.lib.licenses.ncsa;
+    license     = stdenv.lib.licenses.bsd3;
+    maintainers = [ stdenv.lib.maintainers.shlevy ];
     platforms   = stdenv.lib.platforms.all;
   };
 }

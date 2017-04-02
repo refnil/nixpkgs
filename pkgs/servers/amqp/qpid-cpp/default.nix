@@ -1,16 +1,17 @@
-{ stdenv, fetchurl, cmake, python2, boost, libuuid, ruby }:
+{ stdenv, fetchurl, cmake, python, boost, libuuid, ruby }:
 
 stdenv.mkDerivation rec {
-  name = "qpid-cpp-${version}";
+  name = "${project}-cpp-${version}";
 
-  version = "0.34";
+  project = "qpid";
+  version = "0.26";
 
   src = fetchurl {
-    url = "mirror://apache/qpid/cpp/${version}/${name}.tar.gz";
-    sha256 = "07ibwvw5lm7xabv32zai5x03r7l9mxm0zk7h9lbfkzmav0f41w0w";
+    url = "mirror://apache/${project}/${version}/${name}.tar.gz";
+    sha256 = "1c03yi19d5h5h78h37add9csmy0mzvvmvn7zkcalwszabdhsb5yk";
   };
 
-  buildInputs = [ cmake python2 boost libuuid ruby ];
+  buildInputs = [ cmake python boost libuuid ruby ];
 
   # the subdir managementgen wants to install python stuff in ${python} and
   # the installation tries to create some folders in /var
@@ -26,6 +27,6 @@ stdenv.mkDerivation rec {
     description = "An AMQP message broker and a C++ messaging API";
     license = stdenv.lib.licenses.asl20;
     platforms = stdenv.lib.platforms.linux;
-    maintainers = [ stdenv.lib.maintainers.cpages ];
+    maintainers = [ stdenv.lib.maintainers.page ];
   };
 }

@@ -1,39 +1,56 @@
-{ stdenv, lib, fetchurl
-  , qt4, qmake4Hook, openssl
+x@{builderDefsPackage
+  , qt4, openssl
   , xproto, libX11, libXScrnSaver, scrnsaverproto
-  , xz, zlib
-}:
-stdenv.mkDerivation rec {
-  name = "vacuum-im-${version}";
-  version = "1.2.4";
+  , xz
+  , ...}:
+builderDefsPackage
+(a :  
+let 
+  helperArgNames = ["stdenv" "fetchurl" "builderDefsPackage"] ++ 
+    [];
 
-  src = fetchurl {
-    url = "https://googledrive.com/host/0B7A5K_290X8-d1hjQmJaSGZmTTA/vacuum-${version}.tar.gz";
-    sha256 = "10qxpfbbaagqcalhk0nagvi5irbbz5hk31w19lba8hxf6pfylrhf";
+  buildInputs = map (n: builtins.getAttr n x)
+    (builtins.attrNames (builtins.removeAttrs x helperArgNames));
+  sourceInfo = rec {
+    version="1.2.3";
+    baseName="vacuum-im";
+    name="${baseName}-${version}";
+    url="http://vacuum-im.googlecode.com/files/vacuum-${version}.tar.xz";
+    hash="037k2b2kkp2ywkrshqa0fj18mkd2jq60x4x62kzbrsvb85qcbbxh";
+  };
+in
+rec {
+  src = a.fetchurl {
+    url = sourceInfo.url;
+    sha256 = sourceInfo.hash;
   };
 
-  buildInputs = [
-    qt4 openssl xproto libX11 libXScrnSaver scrnsaverproto xz zlib
-  ];
+  inherit (sourceInfo) name version;
+  inherit buildInputs;
 
-  # hack: needed to fix build issues in
-  # http://hydra.nixos.org/build/38322959/nixlog/1
-  # should be an upstream issue but it's easy to fix
-  NIX_LDFLAGS = "-lz";
+  /* doConfigure should be removed if not needed */
+  phaseNames = ["addInputs" "doQMake" "doMakeInstall"];
 
-  nativeBuildInputs = [ qmake4Hook ];
-
-  preConfigure = ''
-    qmakeFlags="$qmakeFlags INSTALL_PREFIX=$out"
-  '';
-
-  hardeningDisable = [ "format" ];
-
-  meta = with stdenv.lib; {
+  doQMake = a.fullDepEntry (''
+    qmake INSTALL_PREFIX=$out -recursive vacuum.pro
+  '') ["doUnpack" "addInputs"];
+      
+  meta = {
     description = "An XMPP client fully composed of plugins";
-    maintainers = [ maintainers.raskin ];
-    platforms = platforms.linux;
-    license = licenses.gpl3;
+    maintainers = with a.lib.maintainers;
+    [
+      raskin
+    ];
+    platforms = with a.lib.platforms;
+      linux;
+    license = with a.lib.licenses;
+      gpl3;
     homepage = "http://code.google.com/p/vacuum-im/";
   };
-}
+  passthru = {
+    updateInfo = {
+      downloadPage = "http://code.google.com/p/vacuum-im/downloads/list?can=2&q=&colspec=Filename";
+    };
+  };
+}) x
+

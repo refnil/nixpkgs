@@ -1,22 +1,33 @@
-{ stdenv, fetchurl, libtool, pkgconfig, libgphoto2, fuse, glib }:
+a :
+let
+  fetchurl = a.fetchurl;
+  s = import ./src-info-for-gphotofs.nix;
 
-stdenv.mkDerivation rec {
-  name = "gphoto2fs-${version}";
-  version = "0.5.0";
-  src = fetchurl {
-    url="mirror://sourceforge/gphoto/gphotofs/${version}/gphotofs-0.5.tar.bz2";
-    sha256 = "1k23ncbsbh64r7kz050bg31jqamchyswgg9izhzij758d7gc8vk7";
-  };
-
-  buildInputs = [
+  version = a.lib.attrByPath ["version"] s.version a;
+  buildInputs = with a; [
     libgphoto2 fuse pkgconfig glib libtool
   ];
+in
+rec {
+  src = fetchurl {
+    url = s.url;
+    sha256 = s.hash;
+  };
 
+  inherit buildInputs;
+  configureFlags = [];
+
+  /* doConfigure should be removed if not needed */
+  phaseNames = ["doConfigure" "doMakeInstall"];
+
+  name = "gphoto2fs-" + version;
   meta = {
     description = "Fuse FS to mount a digital camera";
     maintainers = [
-      stdenv.lib.maintainers.raskin
+      a.lib.maintainers.raskin
     ];
-    platforms = stdenv.lib.platforms.linux;
+    platforms = [
+      "i686-linux" "x86_64-linux"
+    ];
   };
 }

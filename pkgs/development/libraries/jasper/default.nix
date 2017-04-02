@@ -1,33 +1,20 @@
-{ stdenv, fetchurl, fetchpatch, libjpeg, cmake }:
+{stdenv, fetchurl, unzip, xlibs, libjpeg}:
 
 stdenv.mkDerivation rec {
-  name = "jasper-2.0.12";
+  name = "jasper-1.900.1";
 
   src = fetchurl {
-    # You can find this code on Github at https://github.com/mdadams/jasper
-    # however note at https://www.ece.uvic.ca/~frodo/jasper/#download
-    # not all tagged releases are for distribution.
-    url = "http://www.ece.uvic.ca/~mdadams/jasper/software/${name}.tar.gz";
-    sha256 = "1njdbxv7d4anzrd476wjww2qsi96dd8vfnp4hri0srrqxpszl92v";
+    url = "http://www.ece.uvic.ca/~mdadams/jasper/software/${name}.zip";
+    sha256 = "154l7zk7yh3v8l2l6zm5s2alvd2fzkp6c9i18iajfbna5af5m43b";
   };
 
-  # newer reconf to recognize a multiout flag
-  nativeBuildInputs = [ cmake ];
+  nativeBuildInputs = [unzip];
   propagatedBuildInputs = [ libjpeg ];
 
   configureFlags = "--enable-shared";
-
-  outputs = [ "bin" "dev" "out" "man" ];
-
-  enableParallelBuilding = true;
-
-  postInstall = ''
-    moveToOutput bin "$bin"
-  '';
-
-  meta = with stdenv.lib; {
-    homepage = https://www.ece.uvic.ca/~frodo/jasper/;
-    description = "JPEG2000 Library";
-    platforms = platforms.unix;
+  
+  meta = {
+    homepage = http://www.ece.uvic.ca/~mdadams/jasper/;
+    description = "JasPer JPEG2000 Library";
   };
 }

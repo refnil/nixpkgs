@@ -15,6 +15,5 @@ stdenv.mkDerivation rec {
     description = "Ascii-art Editor Without A Name";
     homepage = "http://aewan.sourceforge.net/";
     license = stdenv.lib.licenses.gpl2Plus;
-    platforms = stdenv.lib.platforms.unix;
   };
 }

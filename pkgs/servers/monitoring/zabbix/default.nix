@@ -2,19 +2,19 @@
 
 let
 
-  version = "1.8.22";
+  version = "1.8.20";
 
   src = fetchurl {
     url = "mirror://sourceforge/zabbix/zabbix-${version}.tar.gz";
-    sha256 = "0cjj3c4j4b9sl3hgh1fck330z9q0gz2k68g227y0paal6k6f54g7";
+    sha256 = "0psdvzg5c3yhdqqmy5m1b0j3nrvcshjywhl56igy0j8vj16zxi86";
   };
 
   preConfigure =
     ''
       substituteInPlace ./configure \
         --replace " -static" "" \
-        ${stdenv.lib.optionalString (stdenv.cc.libc != null) ''
-          --replace /usr/include/iconv.h ${stdenv.lib.getDev stdenv.cc.libc}/include/iconv.h
+        ${stdenv.lib.optionalString (stdenv.gcc.libc != null) ''
+          --replace /usr/include/iconv.h ${stdenv.gcc.libc}/include/iconv.h
         ''}
     '';
 
@@ -57,12 +57,12 @@ in
 
     configureFlags = "--enable-agent";
 
-    meta = with stdenv.lib; {
+    meta = {
       description = "An enterprise-class open source distributed monitoring solution (client-side agent)";
       homepage = http://www.zabbix.com/;
-      license = licenses.gpl2;
-      maintainers = [ maintainers.eelco ];
-      platforms = platforms.linux;
+      license = "GPL";
+      maintainers = [ stdenv.lib.maintainers.eelco ];
+      platforms = stdenv.lib.platforms.linux ++ stdenv.lib.platforms.darwin;
     };
   };
 

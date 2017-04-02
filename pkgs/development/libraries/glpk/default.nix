@@ -1,11 +1,11 @@
 { fetchurl, stdenv }:
 
 stdenv.mkDerivation rec {
-  name = "glpk-4.61";
+  name = "glpk-4.52.1";
 
   src = fetchurl {
     url = "mirror://gnu/glpk/${name}.tar.gz";
-    sha256 = "1adbvwiaqrv9pql9ry3lhn2vfsxnff2vh4fs477d90kpfx0xwrlq";
+    sha256 = "0nz9ngmx23c8gbjr8l8ygnfaanxj2mwbl8awpg630bgrkxdnhc9j";
   };
 
   doCheck = true;

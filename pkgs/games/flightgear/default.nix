@@ -1,37 +1,22 @@
-{ stdenv, fetchurl, makeWrapper
+{ stdenv, fetchurl
 , freeglut, freealut, mesa, libICE, libjpeg, openal, openscenegraph, plib
 , libSM, libunwind, libX11, xproto, libXext, xextproto, libXi, inputproto
 , libXmu, libXt, simgear, zlib, boost, cmake, libpng, udev, fltk13, apr
-, makeDesktopItem, qtbase
+, makeDesktopItem
 }:
 
-let
-  version = "2016.4.4";
-  shortVersion = "2016.4";
-  data = stdenv.mkDerivation rec {
-    name = "flightgear-base-${version}";
-
-    src = fetchurl {
-      url = "mirror://sourceforge/flightgear/release-${shortVersion}/FlightGear-${version}-data.tar.bz2";
-      sha256 = "0s4nlkwi9jfc408agsl0w5xl3vajrvplc66k3nwg92wsr614pz9x";
-    };
-
-    phases = [ "installPhase" ];
-
-    installPhase = ''
-      mkdir -p "$out/share/FlightGear"
-      tar xf "${src}" -C "$out/share/FlightGear/" --strip-components=1
-    '';
-  };
-in
 stdenv.mkDerivation rec {
+  version = "3.0.0";
   name = "flightgear-${version}";
-   # inheriting data for `nix-prefetch-url -A pkgs.flightgear.data.src`
-  inherit version data;
 
   src = fetchurl {
-    url = "mirror://sourceforge/flightgear/release-${shortVersion}/${name}.tar.bz2";
-    sha256 = "1z7s9m2g85g8q9zxawhpal84rq2jin1ppchshbwi460gwk5r46fm";
+    url = "http://ftp.linux.kiev.ua/pub/fgfs/Source/${name}.tar.bz2";
+    sha256 = "1sd6ic9rrcgrqvc6ywkasj2pnmmmdv1i2rlyac2a882rh8i1kgz4";
+  };
+
+  datasrc = fetchurl {
+    url = "http://ftp.igh.cnrs.fr/pub/flightgear/ftp/Shared/FlightGear-data-${version}.tar.bz2";
+    sha256 = "0mq5hkh8zgm129mg1ij3rrk7h2xs9ijxa7d7hipjlp6mcyhlk0q4";
   };
 
   # Of all the files in the source and data archives, there doesn't seem to be
@@ -52,22 +37,21 @@ stdenv.mkDerivation rec {
   };
 
   buildInputs = [
-    makeWrapper
     freeglut freealut mesa libICE libjpeg openal openscenegraph plib
     libSM libunwind libX11 xproto libXext xextproto libXi inputproto
-    libXmu libXt simgear zlib boost cmake libpng udev fltk13 apr qtbase
+    libXmu libXt simgear zlib boost cmake libpng udev fltk13 apr
   ];
+
+  preConfigure = ''
+    export cmakeFlagsArray=(-DFG_DATA_DIR="$out/share/FlightGear/")
+  '';
 
   postInstall = ''
     mkdir -p "$out/share/applications/"
-    cp "${desktopItem}"/share/applications/* "$out/share/applications/" #*/
+    cp "${desktopItem}"/share/applications/* "$out/share/applications/"
 
-    for f in $out/bin/* #*/
-    do
-      wrapProgram $f --set FG_ROOT "${data}/share/FlightGear"
-    done
-
-
+    mkdir -p "$out/share/FlightGear"
+    tar xvf "${datasrc}" -C "$out/share/FlightGear/" --strip-components=1
   '';
 
   meta = with stdenv.lib; {

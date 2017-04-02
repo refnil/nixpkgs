@@ -66,7 +66,7 @@ in
 
       rsaKey = mkOption {
         default = null;
-        example = literalExample "/root/certificates/irc.key";
+        example = /root/certificates/irc.key;
         description = "
           IRCD server RSA key.
         ";
@@ -74,7 +74,7 @@ in
 
       certificate = mkOption {
         default = null;
-        example = literalExample "/root/certificates/irc.pem";
+        example = /root/certificates/irc.pem;
         description = "
           IRCD server SSL certificate. There are some limitations - read manual.
         ";
@@ -121,11 +121,17 @@ in
 
     users.extraGroups.ircd.gid = config.ids.gids.ircd;
 
-    systemd.services."ircd-hybrid" = {
-      description = "IRCD Hybrid server";
-      after = [ "started networking" ];
-      wantedBy = [ "multi-user.target" ];
-      script = "${ircdService}/bin/control start";
-    };
+    jobs.ircd_hybrid =
+      { name = "ircd-hybrid";
+
+        description = "IRCD Hybrid server";
+
+        startOn = "started networking";
+        stopOn = "stopping networking";
+
+        exec = "${ircdService}/bin/control start";
+      };
+
   };
+
 }

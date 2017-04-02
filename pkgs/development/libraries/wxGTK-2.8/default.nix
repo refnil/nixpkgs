@@ -1,5 +1,5 @@
-{ stdenv, fetchurl, pkgconfig, gtk2, libXinerama, libSM, libXxf86vm, xf86vidmodeproto
-, gstreamer, gst-plugins-base, GConf, libX11, cairo
+{ stdenv, fetchurl, pkgconfig, gtk, libXinerama, libSM, libXxf86vm, xf86vidmodeproto
+, gstreamer, gst_plugins_base, GConf
 , withMesa ? true, mesa ? null, compat24 ? false, compat26 ? true, unicode ? true,
 }:
 
@@ -16,12 +16,10 @@ stdenv.mkDerivation rec {
     sha256 = "1l1w4i113csv3bd5r8ybyj0qpxdq83lj6jrc5p7cc10mkwyiagqz";
   };
 
-  buildInputs = [ gtk2 libXinerama libSM libXxf86vm xf86vidmodeproto gstreamer gst-plugins-base GConf libX11 cairo ]
+  buildInputs = [ gtk libXinerama libSM libXxf86vm xf86vidmodeproto gstreamer gst_plugins_base GConf ]
     ++ optional withMesa mesa;
 
   nativeBuildInputs = [ pkgconfig ];
-
-  hardeningDisable = [ "format" ];
 
   configureFlags = [
     "--enable-gtk2"
@@ -35,13 +33,13 @@ stdenv.mkDerivation rec {
 
   # These variables are used by configure to find some dependencies.
   SEARCH_INCLUDE =
-    "${libXinerama.dev}/include ${libSM.dev}/include ${libXxf86vm.dev}/include";
+    "${libXinerama}/include ${libSM}/include ${libXxf86vm}/include";
   SEARCH_LIB =
-    "${libXinerama.out}/lib ${libSM.out}/lib ${libXxf86vm.out}/lib "
-    + optionalString withMesa "${mesa.out}/lib ";
+    "${libXinerama}/lib ${libSM}/lib ${libXxf86vm}/lib "
+    + optionalString withMesa "${mesa}/lib ";
 
   # Work around a bug in configure.
-  NIX_CFLAGS_COMPILE = [ "-DHAVE_X11_XLIB_H=1" "-lX11" "-lcairo" "-Wno-narrowing" ];
+  NIX_CFLAGS_COMPILE = "-DHAVE_X11_XLIB_H=1";
 
   preConfigure = "
     substituteInPlace configure --replace 'SEARCH_INCLUDE=' 'DUMMY_SEARCH_INCLUDE='
@@ -56,14 +54,7 @@ stdenv.mkDerivation rec {
     (cd $out/include && ln -s wx-*/* .)
   ";
 
-  passthru = {
-    inherit compat24 compat26 unicode;
-    gtk = gtk2;
-  };
+  passthru = {inherit gtk compat24 compat26 unicode;};
 
   enableParallelBuilding = true;
-  
-  meta = {
-    platforms = stdenv.lib.platforms.all;
-  };
 }

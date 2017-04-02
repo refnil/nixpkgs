@@ -1,45 +1,54 @@
-{ stdenv, fetchurl
+x@{builderDefsPackage
   , openssl, tdb, zlib, flex, bison
-  }:
+  , ...}:
+builderDefsPackage
+(a :  
 let 
-  buildInputs = [ openssl tdb zlib flex bison ];
+  helperArgNames = ["stdenv" "fetchurl" "builderDefsPackage"] ++ 
+    [];
+
+  buildInputs = map (n: builtins.getAttr n x)
+    (builtins.attrNames (builtins.removeAttrs x helperArgNames));
   sourceInfo = rec {
     baseName="fdm";
-    version = "1.8";
+    version="1.7";
     name="${baseName}-${version}";
     url="mirror://sourceforge/${baseName}/${baseName}/${name}.tar.gz";
-    sha256 = "0hi39f31ipv8f9wxb41pajvl61w6vaapl39wq8v1kl9c7q6h0k2g";
+    hash="0apg1jasn4m5j3vh0v9lr2l3lyzy35av1ylxr0wf8k0j9w4p8i28";
   };
 in
-stdenv.mkDerivation {
-  src = fetchurl {
-    inherit (sourceInfo) url sha256;
+rec {
+  src = a.fetchurl {
+    url = sourceInfo.url;
+    sha256 = sourceInfo.hash;
   };
 
   inherit (sourceInfo) name version;
   inherit buildInputs;
 
-  preBuild = ''
-    export makeFlags="$makeFlags PREFIX=$out"
-    export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE -Dbool=int"
-
+  phaseNames = ["doConfigure" "fixInstall" "doMakeInstall"];
+  makeFlags = ["PREFIX=$out"];
+  fixInstall = a.fullDepEntry (''
     sed -i */Makefile -i Makefile -e 's@ -g bin @ @'
     sed -i */Makefile -i Makefile -e 's@ -o root @ @'
     sed -i GNUmakefile -e 's@ -g $(BIN_OWNER) @ @'
     sed -i GNUmakefile -e 's@ -o $(BIN_GROUP) @ @'
     sed -i */Makefile -i Makefile -i GNUmakefile -e 's@-I-@@g'
-  '';
+  '') ["minInit" "doUnpack"];
       
   meta = {
     description = "Mail fetching and delivery tool - should do the job of getmail and procmail";
-    maintainers = with stdenv.lib.maintainers;
+    maintainers = with a.lib.maintainers;
     [
       raskin
     ];
-    platforms = with stdenv.lib.platforms;
+    platforms = with a.lib.platforms;
       linux;
-    homepage = "http://fdm.sourceforge.net/";
-    inherit (sourceInfo) version;
-    updateWalker = true;
   };
-}
+  passthru = {
+    updateInfo = {
+      downloadPage = "http://fdm.sourceforge.net/";
+    };
+  };
+}) x
+

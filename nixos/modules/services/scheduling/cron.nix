@@ -4,6 +4,8 @@ with lib;
 
 let
 
+  inherit (config.services) jobsTags;
+
   # Put all the system cronjobs together.
   systemCronJobsFile = pkgs.writeText "system-crontab"
     ''
@@ -20,12 +22,8 @@ let
   cronNixosPkg = pkgs.cron.override {
     # The mail.nix nixos module, if there is any local mail system enabled,
     # should have sendmail in this path.
-    sendmailPath = "/run/wrappers/bin/sendmail";
+    sendmailPath = "/var/setuid-wrappers/sendmail";
   };
-
-  allFiles =
-    optional (config.services.cron.systemCronJobs != []) systemCronJobsFile
-    ++ config.services.cron.cronFiles;
 
 in
 
@@ -39,7 +37,7 @@ in
 
       enable = mkOption {
         type = types.bool;
-        default = false;
+        default = true;
         description = "Whether to enable the Vixie cron daemon.";
       };
 
@@ -61,7 +59,7 @@ in
           A list of Cron jobs to be appended to the system-wide
           crontab.  See the manual page for crontab for the expected
           format. If you want to get the results mailed you must setuid
-          sendmail. See <option>security.wrappers</option>
+          sendmail. See <option>security.setuidOwners</option>
 
           If neither /var/cron/cron.deny nor /var/cron/cron.allow exist only root
           will is allowed to have its own crontab file. The /var/cron/cron.deny file
@@ -73,15 +71,6 @@ in
         '';
       };
 
-      cronFiles = mkOption {
-        type = types.listOf types.path;
-        default = [];
-        description = ''
-          A list of extra crontab files that will be read and appended to the main
-          crontab file when the cron service starts.
-        '';
-      };
-
     };
 
   };
@@ -89,45 +78,40 @@ in
 
   ###### implementation
 
-  config = mkMerge [
+  config = mkIf config.services.cron.enable {
 
-    { services.cron.enable = mkDefault (allFiles != []); }
-    (mkIf (config.services.cron.enable) {
-      security.wrappers.crontab.source = "${cronNixosPkg}/bin/crontab";
-      environment.systemPackages = [ cronNixosPkg ];
-      environment.etc.crontab =
-        { source = pkgs.runCommand "crontabs" { inherit allFiles; preferLocalBuild = true; }
-            ''
-              touch $out
-              for i in $allFiles; do
-                cat "$i" >> $out
-              done
-            '';
-          mode = "0600"; # Cron requires this.
-        };
+    environment.etc = singleton
+      # The system-wide crontab.
+      { source = systemCronJobsFile;
+        target = "crontab";
+        mode = "0600"; # Cron requires this.
+      };
 
-      systemd.services.cron =
-        { description = "Cron Daemon";
+    security.setuidPrograms = [ "crontab" ];
 
-          wantedBy = [ "multi-user.target" ];
+    environment.systemPackages = [ cronNixosPkg ];
 
-          preStart =
-            ''
-              mkdir -m 710 -p /var/cron
+    jobs.cron =
+      { description = "Cron Daemon";
 
-              # By default, allow all users to create a crontab.  This
-              # is denoted by the existence of an empty cron.deny file.
-              if ! test -e /var/cron/cron.allow -o -e /var/cron/cron.deny; then
-                  touch /var/cron/cron.deny
-              fi
-            '';
+        startOn = "startup";
 
-          restartTriggers = [ config.environment.etc.localtime.source ];
-          serviceConfig.ExecStart = "${cronNixosPkg}/bin/cron -n";
-        };
+        path = [ cronNixosPkg ];
 
-    })
+        preStart =
+          ''
+            mkdir -m 710 -p /var/cron
 
-  ];
+            # By default, allow all users to create a crontab.  This
+            # is denoted by the existence of an empty cron.deny file.
+            if ! test -e /var/cron/cron.allow -o -e /var/cron/cron.deny; then
+                touch /var/cron/cron.deny
+            fi
+          '';
+
+        exec = "cron -n";
+      };
+
+  };
 
 }

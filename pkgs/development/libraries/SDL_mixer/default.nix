@@ -1,4 +1,4 @@
-{ stdenv, lib, fetchurl, SDL, libogg, libvorbis, smpeg, enableNativeMidi ? false, fluidsynth ? null }:
+{ stdenv, fetchurl, SDL, libogg, libvorbis, enableNativeMidi ? false }:
 
 stdenv.mkDerivation rec {
   pname   = "SDL_mixer";
@@ -10,9 +10,11 @@ stdenv.mkDerivation rec {
     sha256 = "0alrhqgm40p4c92s26mimg9cm1y7rzr6m0p49687jxd9g6130i0n";
   };
 
-  buildInputs = [ SDL libogg libvorbis fluidsynth smpeg ];
+  buildInputs = [SDL libogg libvorbis];
 
-  configureFlags = [ "--disable-music-ogg-shared" ] ++ lib.optional enableNativeMidi " --enable-music-native-midi-gpl";
+  configureFlags = "--disable-music-ogg-shared" + stdenv.lib.optionalString enableNativeMidi "--enable-music-native-midi-gpl";
+
+  postInstall = "ln -s $out/include/SDL/SDL_mixer.h $out/include/";
 
   meta = with stdenv.lib; {
     description = "SDL multi-channel audio mixer library";

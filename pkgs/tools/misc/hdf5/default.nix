@@ -1,49 +1,25 @@
+
 { stdenv
 , fetchurl
-, cpp ? false
-, gfortran ? null
 , zlib ? null
 , szip ? null
-, mpi ? null
-, enableShared ? true
 }:
-
-# cpp and mpi options are mutually exclusive
-# (--enable-unsupported could be used to force the build)
-assert !cpp || mpi == null;
-
-let inherit (stdenv.lib) optional optionals; in
-
 stdenv.mkDerivation rec {
-  version = "1.8.18";
-  name = "hdf5-${version}";
+  version = "1.8.13";
+  name = "hdf5-${version}-patch1";
   src = fetchurl {
-    url = "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8/${name}/src/${name}.tar.bz2";
-    sha256 = "13542vrnl1p35n8vbq0wzk40vddmm33q5nh04j98c7r1yjnxxih1";
- };
-
-  passthru = {
-    mpiSupport = (mpi != null);
-    inherit mpi;
+    url = "http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-${version}.tar.gz";
+    sha256 = "1h9qdl321gzm3ihdhlijbl9sh9qcdrw94j7izg64yfqhxj7b7xl2";  			
   };
 
   buildInputs = []
-    ++ optional (gfortran != null) gfortran
-    ++ optional (szip != null) szip;
+    ++ stdenv.lib.optional (zlib != null) zlib
+    ++ stdenv.lib.optional (szip != null) szip;
 
-  propagatedBuildInputs = []
-    ++ optional (zlib != null) zlib
-    ++ optional (mpi != null) mpi;
-
-  configureFlags = []
-    ++ optional cpp "--enable-cxx"
-    ++ optional (gfortran != null) "--enable-fortran"
-    ++ optional (szip != null) "--with-szlib=${szip}"
-    ++ optionals (mpi != null) ["--enable-parallel" "CC=${mpi}/bin/mpicc"]
-    ++ optional enableShared "--enable-shared";
-
+  configureFlags = if szip != null then "--with-szlib=${szip}" else "";
+  
   patches = [./bin-mv.patch];
-
+  
   meta = {
     description = "Data model, library, and file format for storing and managing data";
     longDescription = ''
@@ -53,6 +29,5 @@ stdenv.mkDerivation rec {
       applications for managing, manipulating, viewing, and analyzing data in the HDF5 format.
     '';
     homepage = http://www.hdfgroup.org/HDF5/;
-    platforms = stdenv.lib.platforms.unix;
   };
 }

@@ -32,7 +32,7 @@ rec {
     } // args);
 
   clangAnalysis = args: nixBuild (
-    { inherit clang-analyzer;
+    { inherit clangAnalyzer;
       doClangAnalysis = true;
     } // args);
 

@@ -16,7 +16,7 @@ stdenv.mkDerivation rec {
     homepage = http://www.pps.jussieu.fr/~jch/software/polipo/;
     description = "A small and fast caching web proxy";
     license = licenses.mit;
-    maintainers = with maintainers; [ phreedom ehmry ];
+    maintainers = with maintainers; [ phreedom emery ];
     platforms = platforms.all;
   };
 }

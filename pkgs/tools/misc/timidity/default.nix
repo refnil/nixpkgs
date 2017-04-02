@@ -1,19 +1,47 @@
-{ stdenv, fetchurl, alsaLib, libjack2, ncurses, pkgconfig }:
+{ composableDerivation, stdenv, fetchurl, alsaLib, jack2, ncurses }:
 
-stdenv.mkDerivation {
-  name = "timidity-2.14.0";
+let inherit (composableDerivation) edf; in
+
+composableDerivation.composableDerivation {} {
+
+  name = "timidity-2.13.0";
 
   src = fetchurl {
-    url = mirror://sourceforge/timidity/TiMidity++-2.14.0.tar.bz2;
-    sha256 = "0xk41w4qbk23z1fvqdyfblbz10mmxsllw0svxzjw5sa9y11vczzr";
+    url = mirror://sourceforge/timidity/TiMidity++-2.13.0.tar.bz2;
+    sha256 = "1jbmk0m375fh5nj2awqzns7pdjbi7dxpjdwcix04zipfcilppbmf";
   };
 
-  nativeBuildInputs = [ pkgconfig ];
-  buildInputs = [ alsaLib libjack2 ncurses ];
+  mergeAttrBy.audioModes = a : b : "${a},${b}";
 
-  configureFlags = [ "--enable-audio=oss,alsa,jack" "--enable-alsaseq" "--with-default-output=alsa" "--enable-ncurses" ];
+  preConfigure = ''
+    configureFlags="$configureFlags --enable-audio=$audioModes"
+  '';
 
-  NIX_LDFLAGS = ["-ljack -L${libjack2}/lib"];
+  # configure still has many more options...
+  flags = {
+    oss = {
+      audioModes = "oss";
+    };
+    alsa = {
+      audioModes = "alsa";
+      buildInputs = [alsaLib];
+      # this is better than /dev/dsp !
+      configureFlags = ["--with-default-output-mode=alsa"];
+    };
+    jack = {
+      audioModes = "jack";
+      buildInputs = [jack2];
+      NIX_LDFLAGS = ["-ljack -L${jack2}/lib64"];
+    };
+  } // edf { name = "ncurses"; enable = { buildInputs = [ncurses]; };};
+
+  cfg = {
+    ncursesSupport = true;
+
+    ossSupport = true;
+    alsaSupport = true;
+    jackSupport = true;
+  };
 
   instruments = fetchurl {
     url = http://www.csee.umbc.edu/pub/midia/instruments.tar.gz;
@@ -27,11 +55,8 @@ stdenv.mkDerivation {
     tar --strip-components=1 -xf $instruments -C $out/share/timidity/
   '';
 
-  meta = with stdenv.lib; {
-    homepage = http://sourceforge.net/projects/timidity/;
-    license = licenses.gpl2;
+  meta = {
     description = "A software MIDI renderer";
-    maintainers = [ maintainers.marcweber ];
-    platforms = platforms.linux;
+    maintainers = [ stdenv.lib.maintainers.marcweber ];
   };
 }

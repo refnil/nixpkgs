@@ -169,27 +169,22 @@ in {
         type = types.bool;
         default = false;
         description = ''
-          Whether to enable the Bacula File Daemon.
+          Whether to enable Bacula File Daemon.
         '';
       };
  
       name = mkOption {
         default = "${config.networking.hostName}-fd";
         description = ''
-          The client name that must be used by the Director when connecting.
-          Generally, it is a good idea to use a name related to the machine
-          so that error messages can be easily identified if you have multiple
-          Clients. This directive is required.
+        	The client name that must be used by the Director when connecting. Generally, it is a good idea to use a name related to the machine so that error messages can be easily identified if you have multiple Clients. This directive is required.
         '';
       };
  
       port = mkOption {
         default = 9102;
-        type = types.int;
+        type = types.uniq types.int;
         description = ''
-          This specifies the port number on which the Client listens for
-          Director connections. It must agree with the FDPort specified in
-          the Client resource of the Director's configuration file.
+        	This specifies the port number on which the Client listens for Director connections. It must agree with the FDPort specified in the Client resource of the Director's configuration file. The default is 9102.
         '';
       };
  
@@ -198,7 +193,8 @@ in {
         description = ''
           This option defines director resources in Bacula File Daemon.
         '';
-        type = with types; attrsOf (submodule directorOptions);
+        type = types.attrsOf types.optionSet;
+        options = [ directorOptions ];
       };
 
       extraClientConfig = mkOption {
@@ -241,7 +237,7 @@ in {
  
       port = mkOption {
         default = 9103;
-        type = types.int;
+        type = types.uniq types.int;
         description = ''
           Specifies port number on which the Storage daemon listens for Director connections. The default is 9103.
         '';
@@ -252,7 +248,8 @@ in {
         description = ''
           This option defines Director resources in Bacula Storage Daemon.
         '';
-        type = with types; attrsOf (submodule directorOptions);
+        type = types.attrsOf types.optionSet;
+        options = [ directorOptions ];
       };
 
       device = mkOption {
@@ -260,7 +257,8 @@ in {
         description = ''
           This option defines Device resources in Bacula Storage Daemon.
         '';
-        type = with types; attrsOf (submodule deviceOptions);
+        type = types.attrsOf types.optionSet;
+        options = [ deviceOptions ];
       };
  
       extraStorageConfig = mkOption {
@@ -304,7 +302,7 @@ in {
  
       port = mkOption {
         default = 9101;
-        type = types.int;
+        type = types.uniq types.int;
         description = ''
           Specify the port (a positive integer) on which the Director daemon will listen for Bacula Console connections. This same port number must be specified in the Director resource of the Console configuration file. The default is 9101, so normally this directive need not be specified. This directive should not be used if you specify DirAddresses (N.B plural) directive.
         '';
@@ -340,7 +338,6 @@ in {
 
       extraConfig = mkOption {
         default = "";
-        type = types.lines;
         description = ''
           Extra configuration for Bacula Director Daemon.
         '';

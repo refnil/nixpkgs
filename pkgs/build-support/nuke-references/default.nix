@@ -3,10 +3,9 @@
 # path (/nix/store/eeee...).  This is useful for getting rid of
 # dependencies that you know are not actually needed at runtime.
 
-{ stdenv, perl }:
+{stdenv}:
 
 stdenv.mkDerivation {
   name = "nuke-references";
   builder = ./builder.sh;
-  inherit perl;
 }

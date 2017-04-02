@@ -1,43 +1,26 @@
 { fetchurl, stdenv, guile, guile_lib, gwrap
-, pkgconfig, gconf, glib, gnome_vfs, gtk2
-, libglade, libgnome, libgnomecanvas, libgnomeui
-, pango, guileCairo, autoconf, automake, texinfo }:
+, pkgconfig, gconf, glib, gnome_vfs, gtk
+, libglade, libgnome, libgnomecanvas, libgnomeui, pango, guileCairo }:
 
 stdenv.mkDerivation rec {
-  name = "guile-gnome-platform-2.16.4";
+  name = "guile-gnome-platform-2.16.1";
 
   src = fetchurl {
-    url = "http://ftp.gnu.org/pub/gnu/guile-gnome/guile-gnome-platform/${name}.tar.gz";
-    sha256 = "adabd48ed5993d8528fd604e0aa0d96ad81a61d06da6cdd68323572ad6c216c3";
+    url = "mirror://gnu/guile-gnome/guile-gnome-platform/${name}.tar.gz";
+    sha256 = "0yy5f4c78jlakxi2bwgh3knc2szw26hg68xikyaza2iim39mc22c";
   };
 
-  buildInputs = [
-    autoconf
-    automake
-    texinfo
-    guile
-    gwrap
-    pkgconfig
-    gconf
-    glib
-    gnome_vfs
-    gtk2
-    libglade
-    libgnome
-    libgnomecanvas
-    libgnomeui
-    pango
-    guileCairo
-  ] ++ stdenv.lib.optional doCheck guile_lib;
-
-  preConfigure = ''
-      ./autogen.sh
-  '';
+  buildInputs =
+    [ guile gwrap
+      pkgconfig gconf glib gnome_vfs gtk libglade libgnome libgnomecanvas
+      libgnomeui pango guileCairo
+    ]
+    ++ stdenv.lib.optional doCheck guile_lib;
 
   # The test suite tries to open an X display, which fails.
   doCheck = false;
 
-  meta = with stdenv.lib; {
+  meta = {
     description = "GNOME bindings for GNU Guile";
 
     longDescription =
@@ -50,9 +33,8 @@ stdenv.mkDerivation rec {
 
     homepage = http://www.gnu.org/software/guile-gnome/;
 
-    license = licenses.gpl2Plus;
+    license = stdenv.lib.licenses.gpl2Plus;
 
-    maintainers = with maintainers; [ taktoa amiloradovsky ];
-    platforms = with platforms; linux;
+    maintainers = [ stdenv.lib.maintainers.ludo ];
   };
 }

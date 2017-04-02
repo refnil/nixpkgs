@@ -1,20 +1,18 @@
-{ stdenv, fetchurl, pkgconfig, xorg, libvdpau }:
+{ stdenv, fetchurl, pkgconfig, xlibs, libvdpau }:
 
 stdenv.mkDerivation rec {
-  name = "vdpauinfo-1.0";
+  name = "vdpauinfo-0.1";
 
   src = fetchurl {
     url = "http://people.freedesktop.org/~aplattner/vdpau/${name}.tar.gz";
-    sha256 = "1i2b0k9h8r0lnxlrkgqzmrjakgaw3f1ygqqwzx8w6676g85rcm20";
+    sha256 = "17q1spsrd5i4jzhpacbs0bb4blf74j8s45rpg0znyc1yjfk5dj5h";
   };
 
-  buildInputs = [ pkgconfig libvdpau ];
+  buildInputs = [ pkgconfig xlibs.libX11 libvdpau ];
 
-  meta = with stdenv.lib; {
+  meta = {
     homepage = http://people.freedesktop.org/~aplattner/vdpau/;
     description = "Tool to query the Video Decode and Presentation API for Unix (VDPAU) abilities of the system";
-    license = licenses.mit; # expat version
-    platforms = platforms.unix;
-    maintainers = [ maintainers.vcunat ];
+    license = "bsd";
   };
 }

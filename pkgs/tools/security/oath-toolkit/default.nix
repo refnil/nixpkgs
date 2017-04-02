@@ -1,24 +1,18 @@
-{ stdenv, fetchurl, pam, xmlsec }:
+{ stdenv, fetchurl, pam }:
 
-let
-  securityDependency =
-    if stdenv.isDarwin then xmlsec
-    else pam;
-in
 stdenv.mkDerivation rec {
-  name = "oath-toolkit-2.6.1";
+  name = "oath-toolkit-2.0.2";
 
   src = fetchurl {
     url = "mirror://savannah/oath-toolkit/${name}.tar.gz";
-    sha256 = "0ybg0gnddmhxga0jwdipyz8jv5mxs0kiiflhvzffl9mw0wcq6mww";
+    sha256 = "0i2rf5j83kb8h3sd9lsm0a46zq805kzagvccc4rk7879lg1fnl99";
   };
 
-  
-  buildInputs = [ securityDependency ];
+  buildInputs = [ pam ];
 
   meta = {
     homepage = http://www.nongnu.org/oath-toolkit/;
     description = "Components for building one-time password authentication systems";
-    platforms = with stdenv.lib.platforms; linux ++ darwin;
+    platforms = stdenv.lib.platforms.linux;
   };
 }

@@ -28,7 +28,6 @@ stdenv.mkDerivation rec {
       and more.
     '';
 
-    license = stdenv.lib.licenses.gpl2Plus;
-    platforms = stdenv.lib.platforms.all;
+    license = "GPLv2+";
   };
 }

@@ -1,66 +1,72 @@
-{stdenv, fetchurl, ocaml, zlib, which, eprover, makeWrapper, coq}:
-stdenv.mkDerivation rec {
-  name = "satallax-${version}";
-  version = "2.7";
+x@{builderDefsPackage
+  , sbcl, zlib
+  , ...}:
+builderDefsPackage
+(a :  
+let 
+  helperArgNames = ["stdenv" "fetchurl" "builderDefsPackage"] ++ 
+    [];
 
-  buildInputs = [ocaml zlib which eprover makeWrapper coq];
-  src = fetchurl {
-    url = "http://www.ps.uni-saarland.de/~cebrown/satallax/downloads/${name}.tar.gz";
-    sha256 = "1kvxn8mc35igk4vigi5cp7w3wpxk2z3bgwllfm4n3h2jfs0vkpib";
+  buildInputs = map (n: builtins.getAttr n x)
+    (builtins.attrNames (builtins.removeAttrs x helperArgNames));
+  sourceInfo = rec {
+    baseName="satallax";
+    version="1.4";
+    name="${baseName}-${version}";
+    url="http://www.ps.uni-saarland.de/~cebrown/satallax/downloads/${name}.tar.gz";
+    hash="0l8dq4nyfw2bdsyqmgb4v6fjw3739p8nqv4bh2gh2924ibzrq5fc";
+  };
+in
+rec {
+  src = a.fetchurl {
+    url = sourceInfo.url;
+    sha256 = sourceInfo.hash;
   };
 
-  preConfigure = ''
-    mkdir fake-tools
-    echo "echo 'Nix-build-host.localdomain'" > fake-tools/hostname
-    chmod a+x fake-tools/hostname
-    export PATH="$PATH:$PWD/fake-tools"
+  inherit (sourceInfo) name version;
+  inherit buildInputs;
 
+  phaseNames = ["doDeployMinisat" "doDeploy"];
+
+  doDeployMinisat = a.fullDepEntry (''
     (
-      cd picosat-*
-      ./configure
+      cd minisat/simp
       make
     )
-    export PATH="$PATH:$PWD/libexec/satallax"
 
-    mkdir -p "$out/libexec/satallax"
-    cp picosat-*/picosat picosat-*/picomus "$out/libexec/satallax"
+    mkdir -p "$out/bin"
+    cp minisat/simp/minisat "$out/bin"
 
-    ( 
-      cd minisat
-      export MROOT=$PWD
-      cd core
-      make
-      cd ../simp
-      make
-    )
-  '';
+    echo "(setq *minisat-binary* \"$out/bin/minisat\")" > config.lisp
 
-  postBuild = "echo testing; ! (bash ./test | grep ERROR)";
+  '') ["defEnsureDir" "minInit" "addInputs" "doUnpack"];
+  doDeploy = a.fullDepEntry (''
+    mkdir -p "$out/share/satallax/build-dir"
+    cp -r * "$out/share/satallax/build-dir"
+    cd  "$out/share/satallax/build-dir"
 
-  installPhase = ''
-    mkdir -p "$out/share/doc/satallax" "$out/bin" "$out/lib" "$out/lib/satallax"
-    cp bin/satallax.opt "$out/bin/satallax"
-    wrapProgram "$out/bin/satallax" \
-      --suffix PATH : "${stdenv.lib.makeBinPath [ coq eprover ]}:$out/libexec/satallax" \
-      --add-flags "-M" --add-flags "$out/lib/satallax/modes"
-
-    cp LICENSE README "$out/share/doc/satallax"
-
-    cp bin/*.so "$out/lib"
-
-    cp -r modes "$out/lib/satallax/"
-    cp -r problems "$out/lib/satallax/"
-    cp -r coq* "$out/lib/satallax/"
-  '';
-
+    sbcl --load make.lisp
+    ! ( ./test | grep ERROR )
+    
+    mkdir -p "$out/bin"
+    cp bin/satallax "$out/bin"
+  '') ["defEnsureDir" "minInit" "addInputs" "doUnpack"];
+      
   meta = {
-    inherit version;
-    description = ''Automated theorem prover for higher-order logic'';
-    license = stdenv.lib.licenses.mit ;
-    maintainers = [stdenv.lib.maintainers.raskin];
-    platforms = stdenv.lib.platforms.linux;
-    downloadPage = "http://www.ps.uni-saarland.de/~cebrown/satallax/downloads.php";
-    homepage = "http://www.ps.uni-saarland.de/~cebrown/satallax/index.php";
-    updateWalker = true;
+    description = "A higher-order logic prover";
+    maintainers = with a.lib.maintainers;
+    [
+      raskin
+    ];
+    platforms = with a.lib.platforms;
+      unix;
+    license = "free-noncopyleft";
+    homepage = "http://www.ps.uni-saarland.de/~cebrown/satallax/";
   };
-}
+  passthru = {
+    updateInfo = {
+      downloadPage = "http://www.ps.uni-saarland.de/~cebrown/satallax/";
+    };
+  };
+}) x
+

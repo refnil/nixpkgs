@@ -1,47 +1,31 @@
-{ stdenv, fetchFromGitHub, perl, icmake, utillinux }:
+# This package is only used to create the documentation of zsh-cvs
+# eg have a look at http://www.zsh.org/mla/users/2008/msg00715.html
+# latest release is newer though
 
-stdenv.mkDerivation rec {
-  name = "yodl-${version}";
-  version = "3.08.02";
+{ stdenv, fetchurl, perl }:
 
-  nativeBuildInputs = [ icmake ];
+stdenv.mkDerivation {
+  name = "yodl-2.14.3";
 
   buildInputs = [ perl ];
 
-  src = fetchFromGitHub {
-    sha256 = "0z4pjrl4bq03fxc50c9h0bnc90vqn5c2dy830mjyzjrn1ms3i003";
-    rev = version;
-    repo = "yodl";
-    owner = "fbb-git";
+  src = fetchurl {
+    url = "mirror://sourceforge/yodl/yodl_2.14.3.orig.tar.gz";
+    sha256 = "0paypm76p34hap3d18vvks5rrilchcw6q56rvq6pjf9raqw8ynd4";
   };
+  
+  patches =
+    [ (fetchurl {
+        url = "mirror://sourceforge/yodl/yodl_2.14.3-1.diff.gz";
+        sha256 = "176hlbiidv7p9051f04anzj4sr9dwlp9439f9mjvvgks47ac0qx4";
+      })
+    ];
 
-  sourceRoot = "yodl-${version}-src/yodl";
-
-  preConfigure = ''
-    patchShebangs ./build
-    patchShebangs scripts/
-    substituteInPlace INSTALL.im --replace /usr $out
-    substituteInPlace macros/rawmacros/startdoc.pl --replace /usr/bin/perl ${perl}/bin/perl
-    substituteInPlace scripts/yodl2whatever.in --replace getopt ${utillinux}/bin/getopt
-  '';
-
-  buildPhase = ''
-    ./build programs
-    ./build macros
-    ./build man
-  '';
-
+  # This doesn't isntall docs yet, do you need them?
   installPhase = ''
-    ./build install programs
-    ./build install macros
-    ./build install man
+    # -> $out
+    sed -i "s@'/usr/@'$out/@" contrib/build.pl
+    perl contrib/build.pl make-software
+    perl contrib/build.pl install-software
   '';
-
-  meta = with stdenv.lib; {
-    description = "A package that implements a pre-document language and tools to process it";
-    homepage = https://fbb-git.github.io/yodl/;
-    license = licenses.gpl3;
-    maintainers = with maintainers; [ nckx pSub ];
-    platforms = platforms.linux;
-  };
 }

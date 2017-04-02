@@ -10,4 +10,4 @@ addPkgToClassPath () {
     done
 }
 
-envHooks+=(addPkgToClassPath)
+envHooks=(''${envHooks[@]} addPkgToClassPath)

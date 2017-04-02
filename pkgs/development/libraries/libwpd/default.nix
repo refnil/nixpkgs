@@ -1,21 +1,14 @@
-{ stdenv, fetchurl, zlib, pkgconfig, glib, libgsf, libxml2, librevenge }:
+{ stdenv, fetchurl, zlib, pkgconfig, glib, libgsf, libxml2 }:
 
 stdenv.mkDerivation rec {
-  name = "libwpd-0.10.0";
+  name = "libwpd-0.9.9";
   
   src = fetchurl {
     url = "mirror://sourceforge/libwpd/${name}.tar.xz";
-    sha256 = "0b6krzr6kxzm89g6bapn805kdayq70hn16n5b5wfs2lwrf0ag2wx";
+    sha256 = "1cn2z89yzsz8k6xjl02jdfhm0pkarw3yxj9ijnz5dx7h1v5g87dr";
   };
   
-  buildInputs = [ glib libgsf libxml2 zlib librevenge ];
+  buildInputs = [ glib libgsf libxml2 zlib ];
 
   nativeBuildInputs = [ pkgconfig ];
-
-  meta = with stdenv.lib; {
-    description = "A library for importing and exporting WordPerfect documents";
-    homepage = http://libwpd.sourceforge.net/;
-    license = licenses.lgpl21;
-    platforms = platforms.unix;
-  };
 }

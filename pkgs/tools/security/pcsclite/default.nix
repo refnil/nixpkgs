@@ -1,42 +1,30 @@
-{ stdenv, fetchurl, pkgconfig, udev, dbus_libs, perl, python2
-, IOKit ? null }:
+{ stdenv, fetchurl, pkgconfig, udev, dbus_libs, perl }:
 
 stdenv.mkDerivation rec {
+  version = "1.8.11";
   name = "pcsclite-${version}";
-  version = "1.8.20";
 
   src = fetchurl {
-    # This URL changes in unpredictable ways, so it is not sensicle
-    # to put a version variable in there.
-    url = "https://alioth.debian.org/frs/download.php/file/4203/pcsc-lite-1.8.20.tar.bz2";
-    sha256 = "1ckb0jf4n585a4j26va3jm2nrv3c1y38974514f8qy3c04a02zgc";
+    url = "https://alioth.debian.org/frs/download.php/file/3991/pcsc-lite-${version}.tar.bz2";
+    sha256 = "945041c94c53959ae5a767616a4ec5099fe67f549bfd344e8bd0cfe7a3c71ac6";
   };
 
-  patches = [ ./no-dropdir-literals.patch ];
-
+  # The OS should care on preparing the drivers into this location
   configureFlags = [
-    # The OS should care on preparing the drivers into this location
     "--enable-usbdropdir=/var/lib/pcsc/drivers"
-    "--enable-confdir=/etc"
-    "--enable-ipcdir=/run/pcscd"
-  ] ++ stdenv.lib.optional stdenv.isLinux
-         "--with-systemdsystemunitdir=\${out}/etc/systemd/system";
+    "--with-systemdsystemunitdir=$out/etc/systemd/system"
+    "--enable-confdir=$out/etc"
+  ];
 
-  postConfigure = ''
-    sed -i -re '/^#define *PCSCLITE_HP_DROPDIR */ {
-      s/(DROPDIR *)(.*)/\1(getenv("PCSCLITE_HP_DROPDIR") ? : \2)/
-    }' config.h
-  '';
+  buildInputs = [ udev dbus_libs perl ];
 
-  nativeBuildInputs = [ pkgconfig perl python2 ];
-  buildInputs = stdenv.lib.optionals stdenv.isLinux [ udev dbus_libs ]
-             ++ stdenv.lib.optionals stdenv.isDarwin [ IOKit ];
+  nativeBuildInputs = [ pkgconfig ];
 
   meta = with stdenv.lib; {
     description = "Middleware to access a smart card using SCard API (PC/SC)";
     homepage = http://pcsclite.alioth.debian.org/;
     license = licenses.bsd3;
-    maintainers = with maintainers; [ viric wkennington ];
-    platforms = with platforms; unix;
+    maintainers = with maintainers; [viric];
+    platforms = with platforms; linux;
   };
 }

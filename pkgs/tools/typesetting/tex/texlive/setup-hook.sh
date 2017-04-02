@@ -4,4 +4,4 @@ addTeXMFPath () {
     fi
 }
 
-envHooks+=(addTeXMFPath)
+envHooks=(${envHooks[@]} addTeXMFPath)

@@ -1,108 +1,17 @@
-set -e
-set -o pipefail
-
-: ${outputs:=out}
-
-
-######################################################################
-# Hook handling.
-
-
-# Run all hooks with the specified name in the order in which they
-# were added, stopping if any fails (returns a non-zero exit
-# code). The hooks for <hookName> are the shell function or variable
-# <hookName>, and the values of the shell array ‘<hookName>Hooks’.
+# Run the named hook, either by calling the function with that name or
+# by evaluating the variable with that name.  This allows convenient
+# setting of hooks both from Nix expressions (as attributes /
+# environment variables) and from shell scripts (as functions).
 runHook() {
     local hookName="$1"
-    shift
-    local var="$hookName"
-    if [[ "$hookName" =~ Hook$ ]]; then var+=s; else var+=Hooks; fi
-    eval "local -a dummy=(\"\${$var[@]}\")"
-    for hook in "_callImplicitHook 0 $hookName" "${dummy[@]}"; do
-        _eval "$hook" "$@"
-    done
-    return 0
-}
-
-
-# Run all hooks with the specified name, until one succeeds (returns a
-# zero exit code). If none succeed, return a non-zero exit code.
-runOneHook() {
-    local hookName="$1"
-    shift
-    local var="$hookName"
-    if [[ "$hookName" =~ Hook$ ]]; then var+=s; else var+=Hooks; fi
-    eval "local -a dummy=(\"\${$var[@]}\")"
-    for hook in "_callImplicitHook 1 $hookName" "${dummy[@]}"; do
-        if _eval "$hook" "$@"; then
-            return 0
-        fi
-    done
-    return 1
-}
-
-
-# Run the named hook, either by calling the function with that name or
-# by evaluating the variable with that name. This allows convenient
-# setting of hooks both from Nix expressions (as attributes /
-# environment variables) and from shell scripts (as functions). If you
-# want to allow multiple hooks, use runHook instead.
-_callImplicitHook() {
-    local def="$1"
-    local hookName="$2"
     case "$(type -t $hookName)" in
         (function|alias|builtin) $hookName;;
         (file) source $hookName;;
         (keyword) :;;
-        (*) if [ -z "${!hookName}" ]; then return "$def"; else eval "${!hookName}"; fi;;
+        (*) eval "${!hookName}";;
     esac
 }
 
-
-# A function wrapper around ‘eval’ that ensures that ‘return’ inside
-# hooks exits the hook, not the caller.
-_eval() {
-    local code="$1"
-    shift
-    if [ "$(type -t $code)" = function ]; then
-        eval "$code \"\$@\""
-    else
-        eval "$code"
-    fi
-}
-
-
-######################################################################
-# Logging.
-
-nestingLevel=0
-
-startNest() {
-    nestingLevel=$(($nestingLevel + 1))
-    echo -en "\033[$1p"
-}
-
-stopNest() {
-    nestingLevel=$(($nestingLevel - 1))
-    echo -en "\033[q"
-}
-
-header() {
-    startNest "$2"
-    echo "$1"
-}
-
-# Make sure that even when we exit abnormally, the original nesting
-# level is properly restored.
-closeNest() {
-    while [ $nestingLevel -gt 0 ]; do
-        stopNest
-    done
-}
-
-
-######################################################################
-# Error handling.
 
 exitHandler() {
     exitCode=$?
@@ -126,12 +35,12 @@ exitHandler() {
 
         # If the builder had a non-zero exit code and
         # $succeedOnFailure is set, create the file
-        # ‘$out/nix-support/failed’ to signal failure, and exit
+        # `$out/nix-support/failed' to signal failure, and exit
         # normally.  Otherwise, return the original exit code.
         if [ -n "$succeedOnFailure" ]; then
             echo "build failed with exit code $exitCode (ignored)"
             mkdir -p "$out/nix-support"
-            printf "%s" $exitCode > "$out/nix-support/failed"
+            echo -n $exitCode > "$out/nix-support/failed"
             exit 0
         fi
 
@@ -146,7 +55,7 @@ trap "exitHandler" EXIT
 
 
 ######################################################################
-# Helper functions.
+# Helper functions that might be useful in setup hooks.
 
 
 addToSearchPathWithCustomDelimiter() {
@@ -165,51 +74,12 @@ addToSearchPath() {
 }
 
 
-ensureDir() {
-    echo "warning: ‘ensureDir’ is deprecated; use ‘mkdir’ instead" >&2
-    local dir
-    for dir in "$@"; do
-        if ! [ -x "$dir" ]; then mkdir -p "$dir"; fi
-    done
-}
-
-
-# Add $1/lib* into rpaths.
-# The function is used in multiple-outputs.sh hook,
-# so it is defined here but tried after the hook.
-_addRpathPrefix() {
-    if [ "$NIX_NO_SELF_RPATH" != 1 ]; then
-        export NIX_LDFLAGS="-rpath $1/lib $NIX_LDFLAGS"
-        if [ -n "$NIX_LIB64_IN_SELF_RPATH" ]; then
-            export NIX_LDFLAGS="-rpath $1/lib64 $NIX_LDFLAGS"
-        fi
-        if [ -n "$NIX_LIB32_IN_SELF_RPATH" ]; then
-            export NIX_LDFLAGS="-rpath $1/lib32 $NIX_LDFLAGS"
-        fi
-    fi
-}
-
-# Return success if the specified file is an ELF object.
-isELF() {
-    local fn="$1"
-    local magic
-    exec {fd}< "$fn"
-    read -n 4 -u $fd magic
-    exec {fd}<&-
-    if [[ "$magic" =~ ELF ]]; then return 0; else return 1; fi
-}
-
-
 ######################################################################
 # Initialisation.
 
+set -e
 
-# Set a fallback default value for SOURCE_DATE_EPOCH, used by some
-# build tools to provide a deterministic substitute for the "current"
-# time. Note that 1 = 1970-01-01 00:00:01. We don't use 0 because it
-# confuses some applications.
-export SOURCE_DATE_EPOCH
-: ${SOURCE_DATE_EPOCH:=1}
+[ -z $NIX_GCC ] && NIX_GCC=@gcc@
 
 
 # Wildcard expansions that don't match should expand to an empty list.
@@ -220,9 +90,10 @@ shopt -s nullglob
 
 # Set up the initial path.
 PATH=
-for i in $initialPath; do
+for i in $NIX_GCC @initialPath@; do
     if [ "$i" = / ]; then i=; fi
     addToSearchPath PATH $i/bin
+    addToSearchPath PATH $i/sbin
 done
 
 if [ "$NIX_DEBUG" = 1 ]; then
@@ -230,20 +101,35 @@ if [ "$NIX_DEBUG" = 1 ]; then
 fi
 
 
+# Execute the pre-hook.
+export SHELL=@shell@
+if [ -z "$shell" ]; then export shell=@shell@; fi
+runHook preHook
+
+
 # Check that the pre-hook initialised SHELL.
 if [ -z "$SHELL" ]; then echo "SHELL not set"; exit 1; fi
-BASH="$SHELL"
-export CONFIG_SHELL="$SHELL"
+
+# Hack: run gcc's setup hook.
+envHooks=()
+crossEnvHooks=()
+if [ -f $NIX_GCC/nix-support/setup-hook ]; then
+    source $NIX_GCC/nix-support/setup-hook
+fi
 
 
-# Dummy implementation of the paxmark function. On Linux, this is
-# overwritten by paxctl's setup hook.
-paxmark() { true; }
+# Ensure that the given directories exists.
+ensureDir() {
+    local dir
+    for dir in "$@"; do
+        if ! [ -x "$dir" ]; then mkdir -p "$dir"; fi
+    done
+}
 
-
-# Execute the pre-hook.
-if [ -z "$shell" ]; then export shell=$SHELL; fi
-runHook preHook
+installBin() {
+    mkdir -p $out/bin
+    cp "$@" $out/bin
+}
 
 
 # Allow the caller to augment buildInputs (it's not always possible to
@@ -254,7 +140,7 @@ runHook addInputsHook
 
 # Recursively find all build inputs.
 findInputs() {
-    local pkg="$1"
+    local pkg=$1
     local var=$2
     local propagatedBuildInputsFile=$3
 
@@ -266,67 +152,78 @@ findInputs() {
 
     eval $var="'${!var} $pkg '"
 
-    if ! [ -e "$pkg" ]; then
-        echo "build input $pkg does not exist" >&2
-        exit 1
+    if [ -f $pkg/nix-support/setup-hook ]; then
+        source $pkg/nix-support/setup-hook
     fi
 
-    if [ -f "$pkg" ]; then
-        source "$pkg"
-    fi
-
-    if [ -d $1/bin ]; then
-        addToSearchPath _PATH $1/bin
-    fi
-
-    if [ -f "$pkg/nix-support/setup-hook" ]; then
-        source "$pkg/nix-support/setup-hook"
-    fi
-
-    if [ -f "$pkg/nix-support/$propagatedBuildInputsFile" ]; then
-        for i in $(cat "$pkg/nix-support/$propagatedBuildInputsFile"); do
-            findInputs "$i" $var $propagatedBuildInputsFile
+    if [ -f $pkg/nix-support/$propagatedBuildInputsFile ]; then
+        for i in $(cat $pkg/nix-support/$propagatedBuildInputsFile); do
+            findInputs $i $var $propagatedBuildInputsFile
         done
     fi
 }
 
 crossPkgs=""
-for i in $buildInputs $defaultBuildInputs $propagatedBuildInputs; do
+for i in $buildInputs $propagatedBuildInputs; do
     findInputs $i crossPkgs propagated-build-inputs
 done
 
 nativePkgs=""
-for i in $nativeBuildInputs $defaultNativeBuildInputs $propagatedNativeBuildInputs; do
+for i in $nativeBuildInputs $propagatedNativeBuildInputs; do
     findInputs $i nativePkgs propagated-native-build-inputs
 done
 
 
 # Set the relevant environment variables to point to the build inputs
 # found above.
-_addToNativeEnv() {
+addToNativeEnv() {
     local pkg=$1
 
+    if [ -d $1/bin ]; then
+        addToSearchPath _PATH $1/bin
+    fi
+
     # Run the package-specific hooks set by the setup-hook scripts.
-    runHook envHook "$pkg"
+    for i in "${envHooks[@]}"; do
+        $i $pkg
+    done
 }
 
 for i in $nativePkgs; do
-    _addToNativeEnv $i
+    addToNativeEnv $i
 done
 
-_addToCrossEnv() {
+addToCrossEnv() {
     local pkg=$1
 
+    # Some programs put important build scripts (freetype-config and similar)
+    # into their crossDrv bin path. Intentionally these should go after
+    # the nativePkgs in PATH.
+    if [ -d $1/bin ]; then
+        addToSearchPath _PATH $1/bin
+    fi
+
     # Run the package-specific hooks set by the setup-hook scripts.
-    runHook crossEnvHook "$pkg"
+    for i in "${crossEnvHooks[@]}"; do
+        $i $pkg
+    done
 }
 
 for i in $crossPkgs; do
-    _addToCrossEnv $i
+    addToCrossEnv $i
 done
 
 
-_addRpathPrefix "$out"
+# Add the output as an rpath.
+if [ "$NIX_NO_SELF_RPATH" != 1 ]; then
+    export NIX_LDFLAGS="-rpath $out/lib $NIX_LDFLAGS"
+    if [ -n "$NIX_LIB64_IN_SELF_RPATH" ]; then
+        export NIX_LDFLAGS="-rpath $out/lib64 $NIX_LDFLAGS"
+    fi
+    if [ -n "$NIX_LIB32_IN_SELF_RPATH" ]; then
+        export NIX_LDFLAGS="-rpath $out/lib32 $NIX_LDFLAGS"
+    fi
+fi
 
 
 # Set the TZ (timezone) environment variable, otherwise commands like
@@ -374,13 +271,41 @@ fi
 export NIX_BUILD_CORES
 
 
-# Prevent OpenSSL-based applications from using certificates in
-# /etc/ssl.
-# Leave it in shells for convenience.
-if [ -z "$SSL_CERT_FILE" ] && [ -z "$IN_NIX_SHELL" ]; then
-  export SSL_CERT_FILE=/no-cert-file.crt
-fi
+######################################################################
+# Misc. helper functions.
 
+
+stripDirs() {
+    local dirs="$1"
+    local stripFlags="$2"
+    local dirsNew=
+
+    for d in ${dirs}; do
+        if [ -d "$prefix/$d" ]; then
+            dirsNew="${dirsNew} $prefix/$d "
+        fi
+    done
+    dirs=${dirsNew}
+
+    if [ -n "${dirs}" ]; then
+        header "stripping (with flags $stripFlags) in $dirs"
+        find $dirs -type f -print0 | xargs -0 ${xargsFlags:--r} strip $commonStripFlags $stripFlags || true
+        stopNest
+    fi
+}
+
+# PaX-mark binaries
+paxmark() {
+    local flags="$1"
+    shift
+
+    if [ -z "@needsPax@" ]; then
+        return
+    fi
+
+    paxctl -c "$@"
+    paxctl -zex -${flags} "$@"
+}
 
 ######################################################################
 # Textual substitution functions.
@@ -390,21 +315,16 @@ substitute() {
     local input="$1"
     local output="$2"
 
-    if [ ! -f "$input" ]; then
-      echo "substitute(): file '$input' does not exist"
-      return 1
-    fi
-
     local -a params=("$@")
 
     local n p pattern replacement varName content
 
     # a slightly hacky way to keep newline at the end
-    content="$(cat "$input"; printf "%s" X)"
+    content="$(cat $input; echo -n X)"
     content="${content%X}"
 
     for ((n = 2; n < ${#params[*]}; n += 1)); do
-        p="${params[$n]}"
+        p=${params[$n]}
 
         if [ "$p" = --replace ]; then
             pattern="${params[$((n + 1))]}"
@@ -414,16 +334,9 @@ substitute() {
 
         if [ "$p" = --subst-var ]; then
             varName="${params[$((n + 1))]}"
-            n=$((n + 1))
-            # check if the used nix attribute name is a valid bash name
-            if ! [[ "$varName" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
-                echo "WARNING: substitution variables should be valid bash names,"
-                echo "  \"$varName\" isn't and therefore was skipped; it might be caused"
-                echo "  by multi-line phases in variables - see #14907 for details."
-                continue
-            fi
             pattern="@$varName@"
             replacement="${!varName}"
+            n=$((n + 1))
         fi
 
         if [ "$p" = --subst-var-by ]; then
@@ -435,8 +348,10 @@ substitute() {
         content="${content//"$pattern"/$replacement}"
     done
 
-    if [ -e "$output" ]; then chmod +w "$output"; fi
-    printf "%s" "$content" > "$output"
+    # !!! This doesn't work properly if $content is "-n".
+    echo -n "$content" > "$output".tmp
+    if [ -x "$output" ]; then chmod +x "$output".tmp; fi
+    mv -f "$output".tmp "$output"
 }
 
 
@@ -447,23 +362,19 @@ substituteInPlace() {
 }
 
 
-# Substitute all environment variables that do not start with an upper-case
-# character or underscore. Note: other names that aren't bash-valid
-# will cause an error during `substitute --subst-var`.
 substituteAll() {
     local input="$1"
     local output="$2"
-    local -a args=()
 
     # Select all environment variables that start with a lowercase character.
-    for varName in $(env | sed -e $'s/^\([a-z][^= \t]*\)=.*/\\1/; t \n d'); do
+    for envVar in $(env | sed "s/^[^a-z].*//" | sed "s/^\([^=]*\)=.*/\1/"); do
         if [ "$NIX_DEBUG" = "1" ]; then
-            echo "@${varName}@ -> '${!varName}'"
+            echo "$envVar -> ${!envVar}"
         fi
-        args+=("--subst-var" "$varName")
+        args="$args --subst-var $envVar"
     done
 
-    substitute "$input" "$output" "${args[@]}"
+    substitute "$input" "$output" $args
 }
 
 
@@ -478,6 +389,32 @@ substituteAllInPlace() {
 # What follows is the generic builder.
 
 
+nestingLevel=0
+
+startNest() {
+    nestingLevel=$(($nestingLevel + 1))
+    echo -en "\033[$1p"
+}
+
+stopNest() {
+    nestingLevel=$(($nestingLevel - 1))
+    echo -en "\033[q"
+}
+
+header() {
+    startNest "$2"
+    echo "$1"
+}
+
+# Make sure that even when we exit abnormally, the original nesting
+# level is properly restored.
+closeNest() {
+    while [ $nestingLevel -gt 0 ]; do
+        stopNest
+    done
+}
+
+
 # This function is useful for debugging broken Nix builds.  It dumps
 # all environment variables to a file `env-vars' in the build
 # directory.  If the build fails and the `-K' option is used, you can
@@ -485,62 +422,54 @@ substituteAllInPlace() {
 # the environment used for building.
 dumpVars() {
     if [ "$noDumpEnvVars" != 1 ]; then
-        export > "$NIX_BUILD_TOP/env-vars" || true
+        export > "$NIX_BUILD_TOP/env-vars"
     fi
 }
 
 
-# Utility function: echo the base name of the given path, with the
+# Utility function: return the base name of the given path, with the
 # prefix `HASH-' removed, if present.
 stripHash() {
-    local strippedName="$(basename "$1")";
+    strippedName=$(basename $1);
     if echo "$strippedName" | grep -q '^[a-z0-9]\{32\}-'; then
-        echo "$strippedName" | cut -c34-
-    else
-        echo "$strippedName"
-    fi
-}
-
-
-unpackCmdHooks+=(_defaultUnpack)
-_defaultUnpack() {
-    local fn="$1"
-
-    if [ -d "$fn" ]; then
-
-        # We can't preserve hardlinks because they may have been
-        # introduced by store optimization, which might break things
-        # in the build.
-        cp -pr --reflink=auto "$fn" "$(stripHash "$fn")"
-
-    else
-
-        case "$fn" in
-            *.tar.xz | *.tar.lzma)
-                # Don't rely on tar knowing about .xz.
-                xz -d < "$fn" | tar xf -
-                ;;
-            *.tar | *.tar.* | *.tgz | *.tbz2)
-                # GNU tar can automatically select the decompression method
-                # (info "(tar) gzip").
-                tar xf "$fn"
-                ;;
-            *)
-                return 1
-                ;;
-        esac
-
+        strippedName=$(echo "$strippedName" | cut -c34-)
     fi
 }
 
 
 unpackFile() {
     curSrc="$1"
+    local cmd
+
     header "unpacking source archive $curSrc" 3
-    if ! runOneHook unpackCmd "$curSrc"; then
-        echo "do not know how to unpack source archive $curSrc"
-        exit 1
-    fi
+
+    case "$curSrc" in
+        *.tar.xz | *.tar.lzma)
+            # Don't rely on tar knowing about .xz.
+            xz -d < $curSrc | tar xf -
+            ;;
+        *.tar | *.tar.* | *.tgz | *.tbz2)
+            # GNU tar can automatically select the decompression method
+            # (info "(tar) gzip").
+            tar xf $curSrc
+            ;;
+        *.zip)
+            unzip -qq $curSrc
+            ;;
+        *)
+            if [ -d "$curSrc" ]; then
+                stripHash $curSrc
+                cp -prd --no-preserve=timestamps $curSrc $strippedName
+            else
+                if [ -z "$unpackCmd" ]; then
+                    echo "source archive $curSrc has unknown type"
+                    exit 1
+                fi
+                runHook unpackCmd
+            fi
+            ;;
+    esac
+
     stopNest
 }
 
@@ -574,7 +503,7 @@ unpackPhase() {
 
     # Find the source directory.
     if [ -n "$setSourceRoot" ]; then
-        runOneHook setSourceRoot
+        runHook setSourceRoot
     elif [ -z "$sourceRoot" ]; then
         sourceRoot=
         for i in *; do
@@ -618,7 +547,7 @@ patchPhase() {
     for i in $patches; do
         header "applying patch $i" 3
         local uncompress=cat
-        case "$i" in
+        case $i in
             *.gz)
                 uncompress="gzip -d"
                 ;;
@@ -633,7 +562,7 @@ patchPhase() {
                 ;;
         esac
         # "2>&1" is a hack to make patch fail if the decompressor fails (nonexistent patch, etc.)
-        $uncompress < "$i" 2>&1 | patch ${patchFlags:--p1}
+        $uncompress < $i 2>&1 | patch ${patchFlags:--p1}
         stopNest
     done
 
@@ -649,8 +578,12 @@ fixLibtool() {
 configurePhase() {
     runHook preConfigure
 
-    if [ -z "$configureScript" -a -x ./configure ]; then
+    if [ -z "$configureScript" ]; then
         configureScript=./configure
+        if ! [ -x $configureScript ]; then
+            echo "no configure script, doing nothing"
+            return
+        fi
     fi
 
     if [ -z "$dontFixLibtool" ]; then
@@ -660,30 +593,26 @@ configurePhase() {
         done
     fi
 
-    if [ -z "$dontAddPrefix" -a -n "$prefix" ]; then
+    if [ -z "$dontAddPrefix" ]; then
         configureFlags="${prefixKey:---prefix=}$prefix $configureFlags"
     fi
 
     # Add --disable-dependency-tracking to speed up some builds.
     if [ -z "$dontAddDisableDepTrack" ]; then
-        if [ -f "$configureScript" ] && grep -q dependency-tracking "$configureScript"; then
+        if grep -q dependency-tracking $configureScript; then
             configureFlags="--disable-dependency-tracking $configureFlags"
         fi
     fi
 
     # By default, disable static builds.
     if [ -z "$dontDisableStatic" ]; then
-        if [ -f "$configureScript" ] && grep -q enable-static "$configureScript"; then
+        if grep -q enable-static $configureScript; then
             configureFlags="--disable-static $configureFlags"
         fi
     fi
 
-    if [ -n "$configureScript" ]; then
-        echo "configure flags: $configureFlags ${configureFlagsArray[@]}"
-        $configureScript $configureFlags "${configureFlagsArray[@]}"
-    else
-        echo "no configure script, doing nothing"
-    fi
+    echo "configure flags: $configureFlags ${configureFlagsArray[@]}"
+    $configureScript $configureFlags "${configureFlagsArray[@]}"
 
     runHook postConfigure
 }
@@ -694,16 +623,17 @@ buildPhase() {
 
     if [ -z "$makeFlags" ] && ! [ -n "$makefile" -o -e "Makefile" -o -e "makefile" -o -e "GNUmakefile" ]; then
         echo "no Makefile, doing nothing"
-    else
-        # See https://github.com/NixOS/nixpkgs/pull/1354#issuecomment-31260409
-        makeFlags="SHELL=$SHELL $makeFlags"
-
-        echo "make flags: $makeFlags ${makeFlagsArray[@]} $buildFlags ${buildFlagsArray[@]}"
-        make ${makefile:+-f $makefile} \
-            ${enableParallelBuilding:+-j${NIX_BUILD_CORES} -l${NIX_BUILD_CORES}} \
-            $makeFlags "${makeFlagsArray[@]}" \
-            $buildFlags "${buildFlagsArray[@]}"
+        return
     fi
+
+    # See https://github.com/NixOS/nixpkgs/pull/1354#issuecomment-31260409
+    makeFlags="SHELL=$SHELL $makeFlags"
+
+    echo "make flags: $makeFlags ${makeFlagsArray[@]} $buildFlags ${buildFlagsArray[@]}"
+    make ${makefile:+-f $makefile} \
+        ${enableParallelBuilding:+-j${NIX_BUILD_CORES} -l${NIX_BUILD_CORES}} \
+        $makeFlags "${makeFlagsArray[@]}" \
+        $buildFlags "${buildFlagsArray[@]}"
 
     runHook postBuild
 }
@@ -722,12 +652,84 @@ checkPhase() {
 }
 
 
+patchELF() {
+    # Patch all ELF executables and shared libraries.
+    header "patching ELF executables and libraries"
+    if [ -e "$prefix" ]; then
+        find "$prefix" \( \
+            \( -type f -a -name "*.so*" \) -o \
+            \( -type f -a -perm +0100 \) \
+            \) -print -exec patchelf --shrink-rpath '{}' \;
+    fi
+    stopNest
+}
+
+
+patchShebangs() {
+    # Rewrite all script interpreter file names (`#! /path') under the
+    # specified  directory tree to paths found in $PATH.  E.g.,
+    # /bin/sh will be rewritten to /nix/store/<hash>-some-bash/bin/sh.
+    # /usr/bin/env gets special treatment so that ".../bin/env python" is
+    # rewritten to /nix/store/<hash>/bin/python.
+    # Interpreters that are already in the store are left untouched.
+    header "patching script interpreter paths"
+    local dir="$1"
+    local f
+    local oldPath
+    local newPath
+    local arg0
+    local args
+    local oldInterpreterLine
+    local newInterpreterLine
+
+    find "$dir" -type f -perm +0100 | while read f; do
+        if [ "$(head -1 "$f" | head -c +2)" != '#!' ]; then
+            # missing shebang => not a script
+            continue
+        fi
+
+        oldInterpreterLine=$(head -1 "$f" | tail -c +3)
+        read -r oldPath arg0 args <<< "$oldInterpreterLine"
+
+        if $(echo "$oldPath" | grep -q "/bin/env$"); then
+            # Check for unsupported 'env' functionality:
+            # - options: something starting with a '-'
+            # - environment variables: foo=bar
+            if $(echo "$arg0" | grep -q -- "^-.*\|.*=.*"); then
+                echo "unsupported interpreter directive \"$oldInterpreterLine\" (set dontPatchShebangs=1 and handle shebang patching yourself)"
+                exit 1
+            fi
+            newPath="$(command -v "$arg0" || true)"
+        else
+            if [ "$oldPath" = "" ]; then
+                # If no interpreter is specified linux will use /bin/sh. Set
+                # oldpath="/bin/sh" so that we get /nix/store/.../sh.
+                oldPath="/bin/sh"
+            fi
+            newPath="$(command -v "$(basename "$oldPath")" || true)"
+            args="$arg0 $args"
+        fi
+
+        newInterpreterLine="$newPath $args"
+
+        if [ -n "$oldPath" -a "${oldPath:0:${#NIX_STORE}}" != "$NIX_STORE" ]; then
+            if [ -n "$newPath" -a "$newPath" != "$oldPath" ]; then
+                echo "$f: interpreter directive changed from \"$oldInterpreterLine\" to \"$newInterpreterLine\""
+                # escape the escape chars so that sed doesn't interpret them
+                escapedInterpreterLine=$(echo "$newInterpreterLine" | sed 's|\\|\\\\|g')
+                sed -i -e "1 s|.*|#\!$escapedInterpreterLine|" "$f"
+            fi
+        fi
+    done
+
+    stopNest
+}
+
+
 installPhase() {
     runHook preInstall
 
-    if [ -n "$prefix" ]; then
-        mkdir -p "$prefix"
-    fi
+    mkdir -p "$prefix"
 
     installTargets=${installTargets:-install}
     echo "install flags: $installTargets $makeFlags ${makeFlagsArray[@]} $installFlags ${installFlagsArray[@]}"
@@ -739,46 +741,93 @@ installPhase() {
 }
 
 
-# The fixup phase performs generic, package-independent stuff, like
-# stripping binaries, running patchelf and setting
-# propagated-build-inputs.
+# The fixup phase performs generic, package-independent, Nix-related
+# stuff, like running patchelf and setting the
+# propagated-build-inputs.  It should rarely be overriden.
 fixupPhase() {
-    # Make sure everything is writable so "strip" et al. work.
-    for output in $outputs; do
-        if [ -e "${!output}" ]; then chmod -R u+w "${!output}"; fi
-    done
-
     runHook preFixup
 
-    # Apply fixup to each output.
-    local output
-    for output in $outputs; do
-        prefix=${!output} runHook fixupOutput
-    done
+    # Make sure everything is writable so "strip" et al. work.
+    if [ -e "$prefix" ]; then chmod -R u+w "$prefix"; fi
 
+    # Put man/doc/info under $out/share.
+    forceShare=${forceShare:=man doc info}
+    if [ -n "$forceShare" ]; then
+        for d in $forceShare; do
+            if [ -d "$prefix/$d" ]; then
+                if [ -d "$prefix/share/$d" ]; then
+                    echo "both $d/ and share/$d/ exists!"
+                else
+                    echo "fixing location of $d/ subdirectory"
+                    mkdir -p $prefix/share
+                    if [ -w $prefix/share ]; then
+                        mv -v $prefix/$d $prefix/share
+                        ln -sv share/$d $prefix
+                    fi
+                fi
+            fi
+        done;
+    fi
 
-    # Propagate build inputs and setup hook into the development output.
+    if [ -z "$dontGzipMan" ]; then
+        echo "gzipping man pages"
+        GLOBIGNORE=.:..:*.gz:*.bz2
+        for f in "$out"/share/man/*/* "$out"/share/man/*/*/*; do
+            if [ -f "$f" -a ! -L "$f" ]; then
+                if gzip -c -n "$f" > "$f".gz; then
+                    rm "$f"
+                else
+                    rm "$f".gz
+                fi
+            fi
+        done
+        for f in "$out"/share/man/*/* "$out"/share/man/*/*/*; do
+            if [ -L "$f" -a -f `readlink -f "$f"`.gz ]; then
+                ln -sf `readlink "$f"`.gz "$f".gz && rm "$f"
+            fi
+        done
+        unset GLOBIGNORE
+    fi
+
+    # TODO: strip _only_ ELF executables, and return || fail here...
+    if [ -z "$dontStrip" ]; then
+        stripDebugList=${stripDebugList:-lib lib32 lib64 libexec bin sbin}
+        if [ -n "$stripDebugList" ]; then
+            stripDirs "$stripDebugList" "${stripDebugFlags:--S}"
+        fi
+
+        stripAllList=${stripAllList:-}
+        if [ -n "$stripAllList" ]; then
+            stripDirs "$stripAllList" "${stripAllFlags:--s}"
+        fi
+    fi
+
+    if [ "$havePatchELF" = 1 -a -z "$dontPatchELF" ]; then
+        patchELF "$prefix"
+    fi
+
+    if [ -z "$dontPatchShebangs" ]; then
+        patchShebangs "$prefix"
+    fi
 
     if [ -n "$propagatedBuildInputs" ]; then
-        mkdir -p "${!outputDev}/nix-support"
-        echo "$propagatedBuildInputs" > "${!outputDev}/nix-support/propagated-build-inputs"
+        mkdir -p "$out/nix-support"
+        echo "$propagatedBuildInputs" > "$out/nix-support/propagated-build-inputs"
     fi
 
     if [ -n "$propagatedNativeBuildInputs" ]; then
-        mkdir -p "${!outputDev}/nix-support"
-        echo "$propagatedNativeBuildInputs" > "${!outputDev}/nix-support/propagated-native-build-inputs"
+        mkdir -p "$out/nix-support"
+        echo "$propagatedNativeBuildInputs" > "$out/nix-support/propagated-native-build-inputs"
+    fi
+
+    if [ -n "$propagatedUserEnvPkgs" ]; then
+        mkdir -p "$out/nix-support"
+        echo "$propagatedUserEnvPkgs" > "$out/nix-support/propagated-user-env-packages"
     fi
 
     if [ -n "$setupHook" ]; then
-        mkdir -p "${!outputDev}/nix-support"
-        substituteAll "$setupHook" "${!outputDev}/nix-support/setup-hook"
-    fi
-
-    # Propagate user-env packages into the output with binaries, TODO?
-
-    if [ -n "$propagatedUserEnvPkgs" ]; then
-        mkdir -p "${!outputBin}/nix-support"
-        echo "$propagatedUserEnvPkgs" > "${!outputBin}/nix-support/propagated-user-env-packages"
+        mkdir -p "$out/nix-support"
+        substituteAll "$setupHook" "$out/nix-support/setup-hook"
     fi
 
     runHook postFixup
@@ -833,10 +882,8 @@ showPhaseHeader() {
 
 
 genericBuild() {
-    if [ -f "$buildCommandPath" ]; then
-        . "$buildCommandPath"
-        return
-    fi
+    header "building $out"
+
     if [ -n "$buildCommand" ]; then
         eval "$buildCommand"
         return
@@ -880,10 +927,13 @@ genericBuild() {
 
         stopNest
     done
+
+    stopNest
 }
 
 
 # Execute the post-hooks.
+for i in "${postHooks[@]}"; do $i; done
 runHook postHook
 
 

@@ -1,46 +1,40 @@
-{ lib, stdenv, fetchurl, libgpgerror, enableCapabilities ? false, libcap }:
+{ fetchurl, stdenv, libgpgerror }:
 
-assert enableCapabilities -> stdenv.isLinux;
-
-stdenv.mkDerivation rec {
-  name = "libgcrypt-${version}";
-  version = "1.7.6";
+stdenv.mkDerivation (rec {
+  name = "libgcrypt-1.5.3";
 
   src = fetchurl {
     url = "mirror://gnupg/libgcrypt/${name}.tar.bz2";
-    sha256 = "1g05prhgqw4ryd0w433q8nhds0h93kf47hfjagi2r7dghkpaysk2";
+    sha256 = "1lar8y3lh61zl5flljpz540d78g99h4d5idfwrfw8lm3gm737xdw";
   };
 
-  outputs = [ "out" "dev" "info" ];
-  outputBin = "dev";
+  propagatedBuildInputs = [ libgpgerror ];
 
-  buildInputs =
-    [ libgpgerror ]
-    ++ lib.optional enableCapabilities libcap;
+  doCheck = stdenv.system != "i686-linux"; # "basic" test fails after stdenv+glibc-2.18
 
-  # Make sure libraries are correct for .pc and .la files
-  # Also make sure includes are fixed for callers who don't use libgpgcrypt-config
-  postFixup = ''
-    sed -i 's,#include <gpg-error.h>,#include "${libgpgerror.dev}/include/gpg-error.h",g' "$dev/include/gcrypt.h"
-  '' + stdenv.lib.optionalString enableCapabilities ''
-    sed -i 's,\(-lcap\),-L${libcap.lib}/lib \1,' $out/lib/libgcrypt.la
+  # For some reason the tests don't find `libgpg-error.so'.
+  checkPhase = ''
+    LD_LIBRARY_PATH="${libgpgerror}/lib:$LD_LIBRARY_PATH" \
+    make check
   '';
 
-  # TODO: figure out why this is even necessary and why the missing dylib only crashes
-  # random instead of every test
-  preCheck = stdenv.lib.optionalString stdenv.isDarwin ''
-    mkdir -p $out/lib
-    cp src/.libs/libgcrypt.20.dylib $out/lib
-  '';
+  meta = {
+    description = "GNU Libgcrypt, a general-pupose cryptographic library";
 
-  doCheck = true;
+    longDescription = ''
+      GNU Libgcrypt is a general purpose cryptographic library based on
+      the code from GnuPG.  It provides functions for all
+      cryptographic building blocks: symmetric ciphers, hash
+      algorithms, MACs, public key algorithms, large integer
+      functions, random numbers and a lot of supporting functions.
+    '';
 
-  meta = with stdenv.lib; {
-    homepage = https://www.gnu.org/software/libgcrypt/;
-    description = "General-pupose cryptographic library";
-    license = licenses.lgpl2Plus;
-    platforms = platforms.all;
-    maintainers = [ maintainers.wkennington maintainers.vrthra ];
-    repositories.git = git://git.gnupg.org/libgcrypt.git;
+    license = stdenv.lib.licenses.lgpl2Plus;
+
+    homepage = http://gnupg.org/;
+    platforms = stdenv.lib.platforms.all;
   };
-}
+} # old "as" problem, see #616 and http://gnupg.10057.n7.nabble.com/Fail-to-build-on-freebsd-7-3-td30245.html
+  // stdenv.lib.optionalAttrs (stdenv.isFreeBSD && stdenv.isi686)
+    { configureFlags = [ "--disable-aesni-support" ]; }
+)

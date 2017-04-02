@@ -1,25 +1,17 @@
-{ stdenv, fetchurl, buildPythonPackage, python, pkgconfig, glib, gobjectIntrospection, pycairo, cairo, which, ncurses}:
+{ stdenv, fetchurl, python, pkgconfig, glib, gobjectIntrospection, pycairo, cairo }:
 
-buildPythonPackage rec {
-  major = "3.22";
-  minor = "0";
-  name = "pygobject-${major}.${minor}";
-  format = "other";
+stdenv.mkDerivation rec {
+  name = "pygobject-3.12.1";
 
   src = fetchurl {
-    url = "mirror://gnome/sources/pygobject/${major}/${name}.tar.xz";
-    sha256 = "08b29cfb08efc80f7a8630a2734dec65a99c1b59f1e5771c671d2e4ed8a5cbe7";
+    url = "mirror://gnome/sources/pygobject/3.12/${name}.tar.xz";
+    sha256 = "0dfsjsa95ix8bx3h8w4bhnz7rymgl2paclvbn93x6qp8b53y0pys";
   };
 
-  outputs = [ "out" "dev" ];
-
-  buildInputs = [ pkgconfig glib gobjectIntrospection ]
-                 ++ stdenv.lib.optionals stdenv.isDarwin [ which ncurses ];
-  propagatedBuildInputs = [ pycairo cairo ];
+  buildInputs = [ python pkgconfig glib gobjectIntrospection pycairo cairo ];
 
   meta = {
     homepage = http://live.gnome.org/PyGObject;
     description = "Python bindings for Glib";
-    platforms = stdenv.lib.platforms.unix;
   };
 }

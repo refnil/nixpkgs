@@ -1,30 +1,24 @@
-{ stdenv, fetchurl, pkgconfig, glib, libIDL, libintlOrEmpty }:
+{ stdenv, fetchurlGnome, pkgconfig, glib, libIDL, libintlOrEmpty }:
 
 stdenv.mkDerivation rec {
-  name = "ORBit2-${minVer}.19";
-  minVer = "2.14";
-
-  src = fetchurl {
-    url = "mirror://gnome/sources/ORBit2/${minVer}/${name}.tar.bz2";
+  name = src.pkgname;
+  
+  src = fetchurlGnome {
+    project = "ORBit2";
+    major = "2"; minor = "14"; patchlevel = "19";
     sha256 = "0l3mhpyym9m5iz09fz0rgiqxl2ym6kpkwpsp1xrr4aa80nlh1jam";
   };
-
-  nativeBuildInputs = [ pkgconfig ];
-  propagatedBuildInputs = [ glib libIDL ] ++ libintlOrEmpty;
-
-  outputs = [ "out" "dev" ];
 
   preBuild = ''
     sed 's/-DG_DISABLE_DEPRECATED//' -i linc2/src/Makefile
   '';
 
-  preFixup = ''
-    moveToOutput "bin/orbit2-config" "$dev"
-  '';
+  nativeBuildInputs = [ pkgconfig ];
+  propagatedBuildInputs = [ glib libIDL ] ++ libintlOrEmpty;
 
   meta = with stdenv.lib; {
     homepage    = https://projects.gnome.org/ORBit2/;
-    description = "A CORBA 2.4-compliant Object Request Broker";
+    description = "A a CORBA 2.4-compliant Object Request Broker";
     platforms   = platforms.unix;
     maintainers = with maintainers; [ lovek323 ];
 

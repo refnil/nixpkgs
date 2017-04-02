@@ -17,6 +17,5 @@ stdenv.mkDerivation {
     homepage = http://tunctl.sourceforge.net/;
     description = "Utility to set up and maintain TUN/TAP network interfaces";
     license = stdenv.lib.licenses.gpl2;
-    platforms = stdenv.lib.platforms.linux;
   };
 }

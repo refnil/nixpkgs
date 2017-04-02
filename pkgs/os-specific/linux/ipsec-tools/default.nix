@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, linuxHeaders, readline, openssl, flex, kerberos, pam }:
+{ stdenv, fetchurl, linuxHeaders, readline, openssl, flex, krb5, pam }:
 
 # TODO: These tools are supposed to work under NetBSD and FreeBSD as
 # well, so I guess it's not appropriate to place this expression in
@@ -14,10 +14,9 @@ stdenv.mkDerivation rec {
     sha256 = "0b9gfbz78k2nj0k7jdlm5kajig628ja9qm0z5yksiwz22s3v7dlf";
   };
 
-  buildInputs = [ readline openssl flex kerberos pam ];
+  buildInputs = [ readline openssl flex krb5 pam ];
 
-  patches = [ ./dont-create-localstatedir-during-install.patch
-              ./CVE-2015-4047.patch ];
+  patches = [ ./dont-create-localstatedir-during-install.patch ];
 
   # fix build with newer gcc versions
   preConfigure = ''substituteInPlace configure --replace "-Werror" "" '';
@@ -39,6 +38,8 @@ stdenv.mkDerivation rec {
   meta = {
     homepage = "http://ipsec-tools.sourceforge.net/";
     description = "Port of KAME's IPsec utilities to the Linux-2.6 IPsec implementation";
+
     platforms = stdenv.lib.platforms.linux;
+    maintainers = [stdenv.lib.maintainers.simons];
   };
 }

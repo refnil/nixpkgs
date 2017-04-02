@@ -1,40 +1,27 @@
-{ stdenv, fetchurl, makeWrapper, jre, jdk, gcc, xorg
-, htmlunit-driver, chromedriver, chromeSupport ? true }:
+{ stdenv, fetchurl }:
 
-with stdenv.lib;
-
-let
-  arch = if stdenv.system == "x86_64-linux" then "amd64"
-         else if stdenv.system == "i686-linux" then "i386"
-         else "";
-
-in stdenv.mkDerivation rec {
+stdenv.mkDerivation rec {
   name = "selenium-server-standalone-${version}";
-  version = "2.53.0";
+  version = "2.39.0";
 
   src = fetchurl {
-    url = "http://selenium-release.storage.googleapis.com/2.53/selenium-server-standalone-${version}.jar";
-    sha256 = "0dp0n5chl1frjy9pcyjvpcdgv1f4dkslh2bpydpxwc5isfzqrf37";
+    url = "https://selenium.googlecode.com/files/${name}.jar";
+    sha256 = "11ixh5x5f9kia2va8wssd3n7y57dkv3snw6xvk85y4qhzg64b65f";
   };
 
-  unpackPhase = "true";
+  unpack = "";
 
-  buildInputs = [ jre makeWrapper ];
-
-  installPhase = ''
+  buildCommand = ''
     mkdir -p $out/share/lib/${name}
     cp $src $out/share/lib/${name}/${name}.jar
-    makeWrapper ${jre}/bin/java $out/bin/selenium-server \
-      --add-flags "-cp ${htmlunit-driver}/share/lib/${htmlunit-driver.name}/${htmlunit-driver.name}.jar:$out/share/lib/${name}/${name}.jar" \
-      --add-flags ${optionalString chromeSupport "-Dwebdriver.chrome.driver=${chromedriver}/bin/chromedriver"} \
-      --add-flags "org.openqa.grid.selenium.GridLauncher"
   '';
 
-  meta = {
+  meta = with stdenv.lib; {
     homepage = https://code.google.com/p/selenium;
-    description = "Selenium Server for remote WebDriver";
-    maintainers = with maintainers; [ coconnor offline ];
+    description = "Selenium Server for remote WebDriver.";
+    maintainers = [ maintainers.coconnor ];
     platforms = platforms.all;
+    hydraPlatforms = [];
     license = licenses.asl20;
   };
 }

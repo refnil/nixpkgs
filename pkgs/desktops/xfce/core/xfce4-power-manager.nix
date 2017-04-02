@@ -1,45 +1,31 @@
-{ stdenv, lib, fetchurl, pkgconfig, intltool, glib, gtk, dbus_glib, upower, xfconf
-, libxfce4ui, libxfce4util, libnotify, xfce4panel, hicolor_icon_theme
-, withGtk3 ? false, gtk3, libxfce4ui_gtk3, xfce4panel_gtk3 }:
-let
-  p_name  = "xfce4-power-manager";
-  ver_maj = if withGtk3 then "1.6" else "1.4";
-  ver_min = if withGtk3 then "0"   else "4";
-in
+{ stdenv, fetchurl, pkgconfig, intltool, gtk, dbus_glib, xfconf
+, libxfce4ui, libxfce4util, libnotify, xfce4panel }:
+
 stdenv.mkDerivation rec {
-  name = "${p_name}-${ver_maj}.${ver_min}";
+  p_name  = "xfce4-power-manager";
+  ver_maj = "1.2";
+  ver_min = "0";
 
   src = fetchurl {
     url = "mirror://xfce/src/xfce/${p_name}/${ver_maj}/${name}.tar.bz2";
-    sha256 =
-      if withGtk3
-      then "0avzhllpimcn7a6z9aa4jn0zg5ahxr9ks5ldchizycdb0rz1bqxx"
-      else "01rvqy1cif4s8lkidb7hhmsz7d9f2fwcwvc51xycaj3qgsmch3n5";
+    sha256 = "1sc4f4wci5yl3l9lk7vcsbwj6hdjshbxw9qm43s64jr882jriyyp";
   };
+
+  name = "${p_name}-${ver_maj}.${ver_min}";
 
   buildInputs =
-    [ pkgconfig intltool glib dbus_glib upower xfconf libxfce4util
-      libnotify hicolor_icon_theme
-    ] ++
-    (if withGtk3
-    then [ gtk3 libxfce4ui_gtk3 xfce4panel_gtk3 ]
-    else [ gtk  libxfce4ui      xfce4panel      ]);
+    [ pkgconfig intltool gtk dbus_glib xfconf libxfce4ui libxfce4util
+      libnotify xfce4panel
+    ];
+  preFixup = "rm $out/share/icons/hicolor/icon-theme.cache";
 
-  postPatch = lib.optionalString withGtk3 ''
-    substituteInPlace configure --replace gio-2.0 gio-unix-2.0
-  '';
+  patches = ./xfce4-power-manager-brightness.patch;
 
-  postConfigure = lib.optionalString withGtk3 ''
-    substituteInPlace src/Makefile      --replace "xfce4_power_manager_CFLAGS = "          "xfce4_power_manager_CFLAGS = \$(GIO_CFLAGS) "
-    substituteInPlace settings/Makefile --replace "xfce4_power_manager_settings_CFLAGS = " "xfce4_power_manager_settings_CFLAGS = \$(GIO_CFLAGS) "
-  '';
-
-  meta = with stdenv.lib; {
+  meta = {
     homepage = http://goodies.xfce.org/projects/applications/xfce4-power-manager;
     description = "A power manager for the Xfce Desktop Environment";
-    license = licenses.gpl2Plus;
-    platforms = platforms.linux;
-    maintainers = [ maintainers.eelco ];
+    license = stdenv.lib.licenses.gpl2Plus;
+    platforms = stdenv.lib.platforms.linux;
+    maintainers = [ stdenv.lib.maintainers.eelco ];
   };
 }
-

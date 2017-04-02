@@ -1,68 +1,45 @@
-{ fetchurl, stdenv, gettext, intltool, makeWrapper, pkgconfig
-, geoclue2
-, guiSupport ? true, hicolor_icon_theme, librsvg, gtk3, python, pygobject3, pyxdg
-, drmSupport ? true, libdrm
-, randrSupport ? true, libxcb
-, vidModeSupport ? true, libX11, libXxf86vm
-}:
+{ fetchurl, stdenv, libX11, libXrandr, libXxf86vm, libxcb, pkgconfig, python
+, randrproto, xcbutil, xf86vidmodeproto, autoconf, automake, gettext, glib
+, GConf, dbus, dbus_glib, makeWrapper, gtk, pygtk, pyxdg, geoclue }:
 
-let
-  mkFlag = flag: name: if flag
-    then "--enable-${name}"
-    else "--disable-${name}";
-in
 stdenv.mkDerivation rec {
+  version = "1.8";
   name = "redshift-${version}";
-  version = "1.11";
-
   src = fetchurl {
-    sha256 = "0ngkwj7rg8nfk806w0sg443w6wjr91xdc0zisqfm5h2i77wm1qqh";
-    url = "https://github.com/jonls/redshift/releases/download/v${version}/redshift-${version}.tar.xz";
+    url = "https://github.com/jonls/redshift/archive/v${version}.tar.gz";
+    sha256 = "1srj2dwy32h71iqikb4ysv5ipclym80i9lys2ns8vjmclg7hj3vi";
   };
 
-  buildInputs = [ geoclue2 ]
-    ++ stdenv.lib.optionals guiSupport [ hicolor_icon_theme librsvg gtk3
-      python pygobject3 pyxdg ]
-    ++ stdenv.lib.optionals drmSupport [ libdrm ]
-    ++ stdenv.lib.optionals randrSupport [ libxcb ]
-    ++ stdenv.lib.optionals vidModeSupport [ libX11 libXxf86vm ];
-  nativeBuildInputs = [ gettext intltool makeWrapper pkgconfig ];
-
-  configureFlags = [
-    (mkFlag guiSupport "gui")
-    (mkFlag drmSupport "drm")
-    (mkFlag randrSupport "randr")
-    (mkFlag vidModeSupport "vidmode")
+  buildInputs = [
+    libX11 libXrandr libXxf86vm libxcb pkgconfig python randrproto xcbutil
+    xf86vidmodeproto autoconf automake gettext glib GConf dbus dbus_glib
+    makeWrapper gtk pygtk pyxdg geoclue
   ];
 
-  enableParallelBuilding = true;
-
-  preInstall = stdenv.lib.optionalString guiSupport ''
-    substituteInPlace src/redshift-gtk/redshift-gtk \
-      --replace "/usr/bin/env python3" "${python}/bin/${python.executable}"
+  preConfigure = ''
+    ./bootstrap
   '';
-  postInstall = stdenv.lib.optionalString guiSupport ''
-    wrapProgram "$out/bin/redshift-gtk" \
-      --set GDK_PIXBUF_MODULE_FILE "$GDK_PIXBUF_MODULE_FILE" \
-      --prefix PYTHONPATH : "$PYTHONPATH" \
-      --prefix GI_TYPELIB_PATH : "$GI_TYPELIB_PATH" \
-      --prefix XDG_DATA_DIRS : "$out/share:${hicolor_icon_theme}/share"
 
-    install -Dm644 {.,$out/share/doc/redshift}/redshift.conf.sample
+  preInstall = ''
+    substituteInPlace src/redshift-gtk/redshift-gtk python --replace "/usr/bin/env python" "${python}/bin/${python.executable}"
+  '';
+
+  postInstall = ''
+    wrapProgram "$out/bin/redshift-gtk" --prefix PYTHONPATH : $PYTHONPATH:${pygtk}/lib/${python.libPrefix}/site-packages/gtk-2.0:${pyxdg}/lib/${python.libPrefix}/site-packages/pyxdg:$out/lib/${python.libPrefix}/site-packages
   '';
 
   meta = with stdenv.lib; {
-    description = "Gradually change screen color temperature";
+    description = "changes the color temperature of your screen gradually";
     longDescription = ''
       The color temperature is set according to the position of the
       sun. A different color temperature is set during night and
       daytime. During twilight and early morning, the color
       temperature transitions smoothly from night to daytime
       temperature to allow your eyes to slowly adapt.
-    '';
-    license = licenses.gpl3Plus;
-    homepage = http://jonls.dk/redshift;
+      '';
+    license = stdenv.lib.licenses.gpl3Plus;
+    homepage = "http://jonls.dk/redshift";
     platforms = platforms.linux;
-    maintainers = with maintainers; [ mornfall nckx ];
+    maintainers = maintainers.mornfall;
   }; 
 }

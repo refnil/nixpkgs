@@ -6,9 +6,6 @@ stdenv.mkDerivation rec {
     url = "https://rubyripper.googlecode.com/files/rubyripper-${version}.tar.bz2";
     sha256 = "1fwyk3y0f45l2vi3a481qd7drsy82ccqdb8g2flakv58m45q0yl1";
   };
-
-  preConfigure = "patchShebangs .";
-
   configureFlags = [ "--enable-cli" ];
   buildInputs = [ ruby cdparanoia makeWrapper ];
   postInstall = ''
@@ -16,8 +13,4 @@ stdenv.mkDerivation rec {
       --prefix PATH : "${ruby}/bin" \
       --prefix PATH : "${cdparanoia}/bin"
   '';
-
-  meta = {
-    platforms = stdenv.lib.platforms.linux;
-  };
 }

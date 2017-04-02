@@ -9,10 +9,8 @@ postInstall() {
     if test -n "$origPostInstall"; then eval "$origPostInstall"; fi
 
     local r p requires
-    set +o pipefail
-    requires=$(grep "Requires:" ${!outputDev}/lib/pkgconfig/*.pc | \
+    requires=$(grep "Requires:" $out/lib/pkgconfig/*.pc | \
         sed "s/Requires://" | sed "s/,/ /g")
-    set -o pipefail
 
     echo "propagating requisites $requires"
 
@@ -33,6 +31,10 @@ postInstall() {
             done
         fi
     done
+
+    mkdir -p "$out/nix-support"
+    echo "$propagatedBuildInputs" > "$out/nix-support/propagated-build-inputs"
+    echo "$propagatedNativeBuildInputs" > "$out/nix-support/propagated-native-build-inputs"
 }
 
 
@@ -45,5 +47,6 @@ fi
 
 
 enableParallelBuilding=1
+
 
 genericBuild

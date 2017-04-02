@@ -1,132 +1,107 @@
-{ stdenv, fetchurl, buildPackages, perl
-, withCryptodev ? false, cryptodevHeaders
-, enableSSL2 ? false }:
-
-with stdenv.lib;
+{ stdenv, fetchurl, perl
+, withCryptodev ? false, cryptodevHeaders }:
 
 let
+  name = "openssl-1.0.1h";
 
-  opensslCrossSystem = stdenv.cross.openssl.system or
-    (throw "openssl needs its platform name cross building");
+  opensslCrossSystem = stdenv.lib.attrByPath [ "openssl" "system" ]
+    (throw "openssl needs its platform name cross building" null)
+    stdenv.cross;
 
-  common = args@{ version, sha256, patches ? [], configureFlags ? [], makeDepend ? false }: stdenv.mkDerivation rec {
-    name = "openssl-${version}";
+  patchesCross = isCross: let
+    isDarwin = stdenv.isDarwin || (isCross && stdenv.cross.libc == "libSystem");
+  in
+    [ # Allow the location of the X509 certificate file (the CA
+      # bundle) to be set through the environment variable
+      # ‘OPENSSL_X509_CERT_FILE’.  This is necessary because the
+      # default location ($out/ssl/cert.pem) doesn't exist, and
+      # hardcoding something like /etc/ssl/cert.pem is impure and
+      # cannot be overriden per-process.  For security, the
+      # environment variable is ignored for setuid binaries.
+      ./cert-file.patch
+    ]
 
-    src = fetchurl {
-      url = "http://www.openssl.org/source/${name}.tar.gz";
-      inherit sha256;
-    };
+    ++ stdenv.lib.optionals (isCross && opensslCrossSystem == "hurd-x86")
+         [ ./cert-file-path-max.patch # merge with `cert-file.patch' eventually
+           ./gnu.patch                # submitted upstream
+         ]
 
-    patches =
-      (args.patches or [])
-      ++ [ ./nix-ssl-cert-file.patch ]
-      ++ optional (versionOlder version "1.1.0")
-          (if stdenv.isDarwin then ./use-etc-ssl-certs-darwin.patch else ./use-etc-ssl-certs.patch)
-      ++ optional stdenv.isCygwin ./1.0.1-cygwin64.patch
-      ++ optional
-           (versionOlder version "1.0.2" && (stdenv.isDarwin || (stdenv ? cross && stdenv.cross.libc == "libSystem")))
-           ./darwin-arch.patch;
+    ++ stdenv.lib.optionals (stdenv.system == "x86_64-kfreebsd-gnu")
+        [ ./gnu.patch
+          ./kfreebsd-gnu.patch
+        ]
 
-    outputs = [ "bin" "dev" "out" "man" ];
-    setOutputFlags = false;
+    ++ stdenv.lib.optional isDarwin ./darwin-arch.patch;
 
-    nativeBuildInputs = [ perl ];
-    buildInputs = stdenv.lib.optional withCryptodev cryptodevHeaders;
+in
 
-    # On x86_64-darwin, "./config" misdetects the system as
-    # "darwin-i386-cc".  So specify the system type explicitly.
-    configureScript =
-      if stdenv.system == "x86_64-darwin" then "./Configure darwin64-x86_64-cc"
-      else if stdenv.system == "x86_64-solaris" then "./Configure solaris64-x86_64-gcc"
-      else "./config";
+stdenv.mkDerivation {
+  inherit name;
 
-    configureFlags = [
-      "shared"
-      "--libdir=lib"
-      "--openssldir=etc/ssl"
-    ] ++ stdenv.lib.optionals withCryptodev [
-      "-DHAVE_CRYPTODEV"
-      "-DUSE_CRYPTODEV_DIGESTS"
-    ] ++ stdenv.lib.optional enableSSL2 "enable-ssl2"
-    ++ args.configureFlags or [];
+  src = fetchurl {
+    urls = [
+      "http://www.openssl.org/source/${name}.tar.gz"
+      "http://openssl.linux-mirror.org/source/${name}.tar.gz"
+    ];
+    sha256 = "14yhsgag5as7nhxnw7f0vklwjwa3pmn1i15nmp3f4qxa6sc8l74x";
+  };
 
-    postConfigure = if makeDepend then "make depend" else null;
+  patches = patchesCross false;
 
-    makeFlags = [ "MANDIR=$(man)/share/man" ];
+  buildInputs = stdenv.lib.optional withCryptodev cryptodevHeaders;
 
-    # Parallel building is broken in OpenSSL.
-    enableParallelBuilding = false;
+  nativeBuildInputs = [ perl ];
 
-    postInstall = ''
+  # On x86_64-darwin, "./config" misdetects the system as
+  # "darwin-i386-cc".  So specify the system type explicitly.
+  configureScript =
+    if stdenv.system == "x86_64-darwin" then "./Configure darwin64-x86_64-cc"
+    else if stdenv.system == "x86_64-solaris" then "./Configure solaris64-x86_64-gcc"
+    else "./config";
+
+  configureFlags = "shared --libdir=lib --openssldir=etc/ssl" +
+    stdenv.lib.optionalString withCryptodev " -DHAVE_CRYPTODEV -DUSE_CRYPTODEV_DIGESTS";
+
+  makeFlags = "MANDIR=$(out)/share/man";
+
+  # Parallel building is broken in OpenSSL.
+  #enableParallelBuilding = true;
+
+  postInstall =
+    ''
       # If we're building dynamic libraries, then don't install static
       # libraries.
-      if [ -n "$(echo $out/lib/*.so $out/lib/*.dylib $out/lib/*.dll)" ]; then
-          rm "$out/lib/"*.a
+      if [ -n "$(echo $out/lib/*.so $out/lib/*.dylib)" ]; then
+          rm $out/lib/*.a
       fi
+    ''; # */
 
-      mkdir -p $bin
-      mv $out/bin $bin/
+  crossAttrs = {
+    patches = patchesCross true;
 
-      mkdir $dev
-      mv $out/include $dev/
-
-      # remove dependency on Perl at runtime
-      rm -r $out/etc/ssl/misc
-
-      rmdir $out/etc/ssl/{certs,private}
+    preConfigure=''
+      # It's configure does not like --build or --host
+      export configureFlags="--libdir=lib --cross-compile-prefix=${stdenv.cross.config}- shared ${opensslCrossSystem}"
     '';
 
-    postFixup = ''
-      # Check to make sure the main output doesn't depend on perl
-      if grep -r '${buildPackages.perl}' $out; then
-        echo "Found an erroneous dependency on perl ^^^" >&2
-        exit 1
-      fi
+    postInstall = ''
+      # Openssl installs readonly files, which otherwise we can't strip.
+      # This could at some stdenv hash change be put out of crossAttrs, too
+      chmod -R +w $out
+
+      # Remove references to perl, to avoid depending on it at runtime
+      rm $out/bin/c_rehash $out/ssl/misc/CA.pl $out/ssl/misc/tsget
     '';
-
-    crossAttrs = {
-      # upstream patch: https://rt.openssl.org/Ticket/Display.html?id=2558
-      postPatch = ''
-         sed -i -e 's/[$][(]CROSS_COMPILE[)]windres/$(WINDRES)/' Makefile.shared
-      '';
-      preConfigure=''
-        # It's configure does not like --build or --host
-        export configureFlags="${concatStringsSep " " (configureFlags ++ [ opensslCrossSystem ])}"
-        # WINDRES and RANLIB need to be prefixed when cross compiling;
-        # the openssl configure script doesn't do that for us
-        export WINDRES=${stdenv.cross.config}-windres
-        export RANLIB=${stdenv.cross.config}-ranlib
-      '';
-      configureScript = "./Configure";
-    };
-
-    meta = {
-      homepage = http://www.openssl.org/;
-      description = "A cryptographic library that implements the SSL and TLS protocols";
-      platforms = stdenv.lib.platforms.all;
-      maintainers = [ stdenv.lib.maintainers.peti ];
-      priority = 10; # resolves collision with ‘man-pages’
-    };
+    configureScript = "./Configure";
+  } // stdenv.lib.optionalAttrs (opensslCrossSystem == "darwin64-x86_64-cc") {
+    CC = "gcc";
   };
 
-in {
-
-  openssl_1_0_2 = common {
-    version = "1.0.2k";
-    sha256 = "1h6qi35w6hv6rd73p4cdgdzg732pdrfgpp37cgwz1v9a3z37ffbb";
+  meta = {
+    homepage = http://www.openssl.org/;
+    description = "A cryptographic library that implements the SSL and TLS protocols";
+    platforms = stdenv.lib.platforms.all;
+    maintainers = [ stdenv.lib.maintainers.simons ];
+    priority = 10; # resolves collision with ‘man-pages’
   };
-
-  openssl_1_1_0 = common {
-    version = "1.1.0e";
-    sha256 = "0k47sdd9gs6yxfv6ldlgpld2lyzrkcv9kz4cf88ck04xjwc8dgjp";
-  };
-
-  openssl_1_0_2-steam = common {
-    version = "1.0.2k";
-    sha256 = "1h6qi35w6hv6rd73p4cdgdzg732pdrfgpp37cgwz1v9a3z37ffbb";
-    configureFlags = [ "no-engine" ];
-    makeDepend = true;
-    patches = [ ./openssl-fix-cpuid_setup.patch ];
-  };
-
 }

@@ -1,46 +1,27 @@
-{ stdenv, fetchFromGitHub, cmake, mesa, freeglut, darwin }:
+{ stdenv, fetchurl, cmake, mesa, freeglut }:
 
 stdenv.mkDerivation rec {
-  name = "bullet-${version}";
-  version = "2.83.7";
-
-  src = fetchFromGitHub {
-    owner = "bulletphysics";
-    repo = "bullet3";
-    rev = version;
-    sha256 = "1zz3vs6i5975y9mgb1k1vxrjbf1028v0nc11p646dsvv2vplxx5r";
+  name = "bullet-2.80"; # vdrift 2012-07-22 doesn't build with 2.81
+  rev = "2531";
+  src = fetchurl {
+    url = "http://bullet.googlecode.com/files/${name}-rev${rev}.tgz";
+    sha256 = "0dig6k88jz5y0cz6dn186vc4l96l4v56zvwpsp5bv9f5wdwjskj6";
   };
 
-  buildInputs = [ cmake ] ++
-    (if stdenv.isDarwin
-     then with darwin.apple_sdk.frameworks; [ Cocoa OpenGL ]
-     else [mesa freeglut]);
-
-  postPatch = stdenv.lib.optionalString stdenv.isDarwin ''
-    sed -i 's/FIND_PACKAGE(OpenGL)//' CMakeLists.txt
-    sed -i 's/FIND_LIBRARY(COCOA_LIBRARY Cocoa)//' CMakeLists.txt
+  buildInputs = [ cmake mesa freeglut ];
+  configurePhase = ''
+    cmake -DBUILD_SHARED_LIBS=ON -DBUILD_EXTRAS=OFF -DBUILD_DEMOS=OFF \
+      -DCMAKE_INSTALL_PREFIX=$out .
   '';
-
-  cmakeFlags = [ "-DBUILD_SHARED_LIBS=ON" "-DBUILD_CPU_DEMOS=OFF" ] ++
-    stdenv.lib.optionals stdenv.isDarwin [
-      "-DMACOSX_DEPLOYMENT_TARGET=\"10.9\""
-      "-DOPENGL_FOUND=true"
-      "-DOPENGL_LIBRARIES=${darwin.apple_sdk.frameworks.OpenGL}/Library/Frameworks/OpenGL.framework"
-      "-DOPENGL_INCLUDE_DIR=${darwin.apple_sdk.frameworks.OpenGL}/Library/Frameworks/OpenGL.framework"
-      "-DOPENGL_gl_LIBRARY=${darwin.apple_sdk.frameworks.OpenGL}/Library/Frameworks/OpenGL.framework"
-      "-DCOCOA_LIBRARY=${darwin.apple_sdk.frameworks.Cocoa}/Library/Frameworks/Cocoa.framework"];
-
-  enableParallelBuilding = true;
 
   meta = {
     description = "A professional free 3D Game Multiphysics Library";
     longDescription = ''
       Bullet 3D Game Multiphysics Library provides state of the art collision
-      detection, soft body and rigid body dynamics.
+      detection, soft body and rigid body dynamics. 
     '';
     homepage = http://code.google.com/p/bullet/;
     license = stdenv.lib.licenses.zlib;
     maintainers = with stdenv.lib.maintainers; [ aforemny ];
-    platforms = with stdenv.lib.platforms; unix;
   };
 }

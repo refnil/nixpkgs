@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, pkgconfig, intltool, gtk2, alsaLib, libglade }:
+{ stdenv, fetchurl, pkgconfig, intltool, gtk, alsaLib, libglade }:
 
 stdenv.mkDerivation {
   name = "lingot-0.9.1";
@@ -8,9 +8,7 @@ stdenv.mkDerivation {
     sha256 = "0ygras6ndw2fylwxx86ac11pcr2y2bcfvvgiwrh92z6zncx254gc";
   };
 
-  hardeningDisable = [ "format" ];
-
-  buildInputs = [ pkgconfig intltool gtk2 alsaLib libglade ];
+  buildInputs = [ pkgconfig intltool gtk alsaLib libglade ];
 
   configureFlags = "--disable-jack";
 

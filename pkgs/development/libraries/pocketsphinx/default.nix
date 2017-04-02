@@ -1,46 +1,20 @@
-{ stdenv
-, fetchurl
-, sphinxbase
-, pkgconfig
-, python27 # >= 2.6
-, swig2 # 2.0
-}:
+{ stdenv, fetchurl, sphinxbase, pkgconfig }:
 
 stdenv.mkDerivation rec {
-  name = "pocketsphinx-5prealpha";
+  name = "pocketsphinx-0.7";
 
   src = fetchurl {
     url = "mirror://sourceforge/cmusphinx/${name}.tar.gz";
-    sha256 = "1n9yazzdgvpqgnfzsbl96ch9cirayh74jmpjf7svs4i7grabanzg";
+    sha256 = "0m94x5pridagr0hgmnidrf4z44zcya05d8fh67k0cc0mmghsq36f";
   };
 
   propagatedBuildInputs = [ sphinxbase ];
 
-  buildInputs = [ pkgconfig python27 swig2 ];
+  buildInputs = [ pkgconfig ];
 
   meta = {
     description = "Voice recognition library written in C";
     homepage = http://cmusphinx.sourceforge.net;
-    license = stdenv.lib.licenses.free;
-    platforms = stdenv.lib.platforms.linux;
+    license = "free-non-copyleft";
   };
 }
-
-/* Example usage:
-
-
-1.
-
-$ cat << EOF > vocabulary.txt
-oh mighty computer /1e-40/
-hello world /1e-30/
-EOF
-
-2.
-
-$ pocketsphinx_continuous -inmic yes -kws vocabulary.txt 2> /dev/null
-# after you say "hello world":
-hello world
-...
-
-*/

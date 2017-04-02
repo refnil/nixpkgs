@@ -1,33 +1,28 @@
-{stdenv, fetchgit, xproto, libX11, libXft, customConfig ? null, patches ? [] }:
-
-with stdenv.lib;
+{stdenv, fetchhg, xproto, libX11, patches ? []}:
 
 stdenv.mkDerivation rec {
-  name = "tabbed-20160425";
-
-  src = fetchgit {
-    url = http://git.suckless.org/tabbed;
-    rev = "bc236142fa72d2f9d6b5c790d3f3a9a9168a7164";
-    sha256 = "1fiv57g3jnlhnb6zrzl3n6lnpn2s9s0sd7bcv7r1nb3grwy7icri";
+  name = "tabbed-20120209";
+ 
+  src = fetchhg {
+    url = http://hg.suckless.org/tabbed;
+    rev = "d7542a6f6dc5";
+    sha256 = "1963jsazfmh5k7923c1mfwppz1xbh48z16j0sa64fiscq22as2gj";
   };
 
+  # Allow users set their own list of patches
   inherit patches;
 
-  postPatch = stdenv.lib.optionalString (customConfig != null) ''
-    cp ${builtins.toFile "config.h" customConfig} ./config.h
+  buildInputs = [ xproto libX11 ];
+
+  preInstall = ''
+    export makeFlags="PREFIX=$out"
   '';
-
-  buildInputs = [ xproto libX11 libXft ];
-
-  makeFlags = [
-    "PREFIX=$(out)"
-  ];
-
+ 
   meta = {
     homepage = http://tools.suckless.org/tabbed;
     description = "Simple generic tabbed fronted to xembed aware applications";
-    license = licenses.mit;
-    maintainers = with maintainers; [ viric vrthra ];
-    platforms = platforms.linux;
+    license="MIT";
+    maintainers = with stdenv.lib.maintainers; [viric];
+    platforms = with stdenv.lib.platforms; linux;
   };
 }

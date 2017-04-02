@@ -42,7 +42,7 @@ in
       };
 
       allowedClients = mkOption {
-        type = types.listOf types.str;
+        type = types.listOf types.string;
         default = [ "127.0.0.1" "::1" ];
         example = [ "127.0.0.1" "::1" "134.157.168.0/24" "2001:660:116::/48" ];
         description = ''
@@ -103,8 +103,12 @@ in
       description = "caching web proxy";
       after = [ "network.target" "nss-lookup.target" ];
       wantedBy = [ "multi-user.target"];
+      preStart = ''
+         ${pkgs.coreutils}/bin/chown polipo:polipo /var/cache/polipo -R
+      '';
       serviceConfig = {
         ExecStart  = "${pkgs.polipo}/bin/polipo -c ${polipoConfig}";
+        ExecReload = "${pkgs.coreutils}/bin/kill -USR1 $MAINPID";
         User = "polipo";
       };
     };

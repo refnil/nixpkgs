@@ -11,7 +11,7 @@ stdenv.mkDerivation {
   buildInputs = [ ncurses ];
 
   installPhase = ''
-    mkdir -p $out/bin
+    ensureDir $out/bin
     cp bsod $out/bin
   '';
 

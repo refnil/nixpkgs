@@ -1,36 +1,35 @@
-{ stdenv, fetchurl, linuxHeaders, perl }:
+{ stdenv, fetchurl, kernelHeaders, kernel, perl }:
 
 let
+  version = "2.0.3";
+
   commonMakeFlags = [
     "prefix=$(out)"
     "SHLIBDIR=$(out)/lib"
   ];
 in
 
-stdenv.mkDerivation rec {
-  name = "klibc-${version}";
-  version = "2.0.4";
+stdenv.mkDerivation {
+  name = "klibc-${version}-${kernel.version}";
 
   src = fetchurl {
     url = "mirror://kernel/linux/libs/klibc/2.0/klibc-${version}.tar.xz";
-    sha256 = "7f9a0850586def7cf4faeeb75e5d0f66e613674c524f6e77b0f4d93a26c801cb";
+    sha256 = "02035f2b230020de569d40605485121e0fe481ed33a93bdb8bf8c6ee2695fffa";
   };
 
   patches = [ ./no-reinstall-kernel-headers.patch ];
 
   nativeBuildInputs = [ perl ];
 
-  hardeningDisable = [ "format" "stackprotector" ];
-
   makeFlags = commonMakeFlags ++ [
     "KLIBCARCH=${stdenv.platform.kernelArch}"
-    "KLIBCKERNELSRC=${linuxHeaders}"
+    "KLIBCKERNELSRC=${kernelHeaders}"
   ] ++ stdenv.lib.optional (stdenv.platform.kernelArch == "arm") "CONFIG_AEABI=y";
 
   crossAttrs = {
     makeFlags = commonMakeFlags ++ [
       "KLIBCARCH=${stdenv.cross.platform.kernelArch}"
-      "KLIBCKERNELSRC=${linuxHeaders.crossDrv}"
+      "KLIBCKERNELSRC=${kernelHeaders.crossDrv}"
       "CROSS_COMPILE=${stdenv.cross.config}-"
     ] ++ stdenv.lib.optional (stdenv.cross.platform.kernelArch == "arm") "CONFIG_AEABI=y";
   };
@@ -42,12 +41,8 @@ stdenv.mkDerivation rec {
     cp $(find $(find . -name static) -type f ! -name "*.g" -a ! -name ".*") $dir/
     cp usr/dash/sh $dir/
 
-    for file in ${linuxHeaders}/include/*; do
+    for file in ${kernelHeaders}/include/*; do
       ln -sv $file $out/lib/klibc/include
     done
   '';
-
-  meta = {
-    platforms = [ "x86_64-linux" ];
-  };
 }

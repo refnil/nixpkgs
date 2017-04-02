@@ -1,77 +1,88 @@
-{ stdenv, fetchurl, texinfo, gmp, mpfr, libmpc, zlib }:
+{ stdenv, fetchurl, writeTextFile, coreutils, gnumake, gcc, gnutar, bzip2
+  , gnugrep, gnused, gawk, diffutils, patch
+  , gmp, mpfr, mpc }:
 
 stdenv.mkDerivation {
   name = "avr-gcc-libc";
 
-  srcs = [
-    (fetchurl {
-        url = "mirror://gnu/binutils/binutils-2.26.tar.bz2";
-        sha256 = "1ngc2h3knhiw8s22l8y6afycfaxr5grviqy7mwvm4bsl14cf9b62";
-    })
+  srcBinutils = fetchurl {
+    url = "mirror://gnu/binutils/binutils-2.21.1.tar.bz2";
+    sha256 = "0m7nmd7gc9d9md43wbrv65hz6lbi2crqwryzpigv19ray1lzmv6d";
+  };
 
-    (fetchurl {
-          url = "mirror://gcc/releases/gcc-5.3.0/gcc-5.3.0.tar.bz2";
-          sha256 = "1ny4smkp5bzs3cp8ss7pl6lk8yss0d9m4av1mvdp72r1x695akxq";
-    })
+  srcGCC = fetchurl {
+    url = "mirror://gcc/releases/gcc-4.6.3/gcc-core-4.6.3.tar.bz2";
+    sha256 = "1hai090f0svf886nyhn4glmfw54v9lz88w2izkx5iqhd3j400gi8";
+  };
 
-    (fetchurl {
-        url = http://download.savannah.gnu.org/releases/avr-libc/avr-libc-2.0.0.tar.bz2;
-        sha256 = "15svr2fx8j6prql2il2fc0ppwlv50rpmyckaxx38d3gxxv97zpdj";
-    })
-  ];
+  srcGCCGPP = fetchurl {
+    url = "mirror://gcc/releases/gcc-4.6.3/gcc-g++-4.6.3.tar.bz2";
+    sha256 = "1s199gb6p65r5k69cdfqqcz5hgifw9bhyj65n2b91s80x4rwgq5k";
+  };
 
-  sourceRoot = ".";
+  srcAVRLibc = fetchurl {
+    url = http://download.savannah.gnu.org/releases/avr-libc/avr-libc-1.7.1.tar.bz2;
+    sha256 = "1b1s4cf787izlm3r094vvkzrzb3w3bg6bwiz2wz71cg7q07kzzn6";
+  };
 
-  nativeBuildInputs = [ texinfo ];
+  phases = "doAll";
 
-  buildInputs = [ gmp mpfr libmpc zlib ];
+  # don't call any wired $buildInputs/nix-support/* scripts or such. This makes the build fail 
+  builder = writeTextFile {
+    name = "avrbinutilsgccavrlibc-builder-script";
+    text =  ''
+    PATH=${coreutils}/bin:${gnumake}/bin:${gcc}/bin:${gnutar}/bin:${bzip2}/bin:${gnugrep}/bin:${gnused}/bin:${gawk}/bin:${diffutils}/bin:${patch}/bin
+    # that's all a bit too hacky...!
+    for i in `cat ${gcc}/nix-support/propagated-user-env-packages`; do
+      echo adding $i
+      PATH=$PATH:$i/bin
+    done
+    mkdir -p "$out"
+    export > env-vars
 
-  hardeningDisable = [ "format" ];
+    for i in "${gmp}" "${mpfr}" "${mpc}"; do
+      export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE -I$i/include "
+      export NIX_LDFLAGS="$NIX_LDFLAGS -L$i/lib "
+    done
 
-  # Make sure we don't strip the libraries in lib/gcc/avr.
-  stripDebugList= [ "bin" "avr/bin" "libexec" ];
-
-  installPhase = ''
     # important, without this gcc won't find the binutils executables
-    export PATH=$PATH:$out/bin
+    PATH=$PATH:$out/bin
 
-    # Binutils.
-    pushd binutils-*/
-    mkdir obj-avr
-    cd obj-avr
-    ../configure --target=avr --prefix="$out" --disable-nls --disable-debug --disable-dependency-tracking
-    make $MAKE_FLAGS
-    make install
-    popd
+    prefix=$out
 
-    # GCC.
-    pushd gcc-*
-    mkdir obj-avr
-    cd obj-avr
-    ../configure --target=avr --prefix="$out" --disable-nls --disable-libssp --with-dwarf2 --disable-install-libiberty --with-system-zlib --enable-languages=c,c++
-    make $MAKE_FLAGS
-    make install
-    popd
+    tar jxf $srcBinutils
+      cd binutils-*/
+      mkdir obj-avr
+      cd obj-avr
+      ../configure --target=avr --prefix="$prefix" --disable-nls --prefix=$prefix
+      make $MAKE_FLAGS
+      make install
 
-    # We don't want avr-libc to use the native compiler.
-    export BUILD_CC=$CC
-    export BUILD_CXX=$CXX
-    unset CC
-    unset CXX
+    cd $TMP
+    tar jxf $srcGCC
+    tar jxf $srcGCCGPP
+      cd gcc-*
+      mkdir obj-avr
+      cd obj-avr
+      ../configure --target=avr --prefix="$prefix" --disable-nls --enable-languages=c,c++ --disable-libssp --with-dwarf2
+      make $MAKE_FLAGS
+      make install
 
-    # AVR-libc.
-    pushd avr-libc-*
-    ./configure --prefix="$out" --build=`./config.guess` --host=avr
-    make $MAKE_FLAGS
-    make install
-    popd
-  '';
+    cd $TMP
+      tar jxf $srcAVRLibc
+      cd avr-libc-*
+      patch -Np1 -i ${./avr-libc-fix-gcc-4.6.0.patch}
+      ./configure --prefix="$prefix" --build=`./config.guess` --host=avr
+      make $MAKE_FLAGS
+      make install
+    '';
+  };
 
   meta = with stdenv.lib; {
-    description = "AVR development environment including binutils, avr-gcc and avr-libc";
-    # I've tried compiling the packages separately.. too much hassle. This just works. Fine.
-    license =  ["GPL" "LGPL"]; # see single packages ..
-    homepage = []; # dito
-    platforms = platforms.linux;
+      description = "AVR developement environment including binutils, avr-gcc and avr-libc";
+      # I've tried compiling the packages separately.. too much hassle. This just works. Fine.
+      license =  ["GPL" "LGPL"]; # see single packages ..
+      homepage = []; # dito
+      platforms = platforms.linux;
   };
 }

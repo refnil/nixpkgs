@@ -1,74 +1,39 @@
-{ stdenv, fetchurl, ncurses, openssl, aspell, gnutls
-, zlib, curl , pkgconfig, libgcrypt
-, cmake, makeWrapper, libobjc, libresolv, libiconv
-, asciidoctor # manpages
-, guileSupport ? true, guile
-, luaSupport ? true, lua5
-, perlSupport ? true, perl
-, pythonPackages
-, rubySupport ? true, ruby
-, tclSupport ? true, tcl
-, extraBuildInputs ? [] }:
-
-assert guileSupport -> guile != null;
-assert luaSupport -> lua5 != null;
-assert perlSupport -> perl != null;
-assert rubySupport -> ruby != null;
-assert tclSupport -> tcl != null;
-
-let
-  inherit (pythonPackages) python pycrypto pync;
-in
+{ stdenv, fetchurl, ncurses, openssl, perl, python, aspell, gnutls
+, zlib, curl , pkgconfig, libgcrypt, ruby, lua5, tcl, guile
+, pythonPackages, cacert, cmake, makeWrapper }:
 
 stdenv.mkDerivation rec {
-  version = "1.7";
+  version = "0.4.3";
   name = "weechat-${version}";
 
   src = fetchurl {
-    url = "http://weechat.org/files/src/weechat-${version}.tar.bz2";
-    sha256 = "1l34rgr83nf2h71mwzhv5c0x03msrwv3kzx3cwzczx72xrih12n7";
+    url = "http://weechat.org/files/src/${name}.tar.gz";
+    sha256 = "1sfx2j8xy6das0zis2nmzi9z41q96gzq61xaw4i0xbgag17s7ddz";
   };
 
-  outputs = [ "out" "doc" ];
+  buildInputs = 
+    [ ncurses perl python openssl aspell gnutls zlib curl pkgconfig
+      libgcrypt ruby lua5 tcl guile pythonPackages.pycrypto makeWrapper
+      cacert cmake ]
+    ++ stdenv.lib.optional stdenv.isDarwin pythonPackages.pync;
 
-  enableParallelBuilding = true;
-  cmakeFlags = with stdenv.lib; [
-    "-DENABLE_MAN=ON"
-    "-DENABLE_DOC=ON"
-  ]
-    ++ optionals stdenv.isDarwin ["-DICONV_LIBRARY=${libiconv}/lib/libiconv.dylib" "-DCMAKE_FIND_FRAMEWORK=LAST"]
-    ++ optional (!guileSupport) "-DENABLE_GUILE=OFF"
-    ++ optional (!luaSupport)   "-DENABLE_LUA=OFF"
-    ++ optional (!perlSupport)  "-DENABLE_PERL=OFF"
-    ++ optional (!rubySupport)  "-DENABLE_RUBY=OFF"
-    ++ optional (!tclSupport)   "-DENABLE_TCL=OFF"
-    ;
+  # This patch is based on
+  # weechat/c324610226cef15ecfb1235113c8243b068084c8. It fixes
+  # freeze/crash on /exit when using nixpkgs' gnutls 3.2. The next
+  # weechat release (0.4.4) will include this, so it's safe to remove
+  # then.
+  patches = [ ./fix-gnutls-32.diff ];
 
-  buildInputs = with stdenv.lib; [
-      ncurses python openssl aspell gnutls zlib curl pkgconfig
-      libgcrypt pycrypto makeWrapper
-      cmake
-      asciidoctor
-      ]
-    ++ optionals stdenv.isDarwin [ pync libobjc libresolv ]
-    ++ optional  guileSupport    guile
-    ++ optional  luaSupport      lua5
-    ++ optional  perlSupport     perl
-    ++ optional  rubySupport     ruby
-    ++ optional  tclSupport      tcl
-    ++ extraBuildInputs;
+  NIX_CFLAGS_COMPILE = "-I${python}/include/${python.libPrefix}";
 
-  NIX_CFLAGS_COMPILE = "-I${python}/include/${python.libPrefix}"
-    # Fix '_res_9_init: undefined symbol' error
-    + (stdenv.lib.optionalString stdenv.isDarwin "-DBIND_8_COMPAT=1 -lresolv");
-
-  postInstall = with stdenv.lib; ''
+  postInstall = ''
     NIX_PYTHONPATH="$out/lib/${python.libPrefix}/site-packages"
-    wrapProgram "$out/bin/weechat" \
-      ${optionalString perlSupport "--prefix PATH : ${perl}/bin"} \
-      --prefix PATH : ${pythonPackages.python}/bin \
-      --prefix PYTHONPATH : "$PYTHONPATH" \
-      --prefix PYTHONPATH : "$NIX_PYTHONPATH"
+  '' + stdenv.lib.optionalString stdenv.isDarwin ''
+    NIX_PYTHONPATH+="${pythonPackages.pync}/lib/${python.libPrefix}/site-packages"
+  '' + ''
+     wrapProgram "$out/bin/weechat" \
+       --prefix PYTHONPATH : "$PYTHONPATH" \
+       --prefix PYTHONPATH : "$NIX_PYTHONPATH"
   '';
 
   meta = {

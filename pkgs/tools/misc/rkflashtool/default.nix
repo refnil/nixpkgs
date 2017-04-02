@@ -20,8 +20,8 @@ stdenv.mkDerivation rec {
   '';
 
   installPhase = ''
-    mkdir -p $out/bin
-    cp rkunpack rkcrc rkflashtool rkparameters rkparametersblock rkunsign rkmisc $out/bin
+    ensureDir $out/bin
+    cp rkunpack rkcrc rkflashtool $out/bin
   '';
 
   meta = {

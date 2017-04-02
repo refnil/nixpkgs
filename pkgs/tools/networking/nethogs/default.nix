@@ -1,21 +1,21 @@
-{ stdenv, fetchFromGitHub, ncurses, libpcap }:
+{ stdenv, fetchgit, ncurses, libpcap }:
 
 stdenv.mkDerivation rec {
   name = "nethogs-${version}";
-  version = "0.8.5";
 
-  src = fetchFromGitHub {
-    owner = "raboof";
-    repo = "nethogs";
-    rev = "v${version}";
-    sha256 = "13plwblwbnyyi40jaqx471gwhln08wm7f0fxyvj1yh3d81k556yx";
+  version = "0.8.1-git";
+
+  src = fetchgit {
+    url = git://github.com/raboof/nethogs.git;
+    rev = "f6f9e890ea731b8acdcb8906642afae4cd96baa8";
+    sha256 = "0dj5sdyxdlssbnjbdf8k7x896m2zgyyg31g12dl5n6irqdrb5scf";
   };
 
   buildInputs = [ ncurses libpcap ];
 
-  makeFlags = [ "VERSION=${version}" ];
-
-  installFlags = [ "PREFIX=$(out)" "sbin=$(out)/bin" ];
+  preConfigure = ''
+    substituteInPlace Makefile --replace "prefix := /usr/local" "prefix := $out"
+  '';
 
   meta = with stdenv.lib; {
     description = "A small 'net top' tool, grouping bandwidth by process";
@@ -29,8 +29,8 @@ stdenv.mkDerivation rec {
       bandwidth.
     '';
     license = licenses.gpl2Plus;
-    homepage = "https://github.com/raboof/nethogs#readme";
+    homepage = http://nethogs.sourceforge.net/;
     platforms = platforms.linux;
-    maintainers = [ maintainers.rycee ];
+    maintainers = with maintainers; [ wizeman ];
   };
 }

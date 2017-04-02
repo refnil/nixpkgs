@@ -1,23 +1,25 @@
-{ stdenv, lib, fetchgit, makeWrapper
-, pkgconfig, cmake, libxml2, vala_0_23, intltool, libmx, gnome3, gtk3, gtk_doc
+{ stdenv, lib, fetchFromGitHub, makeWrapper
+, pkgconfig, cmake, libxml2, vala, intltool, libmx, gnome3, gtk3, gtk_doc
 , keybinder3, clutter_gtk, libnotify
-, libxkbcommon, xorg, udev
+, libxkbcommon, xlibs, udev
 , bashInteractive
 }:
 
-stdenv.mkDerivation {
-  name = "finalterm-git-2014-11-15";
+let rev = "5ccde4e8f2c02a398f9172e07c25262ecf954626";
+in stdenv.mkDerivation {
+  name = "finalterm-git-${builtins.substring 0 8 rev}";
 
-  src = fetchgit {
-    url = "https://github.com/p-e-w/finalterm.git";
-    rev = "39b078b2a96a5c3c9e74f92b1929f383d220ca8b";
-    sha256 = "14viln5nabr39lafg1lzf6ydibz1h5d9346drp435ljxc6wsh21i";
+  src = fetchFromGitHub {
+    owner = "p-e-w";
+    repo = "finalterm";
+    inherit rev;
+    sha256 = "1gw6nc19whfjd4xj0lc0fmjypn8d7nasif79671859ymnfizyq4f";
   };
 
   buildInputs = [
-    pkgconfig cmake vala_0_23 intltool gtk3 gnome3.gnome_common gnome3.libgee
+    pkgconfig cmake vala intltool gtk3 gnome3.gnome_common gnome3.libgee
     gtk_doc clutter_gtk libmx keybinder3 libxml2 libnotify makeWrapper
-    xorg.libpthreadstubs xorg.libXdmcp xorg.libxshmfence
+    xlibs.libpthreadstubs xlibs.libXdmcp xlibs.libxshmfence
     libxkbcommon
   ] ++ lib.optionals stdenv.isLinux [
     udev
@@ -32,16 +34,11 @@ stdenv.mkDerivation {
     )
   '';
 
-  postInstall = ''
-    mkdir -p $out/share/gsettings-schemas/$name
-    mv $out/share/glib-2.0 $out/share/gsettings-schemas/$name/
-  '';
-
   postFixup = ''
     wrapProgram "$out/bin/finalterm" \
       --prefix GI_TYPELIB_PATH : "$GI_TYPELIB_PATH" \
       --prefix GIO_EXTRA_MODULES : "${gnome3.dconf}/lib/gio/modules" \
-      --prefix XDG_DATA_DIRS : "${gnome3.defaultIconTheme}/share:${gnome3.gtk.out}/share:$out/share:$GSETTINGS_SCHEMAS_PATH"
+      --prefix XDG_DATA_DIRS : "${gnome3.gnome_icon_theme}/share:${gnome3.gtk}/share:$out/share:$GSETTINGS_SCHEMAS_PATH"
   '';
 
   meta = with lib; {
@@ -58,6 +55,6 @@ stdenv.mkDerivation {
     '';
     license = licenses.gpl3Plus;
     maintainers = with maintainers; [ cstrahan ];
-    platforms = platforms.linux;
+    platforms = with platforms; linux;
   };
 }

@@ -1,15 +1,11 @@
 { stdenv, fetchurl, sbcl, libX11, libXpm, libICE, libSM, libXt, libXau, libXdmcp }:
 
-let
-  version = "1.3.1";
-  name = "fricas-" + version;
-in
-stdenv.mkDerivation {
-  inherit name;
+stdenv.mkDerivation rec {
+  name = "fricas-1.2.2";
 
   src = fetchurl {
-    url    = "http://sourceforge.net/projects/fricas/files/fricas/${version}/${name}-full.tar.bz2";
-    sha256 = "0c2wgj1c3mh5f8msx1ckxpnhm0dyq7dqf1wk6aiyysh8xn57cjkx";
+    url    = "http://sourceforge.net/projects/fricas/files/fricas/1.2.2/${name}-full.tar.bz2";
+    sha256 = "87db64a1fd4211f3b776793acea931b4271d2e7a28396414c7d7397d833defe1";
   };
 
   buildInputs = [ sbcl libX11 libXpm libICE libSM libXt libXau libXdmcp ];
@@ -18,10 +14,10 @@ stdenv.mkDerivation {
 
   meta = {
     homepage = http://fricas.sourceforge.net/;
-    description = "An advanced computer algebra system";
+    description = "Fricas CAS";
     license = stdenv.lib.licenses.bsd3;
 
-    platforms = stdenv.lib.platforms.linux;
-    maintainers = [ stdenv.lib.maintainers.sprock ];
+    hydraPlatforms = stdenv.lib.platforms.linux;
+    maintainers = stdenv.lib.maintainers.sprock;
   };
 }

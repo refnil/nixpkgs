@@ -15,7 +15,7 @@ let
     logfile=/var/log/murmur/murmurd.log
     pidfile=${cfg.pidfile}
 
-    welcometext="${cfg.welcometext}"
+    welcome="${cfg.welcome}"
     port=${toString cfg.port}
 
     ${if cfg.hostName == "" then "" else "host="+cfg.hostName}
@@ -39,9 +39,6 @@ let
     certrequired=${if cfg.clientCertRequired then "true" else "false"}
     ${if cfg.sslCert == "" then "" else "sslCert="+cfg.sslCert}
     ${if cfg.sslKey  == "" then "" else "sslKey="+cfg.sslKey}
-    ${if cfg.sslCa   == "" then "" else "sslCA="+cfg.sslCa}
-    
-    ${cfg.extraConfig}
   '';
 in
 {
@@ -84,7 +81,7 @@ in
         description = "Path to PID file for Murmur daemon.";
       };
 
-      welcometext = mkOption {
+      welcome = mkOption {
         type = types.str;
         default = "";
         description = "Welcome message for connected clients.";
@@ -221,18 +218,6 @@ in
         type = types.str;
         default = "";
         description = "Path to your SSL key.";
-      };
-
-      sslCa = mkOption {
-        type = types.str;
-        default = "";
-        description = "Path to your SSL CA certificate.";
-      };
-
-      extraConfig = mkOption {
-        type = types.lines;
-        default = "";
-        description = "Extra configuration to put into mumur.ini.";
       };
     };
   };

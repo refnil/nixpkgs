@@ -1,36 +1,24 @@
-{ fetchurl, stdenv, pkgconfig, libtirpc
-, useSystemd ? true, systemd }:
+{ fetchurl, stdenv, libtirpc }:
 
 stdenv.mkDerivation rec {
-  name = "rpcbind-${version}";
-  version = "0.2.4";
-
+  name = "rpcbind-0.2.0";
+  
   src = fetchurl {
-    url = "mirror://sourceforge/rpcbind/${version}/${name}.tar.bz2";
-    sha256 = "0rjc867mdacag4yqvs827wqhkh27135rp9asj06ixhf71m9rljh7";
+    url = "mirror://sourceforge/rpcbind/rpcbind-0.2.0.tar.bz2";
+    sha256 = "c92f263e0353887f16379d7708ef1fb4c7eedcf20448bc1e4838f59497a00de3";
   };
 
-  patches = [
-    ./sunrpc.patch
-  ];
+  patches = [ ./sunrpc.patch ];
 
-  buildInputs = [ libtirpc ]
-             ++ stdenv.lib.optional useSystemd systemd;
+  preConfigure = ''
+    export CPPFLAGS=-I${libtirpc}/include/tirpc
+  '';
 
-  configureFlags = [
-    "--with-systemdsystemunitdir=${if useSystemd then "$(out)/etc/systemd/system" else "no"}"
-    "--enable-warmstarts"
-    "--with-rpcuser=rpc"
-  ];
+  buildInputs = [ libtirpc ];
 
-  nativeBuildInputs = [ pkgconfig ];
-
-  meta = with stdenv.lib; {
+  meta = {
     description = "ONC RPC portmapper";
-    license = licenses.bsd3;
-    platforms = platforms.unix;
-    homepage = "http://sourceforge.net/projects/rpcbind/";
-    maintainers = with maintainers; [ abbradar ];
+    license = "BSD";
     longDescription = ''
       Universal addresses to RPC program number mapper.
     '';

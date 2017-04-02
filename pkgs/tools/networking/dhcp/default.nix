@@ -1,14 +1,11 @@
-{ stdenv, fetchurl, perl, file, nettools, iputils, iproute, makeWrapper
-, coreutils, gnused, openldap ? null
-}:
+{ stdenv, fetchurl, nettools, iputils, iproute, makeWrapper, coreutils, gnused }:
 
 stdenv.mkDerivation rec {
-  name = "dhcp-${version}";
-  version = "4.3.4";
-
+  name = "dhcp-4.1-ESV-R6";
+  
   src = fetchurl {
-    url = "http://ftp.isc.org/isc/dhcp/${version}/${name}.tar.gz";
-    sha256 = "0zk0imll6bfyp9p4ndn8h6s4ifijnw5bhixswifr5rnk7pp5l4gm";
+    url = http://ftp.isc.org/isc/dhcp/4.1-ESV-R6/dhcp-4.1-ESV-R6.tar.gz;
+    sha256 = "17md1vml07szl9dx4875gfg4sgnb3z73glpbq1si7p82mfhnddny";
   };
 
   patches =
@@ -23,30 +20,19 @@ stdenv.mkDerivation rec {
       ./set-hostname.patch
     ];
 
-  buildInputs = [ perl makeWrapper openldap ];
+  # Fixes "socket.c:591: error: invalid application of 'sizeof' to
+  # incomplete type 'struct in6_pktinfo'".  See
+  # http://www.mail-archive.com/blfs-book@linuxfromscratch.org/msg13013.html
+  NIX_CFLAGS_COMPILE = "-D_GNU_SOURCE";
 
-  configureFlags = [
-    "--enable-failover"
-    "--enable-execute"
-    "--enable-tracing"
-    "--enable-delayed-ack"
-    "--enable-dhcpv6"
-    "--enable-paranoia"
-    "--enable-early-chroot"
-    "--sysconfdir=/etc"
-    "--localstatedir=/var"
-  ] ++ stdenv.lib.optionals (openldap != null) [ "--with-ldap" "--with-ldapcrypto" ];
+  # It would automatically add -Werror, which disables build in gcc 4.4
+  # due to an uninitialized variable.
+  CFLAGS = "-g -O2 -Wall";
 
-  installFlags = [ "DESTDIR=\${out}" ];
+  buildInputs = [ makeWrapper ];
 
   postInstall =
     ''
-      mv $out/$out/* $out
-      DIR=$out/$out
-      while rmdir $DIR 2>/dev/null; do
-        DIR="$(dirname "$DIR")"
-      done
-
       cp client/scripts/linux $out/sbin/dhclient-script
       substituteInPlace $out/sbin/dhclient-script \
         --replace /sbin/ip ${iproute}/sbin/ip
@@ -56,12 +42,11 @@ stdenv.mkDerivation rec {
 
   preConfigure =
     ''
-      substituteInPlace configure --replace "/usr/bin/file" "${file}/bin/file"
       sed -i "includes/dhcpd.h" \
 	-"es|^ *#define \+_PATH_DHCLIENT_SCRIPT.*$|#define _PATH_DHCLIENT_SCRIPT \"$out/sbin/dhclient-script\"|g"
     '';
 
-  meta = with stdenv.lib; {
+  meta = {
     description = "Dynamic Host Configuration Protocol (DHCP) tools";
 
     longDescription = ''
@@ -72,8 +57,6 @@ stdenv.mkDerivation rec {
    '';
 
     homepage = http://www.isc.org/products/DHCP/;
-    license = licenses.isc;
-    platforms = platforms.unix;
-    maintainers = with maintainers; [ wkennington ];
+    license = "http://www.isc.org/sw/dhcp/dhcp-copyright.php";
   };
 }

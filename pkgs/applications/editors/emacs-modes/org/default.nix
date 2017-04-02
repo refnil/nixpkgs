@@ -1,17 +1,16 @@
-{ fetchurl, stdenv, emacs, texinfo, which, texlive }:
+{ fetchurl, stdenv, emacs, texinfo, which, texLive, texLiveCMSuper
+, texLiveAggregationFun }:
 
 stdenv.mkDerivation rec {
-  name = "org-8.3.3";
+  name = "org-8.2.7b";
 
   src = fetchurl {
     url = "http://orgmode.org/${name}.tar.gz";
-    sha256 = "1vhymmd41v7an457xdjhk5zfc4q1x7z64b25rs1ccam5p550cq65";
+    sha256 = "07hq2q126d967nj7xq46q4mkca5r2rw61bn8d6nzkhksghp8b2v1";
   };
 
   buildInputs = [ emacs ];
-  nativeBuildInputs = [ (texlive.combine {
-    inherit (texlive) scheme-small cm-super;
-  }) texinfo ];
+  nativeBuildInputs = [ (texLiveAggregationFun { paths=[ texinfo texLive texLiveCMSuper ]; }) ];
 
   configurePhase =
     '' sed -i mk/default.mk \

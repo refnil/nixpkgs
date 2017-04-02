@@ -32,8 +32,6 @@ let
       ${optionalString (cfg.dbPassword != "") ''
         DBPassword = ${cfg.dbPassword}
       ''}
-
-      ${config.services.zabbixServer.extraConfig}
     '';
 
   useLocalPostgres = cfg.dbServer == "localhost" || cfg.dbServer == "";
@@ -48,7 +46,6 @@ in
 
     services.zabbixServer.enable = mkOption {
       default = false;
-      type = types.bool;
       description = ''
         Whether to run the Zabbix server on this machine.
       '';
@@ -56,7 +53,6 @@ in
 
     services.zabbixServer.dbServer = mkOption {
       default = "localhost";
-      type = types.str;
       description = ''
         Hostname or IP address of the database server.
         Use an empty string ("") to use peer authentication.
@@ -65,16 +61,7 @@ in
 
     services.zabbixServer.dbPassword = mkOption {
       default = "";
-      type = types.str;
       description = "Password used to connect to the database server.";
-    };
-
-    services.zabbixServer.extraConfig = mkOption {
-      default = "";
-      type = types.lines;
-      description = ''
-        Configuration that is injected verbatim into the configuration file.
-      '';
     };
 
   };

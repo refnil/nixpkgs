@@ -1,75 +1,47 @@
-{ stdenv, fetchurl, fetchpatch, runCommand, zlib }:
+{stdenv, fetchurl, runCommand, gcc, zlib}:
 
-let ccache = stdenv.mkDerivation rec {
-  name = "ccache-${version}";
-  version = "3.2.5";
-
+let
+  ccache =
+stdenv.mkDerivation {
+  name = "ccache-3.1.9";
   src = fetchurl {
-    sha256 = "11db1g109g0g5si0s50yd99ja5f8j4asxb081clvx78r9d9i2w0i";
-    url = "mirror://samba/ccache/${name}.tar.xz";
+    url = http://samba.org/ftp/ccache/ccache-3.1.9.tar.gz;
+    sha256 = "0ixlxqv1xyacwgg0k9b4a6by07c7k75y0xbr8dp76jvyada0c9x2";
   };
 
   buildInputs = [ zlib ];
 
-  postPatch = ''
-    substituteInPlace Makefile.in --replace 'objs) $(extra_libs)' 'objs)'
-  '';
-
-  doCheck = !stdenv.isDarwin;
-
-  passthru = let
-      unwrappedCC = stdenv.cc.cc;
-    in {
+  passthru = {
     # A derivation that provides gcc and g++ commands, but that
     # will end up calling ccache for the given cacheDir
-    links = extraConfig: stdenv.mkDerivation rec {
-      name = "ccache-links";
-      passthru = {
-        isClang = unwrappedCC.isClang or false;
-        isGNU = unwrappedCC.isGNU or false;
-      };
-      inherit (unwrappedCC) lib;
-      buildCommand = ''
+    links = extraConfig : (runCommand "ccache-links"
+        { inherit (gcc) langC langCC; }
+      ''
         mkdir -p $out/bin
-
-        wrap() {
-          local cname="$1"
-          if [ -x "${unwrappedCC}/bin/$cname" ]; then
-            cat > $out/bin/$cname << EOF
-        #!/bin/sh
-        ${extraConfig}
-        exec ${ccache}/bin/ccache ${unwrappedCC}/bin/$cname "\$@"
+        if [ $langC -eq 1 ]; then
+          cat > $out/bin/gcc << EOF
+          #!/bin/sh
+          ${extraConfig}
+          exec ${ccache}/bin/ccache ${gcc.gcc}/bin/gcc "\$@"
         EOF
-            chmod +x $out/bin/$cname
-          fi
-        }
-
-        wrap cc
-        wrap c++
-        wrap gcc
-        wrap g++
-        wrap clang
-        wrap clang++
-
-        for executable in $(ls ${unwrappedCC}/bin); do
-          if [ ! -x "$out/bin/$executable" ]; then
-            ln -s ${unwrappedCC}/bin/$executable $out/bin/$executable
-          fi
-        done
-        for file in $(ls ${unwrappedCC} | grep -vw bin); do
-          ln -s ${unwrappedCC}/$file $out/$file
-        done
-      '';
-    };
+          chmod +x $out/bin/gcc
+        fi
+        if [ $langCC -eq 1 ]; then
+          cat > $out/bin/g++ << EOF
+          #!/bin/sh
+          ${extraConfig}
+          exec ${ccache}/bin/ccache ${gcc.gcc}/bin/g++ "\$@"
+        EOF
+          chmod +x $out/bin/g++
+        fi
+      '');
   };
 
-  meta = with stdenv.lib; {
+  meta = {
     description = "Compiler cache for fast recompilation of C/C++ code";
     homepage = http://ccache.samba.org/;
-    downloadPage = https://ccache.samba.org/download.html;
-    license = licenses.gpl3Plus;
-    maintainers = with maintainers; [ nckx ];
-    platforms = platforms.unix;
+    license = "GPL";
   };
 };
-in ccache
+in
+ccache

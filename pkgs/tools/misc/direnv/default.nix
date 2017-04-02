@@ -1,28 +1,23 @@
-{ stdenv, fetchFromGitHub, go, bash }:
+{ fetchurl, stdenv, go }:
 
-stdenv.mkDerivation rec {
+let
+  version = "2.4.0";
+in
+stdenv.mkDerivation {
   name = "direnv-${version}";
-  version = "2.10.0";
-
-  src = fetchFromGitHub {
-    owner = "direnv";
-    repo = "direnv";
-    rev = "v${version}";
-    sha256 = "04b098i8dlr6frks67ik0kbc281c6j8lkb6v0y33iwqv45n233q3";
+  src = fetchurl {
+    url = "http://github.com/zimbatm/direnv/archive/v${version}.tar.gz";
+    name = "direnv-${version}.tar.gz";
+    sha256 = "aab8028cc1d68461dd1f6c3c9d000eef10273c52399fe5d1dd917f2f4a1a349a";
   };
 
   buildInputs = [ go ];
 
-  buildPhase = ''
-    make BASH_PATH=${bash}/bin/bash
-  '';
+  buildPhase = "make";
+  installPhase = "make install DESTDIR=$out";
 
-  installPhase = ''
-    make install DESTDIR=$out
-  '';
-
-  meta = with stdenv.lib; {
-    description = "A shell extension that manages your environment";
+  meta = {
+    description = "a shell extension that manages your environment";
     longDescription = ''
       Once hooked into your shell direnv is looking for an .envrc file in your
       current directory before every prompt.
@@ -35,8 +30,8 @@ stdenv.mkDerivation rec {
       environment variables.
     '';
     homepage = http://direnv.net;
-    license = licenses.mit;
-    maintainers = with maintainers; [ zimbatm ];
-    inherit (go.meta) platforms;
+    license = stdenv.lib.licenses.mit;
+    maintainers = [ stdenv.lib.maintainers.zimbatm ];
+    platforms = go.meta.platforms;
   };
 }

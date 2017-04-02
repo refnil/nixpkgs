@@ -1,4 +1,4 @@
-{stdenv, fetchurl, which, pkgconfig, file, glib, gtk2, gtk3, curl, libXt}:
+{stdenv, fetchurl, which, pkgconfig, file, glib, gtk2, gtk3, curl}:
 let
   srcData = # Generated upstream information 
   rec {
@@ -24,7 +24,7 @@ stdenv.mkDerivation rec {
     export configureFlags="$configureFlags --target-cpu=$(uname -m)"
   '';
 
-  buildInputs = [which pkgconfig file glib gtk2 gtk3 curl libXt];
+  buildInputs = [which pkgconfig file glib gtk2 gtk3 curl];
 
   preferLocalBuild = true;
 

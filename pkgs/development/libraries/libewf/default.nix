@@ -1,23 +1,19 @@
-{ fetchurl, stdenv, zlib, openssl, libuuid, file, fuse, autoreconfHook, pkgconfig }:
+{ fetchurl, stdenv, zlib, openssl, libuuid, file }:
 
 stdenv.mkDerivation rec {
-  version = "20140608";
-  name = "libewf-${version}";
+  name = "libewf-20100226";
   src = fetchurl {
-    url = "https://googledrive.com/host/0B3fBvzttpiiSMTdoaVExWWNsRjg/libewf-20140608.tar.gz";
-    sha256 = "0wfsffzxk934hl8cpwr14w8ixnh8d23x0xnnzcspjwi2c7730h6i";
+    url = "mirror://sourceforge/libewf/${name}.tar.gz";
+    sha256 = "aedd2a6b3df6525ff535ab95cd569ebb361a4022eb4163390f26257913c2941a";
   };
 
-  nativeBuildInputs = [ autoreconfHook pkgconfig ];
+  preConfigure = ''sed -e 's@/usr/bin/file@file@g' -i configure'';
+
   buildInputs = [ zlib openssl libuuid ];
-  patches = [ ./04-fix-FTBFS-GCC5.patch ];
 
   meta = {
     description = "Library for support of the Expert Witness Compression Format";
     homepage = http://sourceforge.net/projects/libewf/;
-    license = stdenv.lib.licenses.lgpl3;
-    maintainers = [ stdenv.lib.maintainers.raskin ] ;
-    platforms = stdenv.lib.platforms.unix;
-    inherit version;
+    license = "free";
   };
 }

@@ -13,13 +13,7 @@ let
   extraUdevRules = pkgs.writeTextFile {
     name = "extra-udev-rules";
     text = cfg.extraRules;
-    destination = "/etc/udev/rules.d/99-local.rules";
-  };
-
-  extraHwdbFile = pkgs.writeTextFile {
-    name = "extra-hwdb-file";
-    text = cfg.extraHwdb;
-    destination = "/etc/udev/hwdb.d/99-local.hwdb";
+    destination = "/etc/udev/rules.d/10-local.rules";
   };
 
   nixosRules = ''
@@ -32,21 +26,17 @@ let
   '';
 
   # Perform substitutions in all udev rules files.
-  udevRules = pkgs.runCommand "udev-rules"
-    { preferLocalBuild = true;
-      allowSubstitutes = false;
-      packages = unique (map toString cfg.packages);
-    }
-    ''
+  udevRules = stdenv.mkDerivation {
+    name = "udev-rules";
+    buildCommand = ''
       mkdir -p $out
       shopt -s nullglob
-      set +o pipefail
 
       # Set a reasonable $PATH for programs called by udev rules.
       echo 'ENV{PATH}="${udevPath}/bin:${udevPath}/sbin"' > $out/00-path.rules
 
       # Add the udev rules from other packages.
-      for i in $packages; do
+      for i in ${toString cfg.packages}; do
         echo "Adding rules for package $i"
         for j in $i/{etc,lib}/udev/rules.d/*; do
           echo "Copying $j to $out/$(basename $j)"
@@ -57,12 +47,10 @@ let
       # Fix some paths in the standard udev rules.  Hacky.
       for i in $out/*.rules; do
         substituteInPlace $i \
-          --replace \"/sbin/modprobe \"${pkgs.kmod}/bin/modprobe \
+          --replace \"/sbin/modprobe \"${config.system.sbin.modprobe}/sbin/modprobe \
           --replace \"/sbin/mdadm \"${pkgs.mdadm}/sbin/mdadm \
           --replace \"/sbin/blkid \"${pkgs.utillinux}/sbin/blkid \
-          --replace \"/bin/mount \"${pkgs.utillinux}/bin/mount \
-          --replace /usr/bin/readlink ${pkgs.coreutils}/bin/readlink \
-          --replace /usr/bin/basename ${pkgs.coreutils}/bin/basename
+          --replace \"/bin/mount \"${pkgs.utillinux}/bin/mount
       done
 
       echo -n "Checking that all programs called by relative paths in udev rules exist in ${udev}/lib/udev... "
@@ -71,7 +59,7 @@ let
       run_progs=$(grep -v '^[[:space:]]*#' $out/* | grep 'RUN+="[^/$]' |
         sed -e 's/.*RUN+="\([^ "]*\)[ "].*/\1/' | uniq)
       for i in $import_progs $run_progs; do
-        if [[ ! -x ${udev}/lib/udev/$i && ! $i =~ socket:.* ]]; then
+        if [[ ! -x ${pkgs.udev}/lib/udev/$i && ! $i =~ socket:.* ]]; then
           echo "FAIL"
           echo "$i is called in udev rules but not installed by udev"
           exit 1
@@ -93,33 +81,13 @@ let
       done
       echo "OK"
 
-      filesToFixup="$(for i in "$out"/*; do
-        grep -l '\B\(/usr\)\?/s\?bin' "$i" || :
-      done)"
-
-      if [ -n "$filesToFixup" ]; then
-        echo "Consider fixing the following udev rules:"
-        echo "$filesToFixup" | while read localFile; do
-          remoteFile="origin unknown"
-          for i in ${toString cfg.packages}; do
-            for j in "$i"/*/udev/rules.d/*; do
-              [ -e "$out/$(basename "$j")" ] || continue
-              [ "$(basename "$j")" = "$(basename "$localFile")" ] || continue
-              remoteFile="originally from $j"
-              break 2
-            done
-          done
-          refs="$(
-            grep -o '\B\(/usr\)\?/s\?bin/[^ "]\+' "$localFile" \
-              | sed -e ':r;N;''${s/\n/ and /;br};s/\n/, /g;br'
-          )"
-          echo "$localFile ($remoteFile) contains references to $refs."
-        done
-        exit 1
-      fi
+      echo "Consider fixing the following udev rules:"
+      for i in ${toString cfg.packages}; do
+        grep -l '\(RUN+\|IMPORT{program}\)="\(/usr\)\?/s\?bin' $i/*/udev/rules.d/* || true
+      done
 
       ${optionalString config.networking.usePredictableInterfaceNames ''
-        cp ${./80-net-setup-link.rules} $out/80-net-setup-link.rules
+        cp ${./80-net-name-slot.rules} $out/80-net-name-slot.rules
       ''}
 
       # If auto-configuration is disabled, then remove
@@ -129,28 +97,7 @@ let
         ln -s /dev/null $out/80-drivers.rules
       ''}
     ''; # */
-
-  hwdbBin = pkgs.runCommand "hwdb.bin"
-    { preferLocalBuild = true;
-      allowSubstitutes = false;
-      packages = unique (map toString ([udev] ++ cfg.packages));
-    }
-    ''
-      mkdir -p etc/udev/hwdb.d
-      for i in $packages; do
-        echo "Adding hwdb files for package $i"
-        for j in $i/{etc,lib}/udev/hwdb.d/*; do
-          ln -s $j etc/udev/hwdb.d/$(basename $j)
-        done
-      done
-
-      echo "Generating hwdb database..."
-      # hwdb --update doesn't return error code even on errors!
-      res="$(${udev}/bin/udevadm hwdb --update --root=$(pwd) 2>&1)"
-      echo "$res"
-      [ -z "$(echo "$res" | egrep '^Error')" ]
-      mv etc/udev/hwdb.bin $out
-    '';
+  };
 
   # Udev has a 512-character limit for ENV{PATH}, so create a symlink
   # tree to work around this.
@@ -192,7 +139,6 @@ in
           <filename><replaceable>pkg</replaceable>/lib/udev/rules.d</filename>
           will be included.
         '';
-        apply = map getBin;
       };
 
       path = mkOption {
@@ -212,44 +158,34 @@ in
         type = types.lines;
         description = ''
           Additional <command>udev</command> rules. They'll be written
-          into file <filename>99-local.rules</filename>. Thus they are
-          read and applied after all other rules.
-        '';
-      };
-
-      extraHwdb = mkOption {
-        default = "";
-        example = ''
-          evdev:input:b0003v05AFp8277*
-            KEYBOARD_KEY_70039=leftalt
-            KEYBOARD_KEY_700e2=leftctrl
-        '';
-        type = types.lines;
-        description = ''
-          Additional <command>hwdb</command> files. They'll be written
-          into file <filename>10-local.hwdb</filename>. Thus they are
-          read before all other files.
+          into file <filename>10-local.rules</filename>. Thus they are
+          read before all other rules.
         '';
       };
 
     };
 
     hardware.firmware = mkOption {
-      type = types.listOf types.package;
+      type = types.listOf types.path;
       default = [];
+      example = [ "/root/my-firmware" ];
       description = ''
-        List of packages containing firmware files.  Such files
+        List of directories containing firmware files.  Such files
         will be loaded automatically if the kernel asks for them
         (i.e., when it has detected specific hardware that requires
-        firmware to function).  If multiple packages contain firmware
-        files with the same name, the first package in the list takes
-        precedence.  Note that you must rebuild your system if you add
-        files to any of these directories.
+        firmware to function).  If more than one path contains a
+        firmware file with the same name, the first path in the list
+        takes precedence.  Note that you must rebuild your system if
+        you add files to any of these directories.  For quick testing,
+        put firmware files in /root/test-firmware and add that
+        directory to the list.
+        Note that you can also add firmware packages to this
+        list as these are directories in the nix store.
       '';
       apply = list: pkgs.buildEnv {
         name = "firmware";
         paths = list;
-        pathsToLink = [ "/lib/firmware" ];
+        pathsToLink = [ "/" ];
         ignoreCollisions = true;
       };
     };
@@ -280,16 +216,13 @@ in
 
     services.udev.extraRules = nixosRules;
 
-    services.udev.packages = [ extraUdevRules extraHwdbFile ];
+    services.udev.packages = [ extraUdevRules ];
 
     services.udev.path = [ pkgs.coreutils pkgs.gnused pkgs.gnugrep pkgs.utillinux udev ];
 
     environment.etc =
       [ { source = udevRules;
           target = "udev/rules.d";
-        }
-        { source = hwdbBin;
-          target = "udev/hwdb.bin";
         }
       ];
 
@@ -299,23 +232,22 @@ in
       (isYes "NET")
     ];
 
-    boot.extraModprobeConfig = "options firmware_class path=${config.hardware.firmware}/lib/firmware";
+    boot.extraModprobeConfig = "options firmware_class path=${config.hardware.firmware}";
 
     system.activationScripts.udevd =
       ''
-        # The deprecated hotplug uevent helper is not used anymore
-        if [ -e /proc/sys/kernel/hotplug ]; then
-          echo "" > /proc/sys/kernel/hotplug
-        fi
+        echo "" > /proc/sys/kernel/hotplug
 
-        # Allow the kernel to find our firmware.
-        if [ -e /sys/module/firmware_class/parameters/path ]; then
-          echo -n "${config.hardware.firmware}/lib/firmware" > /sys/module/firmware_class/parameters/path
+        # Regenerate the hardware database /var/lib/udev/hwdb.bin
+        # whenever systemd changes.
+        if [ ! -e /var/lib/udev/prev-systemd -o "$(readlink /var/lib/udev/prev-systemd)" != ${config.systemd.package} ]; then
+          echo "regenerating udev hardware database..."
+          ${config.systemd.package}/bin/udevadm hwdb --update && ln -sfn ${config.systemd.package} /var/lib/udev/prev-systemd
         fi
       '';
 
     systemd.services.systemd-udevd =
-      { restartTriggers = cfg.packages;
+      { environment.MODULE_DIR = "/run/booted-system/kernel-modules/lib/modules";
       };
 
   };

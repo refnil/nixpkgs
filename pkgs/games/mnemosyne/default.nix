@@ -1,33 +1,33 @@
 { stdenv
 , fetchurl
-, pythonPackages
+, buildPythonPackage
+, pyqt4
+, matplotlib
+, cherrypy
+, sqlite3
 }:
-let
-  version = "2.3.2";
-in pythonPackages.buildPythonApplication rec {
+let 
+  version = "2.2.1";
+in buildPythonPackage rec {
   name = "mnemosyne-${version}";
   src = fetchurl {
     url    = "http://sourceforge.net/projects/mnemosyne-proj/files/mnemosyne/${name}/Mnemosyne-${version}.tar.gz";
-    sha256 = "0jkrw45i4v24p6xyq94z7rz5948h7f5dspgs5mcdaslnlp2accfp";
+    sha256 = "7f5dd06a879b9ab059592355412182ee286e78e124aa25d588cacf9e4ab7c423";
   };
-  propagatedBuildInputs = with pythonPackages; [
+  pythonPath = [
     pyqt4
     matplotlib
     cherrypy
-    webob
+    sqlite3
   ];
   preConfigure = ''
     substituteInPlace setup.py --replace /usr $out
     find . -type f -exec grep -H sys.exec_prefix {} ';' | cut -d: -f1 | xargs sed -i s,sys.exec_prefix,\"$out\",
   '';
-  postInstall = ''
-    mkdir -p $out/share
-    mv $out/lib/python2.7/site-packages/$out/share/locale $out/share
-    rm -r $out/lib/python2.7/site-packages/nix
-  '';
+  installCommand = "python setup.py install --prefix=$out";
   meta = {
-    homepage = http://mnemosyne-proj.org/;
-    description = "Spaced-repetition software";
+    homepage = "http://mnemosyne-proj.org/";
+    description = "Spaced-repetition software.";
     longDescription = ''
       The Mnemosyne Project has two aspects:
 
@@ -51,7 +51,7 @@ in pythonPackages.buildPythonApplication rec {
       uploaded to a central server for analysis. This data will be valuable to
       study the behaviour of our memory over a very long time period. The
       results will be used to improve the scheduling algorithms behind the
-      software even further.
+      software even further.  
     '';
   };
 }

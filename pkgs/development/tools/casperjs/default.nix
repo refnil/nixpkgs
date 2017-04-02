@@ -1,48 +1,40 @@
-{ stdenv, fetchFromGitHub, fontsConf, phantomjs2, python, nodePackages }:
+{ stdenv, fetchgit, python, phantomjs }:
 
-let version = "1.1.1";
+stdenv.mkDerivation rec {
+  name = "casperjs-1.0.0-RC5";
 
-in stdenv.mkDerivation rec {
-
-  name = "casperjs-${version}";
-
-  src = fetchFromGitHub {
-    owner = "casperjs";
-    repo = "casperjs";
-    rev = version;
-    sha256 = "187prrm728xpn0nx9kxfxa4fwd7w25z78nsxfk6a6kl7c5656jpz";
+  src = fetchgit {
+    url = "git://github.com/n1k0/casperjs.git";
+    rev = "refs/tags/1.0.0-RC5";
+    sha256 = "e7fd6b94b4b304416159196208dea7f6e8841a667df102eb378a698a92f0f2c7";
   };
-
-  buildInputs = [ phantomjs2 python nodePackages.eslint ];
 
   patchPhase = ''
     substituteInPlace bin/casperjs --replace "/usr/bin/env python" "${python}/bin/python" \
-                                   --replace "'phantomjs'" "'${phantomjs2}/bin/phantomjs'"
-  '';
-
-  dontBuild = true;
-
-  doCheck = true;
-  checkPhase = ''
-    export FONTCONFIG_FILE=${fontsConf}
-    make test
+                                   --replace "'phantomjs'" "'${phantomjs}/bin/phantomjs'"
   '';
 
   installPhase = ''
-    cp -r . $out
+    mkdir -p $out/share/casperjs $out/bin
+    cp -a . $out/share/casperjs/.
+    ln -s $out/share/casperjs/bin/casperjs $out/bin
   '';
 
   meta = {
-
-    description = ''
-      Navigation scripting & testing utility for PhantomJS and SlimerJS
-    '';
-
+    description = "Navigation scripting & testing utility for PhantomJS";
     longDescription = ''
-      CasperJS is a navigation scripting & testing utility for PhantomJS and
-      SlimerJS (still experimental). It eases the process of defining a full
-      navigation scenario and provides useful high-level functions, methods &
-      syntactic sugar for doing common tasks.
+      CasperJS is a navigation scripting & testing utility for PhantomJS.
+      It eases the process of defining a full navigation scenario and provides useful high-level
+      functions, methods & syntaxic sugar for doing common tasks such as:
+      - defining & ordering navigation steps
+      - filling forms
+      - clicking links
+      - capturing screenshots of a page (or an area)
+      - making assertions on remote DOM
+      - logging & events
+      - downloading base64 encoded resources, even binary ones
+      - catching errors and react accordingly
+      - writing functional test suites, exporting results as JUnit XML (xUnit)
     '';
 
     homepage = http://casperjs.org;

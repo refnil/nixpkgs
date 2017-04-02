@@ -1,53 +1,53 @@
 { stdenv, fetchurl
-, libX11, wxGTK
+, libX11, gettext, wxGTK
 , libiconv, fontconfig, freetype
 , mesa
 , libass, fftw, ffms
 , ffmpeg, pkgconfig, zlib # Undocumented (?) dependencies
 , icu, boost, intltool # New dependencies
-, spellcheckSupport ? true, hunspell ? null
+, spellChecking ? true, hunspell ? null
 , automationSupport ? true, lua ? null
 , openalSupport ? false, openal ? null
 , alsaSupport ? true, alsaLib ? null
-, pulseaudioSupport ? true, libpulseaudio ? null
-, portaudioSupport ? false, portaudio ? null }:
+, pulseaudioSupport ? true, pulseaudio ? null
+, portaudioSupport ? false, portaudio ? null
+}:
 
-assert spellcheckSupport -> (hunspell != null);
+assert spellChecking -> (hunspell != null);
 assert automationSupport -> (lua != null);
 assert openalSupport -> (openal != null);
 assert alsaSupport -> (alsaLib != null);
-assert pulseaudioSupport -> (libpulseaudio != null);
+assert pulseaudioSupport -> (pulseaudio != null);
 assert portaudioSupport -> (portaudio != null);
 
-with stdenv.lib;
 stdenv.mkDerivation rec {
   name = "aegisub-${version}";
-  version = "3.2.2";
+  version = "3.1.3";
 
   src = fetchurl {
     url = "http://ftp.aegisub.org/pub/releases/${name}.tar.xz";
-    sha256 = "11b83qazc8h0iidyj1rprnnjdivj1lpphvpa08y53n42bfa36pn5";
+    sha256 = "0n2y5cggayr8246p2cvrz0ajlhhvmzcgsp7nljnm21jypk15pspg";
   };
 
+  nativeBuildInputs = [ intltool ];
+
   buildInputs = with stdenv.lib;
-  [ pkgconfig intltool libX11 wxGTK fontconfig freetype mesa
-    libass fftw ffms ffmpeg zlib icu boost boost.out libiconv
-  ]
-    ++ optional spellcheckSupport hunspell
-    ++ optional automationSupport lua
-    ++ optional openalSupport openal
-    ++ optional alsaSupport alsaLib
-    ++ optional pulseaudioSupport libpulseaudio
-    ++ optional portaudioSupport portaudio
-    ;
+  [ libX11 gettext wxGTK libiconv fontconfig freetype mesa libass fftw ffms ffmpeg pkgconfig zlib icu boost ]
+  ++ optional spellChecking hunspell
+  ++ optional automationSupport lua
+  ++ optional openalSupport openal
+  ++ optional alsaSupport alsaLib
+  ++ optional pulseaudioSupport pulseaudio
+  ++ optional portaudioSupport portaudio
+  ;
 
-  enableParallelBuilding = true;
+  NIX_LDFLAGS = "-liconv -lavutil -lavformat -lavcodec -lswscale -lz -lm -lGL";
 
-  hardeningDisable = [ "bindnow" "relro" ];
+  configureFlags = "--with-boost-libdir=${boost}/lib/";
 
   postInstall = "ln -s $out/bin/aegisub-* $out/bin/aegisub";
 
-  meta = {
+  meta = with stdenv.lib; {
     description = "An advanced subtitle editor";
     longDescription = ''
       Aegisub is a free, cross-platform open source tool for creating and
@@ -62,5 +62,6 @@ stdenv.mkDerivation rec {
               # - so the resulting program will be GPL
     maintainers = [ maintainers.AndersonTorres ];
     platforms = platforms.linux;
+
   };
 }

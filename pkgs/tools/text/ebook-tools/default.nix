@@ -18,7 +18,7 @@ stdenv.mkDerivation rec {
   meta = {
     homepage = "http://ebook-tools.sourceforge.net";
     description = "Tools and library for dealing with various ebook file formats";
-    maintainers = [ ];
+    maintainers = [ stdenv.lib.maintainers.urkud ];
     platforms = stdenv.lib.platforms.all;
   };
 }

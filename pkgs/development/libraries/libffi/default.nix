@@ -1,39 +1,33 @@
-{ fetchurl, stdenv, dejagnu, doCheck ? false }:
+{ fetchurl, stdenv, dejagnu }:
 
 stdenv.mkDerivation rec {
-  name = "libffi-3.2.1";
+  name = "libffi-3.0.13";
 
   src = fetchurl {
     url = "ftp://sourceware.org/pub/libffi/${name}.tar.gz";
-    sha256 = "0dya49bnhianl0r65m65xndz6ls2jn1xngyn72gd28ls3n7bnvnh";
+    sha256 = "077ibkf84bvcd6rw1m6jb107br63i2pp301rkmsbgg6300adxp8x";
   };
 
-  patches = stdenv.lib.optional stdenv.isCygwin ./3.2.1-cygwin.patch;
-
-  outputs = [ "out" "dev" "doc" ];
+  patches = stdenv.lib.optional (stdenv.needsPax) ./libffi-3.0.13-emutramp_pax_proc.patch;
 
   buildInputs = stdenv.lib.optional doCheck dejagnu;
 
   configureFlags = [
     "--with-gcc-arch=generic" # no detection of -march= or -mtune=
-    "--enable-pax_emutramp"
-  ];
+  ] ++ stdenv.lib.optional (stdenv.needsPax) "--enable-pax_emutramp";
 
-  inherit doCheck;
+  doCheck = stdenv.isLinux; # until we solve dejagnu problems on darwin and expect on BSD
 
   dontStrip = stdenv ? cross; # Don't run the native `strip' when cross-compiling.
 
-  # Install headers and libs in the right places.
-  postFixup = ''
-    mkdir -p "$dev/"
-    mv "$out/lib/${name}/include" "$dev/include"
-    rmdir "$out/lib/${name}"
-    substituteInPlace "$dev/lib/pkgconfig/libffi.pc" \
-      --replace 'includedir=''${libdir}/libffi-3.2.1' "includedir=$dev"
-  '';
+  postInstall =
+    # Install headers in the right place.
+    '' ln -s${if stdenv.isFreeBSD then "" else "r"}v "$out/lib/"libffi*/include "$out/include"
+    '';
 
-  meta = with stdenv.lib; {
+  meta = {
     description = "A foreign function call interface library";
+
     longDescription = ''
       The libffi library provides a portable, high level programming
       interface to various calling conventions.  This allows a
@@ -48,10 +42,14 @@ stdenv.mkDerivation rec {
       interface.  A layer must exist above libffi that handles type
       conversions for values passed between the two languages.
     '';
+
     homepage = http://sourceware.org/libffi/;
+
     # See http://github.com/atgreen/libffi/blob/master/LICENSE .
-    license = licenses.free;
-    maintainers = [ ];
-    platforms = platforms.all;
+    license = "free, non-copyleft";
+
+    maintainers = [ stdenv.lib.maintainers.ludo ];
+    platforms = stdenv.lib.platforms.all;
   };
 }
+

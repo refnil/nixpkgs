@@ -5,13 +5,11 @@ stdenv.mkDerivation rec {
   builder = ./builder.sh;
   src = fetchurl {
     url = ftp://ftp.tex.ac.uk/pub/archive/graphics/transfig/transfig.3.2.4.tar.gz;
-    sha256 = "0429snhp5acbz61pvblwlrwv8nxr6gf12p37f9xxwrkqv4ir7dd4";
+    md5 = "742de0f7a3cae74d247bbd0c70dd9dd7";
   };
 
   buildInputs = [zlib libjpeg libpng imake];
   inherit libpng;
-
-  hardeningDisable = [ "format" ];
 
   patches = [prefixPatch1 prefixPatch2 prefixPatch3 varargsPatch gensvgPatch];
 
@@ -29,8 +27,4 @@ stdenv.mkDerivation rec {
 
   gensvgPatch =
     ./patch-fig2dev-dev-gensvg.c;
-
-  meta = {
-    platforms = stdenv.lib.platforms.unix;
-  };
 }

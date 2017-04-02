@@ -1,41 +1,32 @@
-{ stdenv, fetchurl, cmake
-, extra-cmake-modules, qtbase, qtscript
-, ki18n, kio, knotifications, knotifyconfig, kdoctools, kross, kcmutils, kdelibs4support
-, libktorrent, boost, taglib
-}:
+{ stdenv, fetchurl, cmake, automoc4, libktorrent, taglib, kdepimlibs, boost
+, gettext, kdebase_workspace, qt4, kdelibs, phonon }:
 
 stdenv.mkDerivation rec {
   name = pname + "-" + version;
 
   pname = "ktorrent";
-  version = "5.0.1";
+  version = "4.3.1";
 
   src = fetchurl {
-    url = http://download.kde.org/stable/ktorrent/5.0/ktorrent-5.0.1.tar.xz;
-    sha256 = "1rbr932djmn1la6vs2sy1zdf39fmla8vwzfn76h7csncbp5fw3yh";
+    url = "${meta.homepage}/downloads/${version}/${name}.tar.bz2";
+    sha256 = "66094f6833347afb0c49e332f0ec15ec48db652cbe66476840846ffd5ca0e4a1";
   };
 
-  patches =
-    [ (fetchurl {
-        url = https://cgit.kde.org/ktorrent.git/patch/?id=f48acc22f0105ce6bac63294d248873ae231c6cc;
-        sha256 = "0jm4y35w2ypbjzf165rnjr224nq4w651ydnpd9zdn3inxh8r4s0v";
-      })
-    ];
+  patches = [ ./find-workspace.diff ];
 
-  nativeBuildInputs = [ kdoctools extra-cmake-modules ];
+  KDEDIRS = libktorrent;
 
   buildInputs =
-    [ cmake qtbase qtscript
-      ki18n kio knotifications knotifyconfig kross kcmutils kdelibs4support
-      libktorrent taglib
+    [ cmake qt4 kdelibs automoc4 phonon libktorrent boost taglib kdepimlibs
+      gettext kdebase_workspace
     ];
 
   enableParallelBuilding = true;
 
   meta = {
     description = "KDE integrated BtTorrent client";
-    homepage = https://www.kde.org/applications/internet/ktorrent/;
-    maintainers = [ stdenv.lib.maintainers.eelco ];
-    platforms = stdenv.lib.platforms.linux;
+    homepage = http://ktorrent.pwsp.net;
+    maintainers = with stdenv.lib.maintainers; [ sander urkud ];
+    inherit (libktorrent.meta) platforms;
   };
 }

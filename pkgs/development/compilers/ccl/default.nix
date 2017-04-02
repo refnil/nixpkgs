@@ -1,80 +1,49 @@
-{ stdenv, fetchsvn, gcc, glibc, m4, coreutils }:
-
-let
-  options = rec {
-    /* TODO: there are also MacOS, FreeBSD and Windows versions */
-    x86_64-linux = {
-      arch = "linuxx86";
-      sha256 = "0g6mkl207ri3ib9w85i9w0sv7srz784pbxidz0d95p6qkvg6shba";
-      runtime = "lx86cl64";
-      kernel = "linuxx8664";
-    };
-    i686-linux = {
-      arch = "linuxx86";
-      sha256 = x86_64-linux.sha256;
-      runtime = "lx86cl";
-      kernel = "linuxx8632";
-    };
-    armv7l-linux = {
-      arch = "linuxarm";
-      sha256 = "0k6wxwyg3pmbb5xdkwma0i3rvbjmy3p604g4minjjc1drzsn1i0q";
-      runtime = "armcl";
-      kernel = "linuxarm";
-    };
-    armv6l-linux = armv7l-linux;
-  };
-  cfg = options.${stdenv.system};
+a :  
+let 
+  buildInputs = with a; [
+    
+  ];
 in
+rec {
+  version = "1.8";
+  name = "ccl-${version}";
 
-assert builtins.hasAttr stdenv.system options;
-
-stdenv.mkDerivation rec {
-  name     = "ccl-${version}";
-  version  = "1.11";
-  revision = "16313";
-
-  src = fetchsvn {
-    url = "http://svn.clozure.com/publicsvn/openmcl/release/${version}/${cfg.arch}/ccl";
-    rev = revision;
-    sha256 = cfg.sha256;
+  /* There are also MacOS and FreeBSD and Windows versions */
+  src = a.fetchurl {
+    url = "ftp://ftp.clozure.com/pub/release/${version}/${name}-linuxx86.tar.gz";
+    sha256 = "1dgg6a8i2csa6xidsq66hbw7zx62gm2178hpkp88yyzgxylszp01";
   };
+  
+  inherit buildInputs;
+  configureFlags = [];
 
-  buildInputs = [ gcc glibc m4 ];
+  /* doConfigure should be removed if not needed */
+  phaseNames = ["doUnpack" "doPatchElf" "doCopy"];
 
-  CCL_RUNTIME = cfg.runtime;
-  CCL_KERNEL = cfg.kernel;
-
-  patchPhase = ''
-    substituteInPlace lisp-kernel/${CCL_KERNEL}/Makefile \
-      --replace "svnversion" "echo ${revision}" \
-      --replace "/bin/rm"    "${coreutils}/bin/rm" \
-      --replace "/bin/echo"  "${coreutils}/bin/echo"
-
-    substituteInPlace lisp-kernel/m4macros.m4 \
-      --replace "/bin/pwd" "${coreutils}/bin/pwd"
-  '';
-
-  buildPhase = ''
-    make -C lisp-kernel/${CCL_KERNEL} clean
-    make -C lisp-kernel/${CCL_KERNEL} all
-
-    ./${CCL_RUNTIME} -n -b -e '(ccl:rebuild-ccl :full t)' -e '(ccl:quit)'
-  '';
-
-  installPhase = ''
+  doCopy = a.fullDepEntry ''
     mkdir -p "$out/share"
-    cp -r .  "$out/share/ccl-installation"
+    cp -r . "$out/share/ccl-installation"
 
     mkdir -p "$out/bin"
-    echo -e '#!/bin/sh\n'"$out/share/ccl-installation/${CCL_RUNTIME}"' "$@"\n' > "$out"/bin/"${CCL_RUNTIME}"
-    chmod a+x "$out"/bin/"${CCL_RUNTIME}"
-  '';
+    for i in $(find . -maxdepth 1 -type f -perm +111); do
+      echo -e '#! /bin/sh\n'"$out/share/ccl-installation/$(basename "$i")"'"$@"\n' > "$out"/bin/"$(basename "$i")"
+      chmod a+x "$out"/bin/"$(basename "$i")"
+    done
+  '' ["minInit" "doUnpack" "defEnsureDir"];
 
-  meta = with stdenv.lib; {
+  doPatchElf = a.fullDepEntry ''
+    patchelfFile="$(type -P patchelf)"
+    goodInterp="$(patchelf --print-interpreter "$patchelfFile")"
+    find . -type f -perm +111 -exec  patchelf --set-interpreter "$goodInterp" '{}' ';'
+  '' ["minInit" "doUnpack"];
+      
+  meta = {
     description = "Clozure Common Lisp";
-    homepage    = http://ccl.clozure.com/;
-    maintainers = with maintainers; [ raskin muflax tohl ];
-    platforms   = attrNames options;
-    license     = licenses.lgpl21;
+    maintainers = [
+      a.lib.maintainers.raskin
+    ];
+    platforms = with a.lib.platforms; 
+      linux;
   };
 }
+

@@ -1,35 +1,25 @@
-{ stdenv, fetchurl, fetchpatch, openssl, lzo, zlib, yacc, flex }:
-
-stdenv.mkDerivation rec {
-  name = "vtun-3.0.4";
+{stdenv, fetchurl, openssl, lzo, zlib, yacc, flex }:
+stdenv.mkDerivation {
+  name = "vtun-3.0.1";
 
   src = fetchurl {
-    url = "mirror://sourceforge/vtun/${name}.tar.gz";
-    sha256 = "1fcqzn2bdjw31j1hvv6lg99v2phhszm29kp2xambxzp32mmxzy5b";
+    url = mirror://sourceforge/vtun/vtun-3.0.1.tar.gz;
+    sha256 = "1sxf9qq2wlfh1wnrlqkh801v1m9jlqpycxvr2nbyyl7nm2cp8l12";
   };
 
-  patches = [
-    (fetchpatch { url = http://sources.debian.net/data/main/v/vtun/3.0.3-2.2/debian/patches/08-gcc5-inline.patch;
-                 sha256 = "18sys97v2hx6vac5zp3ld7sa6kz4izv3g9dnkm0lflbaxhym2vs1";
-                })
-  ];
-
-  postPatch = ''
-    sed -i -e 's/-m 755//' -e 's/-o root -g 0//' Makefile.in
-    sed -i '/strip/d' Makefile.in
+  patchPhase = ''
+    sed -i -e 's/-m 755//' -e 's/-o root -g 0//' Makefile.in 
   '';
   buildInputs = [ lzo openssl zlib yacc flex ];
 
   configureFlags = ''
     --with-lzo-headers=${lzo}/include/lzo
-    --with-ssl-headers=${openssl.dev}/include/openssl
-    --with-blowfish-headers=${openssl.dev}/include/openssl'';
+    --with-ssl-headers=${openssl}/include/openssl
+    --with-blowfish-headers=${openssl}/include/openssl'';
 
-  meta = with stdenv.lib; {
-      description = "Virtual Tunnels over TCP/IP with traffic shaping, compression and encryption";
-      homepage = http://vtun.sourceforge.net/;
-      license = licenses.gpl2;
-      platforms = platforms.linux;
-      maintainers = with maintainers; [ pSub ];
+  meta = { 
+      description="Virtual Tunnels over TCP/IP with traffic shaping, compression and encryption";
+      homepage="http://vtun.sourceforge.net/";
+      license = stdenv.lib.licenses.gpl2;
   };
 }

@@ -12,10 +12,8 @@
 , opencv
 , openssl
 , unixODBC
-, xorg
+, xlibs
 , zlib
-, libxml2
-, libuuid
 }:
 
 let
@@ -26,18 +24,17 @@ let
       throw "Mathematica requires i686-linux or x86_64 linux";
 in
 stdenv.mkDerivation rec {
-  version = "11.0.1";
 
-  name = "mathematica-${version}";
+  name = "mathematica-9.0.0";
 
   src = requireFile rec {
-    name = "Mathematica_${version}_LINUX.sh";
+    name = "Mathematica_9.0.0_LINUX.sh";
     message = '' 
-      This nix expression requires that ${name} is
+      This nix expression requires that Mathematica_9.0.0_LINUX.sh is
       already part of the store. Find the file on your Mathematica CD
       and add it to the nix store with nix-store --add-fixed sha256 <FILE>.
     '';
-    sha256 = "1qqwz8gbw74rnnyirpbdanwx3d25s4x0i4zc7bs6kp959x66cdkw";
+    sha256 = "106zfaplhwcfdl9rdgs25x83xra9zcny94gb22wncbfxvrsk3a4q";
   };
 
   buildInputs = [
@@ -47,16 +44,14 @@ stdenv.mkDerivation rec {
     coreutils
     fontconfig
     freetype
-    gcc.cc
+    gcc.gcc
     gcc.libc
     glib
     ncurses
     opencv
     openssl
     unixODBC
-    libxml2
-    libuuid
-  ] ++ (with xorg; [
+  ] ++ (with xlibs; [
     libX11
     libXext
     libXtst
@@ -64,16 +59,11 @@ stdenv.mkDerivation rec {
     libXmu
     libXrender
     libxcb
-    libXcursor
-    libXfixes
-    libXrandr
-    libICE
-    libSM
   ]);
 
   ldpath = stdenv.lib.makeLibraryPath buildInputs
     + stdenv.lib.optionalString (stdenv.system == "x86_64-linux")
-      (":" + stdenv.lib.makeSearchPathOutput "lib" "lib64" buildInputs);
+      (":" + stdenv.lib.makeSearchPath "lib64" buildInputs);
 
   phases = "unpackPhase installPhase fixupPhase";
 
@@ -89,29 +79,24 @@ stdenv.mkDerivation rec {
     cd Installer
     # don't restrict PATH, that has already been done
     sed -i -e 's/^PATH=/# PATH=/' MathInstaller
-    sed -i -e 's/\/bin\/bash/\/bin\/sh/' MathInstaller
 
     echo "=== Running MathInstaller ==="
-    ./MathInstaller -auto -createdir=y -execdir=$out/bin -targetdir=$out/libexec/Mathematica -silent
+    ./MathInstaller -auto -createdir=y -execdir=$out/bin -targetdir=$out/libexec/Mathematica -platforms=${platform} -silent
   '';
 
   preFixup = ''
     echo "=== PatchElfing away ==="
-    # This code should be a bit forgiving of errors, unfortunately
-    set +e
-    find $out/libexec/Mathematica/SystemFiles -type f -perm -0100 | while read f; do
+    find $out/libexec/Mathematica/SystemFiles -type f -perm +100 | while read f; do
       type=$(readelf -h "$f" 2>/dev/null | grep 'Type:' | sed -e 's/ *Type: *\([A-Z]*\) (.*/\1/')
       if [ -z "$type" ]; then
         :
       elif [ "$type" == "EXEC" ]; then
         echo "patching $f executable <<"
-        patchelf --shrink-rpath "$f"
         patchelf \
-	  --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" \
-          --set-rpath "$(patchelf --print-rpath "$f"):${ldpath}" \
-          "$f" \
-          && patchelf --shrink-rpath "$f" \
-          || echo unable to patch ... ignoring 1>&2
+            --set-interpreter "$(cat $NIX_GCC/nix-support/dynamic-linker)" \
+            --set-rpath "${ldpath}" \
+            "$f"
+        patchelf --shrink-rpath "$f"
       elif [ "$type" == "DYN" ]; then
         echo "patching $f library <<"
         patchelf \

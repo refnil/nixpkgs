@@ -1,20 +1,26 @@
-{ stdenv, fetchurl, autoreconfHook }:
+{ fetchurl, stdenv }:
 
 stdenv.mkDerivation rec {
-  name = "numactl-2.0.10";
-
+  name = "numactl-1.0.2";
   src = fetchurl {
     url = "ftp://oss.sgi.com/www/projects/libnuma/download/${name}.tar.gz";
-    sha256 = "0qfv2ks6d3gm0mw5sj4cbhsd7cbsb7qm58xvchl2wfzifkzcinnv";
+    sha256 = "0hbrrh7a8cradj1xdl3wvyp9afx1hzsk90g2lkwd5pn6bniai31j";
   };
 
-  nativeBuildInputs = [ autoreconfHook ];
+  patchPhase = ''
+    sed -i "Makefile" -es"|^ *prefix *:=.*$|prefix := $out|g"
+  '';
 
-  meta = with stdenv.lib; {
+  preInstall = ''
+    # The `install' rule expects this directory to be available.
+    mkdir -p "$out/share/man/man5"
+  '';
+
+  meta = {
     description = "Library and tools for non-uniform memory access (NUMA) machines";
+    license = [ "LGPLv2.1" # library
+                "GPLv2"    # command-line tools
+	      ];
     homepage = http://oss.sgi.com/projects/libnuma/;
-    license = licenses.gpl2;
-    platforms = platforms.linux;
-    maintainers = with maintainers; [ wkennington ];
   };
 }

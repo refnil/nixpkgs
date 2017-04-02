@@ -1,6 +1,6 @@
 { stdenv, fetchurl, libXv, libXi, libXrender, libXrandr, zlib, glib
 , libXext, libX11, libXScrnSaver, libSM, qt4, libICE, freetype, fontconfig
-, libpulseaudio, lib, ... }:
+, pulseaudio, lib, ... }:
 
 assert stdenv.system == "i686-linux";
 
@@ -14,7 +14,7 @@ stdenv.mkDerivation rec {
 
   buildInputs = [
     stdenv.glibc
-    stdenv.cc.cc
+    stdenv.gcc.gcc
     libXv
     libXext
     libX11
@@ -25,7 +25,7 @@ stdenv.mkDerivation rec {
     libXi
     libXrender
     libXrandr
-    libpulseaudio
+    pulseaudio
     freetype
     fontconfig
     zlib
@@ -38,23 +38,25 @@ stdenv.mkDerivation rec {
     mkdir -p $out/{libexec/skype/,bin}
     cp -r * $out/libexec/skype/
 
-    # Fix execution on PaX-enabled kernels
-    paxmark m $out/libexec/skype/skype
+    fullPath=
+    for i in $nativeBuildInputs; do
+      fullPath=$fullPath''${fullPath:+:}$i/lib
+    done
 
-    patchelf --interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" \
-        --set-rpath "${lib.makeLibraryPath buildInputs}" $out/libexec/skype/skype
+    patchelf --interpreter "$(cat $NIX_GCC/nix-support/dynamic-linker)" \
+        --set-rpath "$fullPath" $out/libexec/skype/skype
 
     cat > $out/bin/skype << EOF
     #!${stdenv.shell}
     export PULSE_LATENCY_MSEC=60  # workaround for pulseaudio glitches
-    exec $out/libexec/skype/skype --resources=$out/libexec/skype "\$@"
+    $out/libexec/skype/skype --resources=$out/libexec/skype "\$@"
     EOF
 
     chmod +x $out/bin/skype
 
     # Fixup desktop file
     substituteInPlace skype.desktop --replace \
-      "Icon=skype.png" "Icon=$out/libexec/skype/icons/SkypeBlue_128x128.png"
+      "Icon=skype.png" "Icon=$out/libexec/skype/icons/SkypeBlue_48x48.png"
     substituteInPlace skype.desktop --replace \
       "Terminal=0" "Terminal=false"
     mkdir -p $out/share/applications
@@ -65,6 +67,5 @@ stdenv.mkDerivation rec {
     description = "A proprietary voice-over-IP (VoIP) client";
     homepage = http://www.skype.com/;
     license = stdenv.lib.licenses.unfree;
-    platforms = [ "i686-linux" ];
   };
 }

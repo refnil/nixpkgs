@@ -1,17 +1,15 @@
-{ stdenv, fetchFromGitHub, cairo, fftw, gtkmm2, lv2, lvtk, pkgconfig, python }:
+{ stdenv, fetchurl, cairo, gtk, gtkmm, lv2, lvtk, pkgconfig, python }:
 
 stdenv.mkDerivation  rec {
   name = "ams-lv2-${version}";
-  version = "1.2.1";
+  version = "1.0.2";
 
-  src = fetchFromGitHub {
-    owner = "blablack";
-    repo = "ams-lv2";
-    rev = version;
-    sha256 = "1n1dnqnj24xhiy9323lj52nswr5120cj56fpckg802miss05sr6x";
+  src = fetchurl {
+    url = "https://github.com/blablack/ams-lv2/archive/v${version}.tar.gz";
+    sha256 = "0fa1ghf6qahbhj9j1ciyw0hr6nngwksa37hbs651mlz0fn7lz4xm";
   };
 
-  buildInputs = [ cairo fftw gtkmm2 lv2 lvtk pkgconfig python ];
+  buildInputs = [ cairo gtk gtkmm lv2 lvtk pkgconfig python ];
 
   configurePhase = "python waf configure --prefix=$out";
 

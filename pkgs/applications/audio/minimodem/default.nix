@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, pkgconfig, fftw, fftwSinglePrec, alsaLib, libsndfile, libpulseaudio }:
+{ stdenv, fetchurl, pkgconfig, fftw, fftwSinglePrec, alsaLib, libsndfile, pulseaudio }:
 
 stdenv.mkDerivation rec {
   version = "0.19";
@@ -10,7 +10,7 @@ stdenv.mkDerivation rec {
     sha256 = "003xyqjq59wcjafrdv1b8w34xsn4nvzz51wwd7mqddajh0g4dz4g";
   };
 
-  buildInputs = [ pkgconfig fftw fftwSinglePrec alsaLib libsndfile libpulseaudio ];
+  buildInputs = [ pkgconfig fftw fftwSinglePrec alsaLib libsndfile pulseaudio ];
 
   meta = {
     description = "General-purpose software audio FSK modem";

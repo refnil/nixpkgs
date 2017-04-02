@@ -1,41 +1,15 @@
-{ stdenv, fetchurl, libXi, libXrandr, libXxf86vm, mesa_noglu, mesa_glu, xlibsWrapper, cmake }:
+{ stdenv, fetchurl, libXi, libXrandr, libXxf86vm, mesa, x11 }:
 
-let version = "3.0.0";
-in stdenv.mkDerivation {
-  name = "freeglut-${version}";
+stdenv.mkDerivation {
+  name = "freeglut-2.8.1";
 
   src = fetchurl {
-    url = "mirror://sourceforge/freeglut/freeglut-${version}.tar.gz";
-    sha256 = "18knkyczzwbmyg8hr4zh8a1i5ga01np2jzd1rwmsh7mh2n2vwhra";
+    url = mirror://sourceforge/freeglut/freeglut-2.8.1.tar.gz;
+    sha256 = "16lrxxxd9ps9l69y3zsw6iy0drwjsp6m26d1937xj71alqk6dr6x";
   };
 
-  outputs = [ "out" "dev" ];
+  configureFlags = "--" + (if stdenv.isDarwin then "disable" else "enable") + "-warnings";
 
-  buildInputs = [ libXi libXrandr libXxf86vm mesa_noglu mesa_glu xlibsWrapper cmake ];
-
-  cmakeFlags = stdenv.lib.optionals stdenv.isDarwin [
-                 "-DOPENGL_INCLUDE_DIR=${mesa_noglu}/include"
-                 "-DOPENGL_gl_LIBRARY:FILEPATH=${mesa_noglu}/lib/libGL.dylib"
-                 "-DOPENGL_glu_LIBRARY:FILEPATH=${mesa_glu}/lib/libGLU.dylib"
-                 "-DFREEGLUT_BUILD_DEMOS:BOOL=OFF"
-                 "-DFREEGLUT_BUILD_STATIC:BOOL=OFF"
-               ];
-
-  enableParallelBuilding = true;
-
-  meta = with stdenv.lib; {
-    description = "Create and manage windows containing OpenGL contexts";
-    longDescription = ''
-      FreeGLUT is an open source alternative to the OpenGL Utility Toolkit
-      (GLUT) library. GLUT (and hence FreeGLUT) allows the user to create and
-      manage windows containing OpenGL contexts on a wide range of platforms
-      and also read the mouse, keyboard and joystick functions. FreeGLUT is
-      intended to be a full replacement for GLUT, and has only a few
-      differences.
-    '';
-    homepage = http://freeglut.sourceforge.net/;
-    license = licenses.mit;
-    platforms = platforms.all;
-    maintainers = [ maintainers.bjornfor ];
-  };
+  buildInputs = [ libXi libXrandr libXxf86vm mesa x11 ];
+  # patches = [ ./0001-remove-typedefs-now-living-in-mesa.patch ];
 }

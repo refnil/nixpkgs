@@ -1,29 +1,19 @@
-{stdenv, libiconv, fetchurl, zlib, openssl, tcl, readline, sqlite, ed, which
-, tcllib, withJson ? true}:
+{stdenv, fetchurl, zlib, openssl, tcl, readline, sqlite, withJson ? true}:
 
-stdenv.mkDerivation rec {
-  name = "fossil-1.36";
+stdenv.mkDerivation {
+  name = "fossil-1.28";
 
   src = fetchurl {
-    urls = 
-      [
-        https://fossil-scm.org/index.html/uv/download/fossil-src-1.36.tar.gz
-      ];
-    name = "${name}.tar.gz";
-    sha256 = "04px1mnq5dlc6gaihxj5nj6k7ac43wfryzifaairjh74qmgc6xi6";
+    url = http://www.fossil-scm.org/download/fossil-src-20140127173344.tar.gz;
+    sha256 = "105a3f3wiqshmkw8q7f7ask3nm0jkjf0h3h2283qiqlsqfkwb9xc";
   };
 
-  buildInputs = [ zlib openssl readline sqlite which ed ]
-             ++ stdenv.lib.optional stdenv.isDarwin libiconv;
+  buildInputs = [ zlib openssl readline sqlite ];
   nativeBuildInputs = [ tcl ];
 
   doCheck = true;
 
   checkTarget = "test";
-
-  preCheck = ''
-    export TCLLIBPATH="${tcllib}/lib/tcllib${tcllib.version}"
-  '';
   configureFlags = if withJson then  "--json" else  "";
 
   preBuild=''
@@ -50,7 +40,7 @@ stdenv.mkDerivation rec {
       from the others by being extremely simple to setup and operate.
     '';
     homepage = http://www.fossil-scm.org/;
-    license = stdenv.lib.licenses.bsd2;
+    license = "BSD";
     platforms = with stdenv.lib.platforms; all;
     maintainers = [ #Add your name here!
       stdenv.lib.maintainers.z77z

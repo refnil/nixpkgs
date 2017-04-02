@@ -11,8 +11,4 @@ stdenv.mkDerivation {
   preBuild = "
     makeFlagsArray=(PREFIX=$out)
   ";
-
-  meta = {
-    platforms = stdenv.lib.platforms.linux;
-  };
 }

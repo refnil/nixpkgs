@@ -11,10 +11,7 @@ let
                    rm $out/logcheck.*
                  '';
 
-  rulesDir = pkgs.symlinkJoin
-    { name = "logcheck-rules-dir";
-      paths = ([ defaultRules ] ++ cfg.extraRulesDirs);
-    };
+  rulesDir = pkgs.symlinkJoin "logcheck-rules-dir" ([ defaultRules ] ++ cfg.extraRulesDirs);
 
   configFile = pkgs.writeText "logcheck.conf" cfg.config;
 
@@ -29,8 +26,8 @@ let
     };
 
   cronJob = ''
-    @reboot   logcheck env PATH=/run/wrappers/bin:$PATH nice -n10 ${pkgs.logcheck}/sbin/logcheck -R ${flags}
-    2 ${cfg.timeOfDay} * * * logcheck env PATH=/run/wrappers/bin:$PATH nice -n10 ${pkgs.logcheck}/sbin/logcheck ${flags}
+    @reboot   logcheck env PATH=/var/setuid-wrappers:$PATH nice -n10 ${pkgs.logcheck}/sbin/logcheck -R ${flags}
+    2 ${cfg.timeOfDay} * * * logcheck env PATH=/var/setuid-wrappers:$PATH nice -n10 ${pkgs.logcheck}/sbin/logcheck ${flags}
   '';
 
   writeIgnoreRule = name: {level, regex, ...}:
@@ -55,53 +52,49 @@ let
 
   levelOption = mkOption {
     default = "server";
-    type = types.enum [ "workstation" "server" "paranoid" ];
+    type = types.str;
     description = ''
-      Set the logcheck level.
+      Set the logcheck level. Either "workstation", "server", or "paranoid".
     '';
   };
 
   ignoreOptions = {
-    options = {
-      level = levelOption;
+    level = levelOption;
 
-      regex = mkOption {
-        default = "";
-        type = types.str;
-        description = ''
-          Regex specifying which log lines to ignore.
-        '';
-      };
+    regex = mkOption {
+      default = "";
+      type = types.str;
+      description = ''
+        Regex specifying which log lines to ignore.
+      '';
     };
   };
 
   ignoreCronOptions = {
-    options = {
-      user = mkOption {
-        default = "root";
-        type = types.str;
-        description = ''
-          User that runs the cronjob.
-        '';
-      };
+    user = mkOption {
+      default = "root";
+      type = types.str;
+      description = ''
+        User that runs the cronjob.
+      '';
+    };
 
-      cmdline = mkOption {
-        default = "";
-        type = types.str;
-        description = ''
-          Command line for the cron job. Will be turned into a regex for the logcheck ignore rule.
-        '';
-      };
+    cmdline = mkOption {
+      default = "";
+      type = types.str;
+      description = ''
+        Command line for the cron job. Will be turned into a regex for the logcheck ignore rule.
+      '';
+    };
 
-      timeArgs = mkOption {
-        default = null;
-        type = types.nullOr (types.str);
-        example = "02 06 * * *";
-        description = ''
-          "min hr dom mon dow" crontab time args, to auto-create a cronjob too.
-          Leave at null to not do this and just add a logcheck ignore rule.
-        '';
-      };
+    timeArgs = mkOption {
+      default = null;
+      type = types.nullOr (types.str);
+      example = "02 06 * * *";
+      description = ''
+        "min hr dom mon dow" crontab time args, to auto-create a cronjob too.
+        Leave at null to not do this and just add a logcheck ignore rule.
+      '';
     };
   };
 
@@ -184,7 +177,8 @@ in
         description = ''
           This option defines extra ignore rules.
         '';
-        type = with types; attrsOf (submodule ignoreOptions);
+        type = types.loaOf types.optionSet;
+        options = [ ignoreOptions ];
       };
 
       ignoreCron = mkOption {
@@ -192,12 +186,13 @@ in
         description = ''
           This option defines extra ignore rules for cronjobs.
         '';
-        type = with types; attrsOf (submodule ignoreCronOptions);
+        type = types.loaOf types.optionSet;
+        options = [ ignoreOptions ignoreCronOptions ];
       };
 
       extraGroups = mkOption {
         default = [];
-        type = types.listOf types.str;
+        type = types.listOf types.string;
         example = [ "postdrop" "mongodb" ];
         description = ''
           Extra groups for the logcheck user, for example to be able to use sendmail,

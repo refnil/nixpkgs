@@ -15,8 +15,7 @@ environment does everything automatically.  If
 can easily customise or override the various build phases.</para>
 
 
-<section xml:id="sec-using-stdenv"><title>Using
-<literal>stdenv</literal></title>
+<section><title>Using <literal>stdenv</literal></title>
 
 <para>To build a package with the standard environment, you use the
 function <varname>stdenv.mkDerivation</varname>, instead of the
@@ -27,7 +26,7 @@ stdenv.mkDerivation {
   name = "libfoo-1.2.3";
   src = fetchurl {
     url = http://example.org/libfoo-1.2.3.tar.bz2;
-    sha256 = "0x2g1jqygyr5wiwg4ma1nd7w4ydpy82z9gkcv8vh2v8dn3y58v5m";
+    md5 = "e1ec107956b6ddcb0b8b0679367e9ac9";
   };
 }</programlisting>
 
@@ -59,7 +58,7 @@ build.  To make this easier, the standard environment breaks the
 package build into a number of <emphasis>phases</emphasis>, all of
 which can be overridden or modified individually: unpacking the
 sources, applying patches, configuring, building, and installing.
-(There are some others; see <xref linkend="sec-stdenv-phases"/>.)
+(There are some others; see <xref linkend="ssec-stdenv-phases"/>.)
 For instance, a package that doesn’t supply a makefile but instead has
 to be compiled “manually” could be handled like this:
 
@@ -125,8 +124,7 @@ genericBuild
 </section>
 
 
-<section xml:id="sec-tools-of-stdenv"><title>Tools provided by
-<literal>stdenv</literal></title>
+<section><title>Tools provided by <literal>stdenv</literal></title>
 
 <para>The standard environment provides the following packages:
 
@@ -152,8 +150,8 @@ genericBuild
 
   <listitem><para>GNU <command>tar</command>.</para></listitem>
 
-  <listitem><para><command>gzip</command>, <command>bzip2</command>
-  and <command>xz</command>.</para></listitem>
+  <listitem><para><command>gzip</command> and
+  <command>bzip2</command>.</para></listitem>
 
   <listitem><para>GNU Make.  It has been patched to provide
   <quote>nested</quote> output that can be fed into the
@@ -194,116 +192,40 @@ genericBuild
     tools.</para></listitem>
   </varlistentry>
 
-</variablelist>
-
-<variablelist>
-  <title>Variables specifying dependencies</title>
-
-  <varlistentry>
-    <term><varname>nativeBuildInputs</varname></term>
-    <listitem><para>
-      A list of dependencies used by the new derivation at <emphasis>build</emphasis>-time.
-      I.e. these dependencies should not make it into the package's runtime-closure, though this is currently not checked.
-      For each dependency <replaceable>dir</replaceable>, the directory <filename><replaceable>dir</replaceable>/bin</filename>, if it exists, is added to the <envar>PATH</envar> environment variable.
-      Other environment variables are also set up via a pluggable mechanism.
-      For instance, if <varname>buildInputs</varname> contains Perl, then the <filename>lib/site_perl</filename> subdirectory of each input is added to the <envar>PERL5LIB</envar> environment variable.
-      See <xref linkend="ssec-setup-hooks"/> for details.
-    </para></listitem>
-  </varlistentry>
-
   <varlistentry>
     <term><varname>buildInputs</varname></term>
-    <listitem><para>
-      A list of dependencies used by the new derivation at <emphasis>run</emphasis>-time.
-      Currently, the build-time environment is modified in the exact same way as with <varname>nativeBuildInputs</varname>.
-      This is problematic in that when cross-compiling, foreign executables can clobber native ones on the <envar>PATH</envar>.
-      Even more confusing is static-linking.
-      A statically-linked library should be listed here because ultimately that generated machine code will be used at run-time, even though a derivation containing the object files or static archives will only be used at build-time.
-      A less confusing solution to this would be nice.
-    </para></listitem>
+    <listitem><para>A list of dependencies used by
+    <literal>stdenv</literal> to set up the environment for the build.
+    For each dependency <replaceable>dir</replaceable>, the directory
+    <filename><replaceable>dir</replaceable>/bin</filename>, if it
+    exists, is added to the <envar>PATH</envar> environment variable.
+    Other environment variables are also set up via a pluggable
+    mechanism.  For instance, if <varname>buildInputs</varname>
+    contains Perl, then the <filename>lib/site_perl</filename>
+    subdirectory of each input is added to the <envar>PERL5LIB</envar>
+    environment variable.  See <xref linkend="ssec-setup-hooks"/> for
+    details.</para></listitem>
   </varlistentry>
-
-
-  <varlistentry>
-    <term><varname>propagatedNativeBuildInputs</varname></term>
-    <listitem><para>
-      Like <varname>nativeBuildInputs</varname>, but these dependencies are <emphasis>propagated</emphasis>:
-      that is, the dependencies listed here are added to the <varname>nativeBuildInputs</varname> of any package that uses <emphasis>this</emphasis> package as a dependency.
-      So if package Y has <literal>propagatedBuildInputs = [X]</literal>, and package Z has <literal>buildInputs = [Y]</literal>, then package X will appear in Z’s build environment automatically.
-    </para></listitem>
-  </varlistentry>
-
+  
   <varlistentry>
     <term><varname>propagatedBuildInputs</varname></term>
-    <listitem><para>
-      Like <varname>buildInputs</varname>, but propagated just like <varname>propagatedNativeBuildInputs</varname>.
-      This inherits <varname>buildInputs</varname>'s flaws of clobbering native executables when cross-compiling and being confusing for static linking.
-    </para></listitem>
+    <listitem><para>Like <varname>buildInputs</varname>, but these
+    dependencies are <emphasis>propagated</emphasis>: that is, the
+    dependencies listed here are added to the
+    <varname>buildInputs</varname> of any package that uses
+    <emphasis>this</emphasis> package as a dependency.  So if package
+    Y has <literal>propagatedBuildInputs = [X]</literal>, and package
+    Z has <literal>buildInputs = [Y]</literal>, then package X will
+    appear in Z’s build environment automatically.</para></listitem>
   </varlistentry>
-
-</variablelist>
-
-<variablelist>
-  <title>Variables affecting build properties</title>
-
-  <varlistentry>
-    <term><varname>enableParallelBuilding</varname></term>
-    <listitem><para>If set, <literal>stdenv</literal> will pass specific
-    flags to <literal>make</literal> and other build tools to enable
-    parallel building with up to <literal>build-cores</literal>
-    workers.</para></listitem>
-  </varlistentry>
-
-  <varlistentry>
-    <term><varname>preferLocalBuild</varname></term>
-    <listitem><para>If set, specifies that the package is so lightweight
-    in terms of build operations (e.g. write a text file from a Nix string
-    to the store) that there's no need to look for it in binary caches --
-    it's faster to just build it locally. It also tells Hydra and other
-    facilities that this package doesn't need to be exported in binary
-    caches (noone would use it, after all).</para></listitem>
-  </varlistentry>
-
-</variablelist>
-
-<variablelist>
-  <title>Special variables</title>
-
-  <varlistentry>
-    <term><varname>passthru</varname></term>
-    <listitem><para>This is an attribute set which can be filled with arbitrary
-    values. For example:
-
-<programlisting>
-passthru = {
-  foo = "bar";
-  baz = {
-    value1 = 4;
-    value2 = 5;
-  };
-}
-</programlisting>
-
-</para>
-
-    <para>Values inside it are not passed to the builder, so you can change
-    them without triggering a rebuild. However, they can be accessed outside of a
-    derivation directly, as if they were set inside a derivation itself, e.g.
-    <literal>hello.baz.value1</literal>. We don't specify any usage or
-    schema of <literal>passthru</literal> - it is meant for values that would be
-    useful outside the derivation in other parts of a Nix expression (e.g. in other
-    derivations). An example would be to convey some specific dependency of your
-    derivation which contains a program with plugins support.  Later, others who
-    make derivations with plugins can use passed-through dependency to ensure that
-    their plugin would be binary-compatible with built program.</para></listitem>
-  </varlistentry>
+  
 
 </variablelist>
 
 </section>
 
 
-<section xml:id="sec-stdenv-phases"><title>Phases</title>
+<section xml:id="ssec-stdenv-phases"><title>Phases</title>
 
 <para>The generic builder has a number of <emphasis>phases</emphasis>.
 Package builds are split into phases to make it easier to override
@@ -321,8 +243,7 @@ is convenient to override a phase from the derivation, while the
 latter is convenient from a build script.</para>
 
 
-<section xml:id="ssec-controlling-phases"><title>Controlling
-phases</title>
+<section><title>Controlling phases</title>
 
 <para>There are a number of variables that control what phases are
 executed and in what order:
@@ -341,7 +262,7 @@ executed and in what order:
       $preInstallPhases installPhase fixupPhase $preDistPhases
       distPhase $postPhases</literal>.
       </para>
-
+      
       <para>Usually, if you just want to add a few phases, it’s more
       convenient to set one of the variables below (such as
       <varname>preInstallPhases</varname>), as you then don’t specify
@@ -406,7 +327,7 @@ executed and in what order:
 </section>
 
 
-<section xml:id="ssec-unpack-phase"><title>The unpack phase</title>
+<section><title>The unpack phase</title>
 
 <para>The unpack phase is responsible for unpacking the source code of
 the package.  The default implementation of
@@ -420,11 +341,9 @@ It supports the following files by default:
     <term>Tar files</term>
     <listitem><para>These can optionally be compressed using
     <command>gzip</command> (<filename>.tar.gz</filename>,
-    <filename>.tgz</filename> or <filename>.tar.Z</filename>),
+    <filename>.tgz</filename> or <filename>.tar.Z</filename>) or
     <command>bzip2</command> (<filename>.tar.bz2</filename> or
-    <filename>.tbz2</filename>) or <command>xz</command>
-    (<filename>.tar.xz</filename> or
-    <filename>.tar.lzma</filename>).</para></listitem>
+    <filename>.tbz2</filename>).</para></listitem>
   </varlistentry>
 
   <varlistentry>
@@ -513,7 +432,7 @@ Additional file types can be supported by setting the
 </section>
 
 
-<section xml:id="ssec-patch-phase"><title>The patch phase</title>
+<section><title>The patch phase</title>
 
 <para>The patch phase applies the list of patches defined in the
 <varname>patches</varname> variable.</para>
@@ -526,10 +445,9 @@ Additional file types can be supported by setting the
     <listitem><para>The list of patches.  They must be in the format
     accepted by the <command>patch</command> command, and may
     optionally be compressed using <command>gzip</command>
-    (<filename>.gz</filename>), <command>bzip2</command>
-    (<filename>.bz2</filename>) or <command>xz</command>
-    (<filename>.xz</filename>).</para></listitem>
-  </varlistentry>
+    (<filename>.gz</filename>) or <command>bzip2</command>
+    (<filename>.bz2</filename>).</para></listitem>
+  </varlistentry>  
 
   <varlistentry>
     <term><varname>patchFlags</varname></term>
@@ -556,7 +474,7 @@ Additional file types can be supported by setting the
 </section>
 
 
-<section xml:id="ssec-configure-phase"><title>The configure phase</title>
+<section><title>The configure phase</title>
 
 <para>The configure phase prepares the source tree for building.  The
 default <function>configurePhase</function> runs
@@ -576,8 +494,8 @@ script) if it exists.</para>
 
   <varlistentry>
     <term><varname>configureFlags</varname></term>
-    <listitem><para>A list of strings passed as additional arguments to the
-    configure script.</para></listitem>
+    <listitem><para>Additional arguments passed to the configure
+    script.</para></listitem>
   </varlistentry>
 
   <varlistentry>
@@ -592,8 +510,8 @@ script) if it exists.</para>
     <term><varname>dontAddPrefix</varname></term>
     <listitem><para>By default, the flag
     <literal>--prefix=$prefix</literal> is added to the configure
-    flags.  If this is undesirable, set this variable to
-    true.</para></listitem>
+    flags.  If this is undesirable, set this variable to a non-empty
+    value.</para></listitem>
   </varlistentry>
 
   <varlistentry>
@@ -609,7 +527,8 @@ script) if it exists.</para>
     <listitem><para>By default, the flag
     <literal>--disable-dependency-tracking</literal> is added to the
     configure flags to speed up Automake-based builds.  If this is
-    undesirable, set this variable to true.</para></listitem>
+    undesirable, set this variable to a non-empty
+    value.</para></listitem>
   </varlistentry>
 
   <varlistentry>
@@ -622,16 +541,7 @@ script) if it exists.</para>
     variables in the Libtool script to prevent Libtool from using
     libraries in <filename>/usr/lib</filename> and
     such.</para></footnote>.  If this is undesirable, set this
-    variable to true.</para></listitem>
-  </varlistentry>
-
-  <varlistentry>
-    <term><varname>dontDisableStatic</varname></term>
-    <listitem><para>By default, when the configure script has
-    <option>--enable-static</option>, the option
-    <option>--disable-static</option> is added to the configure flags.</para>
-    <para>If this is undesirable, set this variable to
-    true.</para></listitem>
+    variable to a non-empty value.</para></listitem>
   </varlistentry>
 
   <varlistentry>
@@ -652,7 +562,7 @@ script) if it exists.</para>
 </section>
 
 
-<section xml:id="build-phase"><title>The build phase</title>
+<section><title>The build phase</title>
 
 <para>The build phase is responsible for actually building the package
 (e.g. compiling it).  The default <function>buildPhase</function>
@@ -677,7 +587,7 @@ nothing.</para>
 
   <varlistentry>
     <term><varname>makeFlags</varname></term>
-    <listitem><para>A list of strings passed as additional flags to
+    <listitem><para>Additional flags passed to
     <command>make</command>.  These flags are also used by the default
     install and check phase.  For setting make flags specific to the
     build phase, use <varname>buildFlags</varname> (see
@@ -704,7 +614,7 @@ makeFlagsArray=(CFLAGS="-O0 -g" LDFLAGS="-lfoo -lbar")
 
   <varlistentry>
     <term><varname>buildFlags</varname> / <varname>buildFlagsArray</varname></term>
-    <listitem><para>A list of strings passed as additional flags to
+    <listitem><para>Additional flags passed to
     <command>make</command>.  Like <varname>makeFlags</varname> and
     <varname>makeFlagsArray</varname>, but only used by the build
     phase.</para></listitem>
@@ -725,7 +635,7 @@ makeFlagsArray=(CFLAGS="-O0 -g" LDFLAGS="-lfoo -lbar")
 </variablelist>
 
 
-<para>
+<para> 
 You can set flags for <command>make</command> through the
 <varname>makeFlags</varname> variable.</para>
 
@@ -736,7 +646,7 @@ called, respectively.</para>
 </section>
 
 
-<section xml:id="ssec-check-phase"><title>The check phase</title>
+<section><title>The check phase</title>
 
 <para>The check phase checks whether the package was built correctly
 by running its test suite.  The default
@@ -772,7 +682,7 @@ doCheck = true;</programlisting>
 
   <varlistentry>
     <term><varname>checkFlags</varname> / <varname>checkFlagsArray</varname></term>
-    <listitem><para>A list of strings passed as additional flags to
+    <listitem><para>Additional flags passed to
     <command>make</command>.  Like <varname>makeFlags</varname> and
     <varname>makeFlagsArray</varname>, but only used by the check
     phase.</para></listitem>
@@ -792,11 +702,11 @@ doCheck = true;</programlisting>
 
 </variablelist>
 
-
+  
 </section>
 
 
-<section xml:id="ssec-install-phase"><title>The install phase</title>
+<section><title>The install phase</title>
 
 <para>The install phase is responsible for installing the package in
 the Nix store under <envar>out</envar>.  The default
@@ -805,7 +715,7 @@ the Nix store under <envar>out</envar>.  The default
 install</command>.</para>
 
 <variablelist>
-  <title>Variables controlling the install phase</title>
+  <title>Variables controlling the check phase</title>
 
   <varlistentry>
     <term><varname>makeFlags</varname> /
@@ -827,7 +737,7 @@ installTargets = "install-bin install-doc";</programlisting>
 
   <varlistentry>
     <term><varname>installFlags</varname> / <varname>installFlagsArray</varname></term>
-    <listitem><para>A list of strings passed as additional flags to
+    <listitem><para>Additional flags passed to
     <command>make</command>.  Like <varname>makeFlags</varname> and
     <varname>makeFlagsArray</varname>, but only used by the install
     phase.</para></listitem>
@@ -851,7 +761,7 @@ installTargets = "install-bin install-doc";</programlisting>
 </section>
 
 
-<section xml:id="ssec-fixup-phase"><title>The fixup phase</title>
+<section><title>The fixup phase</title>
 
 <para>The fixup phase performs some (Nix-specific) post-processing
 actions on the files installed under <filename>$out</filename> by the
@@ -859,12 +769,12 @@ install phase.  The default <function>fixupPhase</function> does the
 following:
 
 <itemizedlist>
-
+      
   <listitem><para>It moves the <filename>man/</filename>,
   <filename>doc/</filename> and <filename>info/</filename>
   subdirectories of <envar>$out</envar> to
   <filename>share/</filename>.</para></listitem>
-
+      
   <listitem><para>It strips libraries and executables of debug
   information.</para></listitem>
 
@@ -884,18 +794,12 @@ following:
 </para>
 
 <variablelist>
-  <title>Variables controlling the fixup phase</title>
+  <title>Variables controlling the check phase</title>
 
   <varlistentry>
     <term><varname>dontStrip</varname></term>
     <listitem><para>If set, libraries and executables are not
     stripped.  By default, they are.</para></listitem>
-  </varlistentry>
-
-  <varlistentry>
-    <term><varname>dontMoveSbin</varname></term>
-    <listitem><para>If set, files in <filename>$out/sbin</filename> are not moved
-    to <filename>$out/bin</filename>. By default, they are.</para></listitem>
   </varlistentry>
 
   <varlistentry>
@@ -975,76 +879,12 @@ following:
     phase.</para></listitem>
   </varlistentry>
 
-  <varlistentry xml:id="stdenv-separateDebugInfo">
-    <term><varname>separateDebugInfo</varname></term>
-    <listitem><para>If set to <literal>true</literal>, the standard
-    environment will enable debug information in C/C++ builds. After
-    installation, the debug information will be separated from the
-    executables and stored in the output named
-    <literal>debug</literal>. (This output is enabled automatically;
-    you don’t need to set the <varname>outputs</varname> attribute
-    explicitly.) To be precise, the debug information is stored in
-    <filename><replaceable>debug</replaceable>/lib/debug/.build-id/<replaceable>XX</replaceable>/<replaceable>YYYY…</replaceable></filename>,
-    where <replaceable>XXYYYY…</replaceable> is the <replaceable>build
-    ID</replaceable> of the binary — a SHA-1 hash of the contents of
-    the binary. Debuggers like GDB use the build ID to look up the
-    separated debug information.</para>
-
-    <para>For example, with GDB, you can add
-
-<programlisting>
-set debug-file-directory ~/.nix-profile/lib/debug
-</programlisting>
-
-    to <filename>~/.gdbinit</filename>. GDB will then be able to find
-    debug information installed via <literal>nix-env
-    -i</literal>.</para>
-
-    </listitem>
-  </varlistentry>
-
 </variablelist>
 
 </section>
 
-<section xml:id="ssec-installCheck-phase"><title>The installCheck phase</title>
 
-<para>The installCheck phase checks whether the package was installed
-correctly by running its test suite against the installed directories.
-The default <function>installCheck</function> calls <command>make
-installcheck</command>.</para>
-
-<variablelist>
-  <title>Variables controlling the installCheck phase</title>
-
-  <varlistentry>
-    <term><varname>doInstallCheck</varname></term>
-    <listitem><para>If set to a non-empty string, the installCheck phase is
-    executed, otherwise it is skipped (default).  Thus you should set
-
-    <programlisting>doInstallCheck = true;</programlisting>
-
-    in the derivation to enable install checks.</para></listitem>
-  </varlistentry>
-
-  <varlistentry>
-    <term><varname>preInstallCheck</varname></term>
-    <listitem><para>Hook executed at the start of the installCheck
-    phase.</para></listitem>
-  </varlistentry>
-
-  <varlistentry>
-    <term><varname>postInstallCheck</varname></term>
-    <listitem><para>Hook executed at the end of the installCheck
-    phase.</para></listitem>
-  </varlistentry>
-
-</variablelist>
-
-</section>
-
-<section xml:id="ssec-distribution-phase"><title>The distribution
-phase</title>
+<section><title>The distribution phase</title>
 
 <para>The distribution phase is intended to produce a source
 distribution of the package.  The default
@@ -1110,41 +950,13 @@ functions.</para>
 
 <variablelist>
 
-
-  <varlistentry xml:id='fun-makeWrapper'>
-    <term><function>makeWrapper</function>
-    <replaceable>executable</replaceable>
-    <replaceable>wrapperfile</replaceable>
-    <replaceable>args</replaceable></term>
-    <listitem><para>Constructs a wrapper for a program with various
-    possible arguments. For example:
-
-<programlisting>
-# adds `FOOBAR=baz` to `$out/bin/foo`’s environment
-makeWrapper $out/bin/foo $wrapperfile --set FOOBAR baz
-
-# prefixes the binary paths of `hello` and `git`
-# Be advised that paths often should be patched in directly
-# (via string replacements or in `configurePhase`).
-makeWrapper $out/bin/foo $wrapperfile --prefix PATH : ${lib.makeBinPath [ hello git ]}
-</programlisting>
-
-    There’s many more kinds of arguments, they are documented in
-    <literal>nixpkgs/pkgs/build-support/setup-hooks/make-wrapper.sh</literal>.</para>
-
-    <para><literal>wrapProgram</literal> is a convenience function you probably
-    want to use most of the time.</para>
-
-    </listitem>
-  </varlistentry>
   
-
   <varlistentry xml:id='fun-substitute'>
     <term><function>substitute</function>
     <replaceable>infile</replaceable>
     <replaceable>outfile</replaceable>
     <replaceable>subs</replaceable></term>
-
+    
     <listitem>
       <para>Performs string substitution on the contents of
       <replaceable>infile</replaceable>, writing the result to
@@ -1172,7 +984,7 @@ makeWrapper $out/bin/foo $wrapperfile --prefix PATH : ${lib.makeBinPath [ hello 
             <literal>@<replaceable>...</replaceable>@</literal> in the
             template as placeholders.</para></listitem>
           </varlistentry>
-
+          
           <varlistentry>
             <term><option>--subst-var-by</option>
             <replaceable>varName</replaceable>
@@ -1181,7 +993,7 @@ makeWrapper $out/bin/foo $wrapperfile --prefix PATH : ${lib.makeBinPath [ hello 
             <literal>@<replaceable>varName</replaceable>@</literal> by
             the string <replaceable>s</replaceable>.</para></listitem>
           </varlistentry>
-
+          
         </variablelist>
 
       </para>
@@ -1209,7 +1021,7 @@ substitute ./foo.in ./foo.out \
 
     </listitem>
   </varlistentry>
-
+  
 
   <varlistentry xml:id='fun-substituteInPlace'>
     <term><function>substituteInPlace</function>
@@ -1220,7 +1032,7 @@ substitute ./foo.in ./foo.out \
     <replaceable>file</replaceable>.</para></listitem>
   </varlistentry>
 
-
+  
   <varlistentry xml:id='fun-substituteAll'>
     <term><function>substituteAll</function>
     <replaceable>infile</replaceable>
@@ -1251,17 +1063,7 @@ PATH=/nix/store/68afga4khv0w...-coreutils-6.12/bin
 echo @foo@
 </programlisting>
 
-    That is, no substitution is performed for undefined variables.</para>
-
-    <para>Environment variables that start with an uppercase letter or an
-    underscore are filtered out,
-    to prevent global variables (like <literal>HOME</literal>) or private
-    variables (like <literal>__ETC_PROFILE_DONE</literal>) from accidentally
-    getting substituted.
-    The variables also have to be valid bash “names”, as
-    defined in the bash manpage (alphanumeric or <literal>_</literal>,
-    must not start with a number).</para>
-  </listitem>
+    That is, no substitution is performed for undefined variables.</para></listitem>
   </varlistentry>
 
 
@@ -1278,42 +1080,13 @@ echo @foo@
     <term><function>stripHash</function>
     <replaceable>path</replaceable></term>
     <listitem><para>Strips the directory and hash part of a store
-    path, outputting the name part to <literal>stdout</literal>.
-    For example:
-
-<programlisting>
-# prints coreutils-8.24
-stripHash "/nix/store/9s9r019176g7cvn2nvcw41gsp862y6b4-coreutils-8.24"
-</programlisting>
-
-    If you wish to store the result in another variable, then the
-    following idiom may be useful:
-
-<programlisting>
-name="/nix/store/9s9r019176g7cvn2nvcw41gsp862y6b4-coreutils-8.24"
-someVar=$(stripHash $name)
-</programlisting>
-
-    </para></listitem>
+    path, and prints (on standard output) only the name part.  For
+    instance, <literal>stripHash
+    /nix/store/68afga4khv0w...-coreutils-6.12</literal> print
+    <literal>coreutils-6.12</literal>.</para></listitem>
   </varlistentry>
+
   
-
-  <varlistentry xml:id='fun-wrapProgram'>
-    <term><function>wrapProgram</function>
-    <replaceable>executable</replaceable>
-    <replaceable>makeWrapperArgs</replaceable></term>
-    <listitem><para>Convenience function for <literal>makeWrapper</literal>
-    that automatically creates a sane wrapper file
-
-    It takes all the same arguments as <literal>makeWrapper</literal>,
-    except for <literal>--argv0</literal>.</para>
-
-    <para>It cannot be applied multiple times, since it will overwrite the wrapper
-    file.</para>
-    </listitem>
-  </varlistentry>
-
-
 </variablelist>
 
 </section>
@@ -1344,9 +1117,12 @@ someVar=$(stripHash $name)
   <varlistentry>
     <term>Python</term>
     <listitem><para>Adds the
-    <filename>lib/${python.libPrefix}/site-packages</filename> subdirectory of
+    <filename>lib/python2.5/site-packages</filename> subdirectory of
     each build input to the <envar>PYTHONPATH</envar> environment
-    variable.</para></listitem>
+    variable.</para>
+
+    <note><para>This should be generalised: the Python version
+    shouldn’t be hard-coded.</para></note></listitem>
   </varlistentry>
 
   <varlistentry>
@@ -1362,14 +1138,6 @@ someVar=$(stripHash $name)
     <listitem><para>Adds the <filename>share/aclocal</filename>
     subdirectory of each build input to the <envar>ACLOCAL_PATH</envar>
     environment variable.</para></listitem>
-  </varlistentry>
-
-  <varlistentry>
-    <term>Autoconf</term>
-    <listitem><para>The <varname>autoreconfHook</varname> derivation adds
-    <varname>autoreconfPhase</varname>, which runs autoreconf, libtoolize and
-    automake, essentially preparing the configure script in autotools-based
-    builds.</para></listitem>
   </varlistentry>
 
   <varlistentry>
@@ -1390,7 +1158,7 @@ someVar=$(stripHash $name)
   </varlistentry>
 
   <varlistentry>
-    <term>Qt 4</term>
+    <term>Qt</term>
     <listitem><para>Sets the <envar>QTDIR</envar> environment variable
     to Qt’s path.</para></listitem>
   </varlistentry>
@@ -1416,25 +1184,6 @@ someVar=$(stripHash $name)
     <envar>GST_PLUGIN_SYSTEM_PATH</envar> environment variable.</para></listitem>
   </varlistentry>
 
-  <varlistentry>
-    <term>paxctl</term>
-    <listitem><para>Defines the <varname>paxmark</varname> helper for
-    setting per-executable PaX flags on Linux (where it is available by
-    default; on all other platforms, <varname>paxmark</varname> is a no-op).
-    For example, to disable secure memory protections on the executable
-    <replaceable>foo</replaceable>:
-    <programlisting>
-      postFixup = ''
-        paxmark m $out/bin/<replaceable>foo</replaceable>
-      '';
-    </programlisting>
-    The <literal>m</literal> flag is the most common flag and is typically
-    required for applications that employ JIT compilation or otherwise need to
-    execute code generated at run-time.  Disabling PaX protections should be
-    considered a last resort: if possible, problematic features should be
-    disabled or patched to work with PaX.</para></listitem>
-  </varlistentry>
-
 </variablelist>
 
 </para>
@@ -1442,7 +1191,7 @@ someVar=$(stripHash $name)
 </section>
 
 
-<section xml:id="sec-purity-in-nixpkgs"><title>Purity in Nixpkgs</title>
+<section><title>Purity in Nixpkgs</title>
 
 <para>[measures taken to prevent dependencies on packages outside the
 store, and what you can do to prevent them]</para>
@@ -1457,216 +1206,6 @@ in the default system locations.</para>
 
 </section>
 
-<section xml:id="sec-hardening-in-nixpkgs"><title>Hardening in Nixpkgs</title>
-
-<para>There are flags available to harden packages at compile or link-time.
-These can be toggled using the <varname>stdenv.mkDerivation</varname> parameters
-<varname>hardeningDisable</varname> and <varname>hardeningEnable</varname>.
-</para>
-
-<para>
-Both parameters take a list of flags as strings. The special
-<varname>"all"</varname> flag can be passed to <varname>hardeningDisable</varname>
-to turn off all hardening. These flags can also be used as environment variables
-for testing or development purposes.
-</para>
-
-<para>The following flags are enabled by default and might require disabling with
-<varname>hardeningDisable</varname> if the program to package is incompatible.
-</para>
-
-<variablelist>
-
-  <varlistentry>
-    <term><varname>format</varname></term>
-    <listitem><para>Adds the <option>-Wformat -Wformat-security
-    -Werror=format-security</option> compiler options. At present,
-    this warns about calls to <varname>printf</varname> and
-    <varname>scanf</varname> functions where the format string is
-    not a string literal and there are no format arguments, as in
-    <literal>printf(foo);</literal>. This may be a security hole
-    if the format string came from untrusted input and contains
-    <literal>%n</literal>.</para>
-
-    <para>This needs to be turned off or fixed for errors similar to:</para>
-
-    <programlisting>
-/tmp/nix-build-zynaddsubfx-2.5.2.drv-0/zynaddsubfx-2.5.2/src/UI/guimain.cpp:571:28: error: format not a string literal and no format arguments [-Werror=format-security]
-         printf(help_message);
-                            ^
-cc1plus: some warnings being treated as errors
-    </programlisting></listitem>
-  </varlistentry>
-
-  <varlistentry>
-    <term><varname>stackprotector</varname></term>
-    <listitem>
-    <para>Adds the <option>-fstack-protector-strong
-    --param ssp-buffer-size=4</option>
-    compiler options. This adds safety checks against stack overwrites
-    rendering many potential code injection attacks into aborting situations.
-    In the best case this turns code injection vulnerabilities into denial
-    of service or into non-issues (depending on the application).</para>
-
-    <para>This needs to be turned off or fixed for errors similar to:</para>
-
-    <programlisting>
-bin/blib.a(bios_console.o): In function `bios_handle_cup':
-/tmp/nix-build-ipxe-20141124-5cbdc41.drv-0/ipxe-5cbdc41/src/arch/i386/firmware/pcbios/bios_console.c:86: undefined reference to `__stack_chk_fail'
-    </programlisting></listitem>
-  </varlistentry>
-
-  <varlistentry>
-    <term><varname>fortify</varname></term>
-    <listitem>
-    <para>Adds the <option>-O2 -D_FORTIFY_SOURCE=2</option> compiler
-    options. During code generation the compiler knows a great deal of
-    information about buffer sizes (where possible), and attempts to replace
-    insecure unlimited length buffer function calls with length-limited ones.
-    This is especially useful for old, crufty code. Additionally, format
-    strings in writable memory that contain '%n' are blocked. If an application
-    depends on such a format string, it will need to be worked around.
-    </para>
-
-    <para>Addtionally, some warnings are enabled which might trigger build
-    failures if compiler warnings are treated as errors in the package build.
-    In this case, set <option>NIX_CFLAGS_COMPILE</option> to
-    <option>-Wno-error=warning-type</option>.</para>
-
-    <para>This needs to be turned off or fixed for errors similar to:</para>
-
-    <programlisting>
-malloc.c:404:15: error: return type is an incomplete type
-malloc.c:410:19: error: storage size of 'ms' isn't known
-    </programlisting>
-    <programlisting>
-strdup.h:22:1: error: expected identifier or '(' before '__extension__'
-    </programlisting>
-    <programlisting>
-strsep.c:65:23: error: register name not specified for 'delim'
-    </programlisting>
-    <programlisting>
-installwatch.c:3751:5: error: conflicting types for '__open_2'
-    </programlisting>
-    <programlisting>
-fcntl2.h:50:4: error: call to '__open_missing_mode' declared with attribute error: open with O_CREAT or O_TMPFILE in second argument needs 3 arguments
-    </programlisting>
-    </listitem>
-  </varlistentry>
-
-  <varlistentry>
-    <term><varname>pic</varname></term>
-    <listitem>
-    <para>Adds the <option>-fPIC</option> compiler options. This options adds
-    support for position independant code in shared libraries and thus making
-    ASLR possible.</para>
-    <para>Most notably, the Linux kernel, kernel modules and other code
-    not running in an operating system environment like boot loaders won't
-    build with PIC enabled. The compiler will is most cases complain that
-    PIC is not supported for a specific build.
-    </para>
-
-    <para>This needs to be turned off or fixed for assembler errors similar to:</para>
-
-    <programlisting>
-ccbLfRgg.s: Assembler messages:
-ccbLfRgg.s:33: Error: missing or invalid displacement expression `private_key_len@GOTOFF'
-    </programlisting>
-    </listitem>
-  </varlistentry>
-
-  <varlistentry>
-    <term><varname>strictoverflow</varname></term>
-    <listitem>
-    <para>Signed integer overflow is undefined behaviour according to the C
-    standard. If it happens, it is an error in the program as it should check
-    for overflow before it can happen, not afterwards. GCC provides built-in
-    functions to perform arithmetic with overflow checking, which are correct
-    and faster than any custom implementation. As a workaround, the option
-    <option>-fno-strict-overflow</option> makes gcc behave as if signed
-    integer overflows were defined.
-    </para>
-
-    <para>This flag should not trigger any build or runtime errors.</para>
-    </listitem>
-  </varlistentry>
-
-  <varlistentry>
-    <term><varname>relro</varname></term>
-    <listitem>
-    <para>Adds the <option>-z relro</option> linker option. During program
-    load, several ELF memory sections need to be written to by the linker,
-    but can be turned read-only before turning over control to the program.
-    This prevents some GOT (and .dtors) overwrite attacks, but at least the
-    part of the GOT used by the dynamic linker (.got.plt) is still vulnerable.
-    </para>
-
-    <para>This flag can break dynamic shared object loading. For instance, the
-    module systems of Xorg and OpenCV are incompatible with this flag. In almost
-    all cases the <varname>bindnow</varname> flag must also be disabled and
-    incompatible programs typically fail with similar errors at runtime.</para>
-    </listitem>
-  </varlistentry>
-
-  <varlistentry>
-    <term><varname>bindnow</varname></term>
-    <listitem>
-    <para>Adds the <option>-z bindnow</option> linker option. During program
-    load, all dynamic symbols are resolved, allowing for the complete GOT to
-    be marked read-only (due to <varname>relro</varname>). This prevents GOT
-    overwrite attacks. For very large applications, this can incur some
-    performance loss during initial load while symbols are resolved, but this
-    shouldn't be an issue for daemons.
-    </para>
-
-    <para>This flag can break dynamic shared object loading. For instance, the
-    module systems of Xorg and PHP are incompatible with this flag. Programs
-    incompatible with this flag often fail at runtime due to missing symbols,
-    like:</para>
-
-    <programlisting>
-intel_drv.so: undefined symbol: vgaHWFreeHWRec
-    </programlisting>
-    </listitem>
-  </varlistentry>
-
-</variablelist>
-
-<para>The following flags are disabled by default and should be enabled
-with <varname>hardeningEnable</varname> for packages that take untrusted
-input like network services.
-</para>
-
-<variablelist>
-
-  <varlistentry>
-    <term><varname>pie</varname></term>
-    <listitem>
-    <para>Adds the <option>-fPIE</option> compiler and <option>-pie</option>
-    linker options. Position Independent Executables are needed to take
-    advantage of Address Space Layout Randomization, supported by modern
-    kernel versions. While ASLR can already be enforced for data areas in
-    the stack and heap (brk and mmap), the code areas must be compiled as
-    position-independent. Shared libraries already do this with the
-    <varname>pic</varname> flag, so they gain ASLR automatically, but binary
-    .text regions need to be build with <varname>pie</varname> to gain ASLR.
-    When this happens, ROP attacks are much harder since there are no static
-    locations to bounce off of during a memory corruption attack.
-    </para>
-    </listitem>
-  </varlistentry>
-
-</variablelist>
-
-<para>For more in-depth information on these hardening flags and hardening in
-general, refer to the
-<link xlink:href="https://wiki.debian.org/Hardening">Debian Wiki</link>,
-<link xlink:href="https://wiki.ubuntu.com/Security/Features">Ubuntu Wiki</link>,
-<link xlink:href="https://wiki.gentoo.org/wiki/Project:Hardened">Gentoo Wiki</link>,
-and the <link xlink:href="https://wiki.archlinux.org/index.php/DeveloperWiki:Security">
-Arch Wiki</link>.
-</para>
-
-</section>
 
 </chapter>
+

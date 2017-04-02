@@ -1,53 +1,34 @@
 { stdenv, fetchurl, pkgconfig, yasm
-, freetype, fribidi
-, encaSupport ? true, enca ? null # enca support
-, fontconfigSupport ? true, fontconfig ? null # fontconfig support
-, harfbuzzSupport ? true, harfbuzz ? null # harfbuzz support
-, rasterizerSupport ? false # Internal rasterizer
-, largeTilesSupport ? false # Use larger tiles in the rasterizer
-, libiconv
+, freetype, fribidi, fontconfig
+, enca ? null
+, harfbuzz ? null
 }:
 
-assert encaSupport -> enca != null;
-assert fontconfigSupport -> fontconfig != null;
-assert harfbuzzSupport -> harfbuzz != null;
-
 let
-  mkFlag = optSet: flag: if optSet then "--enable-${flag}" else "--disable-${flag}";
-in
-
-with stdenv.lib;
-stdenv.mkDerivation rec {
+  version = "0.11.1";
+  sha256 = "1b0ki1zdkhflszzj5qr45j9qsd0rfbb6ws5pqkny8jhih0l3lxwx";
+  baseurl = "https://github.com/libass/libass/releases/download";
+in stdenv.mkDerivation rec {
   name = "libass-${version}";
-  version = "0.13.4";
 
   src = fetchurl {
-    url = "https://github.com/libass/libass/releases/download/${version}/${name}.tar.xz";
-    sha256 = "1dlzkjybnpl2fkvyjq0qblb7qw12cs893bs7zj3rvf8ij342yjnq";
+    url = "${baseurl}/${version}/${name}.tar.xz";
+    inherit sha256;
   };
-
-  configureFlags = [
-    (mkFlag encaSupport "enca")
-    (mkFlag fontconfigSupport "fontconfig")
-    (mkFlag harfbuzzSupport "harfbuzz")
-    (mkFlag rasterizerSupport "rasterizer")
-    (mkFlag largeTilesSupport "large-tiles")
-  ];
 
   nativeBuildInputs = [ pkgconfig yasm ];
 
-  buildInputs = [ freetype fribidi ]
-    ++ optional encaSupport enca
-    ++ optional fontconfigSupport fontconfig
-    ++ optional harfbuzzSupport harfbuzz
-    ++ optional stdenv.isDarwin libiconv;
+  buildInputs = [
+    freetype fribidi fontconfig
+    enca harfbuzz
+  ];
 
   meta = {
     description = "Portable ASS/SSA subtitle renderer";
-    homepage    = https://github.com/libass/libass;
-    license     = licenses.isc;
-    platforms   = platforms.unix;
-    maintainers = with maintainers; [ codyopel ];
+    homepage = http://code.google.com/p/libass/;
+    license = stdenv.lib.licenses.isc;
+    platforms = stdenv.lib.platforms.linux;
+    maintainers = [ stdenv.lib.maintainers.urkud ];
     repositories.git = git://github.com/libass/libass.git;
   };
 }

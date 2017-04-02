@@ -1,5 +1,5 @@
 { stdenv, writeScript, vmTools, makeInitrd
-, samba, vde2, openssh, socat, netcat-gnu, coreutils, gnugrep, gzip
+, samba, vde2, openssh, socat, netcat, coreutils, gnugrep, gzip
 }:
 
 { sshKey
@@ -48,11 +48,11 @@ let
     mount -t proc none /fs/proc
 
     mount -t 9p \
-      -o trans=virtio,version=9p2000.L,cache=loose \
+      -o trans=virtio,version=9p2000.L,msize=262144,cache=loose \
       store /fs/nix/store
 
     mount -t 9p \
-      -o trans=virtio,version=9p2000.L,cache=loose \
+      -o trans=virtio,version=9p2000.L,msize=262144,cache=loose \
       xchg /fs/xchg
 
     echo root:x:0:0::/root:/bin/false > /fs/etc/passwd
@@ -71,6 +71,8 @@ let
     };
   };
 
+  shellEscape = x: "'${replaceChars ["'"] [("'\\'" + "'")] x}'";
+
   loopForever = "while :; do ${coreutils}/bin/sleep 1; done";
 
   initScript = writeScript "init.sh" (''
@@ -79,7 +81,7 @@ let
     ${coreutils}/bin/chmod 600 /ssh.key
   '' + (if installMode then ''
     echo -n "Waiting for Windows installation to finish..."
-    while ! ${netcat-gnu}/bin/netcat -z 192.168.0.1 22; do
+    while ! ${netcat}/bin/netcat -z 192.168.0.1 22; do
       echo -n .
       # Print a dot every 10 seconds only to shorten line length.
       ${coreutils}/bin/sleep 10
@@ -118,7 +120,7 @@ let
     ${samba}/sbin/smbd -D
 
     echo -n "Waiting for Windows VM to become available..."
-    while ! ${netcat-gnu}/bin/netcat -z 192.168.0.1 22; do
+    while ! ${netcat}/bin/netcat -z 192.168.0.1 22; do
       echo -n .
       ${coreutils}/bin/sleep 1
     done
@@ -130,7 +132,7 @@ let
       -o StrictHostKeyChecking=no \
       -i /ssh.key \
       -l Administrator \
-      192.168.0.1 -- ${lib.escapeShellArg command}
+      192.168.0.1 -- ${shellEscape command}
   '') + optionalString (suspendTo != null) ''
     ${coreutils}/bin/touch /xchg/suspend_now
     ${loopForever}

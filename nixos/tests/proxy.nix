@@ -1,4 +1,4 @@
-import ./make-test.nix ({ pkgs, ...} : 
+import ./make-test.nix (
 
 let
 
@@ -7,7 +7,7 @@ let
 
     { services.httpd.enable = true;
       services.httpd.adminAddr = "foo@example.org";
-      services.httpd.documentRoot = "${pkgs.valgrind.doc}/share/doc/valgrind/html";
+      services.httpd.documentRoot = "${pkgs.valgrind}/share/doc/valgrind/html";
       networking.firewall.allowedTCPPorts = [ 80 ];
     };
 
@@ -15,9 +15,6 @@ in
 
 {
   name = "proxy";
-  meta = with pkgs.stdenv.lib.maintainers; {
-    maintainers = [ eelco chaoflow ];
-  };
 
   nodes =
     { proxy =
@@ -25,19 +22,20 @@ in
 
         { services.httpd.enable = true;
           services.httpd.adminAddr = "bar@example.org";
-          services.httpd.extraModules = [ "proxy_balancer" "lbmethod_byrequests" ];
+          services.httpd.extraModules = ["proxy_balancer"];
 
           services.httpd.extraConfig =
             ''
               ExtendedStatus on
 
               <Location /server-status>
-                Require all granted
+                Order deny,allow
+                Allow from all
                 SetHandler server-status
               </Location>
 
               <Proxy balancer://cluster>
-                Require all granted
+                Allow from all
                 BalancerMember http://${nodes.backend1.config.networking.hostName} retry=0
                 BalancerMember http://${nodes.backend2.config.networking.hostName} retry=0
               </Proxy>
@@ -67,7 +65,6 @@ in
       $proxy->waitForUnit("httpd");
       $backend1->waitForUnit("httpd");
       $backend2->waitForUnit("httpd");
-      $client->waitForUnit("network.target");
 
       # With the back-ends up, the proxy should work.
       $client->succeed("curl --fail http://proxy/");
@@ -93,4 +90,5 @@ in
       $backend2->unblock;
       $client->succeed("curl --fail http://proxy/");
     '';
+
 })

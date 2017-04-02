@@ -8,19 +8,12 @@ stdenv.mkDerivation rec {
     sha256 = "1fy0ymvzrrvs889zanxcaxjfcxarm2d3k43c9frmbl1ld7dblmkd";
   };
 
-  preBuild =
-    ''
-      # Fix building on Darwin with GCC.
-      substituteInPlace compat/regex.c --replace \
-         __private_extern__  '__attribute__ ((visibility ("hidden")))'
-    '';
-
   buildInputs = [ gettext ];
 
   doCheck = true;
 
   meta = {
-    description = "Converter from ASCII to PostScript, HTML, or RTF";
+    description = "GNU Enscript, a converter from ASCII to PostScript, HTML, or RTF";
 
     longDescription =
       '' GNU Enscript converts ASCII files to PostScript, HTML, or RTF and
@@ -37,7 +30,7 @@ stdenv.mkDerivation rec {
 
     homepage = http://www.gnu.org/software/enscript/;
 
-    maintainers = [ ];
+    maintainers = [ stdenv.lib.maintainers.ludo ];
     platforms = stdenv.lib.platforms.all;
   };
 }

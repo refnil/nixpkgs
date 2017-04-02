@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, unzip, cmake, /*jdk,*/ alsaLib }:
+{ stdenv, fetchurl, unzip, cmake, /*openjdk,*/ alsaLib }:
 
 stdenv.mkDerivation rec {
   name = "portmidi-${version}";
@@ -10,7 +10,7 @@ stdenv.mkDerivation rec {
   };
 
   cmakeFlags = let
-    #base = "${jdk}/jre/lib/${jdk.architecture}";
+    #base = "${openjdk}/jre/lib/${openjdk.architecture}";
   in [
     "-DPORTMIDI_ENABLE_JAVA=0"
     /* TODO: Fix Java support.
@@ -44,14 +44,11 @@ stdenv.mkDerivation rec {
     ln -s libportmidi.so "$out/lib/libporttime.so"
   '';
 
-  buildInputs = [ unzip cmake /*jdk*/ alsaLib ];
-
-  hardeningDisable = [ "format" ];
+  buildInputs = [ unzip cmake /*openjdk*/ alsaLib ];
 
   meta = {
     homepage = "http://portmedia.sourceforge.net/portmidi/";
     description = "Platform independent library for MIDI I/O";
     license = stdenv.lib.licenses.mit;
-    platforms = stdenv.lib.platforms.linux;
   };
 }

@@ -4,7 +4,7 @@ stdenv.mkDerivation {
   name = "saxonb-8.8";
   src = fetchurl {
     url = mirror://sourceforge/saxon/saxonb8-8j.zip;
-    sha256 = "15bzrfyd2f1045rsp9dp4znyhmizh1pm97q8ji2bc0b43q23xsb8";
+    md5 = "35c4c376174cfe340f179d2e44dd84f0";
   };
 
   buildInputs = [unzip];
@@ -19,8 +19,4 @@ exec ${jre}/bin/java -jar $out/saxon8.jar \"\\$@\"
 EOF
     chmod a+x $out/bin/saxon8
   ";
-
-  meta = {
-    platforms = stdenv.lib.platforms.unix;
-  };
 }

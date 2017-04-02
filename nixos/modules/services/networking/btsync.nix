@@ -4,9 +4,6 @@ with lib;
 
 let
   cfg = config.services.btsync;
-
-  bittorrentSync = cfg.package;
-
   listenAddr = cfg.httpListenAddr + ":" + (toString cfg.httpListenPort);
 
   boolStr = x: if x then "true" else "false";
@@ -16,10 +13,9 @@ let
     ''
       "webui":
       {
-        ${optionalEmptyStr cfg.httpLogin     "\"login\":          \"${cfg.httpLogin}\","}
-        ${optionalEmptyStr cfg.httpPass      "\"password\":       \"${cfg.httpPass}\","}
-        ${optionalEmptyStr cfg.apiKey        "\"api_key\":        \"${cfg.apiKey}\","}
-        ${optionalEmptyStr cfg.directoryRoot "\"directory_root\": \"${cfg.directoryRoot}\","}
+        ${optionalEmptyStr cfg.httpLogin "\"login\":    \"${cfg.httpLogin}\","}
+        ${optionalEmptyStr cfg.httpPass  "\"password\": \"${cfg.httpPass}\","}
+        ${optionalEmptyStr cfg.apiKey    "\"api_key\":  \"${cfg.apiKey}\","}
         "listen": "${listenAddr}"
       }
     '';
@@ -61,7 +57,7 @@ let
     ''
       {
         "device_name":     "${cfg.deviceName}",
-        "storage_path":    "${cfg.storagePath}",
+        "storage_path":    "/var/lib/btsync",
         "listening_port":  ${toString cfg.listeningPort},
         "use_gui":         false,
 
@@ -83,14 +79,16 @@ in
         type = types.bool;
         default = false;
         description = ''
-          If enabled, start the Bittorrent Sync daemon. Once enabled, you can
-          interact with the service through the Web UI, or configure it in your
-          NixOS configuration. Enabling the <literal>btsync</literal> service
-          also installs a systemd user unit which can be used to start
-          user-specific copies of the daemon. Once installed, you can use
-          <literal>systemctl --user start btsync</literal> as your user to start
-          the daemon using the configuration file located at
-          <literal>$HOME/.config/btsync.conf</literal>.
+          If enabled, start the Bittorrent Sync daemon. Once enabled,
+          you can interact with the service through the Web UI, or
+          configure it in your NixOS configuration. Enabling the
+          <literal>btsync</literal> service also installs a
+          multi-instance systemd unit which can be used to start
+          user-specific copies of the daemon. Once installed, you can
+          use <literal>systemctl start btsync@user</literal> to start
+          the daemon only for user <literal>user</literal>, using the
+          configuration file located at
+          <literal>$HOME/.config/btsync.conf</literal>
         '';
       };
 
@@ -197,35 +195,10 @@ in
           '';
       };
 
-      package = mkOption {
-        type = types.package;
-        example = literalExample "pkgs.bittorrentSync20";
-        description = ''
-          Branch of bittorrent sync to use.
-        '';
-      };
-
-      storagePath = mkOption {
-        type = types.path;
-        default = "/var/lib/btsync/";
-        description = ''
-          Where BitTorrent Sync will store it's database files (containing
-          things like username info and licenses). Generally, you should not
-          need to ever change this.
-        '';
-      };
-
       apiKey = mkOption {
         type = types.str;
         default = "";
         description = "API key, which enables the developer API.";
-      };
-
-      directoryRoot = mkOption {
-        type = types.str;
-        default = "";
-        example = "/media";
-        description = "Default directory to add folders in the web UI.";
       };
 
       sharedFolders = mkOption {
@@ -250,21 +223,6 @@ in
           --generate-secret</literal>. Note that this secret will be
           put inside the Nix store, so it is realistically not very
           secret.
-
-          If you would like to be able to modify the contents of this
-          directories, it is recommended that you make your user a
-          member of the <literal>btsync</literal> group.
-
-          Directories in this list should be in the
-          <literal>btsync</literal> group, and that group must have
-          write access to the directory. It is also recommended that
-          <literal>chmod g+s</literal> is applied to the directory
-          so that any sub directories created will also belong to
-          the <literal>btsync</literal> group. Also,
-          <literal>setfacl -d -m group:btsync:rwx</literal> and
-          <literal>setfacl -m group:btsync:rwx</literal> should also
-          be applied so that the sub directories are writable by
-          the group.
         '';
       };
     };
@@ -283,43 +241,36 @@ in
         }
       ];
 
-    services.btsync.package = mkOptionDefault pkgs.bittorrentSync14;
-
     users.extraUsers.btsync = {
       description     = "Bittorrent Sync Service user";
-      home            = cfg.storagePath;
+      home            = "/var/lib/btsync";
       createHome      = true;
       uid             = config.ids.uids.btsync;
-      group           = "btsync";
     };
-
-    users.extraGroups = [
-      { name = "btsync";
-      }];
 
     systemd.services.btsync = with pkgs; {
       description = "Bittorrent Sync Service";
       wantedBy    = [ "multi-user.target" ];
-      after       = [ "network.target" "local-fs.target" ];
+      after       = [ "network.target" ];
       serviceConfig = {
         Restart   = "on-abort";
-        UMask     = "0002";
         User      = "btsync";
         ExecStart =
           "${bittorrentSync}/bin/btsync --nodaemon --config ${configFile}";
       };
     };
 
-    systemd.user.services.btsync = with pkgs; {
-      description = "Bittorrent Sync user service";
-      after       = [ "network.target" "local-fs.target" ];
+    systemd.services."btsync@" = with pkgs; {
+      description = "Bittorrent Sync Service for %i";
+      after       = [ "network.target" ];
       serviceConfig = {
         Restart   = "on-abort";
+        User      = "%i";
         ExecStart =
           "${bittorrentSync}/bin/btsync --nodaemon --config %h/.config/btsync.conf";
       };
     };
 
-    environment.systemPackages = [ cfg.package ];
+    environment.systemPackages = [ pkgs.bittorrentSync ];
   };
 }

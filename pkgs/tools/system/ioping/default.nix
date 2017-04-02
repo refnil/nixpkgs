@@ -1,23 +1,50 @@
-{ stdenv, fetchFromGitHub }:
+x@{builderDefsPackage
+  , ...}:
+builderDefsPackage
+(a :  
+let 
+  helperArgNames = ["stdenv" "fetchurl" "builderDefsPackage"] ++ 
+    [];
 
-stdenv.mkDerivation rec {
-  name = "ioping-${version}";
-  version = "1.0";
-
-  src = fetchFromGitHub {
-    owner = "koct9i";
-    repo = "ioping";
-    rev = "v${version}";
-    sha256 = "0yn7wgd6sd39zmr5l97zd6sq1ah7l49k1h7dhgx0nv96fa4r2y9h";
+  buildInputs = map (n: builtins.getAttr n x)
+    (builtins.attrNames (builtins.removeAttrs x helperArgNames));
+  sourceInfo = rec {
+    baseName="ioping";
+    version="0.7";
+    name="${baseName}-${version}";
+    url="http://ioping.googlecode.com/files/${name}.tar.gz";
+    hash="1c0k9gsq7rr9fqh6znn3i196l84zsm44nq3pl1b7grsnnbp2hki3";
+  };
+in
+rec {
+  src = a.fetchurl {
+    url = sourceInfo.url;
+    sha256 = sourceInfo.hash;
   };
 
-  makeFlags = "PREFIX=$(out)";
+  inherit (sourceInfo) name version;
+  inherit buildInputs;
 
-  meta = with stdenv.lib; {
-    description = "Disk I/O latency measuring tool";
-    maintainers = with maintainers; [ raskin ndowens ];
-    platforms = platforms.unix;
-    license = licenses.gpl3Plus;
-    homepage = https://github.com/koct9i/ioping;
+  /* doConfigure should be removed if not needed */
+  phaseNames = ["doMakeInstall"];
+  makeFlags = [
+    ''PREFIX="$out"''
+  ];
+      
+  meta = {
+    description = "Filesystem IO delay time measurer";
+    maintainers = with a.lib.maintainers;
+    [
+      raskin
+    ];
+    platforms = with a.lib.platforms;
+      linux;
+    license = a.lib.licenses.gpl3Plus;
   };
-}
+  passthru = {
+    updateInfo = {
+      downloadPage = "http://code.google.com/p/ioping/downloads/list";
+    };
+  };
+}) x
+

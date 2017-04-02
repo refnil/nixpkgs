@@ -1,31 +1,27 @@
 { fetchurl, stdenv, libiconv }:
 
-stdenv.mkDerivation rec {
-  name = "libunistring-0.9.7";
+stdenv.mkDerivation (rec {
+  name = "libunistring-0.9.3";
 
   src = fetchurl {
     url = "mirror://gnu/libunistring/${name}.tar.gz";
-    sha256 = "1ra1baz2187kbw9im47g6kqb5mx9plq703mkjxaval8rxv5q3q4w";
+    sha256 = "18q620269xzpw39dwvr9zpilnl2dkw5z5kz3mxaadnpv4k3kw3b1";
   };
 
-  patches = stdenv.lib.optional stdenv.isDarwin [ ./clang.patch ];
-
-  outputs = [ "out" "dev" "info" "doc" ];
-
-  propagatedBuildInputs = stdenv.lib.optional (!stdenv.isLinux) libiconv;
-
-  configureFlags = [
-    "--with-libiconv-prefix=${libiconv}"
-  ];
+  propagatedBuildInputs =
+    stdenv.lib.optional ((! (stdenv ? glibc))
+                         || (stdenv ? cross &&
+                             stdenv.cross.config == "i686-pc-mingw32"))
+     libiconv;
 
   # XXX: There are test failures on non-GNU systems, see
   # http://lists.gnu.org/archive/html/bug-libunistring/2010-02/msg00004.html .
-  doCheck = stdenv ? glibc;
+  doCheck = (stdenv ? glibc);
 
   meta = {
     homepage = http://www.gnu.org/software/libunistring/;
 
-    description = "Unicode string library";
+    description = "GNU Libunistring, a Unicode string library";
 
     longDescription = ''
       This library provides functions for manipulating Unicode strings
@@ -50,7 +46,23 @@ stdenv.mkDerivation rec {
 
     license = stdenv.lib.licenses.lgpl3Plus;
 
-    maintainers = [ ];
+    maintainers = [ stdenv.lib.maintainers.ludo ];
     platforms = stdenv.lib.platforms.all;
   };
 }
+
+//
+
+# On Cygwin Libtool is unable to find `libiconv.dll' if there's no explicit
+# `-L/path/to/libiconv' argument on the linker's command line; and since it
+# can't find the dll, it will only create a static library.
+(if (stdenv ? glibc)
+ then {}
+ else { configureFlags = "--with-libiconv-prefix=${libiconv}"; })
+
+//
+
+# Don't run the native `strip' when cross-compiling.
+(if (stdenv ? cross)
+ then { dontStrip = true; }
+ else { }))

@@ -1,20 +1,16 @@
-{stdenv, fetchurl, pkgconfig, libusb1}:
+{stdenv, fetchurl}:
 
 stdenv.mkDerivation {
-  name = "libusb-compat-0.1.5";
+  name = "libusb-0.1.12";
 
-  outputs = [ "out" "dev" ]; # get rid of propagating systemd closure
-  outputBin = "dev";
-
-  nativeBuildInputs = [ pkgconfig ];
-  propagatedBuildInputs = [ libusb1 ];
+  # On non-linux, we get warnings compiling, and we don't want the
+  # build to break.
+  patchPhase = ''
+    sed -i s/-Werror// Makefile.in
+  '';
 
   src = fetchurl {
-    url = mirror://sourceforge/libusb/libusb-compat-0.1.5.tar.bz2;
-    sha256 = "0nn5icrfm9lkhzw1xjvaks9bq3w6mjg86ggv3fn7kgi4nfvg8kj0";
-  };
-
-  meta = {
-    platforms = stdenv.lib.platforms.unix;
+    url = mirror://sourceforge/libusb/libusb-0.1.12.tar.gz;
+    md5 = "caf182cbc7565dac0fd72155919672e6";
   };
 }

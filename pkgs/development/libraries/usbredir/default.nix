@@ -2,15 +2,12 @@
 
 stdenv.mkDerivation rec {
   name = "usbredir-${version}";
-  version = "0.7.1";
+  version = "0.6";
 
   src = fetchurl {
     url = "http://spice-space.org/download/usbredir/${name}.tar.bz2";
-    sha256 = "1wsnmk4wjpdhbn1zaxg6bmyxspcki2zgy0am9lk037rnl4krwzj0";
+    sha256 = "028184960044ea4124030000b3c55a35c3238835116e3a0fbcaff449df2c8edf";
   };
-
-  # Works around bunch of "format '%lu' expects argument of type 'long unsigned int', but argument 4 has type 'uint64_t {aka long long unsigned int}'" warnings
-  NIX_CFLAGS_COMPILE = stdenv.lib.optionalString stdenv.isi686 "-Wno-error=format";
 
   buildInputs = [ pkgconfig libusb ];
   propagatedBuildInputs = [ libusb ];

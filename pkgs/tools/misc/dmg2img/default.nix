@@ -14,8 +14,4 @@ stdenv.mkDerivation rec {
     mkdir -p $out/bin
     cp dmg2img $out/bin
   '';
-
-  meta = {
-    platforms = stdenv.lib.platforms.unix;
-  };
 }

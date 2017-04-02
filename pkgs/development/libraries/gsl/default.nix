@@ -1,19 +1,18 @@
-{ fetchurl, fetchpatch, stdenv }:
+{ fetchurl, stdenv }:
 
 stdenv.mkDerivation rec {
-  name = "gsl-2.3";
+  name = "gsl-1.16";
 
   src = fetchurl {
     url = "mirror://gnu/gsl/${name}.tar.gz";
-    sha256 = "1yxdzqjwmi2aid650fa9zyr8llw069x7lm489wx9nnfdi6vh09an";
+    sha256 = "0lrgipi0z6559jqh82yx8n4xgnxkhzj46v96dl77hahdp58jzg3k";
   };
 
-  patches = [
-    # ToDo: there might be more impurities than FMA support check
-    ./disable-fma.patch # http://lists.gnu.org/archive/html/bug-gsl/2011-11/msg00019.html
-  ];
+  # ToDo: there might be more impurities than FMA support check
+  patches = [ ./disable-fma.patch ]; # http://lists.gnu.org/archive/html/bug-gsl/2011-11/msg00019.html
+  patchFlags = "-p0";
 
-  doCheck = stdenv.system != "i686-linux"; # https://lists.gnu.org/archive/html/bug-gsl/2015-11/msg00012.html
+  doCheck = true;
 
   meta = {
     description = "The GNU Scientific Library, a large numerical library";
@@ -30,6 +29,5 @@ stdenv.mkDerivation rec {
       fitting.  There are over 1000 functions in total with an
       extensive test suite.
     '';
-    platforms = stdenv.lib.platforms.unix;
   };
 }

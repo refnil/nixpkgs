@@ -17,7 +17,7 @@ stdenv.mkDerivation rec {
 
   unpackPhase = "true";
 
-  dontBuild = true;
+  buildPhase = "true";
 
   installPhase = ''
     mkdir -p "$out/bin"
@@ -29,7 +29,7 @@ stdenv.mkDerivation rec {
 
   meta = {
     homepage = "http://www.jbidwatcher.com/";
-    description = "Monitor and snipe Ebay auctions";
+    description = "monitor and snipe Ebay auctions";
     license = "LGPL";
 
     longDescription = ''
@@ -45,5 +45,6 @@ stdenv.mkDerivation rec {
     '';
 
     platforms = stdenv.lib.platforms.linux ++ stdenv.lib.platforms.darwin;
+    maintainers = [ stdenv.lib.maintainers.simons ];
   };
 }

@@ -4,9 +4,7 @@ with lib;
 
 let
 
-  inherit (config.boot) kernelPatches;
-
-  inherit (config.boot.kernelPackages) kernel;
+  kernel = config.boot.kernelPackages.kernel;
 
   kernelModulesConf = pkgs.writeText "nixos.conf"
     ''
@@ -23,11 +21,6 @@ in
 
     boot.kernelPackages = mkOption {
       default = pkgs.linuxPackages;
-      apply = kernelPackages: kernelPackages.extend (self: super: {
-        kernel = super.kernel.override {
-          kernelPatches = super.kernel.kernelPatches ++ kernelPatches;
-        };
-      });
       # We don't want to evaluate all of linuxPackages for the manual
       # - some of it might not even evaluate correctly.
       defaultText = "pkgs.linuxPackages";
@@ -46,13 +39,6 @@ in
       '';
     };
 
-    boot.kernelPatches = mkOption {
-      type = types.listOf types.attrs;
-      default = [];
-      example = literalExample "[ pkgs.kernelPatches.ubuntu_fan_4_4 ]";
-      description = "A list of additional patches to apply to the kernel.";
-    };
-
     boot.kernelParams = mkOption {
       type = types.listOf types.str;
       default = [ ];
@@ -63,8 +49,9 @@ in
       type = types.int;
       default = 4;
       description = ''
-        The kernel console log level.  Log messages with a priority
-        numerically less than this will not appear on the console.
+        The kernel console log level.  Only log messages with a
+        priority numerically less than this will appear on the
+        console.
       '';
     };
 
@@ -77,7 +64,7 @@ in
     };
 
     boot.extraModulePackages = mkOption {
-      type = types.listOf types.package;
+      type = types.listOf types.path;
       default = [];
       example = literalExample "[ pkgs.linuxPackages.nvidia_x11 ]";
       description = "A list of additional packages supplying kernel modules.";
@@ -172,11 +159,11 @@ in
 
     boot.kernel.sysctl."kernel.printk" = config.boot.consoleLogLevel;
 
-    boot.kernelModules = [ "loop" "atkbd" ];
+    boot.kernelModules = [ "loop" "configs" ];
 
     boot.initrd.availableKernelModules =
       [ # Note: most of these (especially the SATA/PATA modules)
-        # shouldn't be included by default since nixos-generate-config
+        # shouldn't be included by default since nixos-hardware-scan
         # detects them, but I'm keeping them for now for backwards
         # compatibility.
 
@@ -198,9 +185,6 @@ in
         "ide_disk"
         "ide_generic"
 
-        # SD cards and internal eMMC drives.
-        "mmc_block"
-
         # Support USB keyboards, in case the boot fails and we only have
         # a USB keyboard.
         "uhci_hcd"
@@ -209,19 +193,14 @@ in
         "ohci_hcd"
         "ohci_pci"
         "xhci_hcd"
-        "xhci_pci"
         "usbhid"
-        "hid_generic" "hid_lenovo"
-        "hid_apple" "hid_logitech_dj" "hid_lenovo_tpkbd" "hid_roccat"
+        "hid_generic"
 
-        # Misc. keyboard stuff.
-        "pcips2" "atkbd" "i8042"
+        # Unix domain sockets (needed by udev).
+        "unix"
 
-        # Temporary fix for https://github.com/NixOS/nixpkgs/issues/18451
-        # Remove as soon as upstream gets fixed - marking it:
-        # TODO
-        # FIXME
-        "i8042"
+        # Misc. stuff.
+        "pcips2" "atkbd"
 
         # To wait for SCSI devices to appear.
         "scsi_wait_scan"
@@ -236,7 +215,7 @@ in
       ];
 
     # The Linux kernel >= 2.6.27 provides firmware.
-    hardware.firmware = [ kernel ];
+    hardware.firmware = [ "${kernel}/lib/firmware" ];
 
     # Create /etc/modules-load.d/nixos.conf, which is read by
     # systemd-modules-load.service to load required kernel modules.
@@ -248,6 +227,7 @@ in
     systemd.services."systemd-modules-load" =
       { wantedBy = [ "multi-user.target" ];
         restartTriggers = [ kernelModulesConf ];
+        environment.MODULE_DIR = "/run/booted-system/kernel-modules/lib/modules";
         serviceConfig =
           { # Ignore failed module loads.  Typically some of the
             # modules in ‘boot.kernelModules’ are "nice to have but
@@ -255,6 +235,10 @@ in
             # barf on those.
             SuccessExitStatus = "0 1";
           };
+      };
+
+    systemd.services.kmod-static-nodes =
+      { environment.MODULE_DIR = "/run/booted-system/kernel-modules/lib/modules";
       };
 
     lib.kernelConfig = {

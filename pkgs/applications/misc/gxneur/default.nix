@@ -20,6 +20,5 @@ stdenv.mkDerivation {
 
   meta = {
     description = "GUI for XNEUR keyboard layout switcher";
-    platforms = stdenv.lib.platforms.linux;
   };
 }

@@ -1,30 +1,21 @@
-{ stdenv, fetchFromGitHub, autoreconfHook, systemd, pkgconfig }:
-
-with stdenv.lib;
+{ stdenv, fetchurl, systemd, pkgconfig }:
 
 stdenv.mkDerivation rec {
-  version = "1.06";
+  version = "1.05.9";
   name = "ndjbdns-${version}";
-
-  src = fetchFromGitHub {
-    owner = "pjps";
-    repo = "ndjbdns";
-    rev = "64d371b6f887621de7bf8bd495be10442b2accd0";
-    sha256 = "0gjyvn8r66kp49gasd6sqfvg2pj0c6v67hnq7cqwl04kj69rfy86";
+  src = fetchurl {
+    url = "http://pjp.dgplug.org/ndjbdns/${name}.tar.gz";
+    sha256 = "0gf3hlmr6grcn6dzflf83lqqfp6hk3ldhbc7z0a1rrh059m93ap5";
   };
 
-  buildInputs = [ autoreconfHook pkgconfig ]
-    ++ optional stdenv.isLinux systemd;
+  buildInputs = [ pkgconfig systemd ];
 
-  meta = {
-    description = "A brand new release of the Djbdns";
-    longDescription = ''
-      Djbdns is a fully‐fledged Domain Name System(DNS), originally written by the eminent author of qmail, Dr. D J Bernstein.
-    '';
+  meta = with stdenv.lib; {
+    description = "N-DJBDNS is a brand new release of the Djbdns. Djbdns is a fully‐fledged Domain Name System(DNS), originally written by the eminent author of qmail, Dr. D J Bernstein.";
     homepage = http://pjp.dgplug.org/ndjbdns/;
     license = licenses.gpl2;
     maintainers = [ maintainers.msackman ];
-    platforms = platforms.linux ++ platforms.darwin;
+    platforms = platforms.linux;
   };
 
 }

@@ -12,12 +12,12 @@ let
 
   mongoCnf = pkgs.writeText "mongodb.conf"
   ''
-    net.bindIp: ${cfg.bind_ip}
-    ${optionalString cfg.quiet "systemLog.quiet: true"}
-    systemLog.destination: syslog
-    storage.dbPath: ${cfg.dbpath}
-    ${optionalString (cfg.replSetName != "") "replication.replSetName: ${cfg.replSetName}"}
-    ${cfg.extraConfig}
+    bind_ip = ${cfg.bind_ip}
+    ${optionalString cfg.quiet "quiet = true"}
+    dbpath = ${cfg.dbpath}
+    logpath = ${cfg.logpath}
+    logappend = ${b2s cfg.logappend}
+    ${optionalString (cfg.replSetName != "") "replSet = ${cfg.replSetName}"}
   '';
 
 in
@@ -39,7 +39,6 @@ in
 
       package = mkOption {
         default = pkgs.mongodb;
-        defaultText = "pkgs.mongodb";
         type = types.package;
         description = "
           Which MongoDB derivation to use.
@@ -66,9 +65,14 @@ in
         description = "Location where MongoDB stores its files";
       };
 
-      pidFile = mkOption {
-        default = "/var/run/mongodb.pid";
-        description = "Location of MongoDB pid file";
+      logpath = mkOption {
+        default = "/var/log/mongodb/mongod.log";
+        description = "Location where MongoDB stores its logfile";
+      };
+
+      logappend = mkOption {
+        default = true;
+        description = "Append logfile instead over overwriting";
       };
 
       replSetName = mkOption {
@@ -77,14 +81,6 @@ in
           If this instance is part of a replica set, set its name here.
           Otherwise, leave empty to run as single node.
         '';
-      };
-
-      extraConfig = mkOption {
-        default = "";
-        example = ''
-          storage.journal.enabled: false
-        '';
-        description = "MongoDB extra configuration in YAML format";
       };
     };
 
@@ -103,6 +99,22 @@ in
 
     environment.systemPackages = [ mongodb ];
 
+    systemd.services.mongodb_init =
+      { description = "MongoDB server initialisation";
+
+        wantedBy = [ "mongodb.service" ];
+        before = [ "mongodb.service" ];
+
+        serviceConfig.Type = "oneshot";
+
+        script = ''
+          if ! test -e ${cfg.dbpath}; then
+              install -d -m0700 -o ${cfg.user} ${cfg.dbpath}
+              install -d -m0755 -o ${cfg.user} `dirname ${cfg.logpath}`
+          fi
+        '';
+      };
+
     systemd.services.mongodb =
       { description = "MongoDB server";
 
@@ -110,23 +122,9 @@ in
         after = [ "network.target" ];
 
         serviceConfig = {
-          ExecStart = "${mongodb}/bin/mongod --quiet --config ${mongoCnf} --fork --pidfilepath ${cfg.pidFile}";
+          ExecStart = "${mongodb}/bin/mongod --quiet --config ${mongoCnf}";
           User = cfg.user;
-          PIDFile = cfg.pidFile;
-          Type = "forking";
-          TimeoutStartSec=120; # intial creating of journal can take some time
-          PermissionsStartOnly = true;
         };
-
-        preStart = ''
-          rm ${cfg.dbpath}/mongod.lock || true
-          if ! test -e ${cfg.dbpath}; then
-              install -d -m0700 -o ${cfg.user} ${cfg.dbpath}
-          fi
-          if ! test -e ${cfg.pidFile}; then
-              install -D -o ${cfg.user} /dev/null ${cfg.pidFile}
-          fi
-        '';
       };
 
   };

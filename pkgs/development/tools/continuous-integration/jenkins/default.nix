@@ -1,24 +1,20 @@
 { stdenv, fetchurl }:
 
 stdenv.mkDerivation rec {
-  name = "jenkins-${version}";
-  version = "2.49";
+  name = "jenkins";
+  version = "1.550";
 
   src = fetchurl {
     url = "http://mirrors.jenkins-ci.org/war/${version}/jenkins.war";
-    sha256 = "0c7qnrx87wrgxgh4im1i6sqlxq3hsrs119krh5vwjzx5wp6daa93";
+    sha256 = "1ziimbfs9kylga0xmxlfsfcc7qsirs5bnx00pa99m2l5sz2ki793";
   };
-
-  buildCommand = ''
-    mkdir -p "$out/webapps"
-    cp "$src" "$out/webapps/jenkins.war"
-  '';
-
-  meta = with stdenv.lib; {
-    description = "An extendable open source continuous integration server";
+  meta = {
+    description = "An extendable open source continuous integration server.";
     homepage = http://jenkins-ci.org;
-    license = licenses.mit;
-    platforms = platforms.all;
-    maintainers = with maintainers; [ coconnor fpletz ];
+    license = stdenv.lib.licenses.mit;
+    platforms = stdenv.lib.platforms.all;
+    maintainers = [ stdenv.lib.maintainers.coconnor ];
   };
+
+  buildCommand = "ln -s $src $out";
 }

@@ -1,38 +1,17 @@
-{stdenv, fetchurl, tk, tcllib, makeWrapper
-, tkremind ? true
-} :
+{stdenv, fetchurl} :
 
-assert tkremind -> tk != null;
-assert tkremind -> tcllib != null;
-assert tkremind -> makeWrapper != null;
-
-stdenv.mkDerivation rec {
-  name = "remind-3.1.15";
+stdenv.mkDerivation {
+  name = "remind-3.1.8";
   src = fetchurl {
-    url = http://www.roaringpenguin.com/files/download/remind-03.01.15.tar.gz;
-    sha256 = "1hcfcxz5fjzl7606prlb7dgls5kr8z3wb51h48s6qm8ang0b9nla";
+    url = http://www.roaringpenguin.com/files/download/remind-03.01.08.tar.gz;
+    sha256 = "0gvizrpkbanm515bhd6mq9xxs4g4ji9pplswaj4plaqsk3yw0qjw";
   };
-
-  tclLibraries = if tkremind then [ tcllib tk ] else [];
-  tclLibPaths = stdenv.lib.concatStringsSep " "
-    (map (p: "${p}/lib/${p.libPrefix}") tclLibraries);
-
-  buildInputs = if tkremind then [ makeWrapper ] else [];
-  propagatedBuildInputs = tclLibraries;
-
-  postPatch = if tkremind then ''
-    substituteInPlace scripts/tkremind --replace "exec wish" "exec ${tk}/bin/wish"
-  '' else "";
-
-  postInstall = if tkremind then ''
-    wrapProgram $out/bin/tkremind --set TCLLIBPATH "${tclLibPaths}"
-  '' else "";
 
   meta = {
     homepage = http://www.roaringpenguin.com/products/remind;
     description = "Sophisticated calendar and alarm program for the console";
     license = stdenv.lib.licenses.gpl2;
-    maintainers = with stdenv.lib.maintainers; [viric raskin kovirobi];
+    maintainers = with stdenv.lib.maintainers; [viric];
     platforms = with stdenv.lib.platforms; linux;
   };
 }

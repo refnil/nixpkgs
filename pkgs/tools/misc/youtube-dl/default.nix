@@ -1,56 +1,33 @@
-{ stdenv, fetchurl, buildPythonApplication
-, zip, ffmpeg, rtmpdump, atomicparsley, pandoc
-# Pandoc is required to build the package's man page. Release tarballs contain a
-# formatted man page already, though, it will still be installed. We keep the
-# manpage argument in place in case someone wants to use this derivation to
-# build a Git version of the tool that doesn't have the formatted man page
-# included.
-, generateManPage ? false
-, ffmpegSupport ? true
-, rtmpSupport ? true
-, makeWrapper }:
+{ stdenv, fetchurl, python, zip }:
 
-with stdenv.lib;
-buildPythonApplication rec {
-
+let
+  version = "2014.04.02";
+in
+stdenv.mkDerivation rec {
   name = "youtube-dl-${version}";
-  version = "2017.04.02";
 
   src = fetchurl {
-    url = "https://yt-dl.org/downloads/${version}/${name}.tar.gz";
-    sha256 = "131z42aq2qnh394y4ykzm3mvsf62lia86y90as6acyg4v201lgk2";
+    url = "http://youtube-dl.org/downloads/${version}/${name}.tar.gz";
+    sha256 = "1c9d5wjl0aaqfvz868wbkr3dwby9vjkx0hkbnwx0wnpg48nlnwpm";
   };
 
-  nativeBuildInputs = [ makeWrapper ];
-  buildInputs = [ zip ] ++ optional generateManPage pandoc;
+  buildInputs = [ python ];
+  nativeBuildInputs = [ zip ];
 
-  # Ensure ffmpeg is available in $PATH for post-processing & transcoding support.
-  # rtmpdump is required to download files over RTMP
-  # atomicparsley for embedding thumbnails
-  postInstall = let
-    packagesToBinPath =
-    [ atomicparsley ]
-    ++ optional ffmpegSupport ffmpeg
-    ++ optional rtmpSupport rtmpdump;
-  in ''
-    wrapProgram $out/bin/youtube-dl --prefix PATH : "${makeBinPath packagesToBinPath}"
+  patchPhase = ''
+    rm youtube-dl
   '';
 
-  # Requires network
-  doCheck = false;
+  configurePhase = ''
+    makeFlagsArray=( PREFIX=$out SYSCONFDIR=$out/etc PYTHON=${python}/bin/python )
+  '';
 
   meta = {
-    homepage = http://rg3.github.io/youtube-dl/;
+    homepage = "http://rg3.github.com/youtube-dl/";
     repositories.git = https://github.com/rg3/youtube-dl.git;
     description = "Command-line tool to download videos from YouTube.com and other sites";
-    longDescription = ''
-      youtube-dl is a small, Python-based command-line program
-      to download videos from YouTube.com and a few more sites.
-      youtube-dl is released to the public domain, which means
-      you can modify it, redistribute it or use it however you like.
-    '';
-    license = licenses.publicDomain;
-    platforms = with platforms; linux ++ darwin;
-    maintainers = with maintainers; [ bluescreen303 phreedom AndersonTorres fuuzetsu fpletz ];
+
+    platforms = with stdenv.lib.platforms; linux ++ darwin;
+    maintainers = with stdenv.lib.maintainers; [ bluescreen303 simons phreedom ];
   };
 }

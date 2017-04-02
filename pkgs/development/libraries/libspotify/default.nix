@@ -1,11 +1,8 @@
 { stdenv, fetchurl, libspotify, alsaLib, readline, pkgconfig, apiKey, unzip, gnused }:
 
-let
-  version = "12.1.51";
-  isLinux = (stdenv.system == "x86_64-linux" || stdenv.system == "i686-linux");
-in
+let version = "12.1.51"; in
 
-if (stdenv.system != "x86_64-linux" && stdenv.system != "x86_64-darwin" && stdenv.system != "i686-linux")
+if (stdenv.system != "x86_64-linux" && stdenv.system != "x86_64-darwin")
 then throw "Check https://developer.spotify.com/technologies/libspotify/ for a tarball for your system and add it here"
 else stdenv.mkDerivation {
   name = "libspotify-${version}";
@@ -21,17 +18,17 @@ else stdenv.mkDerivation {
         url    = "https://developer.spotify.com/download/libspotify/libspotify-${version}-Darwin-universal.zip";
         sha256 = "1gcgrc8arim3hnszcc886lmcdb4iigc08abkaa02l6gng43ky1c0";
       }
-    else if stdenv.system == "i686-linux" then
-      fetchurl {
-        url    = "https://developer.spotify.com/download/libspotify/libspotify-${version}-Linux-i686-release.tar.gz";
-        sha256 = "1bjmn64gbr4p9irq426yap4ipq9rb84zsyhjjr7frmmw22xb86ll";
-      }
     else
       null;
 
-  dontBuild = true;
-
-  installPhase = if (isLinux)
+  # common
+  buildPhase = "true";
+  # no patch or build phase for darwin
+  phases = 
+    [ "unpackPhase" ] ++ 
+    (stdenv.lib.optionals (stdenv.system == "x86_64-linux") [ "patchPhase" "buildPhase" ]) ++
+    [ "installPhase" ];
+  installPhase = if (stdenv.system == "x86_64-linux")
     then "installPhase"
     else ''
       mkdir -p "$out"/include/libspotify
@@ -43,17 +40,17 @@ else stdenv.mkDerivation {
       mkdir -p "$out"/share/man
       mv -v man3 "$out"/share/man
     '';
-
+ 
 
   # darwin-specific
   buildInputs = stdenv.lib.optional (stdenv.system == "x86_64-darwin") unzip;
 
   # linux-specific
-  installFlags = stdenv.lib.optionalString (isLinux)
+  installFlags = stdenv.lib.optionalString (stdenv.system == "x86_64-linux")
     "prefix=$(out)";
-  patchPhase = stdenv.lib.optionalString (isLinux)
+  patchPhase = stdenv.lib.optionalString (stdenv.system == "x86_64-linux")
     "${gnused}/bin/sed -i 's/ldconfig//' Makefile";
-  postInstall = stdenv.lib.optionalString (isLinux)
+  postInstall = stdenv.lib.optionalString (stdenv.system == "x86_64-linux")
     "mv -v share $out";
 
   passthru = {

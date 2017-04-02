@@ -1,26 +1,25 @@
-{ stdenv, fetchurl, fetchpatch, pkgconfig, intltool, gtk, polkit
-, libxfce4util, libxfce4ui, xfce4panel, libwnck, dbus_glib, xfconf, libglade, xorg
-, hicolor_icon_theme
-}:
+{ stdenv, fetchurl, pkgconfig, intltool, gtk, libxfce4util, libxfce4ui, xfce4panel
+, libwnck, dbus_glib, xfconf, libglade, xorg
+, polkit }:
 
-let
-  p_name  = "xfce4-session";
-  ver_maj = "4.12";
-  ver_min = "1";
-in
+#TODO: gnome stuff: gconf (assistive?), keyring
+
 stdenv.mkDerivation rec {
-  name = "${p_name}-${ver_maj}.${ver_min}";
+  p_name  = "xfce4-session";
+  ver_maj = "4.10";
+  ver_min = "1";
 
   src = fetchurl {
     url = "mirror://xfce/src/xfce/${p_name}/${ver_maj}/${name}.tar.bz2";
-    sha256 = "97d7f2a2d0af7f3623b68d1f04091e02913b28f9555dab8b0d26c8a1299d08fd";
+    sha256 = "10zwki7v55a325abr57wczcb5g7ml99cqk1p8ls8qycqqfyzlm01";
   };
+  name = "${p_name}-${ver_maj}.${ver_min}";
 
   buildInputs =
     [ pkgconfig intltool gtk libxfce4util libxfce4ui libwnck dbus_glib
-      xfconf xfce4panel libglade xorg.iceauth xorg.libSM
-      polkit hicolor_icon_theme
-    ]; #TODO: upower-glib, gconf (assistive?), gnome keyring
+      xfconf xfce4panel libglade xorg.iceauth
+      polkit
+    ];
 
   preBuild = ''
     sed '/^PATH=/d'        -i scripts/xflock4
@@ -29,12 +28,13 @@ stdenv.mkDerivation rec {
 
   configureFlags = [ "--with-xsession-prefix=$(out)" ];
 
-  meta = with stdenv.lib; {
+  preFixup = "rm $out/share/icons/hicolor/icon-theme.cache";
+
+  meta = {
     homepage = http://www.xfce.org/projects/xfce4-session;
     description = "Session manager for Xfce";
-    license = licenses.gpl2Plus;
-    platforms = platforms.linux;
-    maintainers = [ maintainers.eelco ];
+    license = stdenv.lib.licenses.gpl2Plus;
+    platforms = stdenv.lib.platforms.linux;
+    maintainers = [ stdenv.lib.maintainers.eelco ];
   };
 }
-

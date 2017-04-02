@@ -1,12 +1,12 @@
-{ stdenv, fetchurl, openssh, openssl }:
+{ stdenv, fetchurl, openssh }:
 
 stdenv.mkDerivation rec {
   name = "nagios-plugins-${version}";
-  version = "2.2.0";
+  version = "2.0";
 
   src = fetchurl {
     url = "http://nagios-plugins.org/download/${name}.tar.gz";
-    sha256 = "074yia04py5y07sbgkvri10dv8nf41kqq1x6kmwqcix5vvm9qyy3";
+    sha256 = "113nv9jqpbqpdjqilqbj1iyshxyvcmq8w94bq5ajz4dxi9j8045s";
   };
 
   # !!! Awful hack. Grrr... this of course only works on NixOS.
@@ -16,15 +16,15 @@ stdenv.mkDerivation rec {
   # configured on the build machine).
   preConfigure= "
     configureFlagsArray=(
-      --with-ping-command='/run/wrappers/bin/ping -4 -n -U -w %d -c %d %s'
-      --with-ping6-command='/run/wrappers/bin/ping -6 -n -U -w %d -c %d %s'
+      --with-ping-command='/var/setuid-wrappers/ping -n -U -w %d -c %d %s'
+      --with-ping6-command='/var/setuid-wrappers/ping6 -n -U -w %d -c %d %s'
     )
   ";
 
   postInstall = "ln -s libexec $out/bin";
 
   # !!! make openssh a runtime dependency only
-  buildInputs = [ openssh openssl ];
+  buildInputs = [ openssh ];
 
   meta = {
     description = "Official plugins for Nagios";

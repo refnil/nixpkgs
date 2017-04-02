@@ -27,6 +27,5 @@ stdenv.mkDerivation {
 
   meta = {
     description = "Create fonts.dir for TTF font directory";
-    platforms = stdenv.lib.platforms.linux;
   };
 }

@@ -1,26 +1,51 @@
-{ stdenv, fetchurl }:
+x@{builderDefsPackage
+  , fontforge
+  , ...}:
+builderDefsPackage
+(a :  
+let 
+  helperArgNames = ["stdenv" "fetchurl" "builderDefsPackage"] ++ 
+    [];
 
-stdenv.mkDerivation rec {
-  name = "inconsolata-${version}";
-  version = "1.010";
-
-  src = fetchurl {
-    url = "http://www.levien.com/type/myfonts/Inconsolata.otf";
-    sha256 = "06js6znbcf7swn8y3b8ki416bz96ay7d3yvddqnvi88lqhbfcq8m";
+  buildInputs = map (n: builtins.getAttr n x)
+    (builtins.attrNames (builtins.removeAttrs x helperArgNames));
+  sourceInfo = rec {
+    name="inconsolata";
+    url="http://www.levien.com/type/myfonts/Inconsolata.sfd";
+    hash="1cd29c8396adb18bfeddb1abf5bdb98b677649bb9b09f126d1335b123a4cfddb";
+  };
+in
+rec {
+  src = a.fetchurl {
+    url = sourceInfo.url;
+    sha256 = sourceInfo.hash;
   };
 
-  phases = [ "installPhase" ];
+  inherit (sourceInfo) name;
+  inherit buildInputs;
 
-  installPhase = ''
-    mkdir -p $out/share/fonts/opentype
-    cp -v $src $out/share/fonts/opentype/inconsolata.otf
-  '';
+  /* doConfigure should be removed if not needed */
+  phaseNames = ["copySrc" "generateFontsFromSFD" "installFonts"];
+  
+  copySrc = a.fullDepEntry (''
+    cp ${src} inconsolata.sfd
+  '') ["minInit"];
 
-  meta = with stdenv.lib; {
-    homepage = http://www.levien.com/type/myfonts/inconsolata.html;
+  generateFontsFromSFD = a.generateFontsFromSFD // {deps=["addInputs"];};
+
+  meta = {
     description = "A monospace font for both screen and print";
-    maintainers = with maintainers; [ raskin rycee ];
-    license = licenses.ofl;
-    platforms = platforms.all;
+    maintainers = with a.lib.maintainers;
+    [
+      raskin
+    ];
+    platforms = with a.lib.platforms;
+      all;
   };
-}
+  passthru = {
+    updateInfo = {
+      downloadPage = "http://www.levien.com/type/myfonts/inconsolata.html";
+    };
+  };
+}) x
+

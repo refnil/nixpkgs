@@ -17,12 +17,12 @@ stdenv.mkDerivation rec {
 
   buildInputs = stdenv.lib.optional stdenv.isLinux emacs;
 
-  doCheck = !stdenv.isDarwin;
+  doCheck = true;
 
   patches = [ ./nix-mapping.patch ];
 
   meta = {
-    description = "Text searching utility";
+    description = "GNU Idutils, a text searching utility";
 
     longDescription = ''
       An "ID database" is a binary file containing a list of file

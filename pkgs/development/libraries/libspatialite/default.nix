@@ -1,30 +1,23 @@
-{ stdenv, lib, fetchurl, pkgconfig, libxml2, sqlite, zlib, proj, geos, libiconv }:
-
-with lib;
+{ stdenv, fetchurl, sqlite, zlib, proj, geos }:
 
 stdenv.mkDerivation rec {
-  name = "libspatialite-4.2.0";
+  name = "libspatialite-4.1.1";
 
   src = fetchurl {
-    url = "http://www.gaia-gis.it/gaia-sins/libspatialite-sources/${name}.tar.gz";
-    sha256 = "0b9ipmp09y2ij7yajyjsh0zcwps8n5g88lzfzlkph33lail8l4wz";
+    url = "http://www.gaia-gis.it/gaia-sins/${name}.tar.gz";
+    sha256 = "03wikddl60ly0yh8szrra1ng2iccsdzz645vkn6a7x2jz45a5084";
   };
 
-  buildInputs = [ pkgconfig libxml2 sqlite zlib proj geos libiconv ];
+  buildInputs = [ sqlite zlib proj geos ];
 
   configureFlags = "--disable-freexl";
 
   enableParallelBuilding = true;
 
-  postInstall = "" + optionalString stdenv.isDarwin ''
-    ln -s $out/lib/mod_spatialite.{so,dylib}
-  '';
-
   meta = {
     description = "Extensible spatial index library in C++";
     homepage = https://www.gaia-gis.it/fossil/libspatialite;
     # They allow any of these
-    license = with licenses; [ gpl2Plus lgpl21Plus mpl11 ];
-    platforms = platforms.unix;
+    license = [ "GPLv2+" "LGPLv2+" "MPL1.1" ];
   };
 }

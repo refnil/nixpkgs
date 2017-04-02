@@ -12,9 +12,9 @@ stdenv.mkDerivation rec {
   buildInputs = [ ncurses ];
  
   installPhase = ''
-    mkdir -p $out/bin
-    mkdir -p $out/share/man/man1
-    mkdir -p $out/share/man/man5
+    ensureDir $out/bin
+    ensureDir $out/share/man/man1
+    ensureDir $out/share/man/man5
 
     cp dhex $out/bin
     cp dhex.1 $out/share/man/man1
@@ -28,6 +28,5 @@ stdenv.mkDerivation rec {
     homepage = http://www.dettus.net/dhex/;
     license = stdenv.lib.licenses.gpl2;
     maintainers = with stdenv.lib.maintainers; [qknight];
-    platforms = with stdenv.lib.platforms; linux;
   };
 }

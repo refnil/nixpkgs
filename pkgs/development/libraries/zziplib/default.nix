@@ -1,4 +1,4 @@
-{ fetchurl, stdenv, perl, python2, zip, xmlto, zlib }:
+{ fetchurl, stdenv, perl, python, zip, xmlto, zlib }:
 
 stdenv.mkDerivation rec {
   name = "zziplib-0.13.58";
@@ -12,11 +12,11 @@ stdenv.mkDerivation rec {
     sed -i -e s,--export-dynamic,, configure
   '';
 
-  buildInputs = [ perl python2 zip xmlto zlib ];
+  buildInputs = [ perl python zip xmlto zlib ];
 
   doCheck = true;
 
-  meta = with stdenv.lib; {
+  meta = {
     description = "Library to extract data from files archived in a zip file";
 
     longDescription = ''
@@ -28,11 +28,11 @@ stdenv.mkDerivation rec {
       zip/unzip tools.
     '';
 
-    license = with licenses; [ lgpl2Plus mpl11 ];
+    license = [ "LGPLv2+" "MPLv1.1" ];
 
     homepage = http://zziplib.sourceforge.net/;
 
     maintainers = [ ];
-    platforms = python2.meta.platforms;
+    platforms = python.meta.platforms;
   };
 }

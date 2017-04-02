@@ -13,7 +13,7 @@ let
   idmapdConfFile = pkgs.writeText "idmapd.conf" ''
     [General]
     Pipefs-Directory = ${rpcMountpoint}
-    ${optionalString (config.networking.domain != null)
+    ${optionalString (config.networking.domain != "")
       "Domain = ${config.networking.domain}"}
 
     [Mapping]
@@ -24,26 +24,9 @@ let
     Method = nsswitch
   '';
 
-  nfsConfFile = pkgs.writeText "nfs.conf" cfg.extraConfig;
-
-  cfg = config.services.nfs;
-
 in
 
 {
-  ###### interface
-
-  options = {
-    services.nfs = {
-      extraConfig = mkOption {
-        type = types.lines;
-        default = "";
-        description = ''
-          Extra nfs-utils configuration.
-        '';
-      };
-    };
-  };
 
   ###### implementation
 
@@ -51,51 +34,60 @@ in
 
     services.rpcbind.enable = true;
 
-    system.fsPackages = [ pkgs.nfs-utils ];
+    system.fsPackages = [ pkgs.nfsUtils ];
+
+    boot.kernelModules = [ "sunrpc" ];
 
     boot.initrd.kernelModules = mkIf inInitrd [ "nfs" ];
 
-    systemd.packages = [ pkgs.nfs-utils ];
-    systemd.generator-packages = [ pkgs.nfs-utils ];
+    systemd.services.statd =
+      { description = "NFSv3 Network Status Monitor";
 
-    environment.etc = {
-      "idmapd.conf".source = idmapdConfFile;
-      "nfs.conf".source = nfsConfFile;
-    };
+        path = [ pkgs.nfsUtils pkgs.sysvtools pkgs.utillinux ];
 
-    systemd.services.nfs-blkmap =
-      { restartTriggers = [ nfsConfFile ];
-      };
+        wantedBy = [ "network-online.target" "multi-user.target" ];
+        before = [ "network-online.target" ];
+        requires = [ "basic.target" "rpcbind.service" ];
+        after = [ "basic.target" "rpcbind.service" "network.target" ];
 
-    systemd.targets.nfs-client =
-      { wantedBy = [ "multi-user.target" "remote-fs.target" ];
-      };
-
-    systemd.services.nfs-idmapd =
-      { restartTriggers = [ idmapdConfFile ];
-      };
-
-    systemd.services.nfs-mountd =
-      { restartTriggers = [ nfsConfFile ];
-        enable = mkDefault false;
-      };
-
-    systemd.services.nfs-server =
-      { restartTriggers = [ nfsConfFile ];
-        enable = mkDefault false;
-      };
-
-    systemd.services.rpc-gssd =
-      { restartTriggers = [ nfsConfFile ];
-      };
-
-    systemd.services.rpc-statd =
-      { restartTriggers = [ nfsConfFile ];
+        unitConfig.DefaultDependencies = false; # don't stop during shutdown
 
         preStart =
           ''
-            mkdir -p /var/lib/nfs/{sm,sm.bak}
+            mkdir -p ${nfsStateDir}/sm
+            mkdir -p ${nfsStateDir}/sm.bak
+            sm-notify -d
           '';
+
+        serviceConfig.Type = "forking";
+        serviceConfig.ExecStart = "@${pkgs.nfsUtils}/sbin/rpc.statd rpc.statd --no-notify";
+        serviceConfig.Restart = "always";
+      };
+
+    systemd.services.idmapd =
+      { description = "NFSv4 ID Mapping Daemon";
+
+        path = [ pkgs.sysvtools pkgs.utillinux ];
+
+        wantedBy = [ "network-online.target" "multi-user.target" ];
+        before = [ "network-online.target" ];
+        requires = [ "rpcbind.service" ];
+        after = [ "rpcbind.service" ];
+
+        preStart =
+          ''
+            mkdir -p ${rpcMountpoint}
+            mount -t rpc_pipefs rpc_pipefs ${rpcMountpoint}
+          '';
+
+        postStop =
+          ''
+            umount ${rpcMountpoint}
+          '';
+
+        serviceConfig.Type = "forking";
+        serviceConfig.ExecStart = "@${pkgs.nfsUtils}/sbin/rpc.idmapd rpc.idmapd -c ${idmapdConfFile}";
+        serviceConfig.Restart = "always";
       };
 
   };

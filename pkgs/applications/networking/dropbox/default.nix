@@ -1,9 +1,8 @@
-{ stdenv, fetchurl, makeDesktopItem, patchelf, makeWrapper
-, dbus_libs, fontconfig, freetype, gcc, glib
-, libdrm, libffi, libICE, libSM
-, libX11, libXcomposite, libXext, libXmu, libXrender, libxcb
-, libxml2, libxslt, ncurses, zlib
-, qtbase, qtdeclarative, qtwebkit, makeQtWrapper
+{ stdenv, fetchurl, makeDesktopItem
+, libSM, libX11, libXext, libXcomposite, libXcursor, libXdamage
+, libXfixes, libXi, libXinerama, libXrandr, libXrender
+, dbus, dbus_glib, fontconfig, gcc, patchelf
+, atk, glib, gdk_pixbuf, gtk, pango, zlib
 }:
 
 # this package contains the daemon version of dropbox
@@ -12,130 +11,86 @@
 # note: the resulting program has to be invoced as
 # 'dropbox' because the internal python engine takes
 # uses the name of the program as starting point.
-
-# Dropbox ships with its own copies of some libraries.
-# Unfortunately, upstream makes changes to the source of
-# some libraries, rendering them incompatible with the
-# open-source versions. Wherever possible, we must try
-# to make the bundled libraries work, rather than replacing
-# them with our own.
+#
+# todo: dropbox is shipped with some copies of libraries.
+# replace these libraries with the appropriate ones in
+# nixpkgs.
 
 let
-  # NOTE: When updating, please also update in current stable,
-  # as older versions stop working
-  version = "22.4.24";
-  sha256 =
-    {
-      "x86_64-linux" = "1353mwk8hjqfc9a87zrp12klsc4anrxr7ccai4cffnq0yw2pnbfp";
-      "i686-linux"   = "07gpdxq61qkj3c4aywh61zwj34w7j24gcv5y2xf2qgcwn8bykks2";
-    }."${stdenv.system}" or (throw "system ${stdenv.system} not supported");
+  arch = if stdenv.system == "x86_64-linux" then "x86_64"
+    else if stdenv.system == "i686-linux" then "x86"
+    else throw "Dropbox client for: ${stdenv.system} not supported!";
 
-  arch =
-    {
-      "x86_64-linux" = "x86_64";
-      "i686-linux"   = "x86";
-    }."${stdenv.system}" or (throw "system ${stdenv.system} not supported");
+  interpreter = if stdenv.system == "x86_64-linux" then "ld-linux-x86-64.so.2"
+    else if stdenv.system == "i686-linux" then "ld-linux.so.2"
+    else throw "Dropbox client for: ${stdenv.system} not supported!";
+
+  version = "2.6.2";
+  sha256 = if stdenv.system == "x86_64-linux" then "0j511nglqg2xngyl78ww7xk09v8yzhghk5cnj6slr9sldy83n7g9"
+    else if stdenv.system == "i686-linux" then "0n0y0wf313yjas4b89ag613jb80skby1qmfkyy1aazgjancf7v5i"
+    else throw "Dropbox client for: ${stdenv.system} not supported!";
 
   # relative location where the dropbox libraries are stored
   appdir = "opt/dropbox";
 
-  ldpath = stdenv.lib.makeLibraryPath
-    [
-      dbus_libs fontconfig freetype gcc.cc glib libdrm libffi libICE libSM
-      libX11 libXcomposite libXext libXmu libXrender libxcb libxml2 libxslt
-      ncurses zlib
-
-      qtbase qtdeclarative qtwebkit
+  # Libraries referenced by dropbox binary.
+  # Be aware that future versions of the dropbox binary may refer
+  # to different versions than are currently in these packages.
+  ldpath = stdenv.lib.makeSearchPath "lib" [
+      libSM libX11 libXext libXcomposite libXcursor libXdamage
+      libXfixes libXi libXinerama libXrandr libXrender
+      atk dbus dbus_glib glib fontconfig gcc gdk_pixbuf
+      gtk pango zlib
     ];
 
   desktopItem = makeDesktopItem {
     name = "dropbox";
     exec = "dropbox";
-    comment = "Sync your files across computers and to the web";
+    comment = "Online directories";
     desktopName = "Dropbox";
-    genericName = "File Synchronizer";
-    categories = "Network;FileTransfer;";
-    startupNotify = "false";
+    genericName = "Online storage";
+    categories = "Application;Internet;";
   };
 
 in stdenv.mkDerivation {
-  name = "dropbox-${version}";
+  name = "dropbox-${version}-bin";
   src = fetchurl {
     name = "dropbox-${version}.tar.gz";
-    url = "https://dl-web.dropbox.com/u/17/dropbox-lnx.${arch}-${version}.tar.gz";
+    # using version-specific URL so if the version is no longer available,
+    # build will fail without having to finish downloading first
+    # url = "http://www.dropbox.com/download?plat=lnx.${arch}";
+    url = "http://dl-web.dropbox.com/u/17/dropbox-lnx.${arch}-${version}.tar.gz";
     inherit sha256;
   };
 
-  sourceRoot = ".dropbox-dist";
+  sourceRoot = ".";
 
-  nativeBuildInputs = [ makeQtWrapper patchelf ];
-  dontStrip = true; # already done
+  patchPhase = ''
+    rm -f .dropbox-dist/dropboxd
+  '';
 
   installPhase = ''
-    mkdir -p "$out/${appdir}"
-    cp -r --no-preserve=mode "dropbox-lnx.${arch}-${version}"/* "$out/${appdir}/"
+    ensureDir "$out/${appdir}"
+    cp -r ".dropbox-dist/"* "$out/${appdir}/"
+    ensureDir "$out/bin"
+    ln -s "$out/${appdir}/dropbox" "$out/bin/dropbox"
 
-    # Vendored libraries interact poorly with our graphics drivers
-    rm "$out/${appdir}/libdrm.so.2"
-    rm "$out/${appdir}/libffi.so.6"
-    rm "$out/${appdir}/libGL.so.1"
-    rm "$out/${appdir}/libX11-xcb.so.1"
+    patchelf --set-interpreter ${stdenv.glibc}/lib/${interpreter} \
+      "$out/${appdir}/dropbox"
 
-    # Cannot use vendored Qt libraries due to problem with xkbcommon
-    rm "$out/${appdir}/"libQt5*.so.5
-    rm "$out/${appdir}/qt.conf"
-    rm -fr "$out/${appdir}/plugins"
+    RPATH=${ldpath}:${gcc.gcc}/lib:$out/${appdir}
+    echo "updating rpaths to: $RPATH"
+    find "$out/${appdir}" -type f -a -perm +0100 \
+      -print -exec patchelf --force-rpath --set-rpath "$RPATH" {} \;
 
-    mkdir -p "$out/share/applications"
+    ensureDir "$out/share/applications"
     cp "${desktopItem}/share/applications/"* $out/share/applications
-
-    mkdir -p "$out/share/icons"
-    ln -s "$out/${appdir}/images/hicolor" "$out/share/icons/hicolor"
-
-    mkdir -p "$out/bin"
-    RPATH="${ldpath}:$out/${appdir}"
-    makeQtWrapper "$out/${appdir}/dropbox" "$out/bin/dropbox" \
-      --prefix LD_LIBRARY_PATH : "$RPATH"
-
-    chmod 755 $out/${appdir}/dropbox
   '';
 
-  fixupPhase = ''
-    INTERP=$(cat $NIX_CC/nix-support/dynamic-linker)
-    RPATH="${ldpath}:$out/${appdir}"
-    getType='s/ *Type: *\([A-Z]*\) (.*/\1/'
-    find "$out/${appdir}" -type f -print | while read obj; do
-        dynamic=$(readelf -S "$obj" 2>/dev/null | grep "DYNAMIC" || true)
-        if [[ -n "$dynamic" ]]; then
-
-            if readelf -l "$obj" 2>/dev/null | grep "INTERP" >/dev/null; then
-                echo "patching interpreter path in $type $obj"
-                patchelf --set-interpreter "$INTERP" "$obj"
-            fi
-
-            type=$(readelf -h "$obj" 2>/dev/null | grep 'Type:' | sed -e "$getType")
-            if [ "$type" == "EXEC" ] || [ "$type" == "DYN" ]; then
-
-                echo "patching RPATH in $type $obj"
-                oldRPATH=$(patchelf --print-rpath "$obj")
-                patchelf --set-rpath "''${oldRPATH:+$oldRPATH:}$RPATH" "$obj"
-
-            else
-
-                echo "unknown ELF type \"$type\"; not patching $obj"
-
-            fi
-        fi
-    done
-
-    paxmark m $out/${appdir}/dropbox
-  '';
+  buildInputs = [ patchelf ];
 
   meta = {
     homepage = "http://www.dropbox.com";
     description = "Online stored folders (daemon version)";
-    maintainers = with stdenv.lib.maintainers; [ ttuegel ];
-    platforms = [ "i686-linux" "x86_64-linux" ];
-    license = stdenv.lib.licenses.unfree;
   };
 }

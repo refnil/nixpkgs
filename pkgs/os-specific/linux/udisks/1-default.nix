@@ -1,21 +1,16 @@
 { stdenv, fetchurl, pkgconfig, sg3_utils, udev, glib, dbus, dbus_glib
 , polkit, parted, lvm2, libatasmart, intltool, libuuid, mdadm
-, libxslt, docbook_xsl, utillinux, libgudev }:
+, libxslt, docbook_xsl, utillinux }:
 
 stdenv.mkDerivation rec {
-  name = "udisks-1.0.5";
+  name = "udisks-1.0.4";
 
   src = fetchurl {
     url = "http://hal.freedesktop.org/releases/${name}.tar.gz";
-    sha256 = "0wbg3jrv8limdgvcygf4dqin3y6d30y9pcmmk711vq571vmq5v7j";
+    sha256 = "1xgqifddwaavmjc8c30i0mdffyirsld7c6qhfyjw7f9khwv8jjw5";
   };
 
-  patches = [ ./purity.patch ./no-pci-db.patch ./glibc.patch ];
-
-  preConfigure =
-    ''
-      configureFlagsArray+=(--with-systemdsystemunitdir=$out/lib/systemd/system)
-    '';
+  patches = [ ./purity.patch ./no-pci-db.patch ./cve-2014-0004.patch ];
 
   postPatch =
     ''
@@ -23,11 +18,11 @@ stdenv.mkDerivation rec {
 
       substituteInPlace src/main.c --replace \
         "/sbin:/bin:/usr/sbin:/usr/bin" \
-        "${utillinux}/bin:${mdadm}/sbin:/var/run/current-system/sw/bin:/var/run/current-system/sw/bin"
+        "${utillinux}/bin:${mdadm}/sbin:/var/run/current-system/sw/bin:/var/run/current-system/sw/sbin"
     '';
 
   buildInputs =
-    [ sg3_utils udev glib dbus dbus_glib polkit parted libgudev
+    [ sg3_utils udev glib dbus dbus_glib polkit parted
       lvm2 libatasmart intltool libuuid libxslt docbook_xsl
     ];
 

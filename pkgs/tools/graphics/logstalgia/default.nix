@@ -1,22 +1,22 @@
-{ stdenv, fetchurl, SDL2, ftgl, pkgconfig, libpng, libjpeg, pcre, SDL2_image, glew
-, mesa, boost, glm, freetype }:
+{ stdenv, fetchurl, SDL, ftgl, pkgconfig, libpng, libjpeg, pcre, SDL_image, glew, mesa }:
 
-stdenv.mkDerivation rec {
-  name = "logstalgia-${version}";
-  version = "1.0.7";
+let
+  name = "logstalgia-1.0.3";
+in
+stdenv.mkDerivation {
+  inherit name;
 
   src = fetchurl {
-    url = "https://github.com/acaudwell/Logstalgia/releases/download/${name}/${name}.tar.gz";
-    sha256 = "1qghz1j3jmfj093br2hfyibayg3fmhg8fvp5ix9n9rbvzc1zslsm";
+    url = "http://logstalgia.googlecode.com/files/logstalgia-1.0.3.tar.gz";
+    sha256 = "1sv1cizyw3y7g558hnvvcal8z889gbr82v4qj35hxdmrzygqlcyk";
   };
 
-  buildInputs = [ glew SDL2 ftgl pkgconfig libpng libjpeg pcre SDL2_image mesa boost
-                  glm freetype ];
+  buildInputs = [glew SDL ftgl pkgconfig libpng libjpeg pcre SDL_image mesa];
 
-  meta = with stdenv.lib; {
-    homepage = http://code.google.com/p/logstalgia;
-    description = "Website traffic visualization tool";
-    license = licenses.gpl3Plus;
+  meta = {
+    homepage = "http://code.google.com/p/logstalgia/";
+    description = "website traffic visualization tool";
+    license = stdenv.lib.licenses.gpl3Plus;
 
     longDescription = ''
       Logstalgia is a website traffic visualization that replays or
@@ -37,7 +37,7 @@ stdenv.mkDerivation rec {
       a Miscellaneous section.
     '';
 
-    platforms = platforms.gnu;
-    maintainers = with maintainers; [ pSub ];
+    platforms = stdenv.lib.platforms.gnu;
+    maintainers = [];
   };
 }

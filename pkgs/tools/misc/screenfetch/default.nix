@@ -1,41 +1,25 @@
-{ stdenv, fetchFromGitHub, makeWrapper, coreutils, gawk, procps, gnused
-, bc, findutils, xdpyinfo, xprop, gnugrep, ncurses
-}:
+{ stdenv, fetchgit, xdpyinfo, xprop }:
 
+let
+  version = "2014-05-27";
+in
 stdenv.mkDerivation {
-  name = "screenFetch-2016-10-11";
+  name = "screenFetch-${version}";
+  pname = "screenfetch";
 
-  src = fetchFromGitHub {
-    owner = "KittyKatt";
-    repo = "screenFetch";
-    rev = "89e51f24018c89b3647deb24406a9af3a78bbe99";
-    sha256 = "0i2k261jj2s4sfhav7vbsd362pa0gghw6qhwafhmicmf8hq2a18v";
+  src = fetchgit {
+    url = git://github.com/KittyKatt/screenFetch.git;
+    rev = "69c46cb94b5765dbcb36905c5a35c42eb8e6e470";
+    sha256 = "0479na831120bpyrg5nb3nb1jr8p8ahkixk1znwg730q3vdcjd6j";
   };
 
-  nativeBuildInputs = [ makeWrapper ];
-
   installPhase = ''
-    install -Dm 0755 screenfetch-dev $out/bin/screenfetch
-    install -Dm 0644 screenfetch.1 $out/man/man1/screenfetch.1
-
-    # Fix all of the depedencies of screenfetch
-    patchShebangs $out/bin/screenfetch
-    wrapProgram "$out/bin/screenfetch" \
-      --set PATH : "" \
-      --prefix PATH : "${coreutils}/bin" \
-      --prefix PATH : "${gawk}/bin" \
-      --prefix PATH : "${procps}/bin" \
-      --prefix PATH : "${gnused}/bin" \
-      --prefix PATH : "${findutils}/bin" \
-      --prefix PATH : "${xdpyinfo}/bin" \
-      --prefix PATH : "${xprop}/bin" \
-      --prefix PATH : "${gnugrep}/bin" \
-      --prefix PATH : "${ncurses}/bin" \
-      --prefix PATH : "${bc}/bin"
+    install -Dm 0755 $pname-dev $out/bin/$pname
+    install -Dm 0644 $pname.1 $out/man/man1/$pname.1
   '';
 
   meta = {
-    description = "Fetches system/theme information in terminal for Linux desktop screenshots";
+    description = "Fetches system/theme information in terminal for Linux desktop screenshots.";
     longDescription = ''
     screenFetch is a "Bash Screenshot Information Tool". This handy Bash
     script can be used to generate one of those nifty terminal theme

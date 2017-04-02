@@ -1,19 +1,14 @@
 { stdenv, fetchurl }:
 
-stdenv.mkDerivation rec {
-  name = "which-2.21";
-
+stdenv.mkDerivation {
+  name = "which-2.20";
+  
   src = fetchurl {
-    url = "mirror://gnu/which/${name}.tar.gz";
-    sha256 = "1bgafvy3ypbhhfznwjv1lxmd6mci3x1byilnnkc7gcr486wlb8pl";
+    url = mirror://gnu/which/which-2.20.tar.gz;
+    sha256 = "1y2p50zadb36izzh2zw4dm5hvdiydqf3qa88l8kav20dcmfbc5yl";
   };
 
-  # FIXME needs gcc 4.9 in bootstrap tools
-  hardeningDisable = [ "stackprotector" ];
-
-  meta = with stdenv.lib; {
+  meta = {
     homepage = http://ftp.gnu.org/gnu/which/;
-    platforms = platforms.all;
-    license = licenses.gpl3;
   };
 }

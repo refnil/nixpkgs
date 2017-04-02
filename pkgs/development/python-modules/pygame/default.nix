@@ -1,44 +1,37 @@
-{ stdenv, lib, fetchurl, buildPythonPackage, python, smpeg, libX11
-, SDL, SDL_image, SDL_mixer, SDL_ttf, libpng, libjpeg, portmidi, freetype
+{ stdenv, fetchurl, python, pkgconfig
+, SDL, SDL_image, SDL_mixer, SDL_ttf, libpng, libjpeg
 }:
 
-buildPythonPackage rec {
-  name = "pygame-${version}";
-  version = "1.9.3";
+stdenv.mkDerivation {
+  name = "pygame-1.9.1";
 
   src = fetchurl {
-    url = "mirror://pypi/p/pygame/pygame-${version}.tar.gz";
-    sha256 = "1hlydiyygl444bq5m5g8n3jsxsgrdyxlm42ipmfbw36wkf0j243m";
+    url = "http://www.pygame.org/ftp/pygame-1.9.1release.tar.gz";
+    sha256 = "0cyl0ww4fjlf289pjxa53q4klyn55ajvkgymw0qrdgp4593raq52";
   };
 
   buildInputs = [
-    SDL SDL_image SDL_mixer SDL_ttf libpng libjpeg
-    portmidi libX11 freetype
+    python pkgconfig SDL SDL_image SDL_mixer SDL_ttf libpng libjpeg
   ];
 
-  # Tests fail because of no audio device and display.
-  doCheck = false;
+  patches = [ ./pygame-v4l.patch ];
 
-  preConfigure = ''
-    sed \
-      -e "s/^origincdirs = .*/origincdirs = []/" \
-      -e "s/^origlibdirs = .*/origlibdirs = []/" \
-      -e "/\/include\/smpeg/d" \
-      -i config_unix.py
-    ${lib.concatMapStrings (dep: ''
-      sed \
-        -e "/^origincdirs =/aorigincdirs += ['${lib.getDev dep}/include']" \
-        -e "/^origlibdirs =/aoriglibdirs += ['${lib.getLib dep}/lib']" \
-        -i config_unix.py
-      '') buildInputs
-    }
-    LOCALBASE=/ ${python.interpreter} config.py
+  configurePhase = ''
+    for i in ${SDL_image} ${SDL_mixer} ${SDL_ttf} ${libpng} ${libjpeg}; do
+      sed -e "/origincdirs =/a'$i/include'," -i config_unix.py
+      sed -e "/origlibdirs =/aoriglibdirs += '$i/lib'," -i config_unix.py
+    done
+
+    yes Y | LOCALBASE=/ python config.py
   '';
 
-  meta = with stdenv.lib; {
+  buildPhase = "python setup.py build"; 
+
+  installPhase = "python setup.py install --prefix=$out";
+
+  meta = {
     description = "Python library for games";
     homepage = "http://www.pygame.org/";
-    license = licenses.lgpl21Plus;
-    platforms = platforms.linux;
+    license = stdenv.lib.licenses.lgpl21Plus;
   };
 }

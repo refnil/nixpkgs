@@ -2,32 +2,12 @@
 
 with lib;
 
-let 
-  cfg = config.services.rsnapshot;
-  cfgfile = pkgs.writeText "rsnapshot.conf" ''
-    config_version	1.2
-    cmd_cp	${pkgs.coreutils}/bin/cp
-    cmd_rm	${pkgs.coreutils}/bin/rm
-    cmd_rsync	${pkgs.rsync}/bin/rsync
-    cmd_ssh	${pkgs.openssh}/bin/ssh
-    cmd_logger	${pkgs.inetutils}/bin/logger
-    cmd_du	${pkgs.coreutils}/bin/du
-    cmd_rsnapshot_diff	${pkgs.rsnapshot}/bin/rsnapshot-diff
-    lockfile	/run/rsnapshot.pid
-    link_dest	1
-
-    ${cfg.extraConfig}
-  '';
+let cfg = config.services.rsnapshot;
 in
 {
   options = {
     services.rsnapshot = {
       enable = mkEnableOption "rsnapshot backups";
-      enableManualRsnapshot = mkOption {
-        description = "Whether to enable manual usage of the rsnapshot command with this module.";
-        default = true;
-        type = types.bool;
-      };
 
       extraConfig = mkOption {
         default = "";
@@ -51,7 +31,7 @@ in
 
       cronIntervals = mkOption {
         default = {};
-        example = { hourly = "0 * * * *"; daily = "50 21 * * *"; };
+        example = { "hourly" = "0 * * * *"; "daily" = "50 21 * * *"; };
         type = types.attrsOf types.string;
         description = ''
           Periodicity at which intervals should be run by cron.
@@ -62,14 +42,24 @@ in
     };
   };
 
-  config = mkIf cfg.enable (mkMerge [
-    {
+  config = mkIf cfg.enable (let
+    myRsnapshot = pkgs.rsnapshot.override { configFile = rsnapshotCfg; };
+    rsnapshotCfg = with pkgs; writeText "gen-rsnapshot.conf" (''
+        config_version	1.2
+        cmd_cp	${coreutils}/bin/cp
+        cmd_rsync	${rsync}/bin/rsync
+        cmd_ssh	${openssh}/bin/ssh
+        cmd_logger	${inetutils}/bin/logger
+        cmd_du	${coreutils}/bin/du
+        lockfile	/run/rsnapshot.pid
+
+        ${cfg.extraConfig}
+      '');
+    in {
+      environment.systemPackages = [ myRsnapshot ];
+
       services.cron.systemCronJobs =
-        mapAttrsToList (interval: time: "${time} root ${pkgs.rsnapshot}/bin/rsnapshot -c ${cfgfile} ${interval}") cfg.cronIntervals;
+        mapAttrsToList (interval: time: "${time} root ${myRsnapshot}/bin/rsnapshot ${interval}") cfg.cronIntervals;
     }
-    (mkIf cfg.enableManualRsnapshot {
-      environment.systemPackages = [ pkgs.rsnapshot ];
-      environment.etc."rsnapshot.conf".source = cfgfile;
-    })
-  ]);
+  );
 }

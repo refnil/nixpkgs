@@ -1,12 +1,11 @@
 { stdenv, fetchurl, libewf, afflib, openssl, zlib }:
 
 stdenv.mkDerivation rec {
-  version = "4.2.0";
-  name = "sleuthkit-${version}";
+  name = "sleuthkit-3.2.2";
 
   src = fetchurl {
     url = "mirror://sourceforge/sleuthkit/${name}.tar.gz";
-    sha256 = "08s7c1jwn2rjq2jm8859ywaiq12adrl02m61hc04iblqjzqqgcli";
+    sha256 = "02hik5xvbgh1dpisvc3wlhhq1aprnlsk0spbw6h5khpbq9wqnmgj";
   };
 
   enableParallelBuilding = true;
@@ -20,7 +19,6 @@ stdenv.mkDerivation rec {
     description = "A forensic/data recovery tool";
     maintainers = [ stdenv.lib.maintainers.raskin ];
     platforms = stdenv.lib.platforms.linux;
-    license = stdenv.lib.licenses.ipl10;
-    inherit version;
+    license = "IBM Public License";
   };
 }

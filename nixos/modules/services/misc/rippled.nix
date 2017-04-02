@@ -1,3 +1,5 @@
+# configuration building is commented out until better tested.
+
 { config, lib, pkgs, ... }:
 
 with lib;
@@ -5,197 +7,29 @@ with lib;
 let
   cfg = config.services.rippled;
 
-  b2i = val: if val then "1" else "0";
-
-  dbCfg = db: ''
-    type=${db.type}
-    path=${db.path}
-    ${optionalString (db.compression != null) ("compression=${b2i db.compression}") }
-    ${optionalString (db.onlineDelete != null) ("online_delete=${toString db.onlineDelete}")}
-    ${optionalString (db.advisoryDelete != null) ("advisory_delete=${b2i db.advisoryDelete}")}
-    ${db.extraOpts}
-  '';
+  rippledStateCfgFile = "/var/lib/rippled/rippled.cfg";
 
   rippledCfg = ''
-    [server]
-    ${concatMapStringsSep "\n" (n: "port_${n}") (attrNames cfg.ports)}
-
-    ${concatMapStrings (p: ''
-    [port_${p.name}]
-    ip=${p.ip}
-    port=${toString p.port}
-    protocol=${concatStringsSep "," p.protocol}
-    ${optionalString (p.user != "") "user=${p.user}"}
-    ${optionalString (p.password != "") "user=${p.password}"}
-    admin=${concatStringsSep "," p.admin}
-    ${optionalString (p.ssl.key != null) "ssl_key=${p.ssl.key}"}
-    ${optionalString (p.ssl.cert != null) "ssl_cert=${p.ssl.cert}"}
-    ${optionalString (p.ssl.chain != null) "ssl_chain=${p.ssl.chain}"}
-    '') (attrValues cfg.ports)}
-
-    [database_path]
-    ${cfg.databasePath}
-
     [node_db]
-    ${dbCfg cfg.nodeDb}
+    type=HyperLevelDB
+    path=/var/lib/rippled/db/hyperldb
 
-    ${optionalString (cfg.tempDb != null) ''
-    [temp_db]
-    ${dbCfg cfg.tempDb}''}
+    [debug_logfile]
+    /var/log/rippled/debug.log
 
-    ${optionalString (cfg.importDb != null) ''
-    [import_db]
-    ${dbCfg cfg.importDb}''}
+  ''
+  + optionalString (cfg.peerIp != null) ''
+    [peer_ip]
+    ${cfg.peerIp}
 
-    [ips]
-    ${concatStringsSep "\n" cfg.ips}
+    [peer_port]
+    ${toString cfg.peerPort}
 
-    [ips_fixed]
-    ${concatStringsSep "\n" cfg.ipsFixed}
+  ''
+  + cfg.extraConfig;
 
-    [validators]
-    ${concatStringsSep "\n" cfg.validators}
-
-    [node_size]
-    ${cfg.nodeSize}
-
-    [ledger_history]
-    ${toString cfg.ledgerHistory}
-
-    [fetch_depth]
-    ${toString cfg.fetchDepth}
-
-    [validation_quorum]
-    ${toString cfg.validationQuorum}
-
-    [sntp_servers]
-    ${concatStringsSep "\n" cfg.sntpServers}
-
-    ${optionalString cfg.statsd.enable ''
-    [insight]
-    server=statsd
-    address=${cfg.statsd.address}
-    prefix=${cfg.statsd.prefix}
-    ''}
-
-    [rpc_startup]
-    { "command": "log_level", "severity": "${cfg.logLevel}" }
-  '' + cfg.extraConfig;
-
-  portOptions = { name, ...}: {
-    options = {
-      name = mkOption {
-	internal = true;
-	default = name;
-      };
-
-      ip = mkOption {
-	default = "127.0.0.1";
-	description = "Ip where rippled listens.";
-	type = types.str;
-      };
-
-      port = mkOption {
-	description = "Port where rippled listens.";
-	type = types.int;
-      };
-
-      protocol = mkOption {
-	description = "Protocols expose by rippled.";
-	type = types.listOf (types.enum ["http" "https" "ws" "wss" "peer"]);
-      };
-
-      user = mkOption {
-	description = "When set, these credentials will be required on HTTP/S requests.";
-	type = types.str;
-	default = "";
-      };
-
-      password = mkOption {
-	description = "When set, these credentials will be required on HTTP/S requests.";
-	type = types.str;
-	default = "";
-      };
-
-      admin = mkOption {
-	description = "A comma-separated list of admin IP addresses.";
-	type = types.listOf types.str;
-	default = ["127.0.0.1"];
-      };
-
-      ssl = {
-	key = mkOption {
-	  description = ''
-	    Specifies the filename holding the SSL key in PEM format.
-	  '';
-	  default = null;
-	  type = types.nullOr types.path;
-	};
-
-	cert = mkOption {
-	  description = ''
-	    Specifies the path to the SSL certificate file in PEM format.
-	    This is not needed if the chain includes it.
-	  '';
-	  default = null;
-	  type = types.nullOr types.path;
-	};
-
-	chain = mkOption {
-	  description = ''
-	    If you need a certificate chain, specify the path to the
-	    certificate chain here. The chain may include the end certificate.
-	  '';
-	  default = null;
-	  type = types.nullOr types.path;
-	};
-      };
-    };
-  };
-
-  dbOptions = {
-    options = {
-      type = mkOption {
-        description = "Rippled database type.";
-        type = types.enum ["rocksdb" "nudb"];
-        default = "rocksdb";
-      };
-
-      path = mkOption {
-        description = "Location to store the database.";
-        type = types.path;
-        default = cfg.databasePath;
-      };
-
-      compression = mkOption {
-        description = "Whether to enable snappy compression.";
-        type = types.nullOr types.bool;
-        default = null;
-      };
-
-      onlineDelete = mkOption {
-        description = "Enable automatic purging of older ledger information.";
-        type = types.addCheck (types.nullOr types.int) (v: v > 256);
-        default = cfg.ledgerHistory;
-      };
-
-      advisoryDelete = mkOption {
-        description = ''
-	        If set, then require administrative RPC call "can_delete"
-	        to enable online deletion of ledger records.
-        '';
-        type = types.nullOr types.bool;
-        default = null;
-      };
-
-      extraOpts = mkOption {
-        description = "Extra database options.";
-        type = types.lines;
-        default = "";
-      };
-    };
-  };
-
+  rippledCfgFile = pkgs.writeText "rippled.cfg" rippledCfg;
+    
 in
 
 {
@@ -203,189 +37,236 @@ in
   ###### interface
 
   options = {
+
     services.rippled = {
-      enable = mkEnableOption "rippled";
 
-      package = mkOption {
-	description = "Which rippled package to use.";
-	type = types.package;
-	default = pkgs.rippled;
-	defaultText = "pkgs.rippled";
+      enable = mkOption {
+        default = false;
+	description = "Whether to enable rippled";
       };
 
-      ports = mkOption {
-	description = "Ports exposed by rippled";
-	type = with types; attrsOf (submodule portOptions);
-	default = {
-	  rpc = {
-	    port = 5005;
-	    admin = ["127.0.0.1"];
-	    protocol = ["http"];
-	  };
+      #
+      # Rippled has a simple configuration file layout that is easy to 
+      # build with nix. Many of the options are defined here but are 
+      # commented out until the code to append them to the config above
+      # is written and they are tested.
+      #
+      # If you find a yourself implementing more options, please submit a 
+      # pull request.
+      #
 
-	  peer = {
-	    port = 51235;
-	    ip = "0.0.0.0";
-	    protocol = ["peer"];
-	  };
-
-	  ws_public = {
-	    port = 5006;
-	    ip = "0.0.0.0";
-	    protocol = ["ws" "wss"];
-	  };
-	};
-      };
-
-      nodeDb = mkOption {
-	description = "Rippled main database options.";
-	type = with types; nullOr (submodule dbOptions);
-	default = {
-	  type = "rocksdb";
-	  extraOpts = ''
-	    open_files=2000
-	    filter_bits=12
-	    cache_mb=256
-	    file_size_pb=8
-	    file_size_mult=2;
-	  '';
-	};
-      };
-
-      tempDb = mkOption {
-	description = "Rippled temporary database options.";
-	type = with types; nullOr (submodule dbOptions);
-	default = null;
-      };
-
-      importDb = mkOption {
-	description = "Settings for performing a one-time import.";
-	type = with types; nullOr (submodule dbOptions);
-	default = null;
-      };
-
-      nodeSize = mkOption {
-	description = ''
-	  Rippled size of the node you are running.
-	  "tiny", "small", "medium", "large", and "huge"
-	'';
-	type = types.enum ["tiny" "small" "medium" "large" "huge"];
-	default = "small";
-      };
-
+      /*
       ips = mkOption {
+        default = [ "r.ripple.com 51235" ];
+	example = [ "192.168.0.1" "192.168.0.1 3939" "r.ripple.com 51235" ];
 	description = ''
 	  List of hostnames or ips where the Ripple protocol is served.
-	  For a starter list, you can either copy entries from:
+	  For a starter list, you can either copy entries from: 
 	  https://ripple.com/ripple.txt or if you prefer you can let it
 	   default to r.ripple.com 51235
 
-	  A port may optionally be specified after adding a space to the
-	  address. By convention, if known, IPs are listed in from most
+	  A port may optionally be specified after adding a space to the 
+	  address. By convention, if known, IPs are listed in from most 
 	  to least trusted.
 	'';
-	type = types.listOf types.str;
-	default = ["r.ripple.com 51235"];
       };
 
       ipsFixed = mkOption {
+        default = null;
+	example = [ "192.168.0.1" "192.168.0.1 3939" "r.ripple.com 51235" ];
 	description = ''
-	  List of IP addresses or hostnames to which rippled should always
-	  attempt to maintain peer connections with. This is useful for
-	  manually forming private networks, for example to configure a
-	  validation server that connects to the Ripple network through a
+	  List of IP addresses or hostnames to which rippled should always 
+	  attempt to maintain peer connections with. This is useful for 
+	  manually forming private networks, for example to configure a 
+	  validation server that connects to the Ripple network through a 
 	  public-facing server, or for building a set of cluster peers.
 
 	  A port may optionally be specified after adding a space to the address
 	'';
-	type = types.listOf types.str;
-	default = [];
       };
+      */
 
-      validators = mkOption {
+      peerIp = mkOption {
+        default = null;
+	example = "0.0.0.0";
 	description = ''
-	  List of nodes to always accept as validators. Nodes are specified by domain
-	  or public key.
-	'';
-	type = types.listOf types.str;
-	default = [
-	  "n949f75evCHwgyP4fPVgaHqNHxUVN15PsJEZ3B3HnXPcPjcZAoy7  RL1"
-	  "n9MD5h24qrQqiyBC8aeqqCWvpiBiYQ3jxSr91uiDvmrkyHRdYLUj  RL2"
-	  "n9L81uNCaPgtUJfaHh89gmdvXKAmSt5Gdsw2g1iPWaPkAHW5Nm4C  RL3"
-	  "n9KiYM9CgngLvtRCQHZwgC2gjpdaZcCcbt3VboxiNFcKuwFVujzS  RL4"
-	  "n9LdgEtkmGB9E2h3K4Vp7iGUaKuq23Zr32ehxiU8FWY7xoxbWTSA  RL5"
-	];
+	  IP address or domain to bind to allow external connections from peers.
+	  Defaults to not binding, which disallows external connections from peers.
+        '';
       };
 
-      databasePath = mkOption {
+      peerPort = mkOption {
+	default = 51235;
 	description = ''
-	  Path to the ripple database.
+	  If peerIp is supplied, corresponding port to bind to for peer connections.
 	'';
-	type = types.path;
-	default = "/var/lib/rippled";
       };
 
-      validationQuorum = mkOption {
+      /*
+      peerPortProxy = mkOption {
+        type = types.int;
+	example = 51236;
 	description = ''
-	  The minimum number of trusted validations a ledger must have before
-	  the server considers it fully validated.
+	  An optional, additional listening port number for peers. Incoming
+	  connections on this port will be required to provide a PROXY Protocol
+	  handshake, described in this document (external link):
+
+	    http://haproxy.1wt.eu/download/1.5/doc/proxy-protocol.txt
+
+	  The PROXY Protocol is a popular method used by elastic load balancing
+	  service providers such as Amazon, to identify the true IP address and
+	  port number of external incoming connections.
+
+	  In addition to enabling this setting, it will also be required to
+	  use your provider-specific control panel or administrative web page
+	  to configure your server instance to receive PROXY Protocol handshakes,
+	  and also to restrict access to your instance to the Elastic Load Balancer.
 	'';
-	type = types.int;
-	default = 3;
       };
 
-      ledgerHistory = mkOption {
+      peerPrivate = mkOption {
+        default = null;
+	example = 0;
 	description = ''
-	  The number of past ledgers to acquire on server startup and the minimum
-	  to maintain while running.
-	'';
-	type = types.either types.int (types.enum ["full"]);
-	default = 1296000; # 1 month
-      };
+	 0: Request peers to broadcast your address. Normal outbound peer connections [default]
+	 1: Request peers not broadcast your address. Only connect to configured peers.
+       '';
+     };
 
-      fetchDepth = mkOption {
+     peerSslCipherList = mkOption {
+       default = null;
+       example = "ALL:!LOW:!EXP:!MD5:@STRENGTH";
+       description = ''
+         A colon delimited string with the allowed SSL cipher modes for peer. The
+	 choices for for ciphers are defined by the OpenSSL API function
+	 SSL_CTX_set_cipher_list, documented here (external link):
+
+	  http://pic.dhe.ibm.com/infocenter/tpfhelp/current/index.jsp?topic=%2Fcom.ibm.ztpf-ztpfdf.doc_put.cur%2Fgtpc2%2Fcpp_ssl_ctx_set_cipher_list.html
+
+	The default setting of "ALL:!LOW:!EXP:!MD5:@STRENGTH", which allows
+	non-authenticated peer connections (they are, however, secure).
+      '';
+    };
+
+    nodeSeed = mkOption {
+      default = null;
+      example = "RASH BUSH MILK LOOK BAD BRIM AVID GAFF BAIT ROT POD LOVE";
+      description = ''
+        This is used for clustering. To force a particular node seed or key, the
+	key can be set here.  The format is the same as the validation_seed field.
+	To obtain a validation seed, use the rippled validation_create command.
+      '';
+    };
+
+    clusterNodes = mkOption {
+      default = null;
+      example = [ "n9KorY8QtTdRx7TVDpwnG9NvyxsDwHUKUEeDLY3AkiGncVaSXZi5" ];
+      description = ''
+        To extend full trust to other nodes, place their node public keys here.
+	Generally, you should only do this for nodes under common administration.
+	Node public keys start with an 'n'. To give a node a name for identification
+	place a space after the public key and then the name.
+      '';
+    };
+
+    sntpServers = mkOption {
+      default = null;
+      example = [ "time.nist.gov" "pool.ntp.org" ];
+      description = ''
+        IP address or domain of NTP servers to use for time synchronization.
+      '';
+    };
+
+    # TODO: websocket options
+
+    rpcAllowRemote = mkOption {
+      default = false;
+      description = ''
+        false: Allow RPC connections only from 127.0.0.1. [default]
+	true:  Allow RPC connections from any IP.
+      '';
+    };
+
+    rpcAdminAllow = mkOption {
+      example = [ "10.0.0.4" ];
+      description = ''
+        List of IP addresses allowed to have admin access.
+      '';
+    };
+
+    rpcAdminUser = mkOption {
+      type = types.str;
+      description = ''
+        As a server, require this as the admin user to be specified.  Also, require
+	rpc_admin_user and rpc_admin_password to be checked for RPC admin functions.
+	The request must specify these as the admin_user and admin_password in the
+	request object.
+      '';
+    };
+
+    rpcAdminPassword = mkOption {
+      type = types.str;
+      description = ''
+        As a server, require this as the admin pasword to be specified.  Also,
+	require rpc_admin_user and rpc_admin_password to be checked for RPC admin
+	functions.  The request must specify these as the admin_user and
+	admin_password in the request object.
+      '';
+    };
+
+      rpcIp = mkOption {
+        type = types.str;
 	description = ''
-	  The number of past ledgers to serve to other peers that request historical
-	  ledger data (or "full" for no limit).
+	  IP address or domain to bind to allow insecure RPC connections.
+	  Defaults to not binding, which disallows RPC connections.
 	'';
-	type = types.either types.int (types.enum ["full"]);
-	default = "full";
       };
 
-      sntpServers = mkOption {
+      rpcPort = mkOption {
+        type = types.int;
+        description = ''
+          If rpcIp is supplied, corresponding port to bind to for peer connections.
+        '';
+      };
+
+      rpcUser = mkOption {
+        type = types.str;
 	description = ''
-	  IP address or domain of NTP servers to use for time synchronization.;
+	  Require a this user to specified and require rpcPassword to
+	  be checked for RPC access via the rpcIp and rpcPort. The user and password
+	  must be specified via HTTP's basic authentication method.
+	  As a client, supply this to the server via HTTP's basic authentication
+	  method.
 	'';
-	type = types.listOf types.str;
-	default = [
-	  "time.windows.com"
-	  "time.apple.com"
-	  "time.nist.gov"
-	  "pool.ntp.org"
-	];
       };
 
-      logLevel = mkOption {
-        description = "Logging verbosity.";
-	type = types.enum ["debug" "error" "info"];
-	default = "error";
+      rpcPassword = mkOption {
+        type = types.str;
+	description = ''
+	  Require a this password to specified and require rpc_user to
+	  be checked for RPC access via the rpcIp and rpcPort. The user and password
+	  must be specified via HTTP's basic authentication method.
+	  As a client, supply this to the server via HTTP's basic authentication
+	  method.
+	'';
       };
 
-      statsd = {
-        enable = mkEnableOption "statsd monitoring for rippled";
-
-        address = mkOption {
-          description = "The UDP address and port of the listening StatsD server.";
-          default = "127.0.0.1:8125";
-          type = types.str;
-        };
-
-        prefix = mkOption {
-          description = "A string prepended to each collected metric.";
-          default = "";
-          type = types.str;
-        };
+      rpcStartup = mkOption {
+        example = [ ''"command" : "log_level"'' ''"partition" : "ripplecalc"'' ''"severity" : "trace"'' ];
+	description = "List of RPC commands to run at startup.";
       };
+
+      rpcSecure = mkOption {
+        default = false;
+	description = ''
+	  false: Server certificates are not provided for RPC clients using SSL [default]
+	  true:  Client RPC connections wil be provided with SSL certificates.
+
+	  Note that if rpc_secure is enabled, it will also be necessasry to configure the
+	  certificate file settings located in rpcSslCert, rpcSslChain, and rpcSslKey
+	'';
+      };
+      */
 
       extraConfig = mkOption {
         default = "";
@@ -394,11 +275,8 @@ in
 	'';
       };
 
-      config = mkOption {
-	internal = true;
-	default = pkgs.writeText "rippled.conf" rippledCfg;
-      };
     };
+
   };
 
 
@@ -410,23 +288,27 @@ in
       { name = "rippled";
         description = "Ripple server user";
         uid = config.ids.uids.rippled;
-	home = cfg.databasePath;
-	createHome = true;
+	home = "/var/lib/rippled";
       };
 
     systemd.services.rippled = {
+      path = [ pkgs.rippled ];
+
       after = [ "network.target" ];
       wantedBy = [ "multi-user.target" ];
 
       serviceConfig = {
-        ExecStart = "${cfg.package}/bin/rippled --fg --conf ${cfg.config}";
-        User = "rippled";
-	Restart = "on-failure";
-	LimitNOFILE=10000;
+        ExecStart = "${pkgs.rippled}/bin/rippled --fg -q --conf ${rippledStateCfgFile}";
+	WorkingDirectory = "/var/lib/rippled";
       };
     };
 
-    environment.systemPackages = [ cfg.package ];
+    networking.firewall.allowedTCPPorts = mkIf (cfg.peerIp != null) [ cfg.peerPort ];
 
+    system.activationScripts.rippled = ''
+      mkdir -p /var/{lib,log}/rippled
+      chown -R rippled /var/{lib,log}/rippled
+      ln -sf ${rippledCfgFile} ${rippledStateCfgFile}
+    '';
   };
 }

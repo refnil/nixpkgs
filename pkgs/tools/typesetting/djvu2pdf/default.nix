@@ -1,4 +1,4 @@
-{ stdenv, makeWrapper, fetchurl, djvulibre, ghostscript, which }:
+{stdenv, fetchurl, pkgconfig, djvulibre, ghostscript }:
 
 stdenv.mkDerivation rec {
   version = "0.9.2";
@@ -9,14 +9,13 @@ stdenv.mkDerivation rec {
     sha256 = "0v2ax30m7j1yi4m02nzn9rc4sn4vzqh5vywdh96r64j4pwvn5s5g";
   };
 
-  nativeBuildInputs = [ makeWrapper ];
+  buildInputs = [ pkgconfig ];
+  propagatedUserEnvPkgs = [ djvulibre ghostscript ];
 
   installPhase = ''
-    mkdir -p $out/bin
+    ensureDir $out/bin
     cp -p djvu2pdf $out/bin
-    wrapProgram $out/bin/djvu2pdf --prefix PATH : ${stdenv.lib.makeBinPath [ ghostscript djvulibre which ]}
-
-    mkdir -p $out/man/man1
+    ensureDir $out/man/man1
     cp -p djvu2pdf.1.gz $out/man/man1
   '';
 
@@ -24,7 +23,6 @@ stdenv.mkDerivation rec {
     description = "Creates djvu files from PDF files";
     homepage = http://0x2a.at/s/projects/djvu2pdf;
     license = stdenv.lib.licenses.gpl2;
-    platforms = stdenv.lib.platforms.all;
     inherit version;
   };
 }

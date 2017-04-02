@@ -1,41 +1,20 @@
-{
-  kdeDerivation, kdeWrapper, lib, fetchgit,
-  extra-cmake-modules, kdoctools, kconfig, kinit, kparts
-}:
+{ stdenv, fetchurl, cmake, kdelibs, gettext }:
 
-let
-  rev = "468652ce70b1214842cef0a021c81d056ec6aa01";
-
-  unwrapped = kdeDerivation rec {
-    name = "kdiff3-${version}";
-    version = "1.7.0-${lib.strings.substring 0 7 rev}";
-
-    src = fetchgit {
-      url = "https://gitlab.com/tfischer/kdiff3";
-      sha256 = "126xl7jbb26v2970ba1rw1d6clhd14p1f2avcwvj8wzqmniq5y5m";
-      inherit rev;
-    };
-
-    setSourceRoot = ''sourceRoot="$(echo */kdiff3/)"'';
-
-    postPatch = ''
-      sed -re "s/(p\\[[^]]+] *== *)('([^']|\\\\')+')/\\1QChar(\\2)/g" -i src/diff.cpp
-    '';
-
-    nativeBuildInputs = [ extra-cmake-modules kdoctools ];
-
-    propagatedBuildInputs = [ kconfig kinit kparts ];
-
-    meta = with lib; {
-      homepage = http://kdiff3.sourceforge.net/;
-      license = licenses.gpl2Plus;
-      description = "Compares and merges 2 or 3 files or directories";
-      maintainers = with maintainers; [ viric peterhoeg ];
-      platforms = with platforms; linux;
-    };
+stdenv.mkDerivation rec {
+  name = "kdiff3-0.9.97";
+  src = fetchurl {
+    url = "mirror://sourceforge/kdiff3/${name}.tar.gz";
+    sha256 = "0ajsnzfr0aqzdiv5wqssxsgfv87v4g5c2zl16264v0cw8jxiddz3";
   };
 
-in kdeWrapper {
-  inherit unwrapped;
-  targets = [ "bin/kdiff3" ];
+  buildInputs = [ kdelibs ];
+  nativeBuildInputs = [ cmake gettext ];
+
+  meta = {
+    homepage = http://kdiff3.sourceforge.net/;
+    license = stdenv.lib.licenses.gpl2Plus;
+    description = "Compares and merges 2 or 3 files or directories";
+    maintainers = with stdenv.lib.maintainers; [viric urkud];
+    platforms = with stdenv.lib.platforms; linux;
+  };
 }

@@ -1,20 +1,20 @@
-{ stdenv, fetchurl, xproto, libX11, libXext, libXrandr }:
+{ stdenv, fetchurl, xproto, libX11, libXext }:
 stdenv.mkDerivation rec {
-  name = "slock-1.4";
+  name = "slock-1.1";
   src = fetchurl {
     url = "http://dl.suckless.org/tools/${name}.tar.gz";
-    sha256 = "0sif752303dg33f14k6pgwq2jp1hjyhqv6x4sy3sj281qvdljf5m";
+    sha256 = "1r70s3npmp0nyrfdsxz8cw1i1z8n9phqdlw02wjphv341h3yajp0";
   };
-  buildInputs = [ xproto libX11 libXext libXrandr ];
+  buildInputs = [ xproto libX11 libXext	];
   installFlags = "DESTDIR=\${out} PREFIX=";
-  meta = with stdenv.lib; {
+  meta = {
     homepage = http://tools.suckless.org/slock;
     description = "Simple X display locker";
     longDescription = ''
       Simple X display locker. This is the simplest X screen locker.
     '';
-    license = licenses.mit;
-    maintainers = with maintainers; [ astsmtl ];
-    platforms = platforms.linux;
+    license = "bsd";
+    maintainers = with stdenv.lib.maintainers; [ astsmtl ];
+    platforms = with stdenv.lib.platforms; linux;
   };
 }

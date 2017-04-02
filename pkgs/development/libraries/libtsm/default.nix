@@ -1,4 +1,4 @@
-{ stdenv, lib, fetchurl, libxkbcommon, pkgconfig, autoconf, automake }:
+{ stdenv, fetchurl, libxkbcommon, pkgconfig }:
 
 stdenv.mkDerivation rec {
   name = "libtsm-3";
@@ -8,23 +8,14 @@ stdenv.mkDerivation rec {
     sha256 = "01ygwrsxfii0pngfikgqsb4fxp8n1bbs47l7hck81h9b9bc1ah8i";
   };
 
-  buildInputs = [ libxkbcommon pkgconfig ] ++ lib.optionals stdenv.isDarwin [
-    autoconf automake
-   ];
-
-  preConfigure = lib.optionalString stdenv.isDarwin ''
-    aclocal
-  '';
+  buildInputs = [ libxkbcommon pkgconfig ];
 
   configureFlags = [ "--disable-debug" ];
 
-  patches = lib.optional stdenv.isDarwin ./darwin.patch;
-
-  meta = with lib; {
+  meta = {
     description = "Terminal-emulator State Machine";
     homepage = "http://www.freedesktop.org/wiki/Software/kmscon/libtsm/";
-    license = licenses.mit;
-    maintainers = with maintainers; [ cstrahan ];
-    platforms = with platforms; unix;
+    license = stdenv.lib.licenses.mit;
+    maintainers = [ stdenv.lib.maintainers.shlevy ];
   };
 }

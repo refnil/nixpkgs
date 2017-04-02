@@ -1,125 +1,59 @@
 { configuration ? import ../lib/from-env.nix "NIXOS_CONFIG" <nixos-config>
 
-# provide an option name, as a string literal.
-, testOption ? null
-
-# provide a list of option names, as string literals.
-, testOptions ? [ ]
+# []: display all options
+# [<option names>]: display the selected options
+, displayOptions ? [
+    "hardware.pcmcia.enable"
+    "environment.systemPackages"
+    "boot.kernelModules"
+    "services.udev.packages"
+    "jobs"
+    "environment.etc"
+    "system.activationScripts"
+  ]
 }:
 
-# This file is made to be used as follow:
-#
-#   $ nix-instantiate ./option-usage.nix --argstr testOption service.xserver.enable -A txtContent --eval
-#
-# or
-#
-#   $ nix-build ./option-usage.nix --argstr testOption service.xserver.enable -A txt -o service.xserver.enable._txt
-#
-# otther target exists such as, `dotContent`, `dot`, and `pdf`.  If you are
-# looking for the option usage of multiple options, you can provide a list
-# as argument.
-#
-#   $ nix-build ./option-usage.nix --arg testOptions \
-#      '["boot.loader.gummiboot.enable" "boot.loader.gummiboot.timeout"]' \
-#      -A txt -o gummiboot.list
-#
-# Note, this script is slow as it has to evaluate all options of the system
-# once per queried option.
-#
-# This nix expression works by doing a first evaluation, which evaluates the
-# result of every option.
-#
-# Then, for each queried option, we evaluate the NixOS modules a second
-# time, except that we replace the `config` argument of all the modules with
-# the result of the original evaluation, except for the tested option which
-# value is replaced by a `throw` statement which is caught by the `tryEval`
-# evaluation of each option value.
-#
-# We then compare the result of the evluation of the original module, with
-# the result of the second evaluation, and consider that the new failures are
-# caused by our mutation of the `config` argument.
-#
-# Doing so returns all option results which are directly using the
-# tested option result.
-
-with import ../../lib;
+# This file is used to generate a dot graph which contains all options and
+# there dependencies to track problems and their sources.
 
 let
 
   evalFun = {
-    specialArgs ? {}
+    extraArgs ? {}
   }: import ../lib/eval-config.nix {
        modules = [ configuration ];
-       inherit specialArgs;
+       inherit extraArgs;
      };
 
   eval = evalFun {};
   inherit (eval) pkgs;
 
-  excludedTestOptions = [
-    # We cannot evluate _module.args, as it is used during the computation
-    # of the modules list.
-    "_module.args"
-
-    # For some reasons which we yet have to investigate, some options cannot
-    # be replaced by a throw without cuasing a non-catchable failure.
-    "networking.bonds"
-    "networking.bridges"
-    "networking.interfaces"
-    "networking.macvlans"
-    "networking.sits"
-    "networking.vlans"
-    "services.openssh.startWhenNeeded"
-  ];
-
-  # for some reasons which we yet have to investigate, some options are
-  # time-consuming to compute, thus we filter them out at the moment.
-  excludedOptions = [
-    "boot.systemd.services"
-    "systemd.services"
-    "environment.gnome3.packageSet"
-    "kde.extraPackages"
-  ];
-  excludeOptions = list:
-    filter (opt: !(elem (showOption opt.loc) excludedOptions)) list;
-
-
-  reportNewFailures = old: new:
+  reportNewFailures = old: new: with pkgs.lib;
     let
       filterChanges =
         filter ({fst, snd}:
-          !(fst.success -> snd.success)
+          !(fst.config.success -> snd.config.success)
         );
 
       keepNames =
         map ({fst, snd}:
-          /* assert fst.name == snd.name; */ snd.name
+          assert fst.name == snd.name; snd.name
         );
-
-      # Use  tryEval (strict ...)  to know if there is any failure while
-      # evaluating the option value.
-      #
-      # Note, the `strict` function is not strict enough, but using toXML
-      # builtins multiply by 4 the memory usage and the time used to compute
-      # each options.
-      tryCollectOptions = moduleResult:
-        flip map (excludeOptions (collect isOption moduleResult)) (opt:
-          { name = showOption opt.loc; } // builtins.tryEval (strict opt.value));
      in
        keepNames (
          filterChanges (
-           zipLists (tryCollectOptions old) (tryCollectOptions new)
+           zipLists (collect isOption old) (collect isOption new)
          )
        );
 
 
   # Create a list of modules where each module contains only one failling
   # options.
-  introspectionModules =
+  introspectionModules = with pkgs.lib;
     let
       setIntrospection = opt: rec {
-        name = showOption opt.loc;
-        path = opt.loc;
+        name = opt.name;
+        path = splitString "." opt.name;
         config = setAttrByPath path
           (throw "Usage introspection of '${name}' by forced failure.");
       };
@@ -127,67 +61,39 @@ let
       map setIntrospection (collect isOption eval.options);
 
   overrideConfig = thrower:
-    recursiveUpdateUntil (path: old: new:
+    pkgs.lib.recursiveUpdateUntil (path: old: new:
       path == thrower.path
     ) eval.config thrower.config;
 
 
-  graph =
+  graph = with pkgs.lib;
     map (thrower: {
       option = thrower.name;
-      usedBy = assert __trace "Investigate ${thrower.name}" true;
-        reportNewFailures eval.options (evalFun {
-          specialArgs = {
-            config = overrideConfig thrower;
-          };
-        }).options;
+      usedBy = reportNewFailures eval.options (evalFun {
+        extraArgs = {
+          config = overrideConfig thrower;
+        };
+      }).options;
     }) introspectionModules;
 
-  displayOptionsGraph =
-     let
-       checkList =
-         if !(isNull testOption) then [ testOption ]
-         else testOptions;
-       checkAll = checkList == [];
-     in
-       flip filter graph ({option, usedBy}:
-         (checkAll || elem option checkList)
-         && !(elem option excludedTestOptions)
-       );
-
-  graphToDot = graph: ''
+  graphToDot = graph: with pkgs.lib; ''
     digraph "Option Usages" {
       ${concatMapStrings ({option, usedBy}:
-          concatMapStrings (user: ''
-            "${option}" -> "${user}"''
-          ) usedBy
-        ) displayOptionsGraph}
+          assert __trace option true;
+          if displayOptions == [] || elem option displayOptions then
+            concatMapStrings (user: ''
+              "${option}" -> "${user}"''
+            ) usedBy
+          else ""
+        ) graph}
     }
   '';
 
-  graphToText = graph:
-    concatMapStrings ({option, usedBy}:
-        concatMapStrings (user: ''
-          ${user}
-        '') usedBy
-      ) displayOptionsGraph;
-
 in
 
-rec {
-  dotContent = graphToDot graph;
-  dot = pkgs.writeTextFile {
+pkgs.texFunctions.dot2pdf {
+  dotGraph = pkgs.writeTextFile {
     name = "option_usages.dot";
-    text = dotContent;
-  };
-
-  pdf = pkgs.texFunctions.dot2pdf {
-    dotGraph = dot;
-  };
-
-  txtContent = graphToText graph;
-  txt = pkgs.writeTextFile {
-    name = "option_usages.txt";
-    text = txtContent;
+    text = graphToDot graph;
   };
 }

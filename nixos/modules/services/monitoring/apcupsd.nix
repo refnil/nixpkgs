@@ -39,7 +39,7 @@ let
 
   shellCmdsForEventScript = eventname: commands: ''
     echo "#!${pkgs.stdenv.shell}" > "$out/${eventname}"
-    echo '${commands}' >> "$out/${eventname}"
+    echo "${commands}" >> "$out/${eventname}"
     chmod a+x "$out/${eventname}"
   '';
 
@@ -74,7 +74,7 @@ in
 
       enable = mkOption {
         default = false;
-        type = types.bool;
+        type = types.uniq types.bool;
         description = ''
           Whether to enable the APC UPS daemon. apcupsd monitors your UPS and
           permits orderly shutdown of your computer in the event of a power
@@ -161,7 +161,6 @@ in
         # systemd kills it with SIGKILL.
         TimeoutStopSec = 5;
       };
-      unitConfig.Documentation = "man:apcupsd(8)";
     };
 
     # A special service to tell the UPS to power down/hibernate just before the

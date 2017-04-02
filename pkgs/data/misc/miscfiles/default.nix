@@ -1,18 +1,16 @@
 {stdenv, fetchurl}:
 
 stdenv.mkDerivation rec {
-  name = "miscfiles-1.5";
+  name = "miscfiles-1.4.2";
 
   src = fetchurl {
     url = "mirror://gnu/miscfiles/${name}.tar.gz";
-    sha256 = "005588vfrwx8ghsdv9p7zczj9lbc9a3r4m5aphcaqv8gif4siaka";
+    sha256 = "1rh10y63asyrqyp5mlmxy7y4kdp6svk2inws3y7mfx8lsrhcm6dn";
   };
 
-  meta = with stdenv.lib; {
+  meta = {
     homepage = http://www.gnu.org/software/miscfiles/;
-    license = licenses.gpl2Plus;
+    license = stdenv.lib.licenses.gpl2Plus;
     description = "Collection of files not of crucial importance for sysadmins";
-    maintainers = with maintainers; [ pSub ];
-    platforms = with platforms; unix;
   };
 }

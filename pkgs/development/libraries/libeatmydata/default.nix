@@ -1,24 +1,16 @@
-{ stdenv, fetchurl, makeWrapper }:
+{ stdenv, fetchurl }:
 
 stdenv.mkDerivation rec {
-  name = "libeatmydata-105";
+  name = "libeatmydata-82";
   
   src = fetchurl {
     url = "http://www.flamingspork.com/projects/libeatmydata/${name}.tar.gz";
-    sha256 = "1pd8sc73cgc41ldsvq6g8ics1m5k8gdcb91as9yg8z5jnrld1lmx";
+    sha256 = "0aavq71bf0yxdgyf8gvyzq086shszzwpbsz5rqkjg4cz0rc5yrqb";
   };
-
-  buildInputs = [ makeWrapper ];
-
-  postInstall = ''
-    wrapProgram $out/bin/eatmydata \
-      --prefix PATH : $out/bin
-  '';
 
   meta = {
     homepage = http://www.flamingspork.com/projects/libeatmydata/;
     license = stdenv.lib.licenses.gpl3Plus;
     description = "Small LD_PRELOAD library to disable fsync and friends";
-    platforms = stdenv.lib.platforms.unix;
   };
 }

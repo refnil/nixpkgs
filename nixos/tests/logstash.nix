@@ -1,11 +1,8 @@
 # This test runs logstash and checks if messages flows and
 # elasticsearch is started.
 
-import ./make-test.nix ({ pkgs, ...} : {
+import ./make-test.nix {
   name = "logstash";
-  meta = with pkgs.stdenv.lib.maintainers; {
-    maintainers = [ eelco chaoflow offline ];
-  };
 
   nodes = {
     one =
@@ -19,12 +16,13 @@ import ./make-test.nix ({ pkgs, ...} : {
                 exec { command => "echo dragons" interval => 1 type => "test" }
               '';
               filterConfig = ''
-                if [message] =~ /dragons/ {
-                  drop {}
+                if [type] == "test" {
+                  grep { match => ["message", "flowers"] drop => true }
                 }
               '';
               outputConfig = ''
                 stdout { codec => rubydebug }
+                elasticsearch { embedded => true }
               '';
             };
           };
@@ -37,5 +35,6 @@ import ./make-test.nix ({ pkgs, ...} : {
     $one->waitForUnit("logstash.service");
     $one->waitUntilSucceeds("journalctl -n 20 _SYSTEMD_UNIT=logstash.service | grep flowers");
     $one->fail("journalctl -n 20 _SYSTEMD_UNIT=logstash.service | grep dragons");
+    $one->waitUntilSucceeds("curl -s http://127.0.0.1:9200/_status?pretty=true | grep logstash");
   '';
-})
+}

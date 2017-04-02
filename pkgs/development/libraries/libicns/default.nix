@@ -9,8 +9,4 @@ stdenv.mkDerivation rec {
   };
 
   buildInputs = [ libpng jasper ];
-
-  meta = {
-    platforms = stdenv.lib.platforms.unix;
-  };
 }

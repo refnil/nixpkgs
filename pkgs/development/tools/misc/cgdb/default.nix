@@ -1,26 +1,25 @@
-{ stdenv, fetchurl, ncurses, readline, flex, texinfo, help2man }:
+{ stdenv, fetchurl, ncurses, readline }:
 
 stdenv.mkDerivation rec {
-  name = "cgdb-${version}";
-  version = "0.6.8";
+  name = "cgdb-0.6.6";
 
   src = fetchurl {
-    url = "http://cgdb.me/files/${name}.tar.gz";
-    sha256 = "0hfgyj8jimb7imqlfdpzaln787r6r0yzwzmnk91rfl19pqlkw85y";
+    url = "mirror://sourceforge/cgdb/${name}.tar.gz";
+    sha256 = "0iap84ikpk1h58wy14zzi1kwszv1hsnvpvnz14swkz54yrh9z7ng";
   };
 
-  buildInputs = [ ncurses readline flex texinfo help2man ];
+  buildInputs = [ ncurses readline ];
 
-  meta = with stdenv.lib; {
+  meta = {
     description = "A curses interface to gdb";
 
-    homepage = https://cgdb.github.io/;
+    homepage = http://cgdb.sourceforge.net/;
 
     repositories.git = git://github.com/cgdb/cgdb.git;
 
-    license = licenses.gpl2Plus;
+    license = stdenv.lib.licenses.gpl2Plus;
 
-    platforms = with platforms; linux ++ cygwin;
-    maintainers = with maintainers; [ viric vrthra ];
+    platforms = with stdenv.lib.platforms; linux ++ cygwin;
+    maintainers = with stdenv.lib.maintainers; [ viric ];
   };
 }

@@ -8,8 +8,6 @@ stdenv.mkDerivation rec {
     sha256 = "08qd9s3wfhv0ajswsylnfwr5h0d7j9d4rgip855nrh400nxp940p";
   };
 
-  outputs = [ "bin" "dev" "out" "doc" ];
-
   nativeBuildInputs = [ gettext ];
   buildInputs = [ attr ];
 
@@ -27,6 +25,5 @@ stdenv.mkDerivation rec {
   meta = {
     homepage = http://savannah.nongnu.org/projects/acl;
     description = "Library and tools for manipulating access control lists";
-    platforms = stdenv.lib.platforms.linux;
   };
 }

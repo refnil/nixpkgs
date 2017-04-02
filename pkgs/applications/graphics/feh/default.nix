@@ -1,45 +1,30 @@
-{ stdenv, fetchurl, makeWrapper
-, xorg, imlib2, libjpeg, libpng
-, curl, libexif, perlPackages }:
-
-with stdenv.lib;
+{ stdenv, makeWrapper, fetchurl, x11, imlib2, libjpeg, libpng
+, libXinerama, curl }:
 
 stdenv.mkDerivation rec {
-  name = "feh-${version}";
-  version = "2.18.2";
+  name = "feh-2.12";
 
   src = fetchurl {
     url = "http://feh.finalrewind.org/${name}.tar.bz2";
-    sha256 = "09f5rfzls4h5jcrp7ylwbiljp5qzc2nbw9p2csv0pnlaixj69gil";
+    sha256 = "0ckhidmsms2l5jycp0qf71jzmb3bpbhjq3bcgfpvfvszah7pmq30";
   };
 
-  outputs = [ "out" "doc" ];
-
-  nativeBuildInputs = [ makeWrapper xorg.libXt ]
-    ++ optionals doCheck [ perlPackages.TestCommand perlPackages.TestHarness ];
-
-  buildInputs = [ xorg.libX11 xorg.libXinerama imlib2 libjpeg libpng curl libexif ];
+  buildInputs = [makeWrapper x11 imlib2 libjpeg libpng libXinerama curl];
 
   preBuild = ''
-    makeFlags="PREFIX=$out exif=1"
-      '';
-
-  postInstall = ''
-    wrapProgram "$out/bin/feh" --prefix PATH : "${libjpeg.bin}/bin" \
-                               --add-flags '--theme=feh' 
-        '';
-  
-  checkPhase = ''
-    PERL5LIB="${perlPackages.TestCommand}/lib/perl5/site_perl" make test
+    makeFlags="PREFIX=$out"
   '';
 
-  doCheck = true;
+  postInstall = ''
+    wrapProgram "$out/bin/feh" --prefix PATH : "${libjpeg}/bin" \
+                               --add-flags '--theme=feh'
+  '';
 
   meta = {
     description = "A light-weight image viewer";
     homepage = https://derf.homelinux.org/projects/feh/;
-    license = licenses.mit;
-    maintainers = [ maintainers.viric ];
-    platforms = platforms.unix;
+    license = "BSD";
+    maintainers = with stdenv.lib.maintainers; [viric];
+    platforms = with stdenv.lib.platforms; linux;
   };
 }

@@ -8,7 +8,7 @@ stdenv.mkDerivation rec {
     sha256 = "0b5nhl9vvif1w3wdipjsk8ckw49jj1w85xw1mmqi3zbcpazia306";
   };
 
-  hardeningDisable = [ "format" ];
+  doCheck = true;
 
   meta = {
     description = "Unix-unix cp over serial line, also includes cu program";

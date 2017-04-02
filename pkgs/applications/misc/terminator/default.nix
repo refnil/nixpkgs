@@ -1,27 +1,27 @@
-{ stdenv, fetchurl, pythonPackages, pango, keybinder, vte, gettext, intltool, file
+{ stdenv, fetchurl, python, pygtk, notify, keybinder, vte, gettext, intltool
+, makeWrapper
 }:
 
-pythonPackages.buildPythonApplication rec {
+stdenv.mkDerivation rec {
   name = "terminator-${version}";
-  version = "1.0";
-
+  version = "0.97";
+  
   src = fetchurl {
     url = "https://launchpad.net/terminator/trunk/${version}/+download/${name}.tar.gz";
-    sha256 = "1pfspcxsbax8a835kcld32fax6vcxsn1fmkny9zzvi4icplhkal8";
+    sha256 = "1xykpx10g2zssx0ss6351ca6vmmma7zwxxhjz0fg28ps4dq88cci";
   };
-
-  nativeBuildInputs = [ file intltool ];
-
-  pythonPath = with pythonPackages; [
-    pygtk pygobject2 vte keybinder notify gettext pango psutil
+  
+  buildInputs = [
+    python pygtk notify keybinder vte gettext intltool makeWrapper
   ];
 
-  postPatch = ''
-    patchShebangs .
-  '';
+  installPhase = ''
+    python setup.py --without-icon-cache install --prefix="$out"
 
-  checkPhase = ''
-    ./run_tests
+    for file in "$out"/bin/*; do
+        wrapProgram "$file" \
+            --prefix PYTHONPATH : "$(toPythonPath $out):$PYTHONPATH"
+    done
   '';
 
   meta = with stdenv.lib; {
@@ -34,7 +34,7 @@ pythonPackages.buildPythonApplication rec {
     '';
     homepage = http://gnometerminator.blogspot.no/p/introduction.html;
     license = licenses.gpl2;
-    maintainers = with maintainers; [ bjornfor globin ];
+    maintainers = [ maintainers.bjornfor ];
     platforms = platforms.linux;
   };
 }

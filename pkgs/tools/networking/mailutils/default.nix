@@ -1,6 +1,7 @@
 { fetchurl, stdenv, gettext, gdbm, libtool, pam, readline
-, ncurses, gnutls, sasl, fribidi, gss , mysql, guile, texinfo,
-  gnum4, dejagnu, nettools }:
+, ncurses, gnutls, mysql, guile, texinfo, gnum4, dejagnu }:
+
+/* TODO: Add GNU SASL, GNU GSSAPI, and FreeBidi.  */
 
 stdenv.mkDerivation rec {
   name = "mailutils-2.2";
@@ -10,24 +11,18 @@ stdenv.mkDerivation rec {
     sha256 = "0szbqa12zqzldqyw97lxqax3ja2adis83i7brdfsxmrfw68iaf65";
   };
 
-  hardeningDisable = [ "format" ];
-
-  patches = [ ./path-to-cat.patch ./no-gets.patch ./scm_c_string.patch ];
-
-  configureFlags = [
-    "--with-gsasl"
-    "--with-gssapi=${gss}"
-  ];
+  patches = [ ./path-to-cat.patch ./no-gets.patch ];
 
   buildInputs =
    [ gettext gdbm libtool pam readline ncurses
-     gnutls mysql.lib guile texinfo gnum4 sasl fribidi gss nettools ]
+     gnutls mysql guile texinfo gnum4 ]
    ++ stdenv.lib.optional doCheck dejagnu;
 
-  doCheck = true;
+  # Tests fail since gcc 4.8
+  doCheck = false;
 
-  meta = with stdenv.lib; {
-    description = "Rich and powerful protocol-independent mail framework";
+  meta = {
+    description = "GNU Mailutils is a rich and powerful protocol-independent mail framework";
 
     longDescription = ''
       GNU Mailutils is a rich and powerful protocol-independent mail
@@ -49,16 +44,13 @@ stdenv.mkDerivation rec {
       message handling system.
     '';
 
-    license = with licenses; [
-      lgpl3Plus /* libraries */
-      gpl3Plus /* tools */
-    ];
+    license = [ "LGPLv3+" /* libraries */  "GPLv3+" /* tools */ ];
 
-    maintainers = with maintainers; [ vrthra ];
+    maintainers = [ stdenv.lib.maintainers.ludo ];
 
     homepage = http://www.gnu.org/software/mailutils/;
 
     # Some of the dependencies fail to build on {cyg,dar}win.
-    platforms = platforms.gnu;
+    platforms = stdenv.lib.platforms.gnu;
   };
 }

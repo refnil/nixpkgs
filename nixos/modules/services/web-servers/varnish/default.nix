@@ -28,7 +28,7 @@ with lib;
       };
 
       stateDir = mkOption {
-        default = "/var/spool/varnish/${config.networking.hostName}";
+        default = "/var/spool/varnish";
         description = "
           Directory holding all state for Varnish to run.
         ";
@@ -45,9 +45,6 @@ with lib;
       preStart = ''
         mkdir -p ${cfg.stateDir}
         chown -R varnish:varnish ${cfg.stateDir}
-      '';
-      postStop = ''
-        rm -rf ${cfg.stateDir}
       '';
       path = [ pkgs.gcc ];
       serviceConfig.ExecStart = "${pkgs.varnish}/sbin/varnishd -a ${cfg.http_address} -f ${pkgs.writeText "default.vcl" cfg.config} -n ${cfg.stateDir} -u varnish";

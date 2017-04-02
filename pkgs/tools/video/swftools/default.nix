@@ -1,24 +1,18 @@
-{ stdenv, fetchurl, freetype, libjpeg, libungif, zlib }:
+{ stdenv, fetchurl, zlib }:
 
-with stdenv.lib;
-stdenv.mkDerivation rec {
-  name = "swftools-${version}";
-  version = "0.9.2";
+stdenv.mkDerivation {
+  name = "swftools-0.8.1";
 
   src = fetchurl {
-    url = "http://www.swftools.org/${name}.tar.gz";
-    sha256 = "1w81dyi81019a6jmnm5z7fzarswng27lg1d4k4d5llxzqszr2s5z";
+    url = http://www.swftools.org/swftools-0.8.1.tar.gz;
+    sha256 = "0l75c3ibwd24g9nqghp1rv1dfrlicw87s0rbdnyffjv4izz6gc2l";
   };
 
-  patches = [ ./swftools.patch ];
+  buildInputs = [ zlib ];
 
-  buildInputs = [ freetype libjpeg libungif zlib ];
-
-  meta = {
+  meta = { 
     description = "Collection of SWF manipulation and creation utilities";
     homepage = http://www.swftools.org/about.html;
-    license = licenses.gpl2;
-    maintainers = [ maintainers.koral ];
-    platforms = stdenv.lib.platforms.unix;
+    license = stdenv.lib.licenses.gpl2;
   };
 }

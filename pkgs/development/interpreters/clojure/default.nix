@@ -1,13 +1,13 @@
 { stdenv, fetchurl, unzip, ant, jdk, makeWrapper }:
 
-let version = "1.8.0"; in
+let version = "1.6.0"; in
 
 stdenv.mkDerivation {
   name = "clojure-${version}";
 
   src = fetchurl {
     url = "http://repo1.maven.org/maven2/org/clojure/clojure/${version}/clojure-${version}.zip";
-    sha256 = "1nip095fz5c492sw15skril60i1vd21ibg6szin4jcvyy3xr6cym";
+    sha256 = "0yv67gackrzlwn9f8cnpw14y2hwspklxhy1450rl71vdrqjahlwq";
   };
 
   buildInputs = [ unzip ant jdk makeWrapper ];
@@ -44,6 +44,5 @@ stdenv.mkDerivation {
       system that ensure clean, correct, multithreaded designs.
     '';
     maintainers = with stdenv.lib.maintainers; [ the-kenny ];
-    platforms = with stdenv.lib.platforms; unix;
   };
 }

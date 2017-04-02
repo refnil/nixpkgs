@@ -1,6 +1,6 @@
 { stdenv, fetchurl, pythonPackages }:
 
-pythonPackages.buildPythonApplication rec {
+pythonPackages.buildPythonPackage rec {
   name = "lastfmsubmitd-${version}";
   namePrefix = ""; 
   version = "1.0.6";

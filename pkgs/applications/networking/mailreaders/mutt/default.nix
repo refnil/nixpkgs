@@ -1,71 +1,62 @@
 { stdenv, fetchurl, ncurses, which, perl
+, sslSupport ? true
+, imapSupport ? true
+, headerCache ? true
+, saslSupport ? true
+, gpgmeSupport ? true
 , gdbm ? null
 , openssl ? null
 , cyrus_sasl ? null
 , gpgme ? null
-, headerCache  ? true
-, sslSupport   ? true
-, saslSupport  ? true
-, gpgmeSupport ? true
-, imapSupport  ? true
-, withSidebar  ? true
 }:
 
-assert headerCache  -> gdbm       != null;
-assert sslSupport   -> openssl    != null;
-assert saslSupport  -> cyrus_sasl != null;
-assert gpgmeSupport -> gpgme      != null;
+assert headerCache -> gdbm != null;
+assert sslSupport -> openssl != null;
+assert saslSupport -> cyrus_sasl != null;
 
-with stdenv.lib;
-
+let
+  version = "1.5.23";
+in
 stdenv.mkDerivation rec {
   name = "mutt-${version}";
-  version = "1.8.0";
-
+  
   src = fetchurl {
-    url = "http://ftp.mutt.org/pub/mutt/${name}.tar.gz";
-    sha256 = "1axdcylyv0p194y6lj1jx127g5yc74zqzzxdc014cjw02bd1x125";
+    url = "mirror://sourceforge/mutt/${name}.tar.gz";
+    sha256 = "0dzx4qk50pjfsb6cs5jahng96a52k12f7pm0sc78iqdrawg71w1s";
   };
 
-  patchPhase = optionalString (openssl != null) ''
-    sed -i 's#/usr/bin/openssl#${openssl}/bin/openssl#' smime_keys.pl
-  '';
-
-  buildInputs =
-    [ ncurses which perl ]
-    ++ optional headerCache  gdbm
-    ++ optional sslSupport   openssl
-    ++ optional saslSupport  cyrus_sasl
-    ++ optional gpgmeSupport gpgme;
-
+  buildInputs = [
+    ncurses which perl
+    (if headerCache then gdbm else null)
+    (if sslSupport then openssl else null)
+    (if saslSupport then cyrus_sasl else null)
+    (if gpgmeSupport then gpgme else null)
+  ];
+  
   configureFlags = [
-    (enableFeature headerCache  "hcache")
-    (enableFeature gpgmeSupport "gpgme")
-    (enableFeature imapSupport  "imap")
-    (enableFeature withSidebar  "sidebar")
-    "--enable-smtp"
-    "--enable-pop"
-    "--enable-imap"
-    "--with-mailpath="
-
-    # Look in $PATH at runtime, instead of hardcoding /usr/bin/sendmail
-    "ac_cv_path_SENDMAIL=sendmail"
+    "--with-mailpath=" "--enable-smtp"
 
     # This allows calls with "-d N", that output debug info into ~/.muttdebug*
     "--enable-debug"
+
+    "--enable-pop" "--enable-imap"
 
     # The next allows building mutt without having anything setgid
     # set by the installer, and removing the need for the group 'mail'
     # I set the value 'mailbox' because it is a default in the configure script
     "--with-homespool=mailbox"
-  ] ++ optional sslSupport  "--with-ssl"
-    ++ optional saslSupport "--with-sasl";
+    (if headerCache then "--enable-hcache" else "--disable-hcache")
+    (if sslSupport then "--with-ssl" else "--without-ssl")
+    (if imapSupport then "--enable-imap" else "--disable-imap")
+    (if saslSupport then "--with-sasl" else "--without-sasl")
+    (if gpgmeSupport then "--enable-gpgme" else "--disable-gpgme")
+  ];
 
-  meta = {
+  meta = with stdenv.lib; {
     description = "A small but very powerful text-based mail client";
     homepage = http://www.mutt.org;
-    license = licenses.gpl2Plus;
+    license = stdenv.lib.licenses.gpl2Plus;
     platforms = platforms.unix;
-    maintainers = with maintainers; [ the-kenny rnhmjoj ];
+    maintainers = with maintainers; [ the-kenny ];
   };
 }

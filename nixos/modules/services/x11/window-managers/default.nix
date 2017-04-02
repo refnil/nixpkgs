@@ -7,32 +7,17 @@ let
 in
 
 {
-  imports = [
-    ./2bwm.nix
-    ./afterstep.nix
-    ./bspwm.nix
-    ./compiz.nix
-    ./dwm.nix
-    ./exwm.nix
-    ./fluxbox.nix
-    ./herbstluftwm.nix
-    ./i3.nix
-    ./jwm.nix
-    ./metacity.nix
-    ./mwm.nix
-    ./openbox.nix
-    ./pekwm.nix
-    ./notion.nix
-    ./ratpoison.nix
-    ./sawfish.nix
-    ./stumpwm.nix
-    ./spectrwm.nix
-    ./twm.nix
-    ./windowmaker.nix
-    ./wmii.nix
-    ./xmonad.nix
-    ./qtile.nix
-    ./none.nix ];
+  imports =
+    [ ./compiz.nix
+      ./openbox.nix
+      ./metacity.nix
+      ./none.nix
+      ./twm.nix
+      ./wmii.nix
+      ./xmonad.nix
+      ./i3.nix
+      ./herbstluftwm.nix
+    ];
 
   options = {
 

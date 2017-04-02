@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, unzip, ant, jdk7, makeWrapper }:
+{ stdenv, fetchurl, unzip, ant, jdk, makeWrapper }:
 
 let
   version = "3.7.2";
@@ -13,7 +13,7 @@ stdenv.mkDerivation rec {
     sha256 = "0swyysbyfmv068x8q1c5jqpwk5zb4xahg17aypx5rwb660f8fpbm";
   };
 
-  buildInputs = [ unzip ant jdk7 makeWrapper ];
+  buildInputs = [ unzip ant jdk makeWrapper ];
 
   unpackPhase = ''
     mkdir "${name}"
@@ -29,7 +29,7 @@ stdenv.mkDerivation rec {
     cp -v *.jar $out/share/java
 
     mkdir -pv $out/bin
-    makeWrapper ${jdk7.jre}/bin/java $out/bin/ecj \
+    makeWrapper ${jdk.jre}/bin/java $out/bin/ecj \
       --add-flags "-cp $out/share/java/ecj.jar org.eclipse.jdt.internal.compiler.batch.Main"
 
     # Add a setup hook that causes Ant to use the ECJ.
@@ -52,8 +52,8 @@ stdenv.mkDerivation rec {
     homepage = http://www.eclipse.org/jdt/core/index.php;
 
     # http://www.eclipse.org/legal/epl-v10.html (free software, copyleft)
-    license = stdenv.lib.licenses.epl10;
+    license = "EPLv1.0";
 
-    platforms = stdenv.lib.platforms.linux ++ stdenv.lib.platforms.darwin;
+    platforms = stdenv.lib.platforms.linux;
   };
 }

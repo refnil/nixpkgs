@@ -41,18 +41,18 @@ in
 
       dates = mkOption {
         default = "*:0/15";
-        type = types.str;
+        type = types.string;
         description = ''
           Specification (in the format described by
           <citerefentry><refentrytitle>systemd.time</refentrytitle>
-          <manvolnum>7</manvolnum></citerefentry>) of the time at
+          <manvolnum>5</manvolnum></citerefentry>) of the time at
           which the Venus will collect feeds.
         '';
       };
 
       user = mkOption {
         default = "root";
-        type = types.str;
+        type = types.string;
         description = ''
           User for running venus script.
         '';
@@ -60,7 +60,7 @@ in
 
       group = mkOption {
         default = "root";
-        type = types.str;
+        type = types.string;
         description = ''
           Group for running venus script.
         '';
@@ -68,7 +68,7 @@ in
 
       name = mkOption {
         default = "NixOS Planet";
-        type = types.str;
+        type = types.string;
         description = ''
           Your planet's name.
         '';
@@ -76,7 +76,7 @@ in
 
       link = mkOption {
         default = "http://planet.nixos.org";
-        type = types.str;
+        type = types.string;
         description = ''
           Link to the main page.
         '';
@@ -84,7 +84,7 @@ in
 
       ownerName = mkOption {
         default = "Rok Garbas";
-        type = types.str;
+        type = types.string;
         description = ''
           Your name.
         '';
@@ -92,7 +92,7 @@ in
 
       ownerEmail = mkOption {
         default = "some@example.com";
-        type = types.str;
+        type = types.string;
         description = ''
           Your e-mail address.
         '';
@@ -166,6 +166,7 @@ in
         script = "exec venus-planet ${configFile}";
         serviceConfig.User = "${cfg.user}";
         serviceConfig.Group = "${cfg.group}";
+        environment.OPENSSL_X509_CERT_FILE = "/etc/ssl/certs/ca-bundle.crt";
         startAt = cfg.dates;
       };
 

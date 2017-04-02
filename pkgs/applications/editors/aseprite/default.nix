@@ -43,5 +43,6 @@ stdenv.mkDerivation rec {
     homepage = "http://www.aseprite.org/";
     license = stdenv.lib.licenses.gpl2Plus;
     platforms = stdenv.lib.platforms.linux;
+    maintainers = with stdenv.lib.maintainers; [iyzsong];
   };
 }

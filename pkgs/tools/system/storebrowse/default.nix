@@ -28,19 +28,18 @@ stdenv.mkDerivation rec {
     GOSQLITE=$GOPATH/src/code.google.com/p/gosqlite
     mkdir -p $GOSQLITE
     cp -R $srcGoSqlite/* $GOSQLITE/
-    export CGO_CFLAGS=-I${sqlite.dev}/include
-    export CGO_LDFLAGS=-L${sqlite.out}/lib
-    go build -ldflags "-r ${sqlite.out}/lib" -o storebrowse
+    export CGO_CFLAGS=-I${sqlite}/include
+    export CGO_LDFLAGS=-L${sqlite}/lib
+    go build -ldflags "-r ${sqlite}/lib" -o storebrowse
   '';
 
   installPhase = ''
-    mkdir -p $out/bin
+    ensureDir $out/bin
     cp storebrowse $out/bin
   '';
 
   meta = {
     homepage = http://viric.name/cgi-bin/storebrowse;
     license = stdenv.lib.licenses.agpl3Plus;
-    broken = true;
   };
 }

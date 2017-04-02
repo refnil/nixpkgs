@@ -19,7 +19,7 @@ in
 stdenv.mkDerivation ({
   name = stdenv.lib.replaceChars [" "] [""] name;
 
-  ANDROID_HOME = "${androidsdkComposition}/libexec";
+  ANDROID_HOME = "${androidsdkComposition}/libexec/android-sdk-${platformName}";
 
   buildInputs = [ jdk ant ] ++
     stdenv.lib.optional useNDK [ androidndk gnumake gawk file which ];
@@ -39,7 +39,7 @@ stdenv.mkDerivation ({
     ${if useNDK then ''
         export GNUMAKE=${gnumake}/bin/make
         export NDK_HOST_AWK=${gawk}/bin/gawk
-        ${androidndk}/bin/ndk-build
+        ${androidndk}/ndk-build
       '' else ""}
     ant ${antFlags} ${if release then "release" else "debug"}
   '';

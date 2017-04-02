@@ -13,7 +13,8 @@ stdenv.mkDerivation rec {
   preConfigure = "configureFlags=--mandir=$out/share/man";
 
   meta = {
-    description = "Utilities for encoding and decoding binary files in MIME";
-    platforms = stdenv.lib.platforms.linux;
+    description = "utilities for encoding and decoding binary files in MIME";
+    maintainers = [ stdenv.lib.maintainers.simons ];
+    platforms = stdenv.lib.platforms.unix;
   };
 }

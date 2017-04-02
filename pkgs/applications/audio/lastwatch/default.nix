@@ -1,6 +1,6 @@
-{ stdenv, fetchgit, python2Packages }:
+{ stdenv, fetchgit, pythonPackages }:
 
-python2Packages.buildPythonApplication rec {
+pythonPackages.buildPythonPackage rec {
   name = "lastwatch-${version}";
   namePrefix = "";
   version = "0.4.1";
@@ -8,19 +8,20 @@ python2Packages.buildPythonApplication rec {
   src = fetchgit {
     url = "git://github.com/aszlig/LastWatch.git";
     rev = "refs/tags/v${version}";
-    sha256 = "0nlng3595j5jvnikk8i5hb915zak5zsmfn2306cc4gfcns9xzjwp";
+    sha256 = "c43f0fd87e9f3daafc7e8676daf2e89c8e21fbabc278eb1455e28d2997587a92";
   };
 
-  propagatedBuildInputs = with python2Packages; [
-    pyinotify
-    pylast
-    mutagen
+  pythonPath = [
+    pythonPackages.pyinotify
+    pythonPackages.pylast
+    pythonPackages.mutagen
   ];
+
+  propagatedBuildInputs = pythonPath;
 
   meta = {
     homepage = "https://github.com/aszlig/LastWatch";
     description = "An inotify-based last.fm audio scrobbler";
     license = stdenv.lib.licenses.gpl2;
-    platforms = stdenv.lib.platforms.linux;
   };
 }

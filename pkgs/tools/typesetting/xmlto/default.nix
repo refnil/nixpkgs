@@ -1,12 +1,12 @@
 { fetchurl, stdenv, flex, libxml2, libxslt
-, docbook_xml_dtd_45, docbook_xsl, w3m
+, docbook_xml_dtd_42, docbook_xsl, w3m
 , bash, getopt, makeWrapper }:
 
 stdenv.mkDerivation rec {
-  name = "xmlto-0.0.28";
+  name = "xmlto-0.0.25";
   src = fetchurl {
     url = "http://fedorahosted.org/releases/x/m/xmlto/${name}.tar.bz2";
-    sha256 = "0xhj8b2pwp4vhl9y16v3dpxpsakkflfamr191mprzsspg4xdyc0i";
+    sha256 = "0dp5nxq491gymq806za0dk4hngfmq65ysrqbn0ypajqbbl6vf71n";
   };
 
   patchPhase = ''
@@ -20,12 +20,11 @@ stdenv.mkDerivation rec {
 
   # `libxml2' provides `xmllint', needed at build-time and run-time.
   # `libxslt' provides `xsltproc', used by `xmlto' at run-time.
-  nativeBuildInputs = [ makeWrapper ];
-  buildInputs = [ libxml2 libxslt docbook_xml_dtd_45 docbook_xsl getopt ];
+  buildInputs = [ libxml2 libxslt docbook_xml_dtd_42 docbook_xsl getopt makeWrapper ];
 
   postInstall = ''
     wrapProgram "$out/bin/xmlto" \
-       --prefix PATH : "${stdenv.lib.makeBinPath [ libxslt libxml2 getopt ]}"
+       --prefix PATH : "${libxslt}/bin:${libxml2}/bin:${getopt}/bin"
 
     # `w3m' is needed for HTML to text conversions.
     substituteInPlace "$out/share/xmlto/format/docbook/txt" \
@@ -33,7 +32,7 @@ stdenv.mkDerivation rec {
   '';
 
   meta = {
-    description = "Front-end to an XSL toolchain";
+    description = "xmlto, a front-end to an XSL toolchain";
 
     longDescription = ''
       xmlto is a front-end to an XSL toolchain.  It chooses an
@@ -44,6 +43,5 @@ stdenv.mkDerivation rec {
 
     license = stdenv.lib.licenses.gpl2Plus;
     homepage = https://fedorahosted.org/xmlto/;
-    platforms = stdenv.lib.platforms.unix;
   };
 }

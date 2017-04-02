@@ -1,36 +1,56 @@
-{ stdenv, fetchurl, pkgconfig, ptlib, srtp, libtheora, speex
-, ffmpeg, x264, cyrus_sasl, openldap, openssl, expat, unixODBC }:
+x@{builderDefsPackage
+  , doxygen, pkgconfig, ptlib, srtp, libtheora, speex
+  , ffmpeg, x264, cyrus_sasl, openldap, openssl, expat, unixODBC
+  , ...}:
+builderDefsPackage
+(a :  
+let 
+  helperArgNames = ["stdenv" "fetchurl" "builderDefsPackage"] ++ 
+    [];
 
-stdenv.mkDerivation rec {
-  name = "opal-3.10.10";
-
-  src = fetchurl {
-    url = "mirror://gnome/sources/opal/3.10/${name}.tar.xz";
-    sha256 = "f208985003461b2743575eccac13ad890b3e5baac35b68ddef17162460aff864";
+  buildInputs = map (n: builtins.getAttr n x)
+    (builtins.attrNames (builtins.removeAttrs x helperArgNames));
+  sourceInfo = rec {
+    baseName="opal";
+    baseVersion="3.6";
+    patchlevel="8";
+    version="${baseVersion}.${patchlevel}";
+    name="${baseName}-${version}";
+    url="mirror://gnome/sources/${baseName}/${baseVersion}/${name}.tar.bz2";
+    hash="0359wqmrxqajd94sw3q2dn6n6y3caggavwdcmzyn6maw7srspgwc";
+  };
+in
+rec {
+  src = a.fetchurl {
+    url = sourceInfo.url;
+    sha256 = sourceInfo.hash;
   };
 
-  buildInputs = [ pkgconfig ptlib srtp libtheora speex
-                  ffmpeg x264 cyrus_sasl openldap openssl expat unixODBC ];
-  propagatedBuildInputs = [ speex ]; 
+  inherit (sourceInfo) name version;
+  inherit buildInputs;
 
-  configureFlags = [ "--enable-h323" ];
-
-  enableParallelBuilding = true;
-
-  NIX_CFLAGS = "-D__STDC_CONSTANT_MACROS=1";
-
-  patches = [ ./disable-samples-ftbfs.diff ./libav9.patch ./libav10.patch ];
+  /* doConfigure should be removed if not needed */
+  phaseNames = ["setVars" "doConfigure" "doMakeInstall"];
+  configureFlags = [
+    "--enable-h323"
+  ];
+  setVars = a.noDepEntry (''
+    export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE -D__STDC_CONSTANT_MACROS=1"
+  '');
       
-  meta = with stdenv.lib; {
-    description = "VoIP library";
-    maintainers = [ maintainers.raskin ];
-    platforms = platforms.linux;
+  meta = {
+    description = "OPAL VoIP library";
+    maintainers = with a.lib.maintainers;
+    [
+      raskin
+    ];
+    platforms = with a.lib.platforms;
+      linux;
   };
-
   passthru = {
     updateInfo = {
       downloadPage = "http://ftp.gnome.org/pub/GNOME/sources/opal";
     };
   };
-}
+}) x
 

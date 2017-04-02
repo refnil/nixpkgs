@@ -1,13 +1,12 @@
 { fetchurl, stdenv, libX11, xproto, libXext, xextproto, libXtst
-, gtk2, libXi, inputproto, pkgconfig, recordproto, texinfo }:
+, gtk, libXi, inputproto, pkgconfig, recordproto, texinfo }:
 
 stdenv.mkDerivation rec {
-  version = "3.19";
-  name = "xnee-${version}";
+  name = "xnee-3.12";
 
   src = fetchurl {
     url = "mirror://gnu/xnee/${name}.tar.gz";
-    sha256 = "04n2lac0vgpv8zsn7nmb50hf3qb56pmj90dmwnivg09gyrf1x92j";
+    sha256 = "10vxn0in0l2jir6x90grx5jc64x63l3b0f8liladdbplc8za8zmw";
   };
 
   patchPhase =
@@ -18,7 +17,7 @@ stdenv.mkDerivation rec {
     '';
 
   buildInputs =
-    [ libX11 xproto libXext xextproto libXtst gtk2
+    [ libX11 xproto libXext xextproto libXtst gtk
       libXi inputproto pkgconfig recordproto
       texinfo
     ];
@@ -35,7 +34,7 @@ stdenv.mkDerivation rec {
   doCheck = true;
 
   meta = {
-    description = "X11 event recording and replay tool";
+    description = "GNU Xnee, an X11 event recording and replay tool";
 
     longDescription =
       '' Xnee is a suite of programs that can record, replay and distribute
@@ -49,7 +48,7 @@ stdenv.mkDerivation rec {
 
     homepage = http://www.gnu.org/software/xnee/;
 
-    maintainers = with stdenv.lib.maintainers; [ fuuzetsu ];
+    maintainers = [ ];
     platforms = stdenv.lib.platforms.gnu;  # arbitrary choice
   };
 }

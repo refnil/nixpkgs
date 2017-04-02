@@ -2,14 +2,14 @@
 
 
 let
-  version = "2.5.1";
+  version = "2.3.0";
 in
 stdenv.mkDerivation {
   name = "rebar-${version}";
 
   src = fetchurl {
     url = "https://github.com/rebar/rebar/archive/${version}.tar.gz";
-    sha256 = "1y9b0smw0g5q197xf4iklzmcf8ad6w52p6mwzpf7b0ib1nd89jw6";
+    sha256 = "0g23ib96lalpmynx39fprlw08ivgyb7i6c6a8jvgqwr9jmd0nj06";
   };
 
   buildInputs = [ erlang ];
@@ -34,7 +34,7 @@ stdenv.mkDerivation {
       variety of locations (git, hg, etc).
       '';
 
-    platforms = stdenv.lib.platforms.unix;
+    platforms = stdenv.lib.platforms.linux;
     maintainers = [ stdenv.lib.maintainers.the-kenny ];
   };
 }

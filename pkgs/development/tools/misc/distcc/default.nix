@@ -1,26 +1,21 @@
-{ stdenv, fetchFromGitHub, popt, avahi, pkgconfig, python, gtk2, runCommand
-, gcc, autoconf, automake, which, procps, libiberty_static
+{ stdenv, fetchurl, popt, avahi, pkgconfig, python, gtk, runCommand, gcc
 , sysconfDir ? ""   # set this parameter to override the default value $out/etc
 , static ? false
 }:
 
 let
   name    = "distcc";
-  version = "2016-02-24";
+  version = "3.1";
   distcc = stdenv.mkDerivation {
     name = "${name}-${version}";
-    src = fetchFromGitHub {
-      owner = "distcc";
-      repo = "distcc";
-      rev = "b2fa4e21b4029e13e2c33f7b03ca43346f2cecb8";
-      sha256 = "1vj31wcdas8wy52hy6749mlrca9v6ynycdiigx5ay8pnya9z73c6";
+    src = fetchurl {
+      url = "http://distcc.googlecode.com/files/${name}-${version}.tar.bz2";
+      sha256 = "f55dbafd76bed3ce57e1bbcdab1329227808890d90f4c724fcd2d53f934ddd89";
     };
 
-    buildInputs = [popt avahi pkgconfig python gtk2 autoconf automake pkgconfig which procps libiberty_static];
+    buildInputs = [popt avahi pkgconfig python gtk];
     preConfigure =
     ''
-      export CPATH=$(ls -d ${gcc.cc}/lib/gcc/*/${gcc.cc.version}/plugin/include)
-
       configureFlagsArray=( CFLAGS="-O2 -fno-strict-aliasing"
                             CXXFLAGS="-O2 -fno-strict-aliasing"
           --mandir=$out/share/man
@@ -28,15 +23,14 @@ let
                             ${if static then "LDFLAGS=-static" else ""}
                             --with${if static == true || popt == null then "" else "out"}-included-popt
                             --with${if avahi != null then "" else "out"}-avahi
-                            --with${if gtk2 != null then "" else "out"}-gtk
+                            --with${if gtk != null then "" else "out"}-gtk
                             --without-gnome
                             --enable-rfc2553
                             --disable-Werror   # a must on gcc 4.6
                            )
       installFlags="sysconfdir=$out/etc";
-
-      ./autogen.sh
     '';
+    patches = [ ./20-minute-io-timeout.patch ];
 
     # The test suite fails because it uses hard-coded paths, i.e. /usr/bin/gcc.
     doCheck = false;
@@ -47,10 +41,11 @@ let
       #
       # extraConfig is meant to be sh lines exporting environment
       # variables like DISTCC_HOSTS, DISTCC_DIR, ...
-      links = extraConfig: (runCommand "distcc-links" { passthru.gcc = gcc.cc; }
+      links = extraConfig : (runCommand "distcc-links"
+          { inherit (gcc) langC langCC; }
         ''
           mkdir -p $out/bin
-          if [ -x "${gcc.cc}/bin/gcc" ]; then
+          if [ $langC -eq 1 ]; then
             cat > $out/bin/gcc << EOF
             #!/bin/sh
             ${extraConfig}
@@ -58,7 +53,7 @@ let
           EOF
             chmod +x $out/bin/gcc
           fi
-          if [ -x "${gcc.cc}/bin/g++" ]; then
+          if [ $langCC -eq 1 ]; then
             cat > $out/bin/g++ << EOF
             #!/bin/sh
             ${extraConfig}
@@ -70,12 +65,12 @@ let
     };
 
     meta = {
-      description = "A fast, free distributed C/C++ compiler";
+      description = "a fast, free distributed C/C++ compiler";
       homepage = "http://distcc.org";
       license = "GPL";
 
       platforms = stdenv.lib.platforms.linux;
-      maintainers = with stdenv.lib.maintainers; [ anderspapitto ];
+      maintainers = [ stdenv.lib.maintainers.simons ];
     };
   };
 in

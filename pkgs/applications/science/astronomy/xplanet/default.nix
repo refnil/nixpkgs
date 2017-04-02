@@ -17,7 +17,7 @@ stdenv.mkDerivation rec {
     description = "Renders an image of the earth or other planets into the X root window";
     homepage = http://xplanet.sourceforge.net;
     license = "GPL";
-    maintainers = [ stdenv.lib.maintainers.sander ];
+    maintainers = [ stdenv.lib.maintainers.sander stdenv.lib.maintainers.urkud ];
     platforms = stdenv.lib.platforms.all;
   };
 }

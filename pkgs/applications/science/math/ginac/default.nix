@@ -19,7 +19,7 @@ stdenv.mkDerivation rec {
   meta = with stdenv.lib; {
     description = "GiNaC is Not a CAS";
     homepage    = http://www.ginac.de/;
-    maintainers = with maintainers; [ lovek323 ];
+    maintainers = with maintainers; [ lovek323 urkud ];
     platforms   = platforms.all;
   };
 }

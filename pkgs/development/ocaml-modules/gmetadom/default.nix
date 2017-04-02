@@ -1,12 +1,14 @@
 {stdenv, fetchurl, ocaml, findlib, gdome2, libxslt, pkgconfig}:
 
 let
+  ocaml_version = (builtins.parseDrvName ocaml.name).version;
+  version = "0.2.6";
   pname = "gmetadom";
+
 in
 
-stdenv.mkDerivation rec {
+stdenv.mkDerivation {
   name = "${pname}-${version}";
-  version = "0.2.6";
 
   src = fetchurl {
     url = "mirror://sourceforge/project/${pname}/${pname}/${version}/${pname}-${version}.tar.gz";
@@ -18,7 +20,7 @@ stdenv.mkDerivation rec {
   dontDisableStatic = true;
 
   preConfigure=''
-    configureFlags="--with-ocaml-lib-prefix=$out/lib/ocaml/${ocaml.version}/site-lib"
+    configureFlags="--with-ocaml-lib-prefix=$out/lib/ocaml/${ocaml_version}/site-lib"
   '';
 
 
@@ -27,7 +29,7 @@ stdenv.mkDerivation rec {
 
   meta = {
     homepage = http://gmetadom.sourceforge.net/;
-    description = "A collection of librares, each library providing a DOM implementation";
+    description = "GMetaDOM is a collection of librares, each library providing a DOM implementation";
     license = stdenv.lib.licenses.lgpl21Plus;
     maintainers = [ stdenv.lib.maintainers.roconnor ];
   };

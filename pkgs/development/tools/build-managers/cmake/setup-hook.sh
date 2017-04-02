@@ -13,7 +13,7 @@ fixCmakeFiles() {
 }
 
 cmakeConfigurePhase() {
-    runHook preConfigure
+    eval "$preConfigure"
 
     if [ -z "$dontFixCmake" ]; then
         fixCmakeFiles .
@@ -36,17 +36,6 @@ cmakeConfigurePhase() {
         cmakeFlags="-DCMAKE_CXX_COMPILER=$crossConfig-g++ -DCMAKE_C_COMPILER=$crossConfig-gcc $cmakeFlags"
     fi
 
-    # This installs shared libraries with a fully-specified install
-    # name. By default, cmake installs shared libraries with just the
-    # basename as the install name, which means that, on Darwin, they
-    # can only be found by an executable at runtime if the shared
-    # libraries are in a system path or in the same directory as the
-    # executable. This flag makes the shared library accessible from its
-    # nix/store directory.
-    cmakeFlags="-DCMAKE_INSTALL_NAME_DIR=$prefix/lib $cmakeFlags"
-    cmakeFlags="-DCMAKE_INSTALL_LIBDIR=${!outputLib}/lib $cmakeFlags"
-    cmakeFlags="-DCMAKE_INSTALL_INCLUDEDIR=${!outputDev}/include $cmakeFlags"
-
     # Avoid cmake resetting the rpath of binaries, on make install
     # And build always Release, to ensure optimisation flags
     cmakeFlags="-DCMAKE_BUILD_TYPE=Release -DCMAKE_SKIP_BUILD_RPATH=ON $cmakeFlags"
@@ -55,11 +44,10 @@ cmakeConfigurePhase() {
 
     cmake ${cmakeDir:-.} $cmakeFlags "${cmakeFlagsArray[@]}"
 
-    runHook postConfigure
+    eval "$postConfigure"
 }
 
-if [ -z "$dontUseCmakeConfigure" -a -z "$configurePhase" ]; then
-    setOutputFlags=
+if [ -z "$dontUseCmakeConfigure" -a ! -v configurePhase ]; then
     configurePhase=cmakeConfigurePhase
 fi
 
@@ -70,25 +58,15 @@ else
 fi
 
 makeCmakeFindLibs(){
-  isystem_seen=
   for flag in $NIX_CFLAGS_COMPILE $NIX_LDFLAGS; do
-    if test -n "$isystem_seen" && test -d "$flag"; then
-      isystem_seen=
-      export CMAKE_INCLUDE_PATH="$CMAKE_INCLUDE_PATH${CMAKE_INCLUDE_PATH:+:}${flag}"
-    else
-      isystem_seen=
-      case $flag in
-        -I*)
-          export CMAKE_INCLUDE_PATH="$CMAKE_INCLUDE_PATH${CMAKE_INCLUDE_PATH:+:}${flag:2}"
-          ;;
-        -L*)
-          export CMAKE_LIBRARY_PATH="$CMAKE_LIBRARY_PATH${CMAKE_LIBRARY_PATH:+:}${flag:2}"
-          ;;
-        -isystem)
-          isystem_seen=1
-          ;;
-      esac
-    fi
+    case $flag in
+      -I*)
+        export CMAKE_INCLUDE_PATH="$CMAKE_INCLUDE_PATH${CMAKE_INCLUDE_PATH:+:}${flag:2}"
+        ;;
+      -L*)
+        export CMAKE_LIBRARY_PATH="$CMAKE_LIBRARY_PATH${CMAKE_LIBRARY_PATH:+:}${flag:2}"
+        ;;
+    esac
   done
 }
 

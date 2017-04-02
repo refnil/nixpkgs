@@ -1,26 +1,16 @@
 { stdenv, fetchurl }:
 
 stdenv.mkDerivation rec {
-  name = "xz-5.2.2";
+  name = "xz-5.0.5";
 
   src = fetchurl {
     url = "http://tukaani.org/xz/${name}.tar.bz2";
-    sha256 = "1da071wyx921pyx3zkxlnbpp14p6km98pnp66mg1arwi9dxgbxbg";
+    sha256 = "1404i59bp6rzxya0br1q9njdv32z4sggyfrkjr7vq695hk94hv0n";
   };
-
-  outputs = [ "bin" "dev" "out" "man" "doc" ];
 
   doCheck = true;
 
-  # In stdenv-linux, prevent a dependency on bootstrap-tools.
-  preConfigure = "unset CONFIG_SHELL";
-
-  postInstall = "rm -rf $out/share/doc";
-
-  # FIXME needs gcc 4.9 in bootstrap tools
-  hardeningDisable = [ "stackprotector" ];
-
-  meta = with stdenv.lib; {
+  meta = {
     homepage = http://tukaani.org/xz/;
     description = "XZ, general-purpose data compression software, successor of LZMA";
 
@@ -38,8 +28,8 @@ stdenv.mkDerivation rec {
          bzip2.
       '';
 
-    license = with licenses; [ gpl2Plus lgpl21Plus ];
-    maintainers = with maintainers; [ sander ];
-    platforms = platforms.all;
+    license = [ "GPLv2+" "LGPLv2.1+" ];
+    maintainers = with stdenv.lib.maintainers; [ sander ];
+    platforms = stdenv.lib.platforms.all;
   };
 }

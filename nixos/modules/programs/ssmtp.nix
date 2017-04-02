@@ -20,8 +20,8 @@ in
     networking.defaultMailServer = {
 
       directDelivery = mkOption {
-        type = types.bool;
         default = false;
+        example = true;
         description = ''
           Use the trivial Mail Transfer Agent (MTA)
           <command>ssmtp</command> package to allow programs to send
@@ -35,7 +35,6 @@ in
       };
 
       hostName = mkOption {
-        type = types.str;
         example = "mail.example.org";
         description = ''
           The host name of the default mail server to use to deliver
@@ -43,17 +42,7 @@ in
         '';
       };
 
-      root = mkOption {
-        type = types.str;
-        default = "";
-        example = "root@example.org";
-        description = ''
-          The e-mail to which mail for users with UID &lt; 1000 is forwarded.
-        '';
-      };
-
       domain = mkOption {
-        type = types.str;
         default = "";
         example = "example.org";
         description = ''
@@ -62,8 +51,8 @@ in
       };
 
       useTLS = mkOption {
-        type = types.bool;
         default = false;
+        example = true;
         description = ''
           Whether TLS should be used to connect to the default mail
           server.
@@ -71,8 +60,8 @@ in
       };
 
       useSTARTTLS = mkOption {
-        type = types.bool;
         default = false;
+        example = true;
         description = ''
           Whether the STARTTLS should be used to connect to the default
           mail server.  (This is needed for TLS-capable mail servers
@@ -81,7 +70,6 @@ in
       };
 
       authUser = mkOption {
-        type = types.str;
         default = "";
         example = "foo@example.org";
         description = ''
@@ -90,18 +78,11 @@ in
       };
 
       authPass = mkOption {
-        type = types.str;
         default = "";
         example = "correctHorseBatteryStaple";
         description = ''
           Password used for SMTP auth. (STORED PLAIN TEXT, WORLD-READABLE IN NIX STORE)
         '';
-      };
-      
-      setSendmail = mkOption {
-        type = types.bool;
-        default = true;
-        description = "Whether to set the system sendmail to ssmtp's.";
       };
 
     };
@@ -115,7 +96,6 @@ in
       ''
         MailHub=${cfg.hostName}
         FromLineOverride=YES
-        ${if cfg.root != "" then "root=${cfg.root}" else ""}
         ${if cfg.domain != "" then "rewriteDomain=${cfg.domain}" else ""}
         UseTLS=${if cfg.useTLS then "YES" else "NO"}
         UseSTARTTLS=${if cfg.useSTARTTLS then "YES" else "NO"}
@@ -125,13 +105,6 @@ in
       '';
 
     environment.systemPackages = [pkgs.ssmtp];
-    
-    services.mail.sendmailSetuidWrapper = mkIf cfg.setSendmail {
-      program = "sendmail";
-      source = "${pkgs.ssmtp}/bin/sendmail";
-      setuid = false;
-      setgid = false;
-    };
 
   };
 

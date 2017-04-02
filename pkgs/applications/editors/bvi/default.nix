@@ -1,21 +1,18 @@
 { stdenv, fetchurl, ncurses }:
 
-stdenv.mkDerivation rec {
-  name = "bvi-${version}";
-  version = "1.4.0";
+stdenv.mkDerivation {
+  name = "bvi-1.3.2";
 
   src = fetchurl {
-    url = "mirror://sourceforge/bvi/${name}.src.tar.gz";
-    sha256 = "00pq9rv7s8inqxq2m3xshxi58691i3pxw9smibcrgh6768l3qnh1";
+    url = mirror://sourceforge/bvi/bvi-1.3.2.src.tar.gz;
+    sha256 = "110wxqnyianqamxq4y53drqqxb9vp4k2fcvic45qggvlqkqhlfgz";
   };
 
   buildInputs = [ ncurses ];
 
-  meta = with stdenv.lib; {
+  meta = { 
     description = "Hex editor with vim style keybindings";
     homepage = http://bvi.sourceforge.net/download.html;
-    license = licenses.gpl2;
-    maintainers = with maintainers; [ pSub ];
-    platforms = platforms.linux;
+    license = stdenv.lib.licenses.gpl2;
   };
 }

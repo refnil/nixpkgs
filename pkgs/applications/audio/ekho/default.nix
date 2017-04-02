@@ -1,5 +1,5 @@
 { stdenv, fetchurl, pkgconfig
-, libsndfile, libpulseaudio
+, libsndfile, pulseaudio
 }:
 
 let
@@ -20,6 +20,7 @@ in stdenv.mkDerivation rec {
     license        = licenses.gpl2Plus;
     platforms      = platforms.linux;
     hydraPlatforms = [];
+    maintainers    = with maintainers; [ iyzsong ];
   };
 
   src = fetchurl {
@@ -34,5 +35,5 @@ in stdenv.mkDerivation rec {
 
   nativeBuildInputs = [ pkgconfig ];
 
-  buildInputs = [ libsndfile libpulseaudio ];
+  buildInputs = [ libsndfile pulseaudio ];
 }

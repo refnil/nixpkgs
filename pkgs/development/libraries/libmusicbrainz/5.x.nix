@@ -1,16 +1,13 @@
-{ stdenv, fetchFromGitHub, cmake, neon, libdiscid, libxml2, pkgconfig }:
+{ stdenv, fetchurl, cmake, neon, libdiscid }:
 
 stdenv.mkDerivation rec {
-  version = "5.1.0";
-  name = "libmusicbrainz-${version}";
+  name = "libmusicbrainz-5.0.1";
 
-  buildInputs = [ cmake neon libdiscid libxml2 pkgconfig ];
+  buildInputs = [ cmake neon libdiscid ];
 
-  src = fetchFromGitHub {
-    owner  = "metabrainz";
-    repo   = "libmusicbrainz";
-    sha256 = "0ah9kaf3g3iv1cps2vs1hs33nfbjfx1xscpjgxr1cg28p4ri6jhq";
-    rev    = "release-${version}";
+  src = fetchurl {
+    url = "https://github.com/downloads/metabrainz/libmusicbrainz/${name}.tar.gz";
+    md5 = "a0406b94c341c2b52ec0fe98f57cadf3";
   };
 
   dontUseCmakeBuildDir=true;
@@ -22,7 +19,7 @@ stdenv.mkDerivation rec {
       The libmusicbrainz (also known as mb_client or MusicBrainz Client
       Library) is a development library geared towards developers who wish to
       add MusicBrainz lookup capabilities to their applications.'';
-    maintainers = [ ];
+    maintainers = [ stdenv.lib.maintainers.urkud ];
     platforms = stdenv.lib.platforms.all;
   };
 }

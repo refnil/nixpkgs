@@ -1,30 +1,26 @@
-{ stdenv, fetchFromGitHub, autoreconfHook, pkgconfig, bison, flex
+{ stdenv, fetchurl, autoreconfHook, pkgconfig, bison, flex
 , python, swig2, tcl, libsepol, libselinux, libxml2, sqlite, bzip2 }:
 
 stdenv.mkDerivation rec {
-  name = "setools-2015-02-12";
+  name = "setools-3.3.8";
 
-  src = fetchFromGitHub {
-    owner = "TresysTechnology";
-    repo = "setools3";
-    rev = "f1e5b208d507171968ca4d2eeefd7980f1004a3c";
-    sha256 = "02gzy2kpszhr13f0d9qfiwh2hj4201g2x366j53v5n5qz481aykd";
+  src = fetchurl {
+    url = "http://oss.tresys.com/projects/setools/chrome/site/dists/${name}/${name}.tar.bz2";
+    sha256 = "16g987ijaxabc30zyjzia4nafq49rm038y1pm4vca7i3kb67wf24";
   };
 
-  configureFlags = [
-    "--disable-gui"
-    "--with-sepol-devel=${libsepol}"
-    "--with-selinux-devel=${libselinux}"
-    "--with-tcl=${tcl}/lib"
-  ];
+  # SWIG-TCL is broken in 3.3.8
+  configureFlags = ''
+    --with-tcl=${tcl}/lib
+    --with-sepol-devel=${libsepol}
+    --with-selinux-devel=${libselinux}
+    --disable-gui
+    --disable-swig-tcl
+  '';
 
-  hardeningDisable = [ "format" ];
+  buildInputs = [ autoreconfHook pkgconfig bison flex python swig2 ];
 
-  NIX_CFLAGS_COMPILE = "-fstack-protector-all";
-  NIX_LDFLAGS = "-L${libsepol}/lib -L${libselinux}/lib";
-
-  nativeBuildInputs = [ autoreconfHook pkgconfig python swig2 bison flex ];
-  buildInputs = [ tcl libxml2 sqlite bzip2 ];
+  nativeBuildInputs = [ tcl libsepol libselinux libxml2 sqlite bzip2 ];
 
   meta = {
     description = "SELinux Tools";

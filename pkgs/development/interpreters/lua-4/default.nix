@@ -5,14 +5,12 @@ stdenv.mkDerivation {
 
   src = fetchurl {
     url = http://www.lua.org/ftp/lua-4.0.1.tar.gz;
-    sha256 = "0ajd906hasii365xdihv9mdmi3cixq758blx0289x4znkha6wx6z";
+    md5 = "a31d963dbdf727f9b34eee1e0d29132c";
   };
 
   configurePhase = "sed -i -e 's/CFLAGS= -O2/CFLAGS = -O3 -fPIC/' config";
   buildFlags = "all so sobin";
   installFlags = "INSTALL_ROOT=$$out";
-
-  hardeningDisable = stdenv.lib.optional stdenv.isi686 "stackprotector";
 
   meta = {
     homepage = "http://www.lua.org";
@@ -26,7 +24,7 @@ stdenv.mkDerivation {
       for configuration, scripting, and rapid prototyping.
     '';
     license = stdenv.lib.licenses.mit;
-    platforms = stdenv.lib.platforms.linux;
-    branch = "4";
+    platforms = stdenv.lib.platforms.unix;
+    maintainers = [ ];
   };
 }

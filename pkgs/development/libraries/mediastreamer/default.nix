@@ -1,39 +1,20 @@
-{ stdenv, fetchurl, pkgconfig, intltool, alsaLib, libpulseaudio, speex, gsm
-, libopus, ffmpeg, libX11, libXv, mesa, glew, libtheora, libvpx, SDL, libupnp
-, ortp, libv4l, libpcap, srtp, fetchFromGitHub, cmake, bctoolbox, doxygen
-, python, libXext, libmatroska, openssl
-}:
+{ stdenv, fetchurl, pkgconfig, alsaLib, ffmpeg, speex, ortp, pulseaudio,
+libv4l, libtheora, intltool, libvpx, gsm, mesa, libX11, libXv, libXext,
+glew, libopus, libupnp, vim }:
 
 stdenv.mkDerivation rec {
-  baseName = "mediastreamer2";
-  version = "2.14.0";
-  name = "${baseName}-${version}";
+  name = "mediastreamer-2.10.0";
 
-  src = fetchFromGitHub {
-    owner = "BelledonneCommunications";
-    repo = "${baseName}";
-    rev = "${version}";
-    sha256 = "1b59rzsaw54mhy4pz9hndmim4rgidkn7s6c4iyl34mz58lwxpmqp";
+  src = fetchurl {
+    url = "mirror://savannah/linphone/mediastreamer/${name}.tar.gz";
+    sha256 = "1sp1vjcz0rx518l7cfmkb4802xa5wyylr2b5hxlpjk3ygg28g3c0";
   };
 
-  patches = [ ./plugins_dir.patch ];
+# TODO: make it load plugins from *_PLUGIN_PATH
+  nativeBuildInputs = [pkgconfig intltool];
 
-  nativeBuildInputs = [ pkgconfig intltool cmake doxygen python ];
+  propagatedBuildInputs = [ alsaLib ffmpeg speex ortp pulseaudio libX11
+    libXv libXext libv4l libtheora libvpx gsm mesa glew libopus libupnp vim ];
 
-  propagatedBuildInputs = [
-    alsaLib libpulseaudio speex gsm libopus
-    ffmpeg libX11 libXv mesa glew libtheora libvpx SDL libupnp
-    ortp libv4l libpcap srtp bctoolbox libXext libmatroska
-    openssl
-  ];
-
-  NIX_CFLAGS_COMPILE = " -DGIT_VERSION=\"v2.14.0\" -Wno-error=deprecated-declarations ";
-  NIX_LDFLAGS = " -lXext -lssl ";
-
-  meta = with stdenv.lib; {
-    description = "A powerful and lightweight streaming engine specialized for voice/video telephony applications";
-    homepage = http://www.linphone.org/technical-corner/mediastreamer2/overview;
-    license = licenses.gpl2;
-    platforms = platforms.linux;
-  };
+  configureFlags = "--enable-external-ortp";
 }

@@ -1,21 +1,21 @@
 { stdenv, fetchurl, pam, yacc, flex }:
 
 stdenv.mkDerivation rec {
-  name    = "libcgroup-${version}";
-  version = "0.41";
+  name = "libcgroup-0.38";
 
   src = fetchurl {
     url = "mirror://sourceforge/libcg/${name}.tar.bz2";
-    sha256 = "0lgvyq37gq84sk30sg18admxaj0j0p5dq3bl6g74a1ppgvf8pqz4";
+    sha256 = "0zw6144jlvzx0hasl4b07vjfa4lm12jaax6zzkljzxlmifjd2djx";
   };
 
-  buildInputs = [ pam yacc flex ];
+  buildInputs = [ pam ];
+
+  nativeBuildInputs = [ yacc flex ];
 
   meta = {
-    description = "Library and tools to manage Linux cgroups";
-    homepage    = "http://libcg.sourceforge.net/";
-    license     = stdenv.lib.licenses.lgpl2;
-    platforms   = stdenv.lib.platforms.linux;
-    maintainers = [ stdenv.lib.maintainers.thoughtpolice ];
+    description = "Library and tools to manage Linux's cgroup resource management system";
+    homepage = http://libcg.sourceforge.net/;
+    license = "LGPL";
+    platforms = stdenv.lib.platforms.linux;
   };
 }

@@ -1,55 +1,38 @@
-{ stdenv, fetchurl, automoc4, cmake, perl, pkgconfig, kdelibs4, lcms2, libpng, eigen
-, exiv2, boost, sqlite, icu, vc, shared_mime_info, librevenge, libodfgen, libwpg
-, libwpd, poppler_qt4, ilmbase, gsl, qca2, marble, libvisio, libmysql, postgresql
-, freetds, fftw, glew, libkdcraw, pstoedit, opencolorio, kdepimlibs
-, kactivities, okular, git, oxygen-icons5, makeWrapper
-# TODO: not found
-#, xbase, openjpeg
-# TODO: package libWPS, Spnav, m2mml, LibEtonyek
-}:
+{ stdenv, fetchurl, cmake, kdelibs, attica, perl, zlib, libpng, boost, mesa
+, kdepimlibs, createresources ? null, eigen, qca2, exiv2, soprano, marble, lcms2
+, fontconfig, freetype, sqlite, icu, libwpd, libwpg, pkgconfig, popplerQt4
+, libkdcraw, libxslt, fftw, glew, gsl, shared_desktop_ontologies, okular
+, libvisio, kactivities, mysql, postgresql, freetds, xbase, openexr, ilmbase
+ }:
 
 stdenv.mkDerivation rec {
-  name = "calligra-2.9.11";
+  name = "calligra-2.7.5";
 
   src = fetchurl {
     url = "mirror://kde/stable/${name}/${name}.tar.xz";
-    sha256 = "02gaahp7a7m53n0hvrp3868s8w37b457isxir0z7b4mwhw7jv3di";
+    sha256 = "0png8ac10xywxsml1z18as18kc9k9162l6an67hi6lgx0rv27ldi";
   };
 
-  nativeBuildInputs = [ automoc4 cmake perl pkgconfig makeWrapper ];
+  nativeBuildInputs = [ cmake perl pkgconfig ];
 
-  buildInputs = [
-    kdelibs4 lcms2 libpng eigen
-    exiv2 boost sqlite icu vc shared_mime_info librevenge libodfgen libwpg
-    libwpd poppler_qt4 ilmbase gsl qca2 marble libvisio libmysql postgresql
-    freetds fftw glew libkdcraw opencolorio kdepimlibs
-    kactivities okular git
-  ];
+#  patches = [ ./fix-kde4.10-build.patch ];
 
-  enableParallelBuilding = true;
+# TODO: package Vc, libWPS, OCIO, OpenShiva, QtShiva, Spnav, m2mml
+# TODO: not found popplerQt4
 
-  postInstall = ''
-    for i in $out/bin/*; do
-      wrapProgram $i \
-        --prefix PATH ':' "${pstoedit.out}/bin" \
-        --prefix XDG_DATA_DIRS ':' "${oxygen-icons5}/share"
-    done
-  '';
+  buildInputs = [ kdelibs attica zlib libpng boost mesa kdepimlibs
+    createresources eigen qca2 exiv2 soprano marble lcms2 fontconfig freetype
+    sqlite icu libwpd libwpg popplerQt4 libkdcraw libxslt fftw glew gsl
+    shared_desktop_ontologies okular 
+    libvisio kactivities mysql postgresql freetds xbase openexr
+];
 
-  meta = with stdenv.lib; {
-    description = "A suite of productivity applications";
-    longDescription = ''
-      Calligra Suite is a set of applications written to help
-      you to accomplish your work. Calligra includes efficient
-      and capable office components: Words for text processing,
-      Sheets for computations, Stage for presentations, Plan for
-      planning, Flow for flowcharts, Kexi for database creation,
-      Krita for painting and raster drawing, and Karbon for
-      vector graphics.
-    '';
+  NIX_CFLAGS_COMPILE = "-I${ilmbase}/include/OpenEXR";
+
+  meta = {
+    description = "A Qt/KDE office suite, formely known as koffice";
     homepage = http://calligra.org;
-    maintainers = with maintainers; [ phreedom ebzzry ];
-    inherit (kdelibs4.meta) platforms;
-    license = licenses.gpl2;
+    maintainers = with stdenv.lib.maintainers; [ urkud phreedom ];
+    inherit (kdelibs.meta) platforms;
   };
 }

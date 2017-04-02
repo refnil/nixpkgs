@@ -1,31 +1,28 @@
-{ stdenv, lib, fetchurl, autoreconfHook, pam, qrencode }:
+{ stdenv, fetchurl, pam, qrencode }:
 
 stdenv.mkDerivation rec {
-  name = "google-authenticator-libpam-${version}";
-  version = "1.03";
+  name = "google-authenticator-1.0";
 
   src = fetchurl {
-    url = "https://github.com/google/google-authenticator-libpam/archive/${version}.tar.gz";
-    sha256 = "0wb95z5v1w4sk0p7y9pbn4v95w9hrbf80vw9k2z2sgs0156ljkb7";
+    url = "https://google-authenticator.googlecode.com/files/libpam-${name}-source.tar.bz2";
+    sha1 = "017b7d89989f1624e360abe02d6b27a6298d285d";
   };
 
-  buildInputs = [ autoreconfHook pam ];
+  buildInputs = [ pam ];
 
   preConfigure = ''
-    sed -i "s|libqrencode.so.3|${qrencode}/lib/libqrencode.so.3|" src/google-authenticator.c
+    sed -i 's|libqrencode.so.3|${qrencode}/lib/libqrencode.so.3|' google-authenticator.c
   '';
 
   installPhase = ''
-    mkdir -p $out/bin $out/lib/security
-    cp ./.libs/pam_google_authenticator.so $out/lib/security
+    ensureDir $out/bin $out/lib/security
+    cp pam_google_authenticator.so $out/lib/security
     cp google-authenticator $out/bin
   '';
 
-  meta = with lib; {
-    homepage = https://github.com/google/google-authenticator-libpam;
+  meta = {
+    homepage = https://code.google.com/p/google-authenticator/;
     description = "Two-step verification, with pam module";
-    license = licenses.asl20;
-    maintainers = with maintainers; [ aneeshusa ];
-    platforms = platforms.linux;
+    license = stdenv.lib.licenses.asl20;
   };
 }

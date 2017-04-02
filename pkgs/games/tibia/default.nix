@@ -1,13 +1,13 @@
-{ stdenv, fetchurl, patchelf, glibc, libX11, mesa }:
+{stdenv, fetchurl, patchelf, glibc, libX11, mesa}:
 
 with stdenv.lib;
 assert stdenv.isi686;
 stdenv.mkDerivation {
-  name = "tibia-10.90";
+  name = "tibia-10.41";
 
   src = fetchurl {
-    url = http://static.tibia.com/download/tibia1090.tgz;
-    sha256 = "11mkh2dynmbpay51yfaxm5dmcys3rnpk579s9ypfkhblsrchbkhx";
+    url = http://static.tibia.com/download/tibia1041.tgz;
+    sha256 = "1hmqn9c6qaa79ldcnl4ws9dm6rd3ymy48fw254pl6g601amn7b8v";
   };
 
   shell = stdenv.shell;
@@ -22,10 +22,10 @@ stdenv.mkDerivation {
 
   installPhase = ''
     mkdir -pv $out/res
-    cp -r * $out/res
+    cp -r ./* $out/res
 
-    patchelf --set-interpreter ${glibc.out}/lib/ld-linux.so.2 \
-             --set-rpath ${stdenv.lib.makeLibraryPath [ stdenv.cc.cc libX11 mesa ]} \
+    patchelf --set-interpreter ${glibc}/lib/ld-linux.so.2 \
+             --set-rpath ${stdenv.gcc.gcc}/lib:${libX11}/lib:${mesa}/lib \
              "$out/res/Tibia"
 
     # We've patchelf'd the files. The main ‘Tibia’ binary is a bit
@@ -41,7 +41,7 @@ stdenv.mkDerivation {
     cat << EOF > "$out/bin/Tibia"
     #!${stdenv.shell}
     cd $out/res
-    ${glibc.out}/lib/ld-linux.so.2 --library-path \$LD_LIBRARY_PATH ./Tibia "\$@"
+    ${glibc}/lib/ld-linux.so.2 --library-path \$LD_LIBRARY_PATH ./Tibia "\$@"
     EOF
 
     chmod +x $out/bin/Tibia
@@ -53,6 +53,5 @@ stdenv.mkDerivation {
     homepage = "http://tibia.com";
     license = stdenv.lib.licenses.unfree;
     platforms = ["i686-linux"];
-    maintainers = with stdenv.lib.maintainers; [ fuuzetsu ];
   };
 }

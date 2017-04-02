@@ -4,8 +4,8 @@
 # often change with updating of git or cgit.
 # stripLen acts as the -p parameter when applying a patch.
 
-{ lib, fetchurl, patchutils }:
-{ stripLen ? 0, addPrefixes ? false, ... }@args:
+{ fetchurl, patchutils }:
+{ stripLen ? 0, ... }@args:
 
 fetchurl ({
   postFetch = ''
@@ -16,12 +16,7 @@ fetchurl ({
         "${patchutils}/bin/filterdiff" \
         --include={} \
         --strip=${toString stripLen} \
-        ${lib.optionalString addPrefixes ''
-           --addoldprefix=a/ \
-           --addnewprefix=b/ \
-        ''} \
         --clean "$out" > "$tmpfile"
     mv "$tmpfile" "$out"
-    ${args.postFetch or ""}
   '';
-} // builtins.removeAttrs args ["stripLen" "addPrefixes"])
+} // args)

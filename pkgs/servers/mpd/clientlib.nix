@@ -6,21 +6,21 @@ stdenv.mkDerivation rec {
 
   src = fetchurl {
     url = "http://www.musicpd.org/download/libmpdclient/2/${name}.tar.xz";
-    sha256 = "10pzs9z815a8hgbbbiliapyiw82bnplsccj5irgqjw5f5plcs22g";
+    sha256 = "1jlrfqxqq3gscwrppr2h0xqxd5abl1ypwpwpwnpxs6p9c2jppjbw";
   };
 
   buildInputs = [ doxygen ];
 
   passthru = {
     majorVersion = "2";
-    minorVersion = "10";
+    minorVersion = "9";
   };
 
-  meta = with stdenv.lib; {
+  meta = {
     description = "Client library for MPD (music player daemon)";
-    homepage = http://www.musicpd.org/libs/libmpdclient/;
-    license = licenses.gpl2;
-    platforms = platforms.unix;
-    maintainers = with maintainers; [ mornfall ehmry ];
+    homepage = http://mpd.wikia.com/wiki/Music_Player_Daemon_Wiki;
+    license = stdenv.lib.licenses.gpl2;
+    platforms = with stdenv.lib.platforms; unix;
+    maintainers = [ stdenv.lib.maintainers.mornfall ];
   };
 }

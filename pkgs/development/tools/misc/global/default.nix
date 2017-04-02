@@ -1,48 +1,31 @@
-{ fetchurl, stdenv, libtool, makeWrapper
-, coreutils, ctags, ncurses, pythonPackages, sqlite, universal-ctags, pkgconfig
-}:
+{ fetchurl, stdenv, libtool, ncurses }:
 
 stdenv.mkDerivation rec {
-  name = "global-${version}";
-  version = "6.5.6";
+  name = "global-6.2.12";
 
   src = fetchurl {
     url = "mirror://gnu/global/${name}.tar.gz";
-    sha256 = "018m536k5y6lks1a6gqn3bsp7r8zk017znqj9kva1nm8d7x9lbqj";
+    sha256 = "05jkhya1cs6yqhkf8nw5x56adkxxrqyga7sq7hx44dbf7alczwfa";
   };
 
-  nativeBuildInputs = [ libtool makeWrapper ];
+  buildInputs = [ libtool ncurses ];
 
-  buildInputs = [ ncurses ];
-
-  propagatedBuildInputs = [ pythonPackages.pygments ];
-
-  configureFlags = [
-    "--with-ltdl-include=${libtool}/include"
-    "--with-ltdl-lib=${libtool.lib}/lib"
-    "--with-ncurses=${ncurses.dev}"
-    "--with-sqlite3=${sqlite.dev}"
-    "--with-exuberant-ctags=${ctags}/bin/ctags"
-    "--with-universal-ctags=${universal-ctags}/bin/ctags"
-    "--with-posix-sort=${coreutils}/bin/sort"
-  ];
+  configurePhase =
+    '' ./configure --prefix="$out" --disable-static ''
+    + ''--with-posix-sort=$(type -p sort) ''
+    + ''--with-ltdl-include=${libtool}/include --with-ltdl-lib=${libtool}/lib ''
+    + ''--with-ncurses=${ncurses}'';
 
   doCheck = true;
 
   postInstall = ''
     mkdir -p "$out/share/emacs/site-lisp"
     cp -v *.el "$out/share/emacs/site-lisp"
-
-    wrapProgram $out/bin/gtags \
-      --prefix GTAGSCONF : "$out/share/gtags/gtags.conf" \
-      --prefix PYTHONPATH : "$(toPythonPath ${pythonPackages.pygments})"
-    wrapProgram $out/bin/global \
-      --prefix GTAGSCONF : "$out/share/gtags/gtags.conf" \
-      --prefix PYTHONPATH : "$(toPythonPath ${pythonPackages.pygments})"
   '';
 
-  meta = with stdenv.lib; {
-    description = "Source code tag system";
+  meta = {
+    description = "GNU GLOBAL source code tag system";
+
     longDescription = ''
       GNU GLOBAL is a source code tagging system that works the same way
       across diverse environments (Emacs, vi, less, Bash, web browser, etc).
@@ -53,9 +36,12 @@ stdenv.mkDerivation rec {
       independence of any editor.  It runs on a UNIX (POSIX) compatible
       operating system like GNU and BSD.
     '';
+
+    license = stdenv.lib.licenses.gpl3Plus;
+
     homepage = http://www.gnu.org/software/global/;
-    license = licenses.gpl3Plus;
-    maintainers = with maintainers; [ pSub peterhoeg ];
-    platforms = platforms.unix;
+
+    maintainers = [ stdenv.lib.maintainers.ludo ];
+    platforms = stdenv.lib.platforms.unix;
   };
 }

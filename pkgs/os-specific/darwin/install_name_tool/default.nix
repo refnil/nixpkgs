@@ -5,9 +5,9 @@ assert stdenv.isDarwin;
 stdenv.mkDerivation {
   name = "install_name_tool";
   src = "/usr/bin/install_name_tool";
-
   unpackPhase = "true";
-  dontBuild = true;
+  configurePhase = "true";
+  buildPhase = "true";
 
   installPhase = ''
     mkdir -p "$out"/bin

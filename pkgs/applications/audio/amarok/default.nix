@@ -1,9 +1,7 @@
-{ stdenv, fetchurl, lib, automoc4, cmake, perl, pkgconfig
-, qtscriptgenerator, gettext, curl , libxml2, mysql, taglib
-, taglib_extras, loudmouth , kdelibs4, qca2, libmtp, liblastfm, libgpod
-, phonon , strigi, soprano, qjson, ffmpeg, libofa, nepomuk_core ? null
-, lz4, lzo, snappy, libaio, pcre
-}:
+{ stdenv, fetchurl, lib, qtscriptgenerator, perl, gettext, curl
+, libxml2, mysql, taglib, taglib_extras, loudmouth , kdelibs
+, qca2, libmtp, liblastfm, libgpod, pkgconfig, automoc4, phonon
+, strigi, soprano, qjson, ffmpeg, libofa, nepomuk_core ? null }:
 
 stdenv.mkDerivation rec {
   name = "${pname}-${version}";
@@ -18,23 +16,11 @@ stdenv.mkDerivation rec {
 
   QT_PLUGIN_PATH="${qtscriptgenerator}/lib/qt4/plugins";
 
-  nativeBuildInputs = [ automoc4 cmake perl pkgconfig ];
-
-  buildInputs = [
-    qtscriptgenerator stdenv.cc.libc gettext curl libxml2 mysql.server/*libmysqld*/
-    taglib taglib_extras loudmouth kdelibs4 phonon strigi soprano qca2
-    libmtp liblastfm libgpod qjson ffmpeg libofa nepomuk_core
-    lz4 lzo snappy libaio pcre
-  ];
-
-  # This is already fixed upstream, will be release in 2.9
-  preConfigure = ''
-    sed -i -e 's/STRLESS/VERSION_LESS/g' cmake/modules/FindTaglib.cmake
-  '';
+  buildInputs = [ qtscriptgenerator stdenv.gcc.libc gettext curl
+    libxml2 mysql taglib taglib_extras loudmouth kdelibs automoc4 phonon strigi
+    soprano qca2 libmtp liblastfm libgpod pkgconfig qjson ffmpeg libofa nepomuk_core ];
 
   cmakeFlags = "-DKDE4_BUILD_TESTS=OFF";
-
-  enableParallelBuilding = true;
 
   propagatedUserEnvPkgs = [ qtscriptgenerator ];
 
@@ -43,6 +29,6 @@ stdenv.mkDerivation rec {
     description = "Popular music player for KDE";
     license = "GPL";
     homepage = http://amarok.kde.org;
-    inherit (kdelibs4.meta) platforms;
+    inherit (kdelibs.meta) platforms maintainers;
   };
 }

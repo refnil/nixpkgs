@@ -15,7 +15,6 @@ stdenv.mkDerivation rec {
 
   meta = {
     description = "POSIX man-pages (0p, 1p, 3p)";
-    homepage = https://www.kernel.org/doc/man-pages/;
-    platforms = stdenv.lib.platforms.unix;
+    homepage = http://kernel.org/pub/linux/docs/manpages/;
   };
 }

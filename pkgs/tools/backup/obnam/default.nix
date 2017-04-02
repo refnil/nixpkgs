@@ -1,21 +1,23 @@
-{ stdenv, fetchurl, pythonPackages, attr }:
+{ stdenv, fetchurl, python, pythonPackages, pycrypto, attr }:
 
-pythonPackages.buildPythonApplication rec {
+pythonPackages.buildPythonPackage rec {
   name = "obnam-${version}";
-  version = "1.21";
+  version = "1.6.1";
+
+  namePrefix = "";
 
   src = fetchurl rec {
-    url = "http://code.liw.fi/debian/pool/main/o/obnam/obnam_${version}.orig.tar.xz";
-    sha256 = "0qlipsq50hca71zc0dp1mg9zs12qm0sbblw7qfzl0hj6mk2rv1by";
+    url = "http://code.liw.fi/debian/pool/main/o/obnam/obnam_${version}.orig.tar.gz";
+    sha256 = "0415njniqpy3xhvibpm82i9alrp2fw3lsnm15h7vqkkvgp8s5g39";
   };
 
   buildInputs = [ pythonPackages.sphinx attr ];
-  propagatedBuildInputs = with pythonPackages; [ pycrypto paramiko tracing ttystatus cliapp larch pyyaml fuse ];
+  propagatedBuildInputs = [ pycrypto pythonPackages.paramiko pythonPackages.tracing pythonPackages.ttystatus pythonPackages.cliapp pythonPackages.larch ];
 
   doCheck = false;
 
   meta = {
-    homepage = http://obnam.org;
+    homepage = http://liw.fi/obnam/;
     description = "Backup program supporting deduplication, compression and encryption";
     maintainers = [ stdenv.lib.maintainers.rickynils ];
     platforms = stdenv.lib.platforms.linux;

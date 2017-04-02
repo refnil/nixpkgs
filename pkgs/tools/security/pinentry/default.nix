@@ -1,42 +1,28 @@
-{ fetchurl, stdenv, pkgconfig
-, libgpgerror, libassuan, libcap ? null, ncurses ? null, gtk2 ? null, qt4 ? null
-}:
+{ fetchurl, stdenv, pkgconfig, glib
+, useGtk ? !stdenv.isDarwin, gtk
+, useNcurses ? true, ncurses
+, useQt4 ? false, qt4 }:
 
-let
-  mkFlag = pfxTrue: pfxFalse: cond: name: "--${if cond then pfxTrue else pfxFalse}-${name}";
-  mkEnable = mkFlag "enable" "disable";
-  mkWith = mkFlag "with" "without";
-  hasX = gtk2 != null || qt4 != null;
-in
-with stdenv.lib;
+assert useGtk || useNcurses || useQt4;
+
 stdenv.mkDerivation rec {
-  name = "pinentry-0.9.7";
+  name = "pinentry-0.8.3";
 
   src = fetchurl {
     url = "mirror://gnupg/pinentry/${name}.tar.bz2";
-    sha256 = "1cp7wjqr6nx31mdclr61s2h84ijqjl0ph99kgj4vyawpjj1j1633";
+    sha256 = "1bd047crf7xb8g61mval8v6qww98rddlsw2dz6j8h8qbnl4hp2sn";
   };
 
-  buildInputs = [ libgpgerror libassuan libcap gtk2 ncurses qt4 ];
+  buildInputs = let opt = stdenv.lib.optional; in []
+    ++ opt useGtk glib
+    ++ opt useGtk gtk
+    ++ opt useNcurses ncurses
+    ++ opt useQt4 qt4;
 
-  prePatch = ''
-    substituteInPlace pinentry/pinentry-curses.c --replace ncursesw ncurses
-  '';
-
-  # configure cannot find moc on its own
-  preConfigure = stdenv.lib.optionalString (qt4 != null) ''
-    export QTDIR="${qt4}"
-    export MOC="${qt4}/bin/moc"
-  '';
-
-  configureFlags = [
-    (mkWith   (libcap != null)  "libcap")
-    (mkWith   (hasX)            "x")
-    (mkEnable (ncurses != null) "pinentry-curses")
-    (mkEnable true              "pinentry-tty")
-    (mkEnable (gtk2 != null)    "pinentry-gtk2")
-    (mkEnable (qt4 != null)     "pinentry-qt4")
-  ];
+  configureFlags = [ "--disable-pinentry-gtk" "--disable-pinentry-qt" ]
+    ++ (if useGtk || useQt4 then ["--with-x"] else ["--without-x"])
+    ++ (if useGtk then ["--enable-pinentry-gtk2"] else ["--disable-pinentry-gtk"])
+    ++ (if useQt4 then ["--enable-pinentry-qt4"] else ["--disable-pinentry-qt4"]);
 
   nativeBuildInputs = [ pkgconfig ];
 
@@ -44,11 +30,10 @@ stdenv.mkDerivation rec {
     homepage = "http://gnupg.org/aegypten2/";
     description = "GnuPG's interface to passphrase input";
     license = stdenv.lib.licenses.gpl2Plus;
-    platforms = stdenv.lib.platforms.all;
+
     longDescription = ''
-      Pinentry provides a console and (optional) GTK+ and Qt GUIs allowing users
-      to enter a passphrase when `gpg' or `gpg2' is run and needs it.
+      Pinentry provides a console and a GTK+ GUI that allows users to
+      enter a passphrase when `gpg' or `gpg2' is run and needs it.
     '';
-    maintainers = [ stdenv.lib.maintainers.ttuegel ];
   };
 }

@@ -1,29 +1,29 @@
-{ stdenv, fetchurl, cmake }:
+{ stdenv, fetchurl }:
 
-stdenv.mkDerivation rec {
+let
+
+  version = "0.8.1";
+  
+in
+
+stdenv.mkDerivation {
   name = "thinkfan-${version}";
-  version = "0.9.3";
 
   src = fetchurl {
     url = "mirror://sourceforge/thinkfan/thinkfan-${version}.tar.gz";
-    sha256 = "0nz4c48f0i0dljpk5y33c188dnnwg8gz82s4grfl8l64jr4n675n";
+    sha256 = "04akla66r8k10x0jvmcpfi92hj2sppygcl7hhwn8n8zsvvf0yqxs";
   };
-
-  nativeBuildInputs = [ cmake ];
-
+  
   installPhase = ''
-    install -Dm755 {.,$out/bin}/thinkfan
-
-    cd "$NIX_BUILD_TOP"; cd "$sourceRoot" # attempt to be a bit robust
-    install -Dm644 {.,$out/share/doc/thinkfan}/README
-    cp -R examples $out/share/doc/thinkfan
-    install -Dm644 {src,$out/share/man/man1}/thinkfan.1
+    mkdir -p $out/bin
+    mv thinkfan $out/bin/
   '';
 
   meta = {
+    description = "";
     license = stdenv.lib.licenses.gpl3;
-    homepage = http://thinkfan.sourceforge.net/;
-    maintainers = with stdenv.lib.maintainers; [ domenkozar nckx ];
+    homePage = "http://thinkfan.sourceforge.net/";
+    maintainers = with stdenv.lib.maintainers; [ iElectric ];
     platforms = stdenv.lib.platforms.linux;
   };
 }

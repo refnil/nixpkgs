@@ -1,69 +1,50 @@
-{ stdenv, fetchurl, lib, pkgconfig, utillinux, libcap, libtirpc, libevent, libnfsidmap
-, sqlite, kerberos, kmod, libuuid, keyutils, lvm2, systemd, coreutils, tcp_wrappers
-}:
+{ fetchurl, stdenv, tcp_wrappers, utillinux, libcap, libtirpc, libevent, libnfsidmap
+, lvm2, e2fsprogs }:
 
-let
-  statdPath = lib.makeBinPath [ systemd utillinux coreutils ];
-
-in stdenv.mkDerivation rec {
-  name = "nfs-utils-${version}";
-  version = "2.1.1";
+stdenv.mkDerivation rec {
+  name = "nfs-utils-1.2.5";
 
   src = fetchurl {
     url = "mirror://sourceforge/nfs/${name}.tar.bz2";
-    sha256 = "02dvxphndpm8vpqqnl0zvij97dq9vsq2a179pzrjcv2i91ll2a0a";
+    sha256 = "16ssfkj36ljifyaskgwpd3ys8ylhi5gasq88aha3bhg5dr7yv59m";
   };
 
-  nativeBuildInputs = [ pkgconfig ];
+  buildInputs =
+    [ tcp_wrappers utillinux libcap libtirpc libevent libnfsidmap
+      lvm2 e2fsprogs
+    ];
 
-  buildInputs = [
-    libtirpc libcap libevent libnfsidmap sqlite lvm2
-    libuuid keyutils kerberos tcp_wrappers
-  ];
-
-  enableParallelBuilding = true;
-
+  # FIXME: Add the dependencies needed for NFSv4 and TI-RPC.
   configureFlags =
-    [ "--enable-gss"
+    [ "--disable-gss"
       "--with-statedir=/var/lib/nfs"
-      "--with-krb5=${kerberos}"
-      "--with-systemd=$(out)/etc/systemd/system"
-      "--enable-libmount-mount"
+      "--with-tirpcinclude=${libtirpc}/include/tirpc"
     ]
-    ++ lib.optional (stdenv ? glibc) "--with-rpcgen=${stdenv.glibc.bin}/bin/rpcgen";
+    ++ stdenv.lib.optional (stdenv ? glibc) "--with-rpcgen=${stdenv.glibc}/bin/rpcgen";
 
-  postPatch =
+  patchPhase =
     ''
-      patchShebangs tests
-      sed -i "s,/usr/sbin,$out/bin,g" utils/statd/statd.c
-      sed -i "s,^PATH=.*,PATH=$out/bin:${statdPath}," utils/statd/start-statd
+      for i in "tests/"*.sh
+      do
+        sed -i "$i" -e's|/bin/bash|/bin/sh|g'
+        chmod +x "$i"
+      done
+      sed -i s,/usr/sbin,$out/sbin, utils/statd/statd.c
 
-      configureFlags="--with-start-statd=$out/bin/start-statd $configureFlags"
+      # https://bugzilla.redhat.com/show_bug.cgi?id=749195
+      sed -i s,PAGE_SIZE,getpagesize\(\), utils/blkmapd/device-process.c
     '';
 
-  makeFlags = [
-    "sbindir=$(out)/bin"
-    "generator_dir=$(out)/etc/systemd/system-generators"
-  ];
-
-  installFlags = [
-    "statedir=$(TMPDIR)"
-    "statdpath=$(TMPDIR)"
-  ];
-
-  postInstall =
+  preBuild =
     ''
-      # Not used on NixOS
-      sed -i \
-        -e "s,/sbin/modprobe,${kmod}/bin/modprobe,g" \
-        -e "s,/usr/sbin,$out/bin,g" \
-        $out/etc/systemd/system/*
+      makeFlags="sbindir=$out/sbin"
+      installFlags="statedir=$TMPDIR" # hack to make `make install' work
     '';
 
   # One test fails on mips.
   doCheck = !stdenv.isMips;
 
-  meta = with stdenv.lib; {
+  meta = {
     description = "Linux user-space NFS utilities";
 
     longDescription = ''
@@ -72,9 +53,10 @@ in stdenv.mkDerivation rec {
       daemons.
     '';
 
-    homepage = "https://sourceforge.net/projects/nfs/";
-    license = licenses.gpl2;
-    platforms = platforms.linux;
-    maintainers = with maintainers; [ abbradar ];
+    homepage = http://nfs.sourceforge.net/;
+    license = stdenv.lib.licenses.gpl2;
+
+    platforms = stdenv.lib.platforms.linux;
+    maintainers = [ stdenv.lib.maintainers.ludo ];
   };
 }

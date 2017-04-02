@@ -1,29 +1,35 @@
 { stdenv, pkgconfig, fetchurl, itstool, intltool, libxml2, glib, gtk3
-, pythonPackages, makeWrapper, gnome3, libwnck3 }:
+, pango, gdk_pixbuf, atk, pep8, python, makeWrapper, gnome3
+, pygobject3, gobjectIntrospection, libwnck3 }:
 
 let
-  version = "${major}.11";
+  version = "${major}.8";
   major = "0.3";
-in pythonPackages.buildPythonApplication rec {
+in
+
+stdenv.mkDerivation rec {
   name = "d-feet-${version}";
-  format = "other";
 
   src = fetchurl {
     url = "mirror://gnome/sources/d-feet/${major}/d-feet-${version}.tar.xz";
-    sha256 = "a3dc940c66f84b996c328531e3034d475ec690d7ff639445ff7ca746aa8cb9c2";
+    sha256 = "e8423feb18fdff9b1465bf8442b78994ba13c12f8fa3b08e6a2f05768b4feee5";
   };
 
-  buildInputs = [ pkgconfig libxml2 itstool intltool glib gtk3
-    gnome3.defaultIconTheme makeWrapper libwnck3
+  buildInputs = [
+    pkgconfig libxml2 itstool intltool glib gtk3 pep8 python
+    gnome3.gnome_icon_theme gnome3.gnome_icon_theme_symbolic
+    makeWrapper pygobject3 libwnck3
   ];
-
-  propagatedBuildInputs = with pythonPackages; [ pygobject3 pep8 ];
 
   preFixup =
     ''
       wrapProgram $out/bin/d-feet \
+        --prefix PYTHONPATH : "$(toPythonPath $out):$(toPythonPath ${pygobject3})" \
         --prefix GI_TYPELIB_PATH : "$GI_TYPELIB_PATH" \
+        --prefix LD_LIBRARY_PATH : "${gtk3}/lib:${atk}/lib:${libwnck3}/lib" \
         --prefix XDG_DATA_DIRS : "$XDG_ICON_DIRS:$out/share"
+
+      rm $out/share/icons/hicolor/icon-theme.cache
     '';
 
   meta = {
@@ -36,7 +42,6 @@ in pythonPackages.buildPythonApplication rec {
 
     homepage = https://wiki.gnome.org/action/show/Apps/DFeet;
     platforms = stdenv.lib.platforms.all;
-    license = stdenv.lib.licenses.gpl2;
     maintainers = with stdenv.lib.maintainers; [ ktosiek ];
   };
 }

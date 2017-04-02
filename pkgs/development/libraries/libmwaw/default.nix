@@ -3,11 +3,11 @@ let
   s = # Generated upstream information
   rec {
     baseName="libmwaw";
-    version="0.3.10";
+    version="0.3.1";
     name="${baseName}-${version}";
-    hash="087j6kx03ggvqwpl944nnf75qkvi9bag8b0z59phg66gbz0s0imj";
-    url="https://netcologne.dl.sourceforge.net/project/libmwaw/libmwaw/libmwaw-0.3.10/libmwaw-0.3.10.tar.xz";
-    sha256="087j6kx03ggvqwpl944nnf75qkvi9bag8b0z59phg66gbz0s0imj";
+    hash="0fa6nf4pxl853xnh2kdjw1nk3w6i39diixiampml7g9qygbd0vqb";
+    url="mirror://sourceforge/project/libmwaw/libmwaw/libmwaw-0.3.1/libmwaw-0.3.1.tar.xz";
+    sha256="0fa6nf4pxl853xnh2kdjw1nk3w6i39diixiampml7g9qygbd0vqb";
   };
   buildInputs = [
     boost pkgconfig cppunit zlib libwpg libwpd librevenge

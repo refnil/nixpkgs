@@ -1,18 +1,18 @@
-{ stdenv, fetchgit, which, python2Packages }:
+{ stdenv, fetchgit, which, pythonPackages }:
 
-let
-  inherit (python2Packages) buildPythonApplication boto m2crypto;
-in buildPythonApplication rec {
-  name = "euca2ools-2.1.4";
+pythonPackages.buildPythonPackage rec {
+  name = "euca2ools-2.1.3";
   namePrefix = "";
 
   src = fetchgit {
     url = https://github.com/eucalyptus/euca2ools.git;
-    rev = "19cb7eac34dd7efe3a56e4841b9692c03458bf3b";
-    sha256 = "0grsgn5gbvk1hlfa8qx7ppz7iyfyi2pdhxy8njr8lm60w4amfiyq";
+    rev = "8ae2ecc";
+    sha256 = "caef5a3e2c9b515fd815034b5b7304acc878a0b9777ae4208dc033b0bf39da2b";
   };
 
-  propagatedBuildInputs = [ boto m2crypto ];
+  pythonPath = [ pythonPackages.boto pythonPackages.m2crypto pythonPackages.ssl ];
+
+  doCheck = false;
 
   meta = {
     homepage = http://open.eucalyptus.com/downloads;

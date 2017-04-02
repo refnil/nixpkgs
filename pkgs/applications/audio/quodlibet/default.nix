@@ -1,18 +1,19 @@
-{ stdenv, fetchurl, python2Packages, intltool
-, gst-python, withGstPlugins ? false, gst-plugins-base ? null
-, gst-plugins-good ? null, gst-plugins-ugly ? null, gst-plugins-bad ? null }:
+{ stdenv, fetchurl, python, buildPythonPackage, mutagen, pygtk, pygobject, intltool
+, pythonDBus, gst_python, withGstPlugins ? false, gst_plugins_base ? null
+, gst_plugins_good ? null, gst_plugins_ugly ? null, gst_plugins_bad ? null }:
 
-assert withGstPlugins -> gst-plugins-base != null
-                         || gst-plugins-good != null
-                         || gst-plugins-ugly != null
-                         || gst-plugins-bad != null;
+assert withGstPlugins -> gst_plugins_base != null
+                         || gst_plugins_good != null
+                         || gst_plugins_ugly != null
+                         || gst_plugins_bad != null;
 
-let
-  version = "2.6.3";
-  inherit (python2Packages) buildPythonApplication python mutagen pygtk pygobject2 dbus-python;
-in buildPythonApplication {
+let version = "2.6.3"; in
+
+buildPythonPackage {
   # call the package quodlibet and just quodlibet
-  name = "quodlibet${stdenv.lib.optionalString (!withGstPlugins) "-without-gst-plugins"}-${version}";
+  name = "quodlibet-${version}"
+         + stdenv.lib.optionalString withGstPlugins "-with-gst-plugins";
+  namePrefix = "";
 
   # XXX, tests fail
   doCheck = false;
@@ -44,11 +45,11 @@ in buildPythonApplication {
   patches = [ ./quodlibet-package-plugins.patch ];
 
   buildInputs = stdenv.lib.optionals withGstPlugins [
-    gst-plugins-base gst-plugins-good gst-plugins-ugly gst-plugins-bad
+    gst_plugins_base gst_plugins_good gst_plugins_ugly gst_plugins_bad
   ];
 
   propagatedBuildInputs = [
-    mutagen pygtk pygobject2 dbus-python gst-python intltool
+    mutagen pygtk pygobject pythonDBus gst_python intltool
   ];
 
   postInstall = stdenv.lib.optionalString withGstPlugins ''

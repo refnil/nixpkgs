@@ -1,10 +1,10 @@
 {stdenv, fetchurl, patchelf, libusb}:
 
-assert stdenv ? cc && stdenv.cc.libc != null;
+assert stdenv ? gcc && stdenv.gcc.libc != null;
 
 stdenv.mkDerivation rec {
   name = "scmccid-5.0.11";
-
+  
   src = if stdenv.system == "i686-linux" then (fetchurl {
       url = "http://www.scmmicro.com/support/download/scmccid_5.0.11_linux.tar.gz";
       sha256 = "1r5wkarhzl09ncgj55baizf573czw0nplh1pgddzx9xck66kh5bm";
@@ -18,7 +18,7 @@ stdenv.mkDerivation rec {
   buildInputs = [ patchelf ];
 
   installPhase = ''
-    RPATH=${libusb.out}/lib:${stdenv.cc.libc.out}/lib
+    RPATH=${libusb}/lib:${stdenv.gcc.libc}/lib
 
     for a in proprietary/*/Contents/Linux/*.so*; do
         if ! test -L $a; then
@@ -33,7 +33,7 @@ stdenv.mkDerivation rec {
   meta = {
     homepage = http://www.scmmicro.com/support/pc-security-support/downloads.html;
     description = "PCSC drivers for linux, for the SCM SCR3310 v2.0 card and others";
-    license = stdenv.lib.licenses.unfree;
+    license = "nonfree";
     maintainers = with stdenv.lib.maintainers; [viric];
     platforms = with stdenv.lib.platforms; linux;
   };

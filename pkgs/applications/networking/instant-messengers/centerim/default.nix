@@ -18,7 +18,7 @@ stdenv.mkDerivation rec {
   buildInputs = [ openssl curl ncurses libjpeg ]
     ++ stdenv.lib.optional withGpg gpgme;
 
-  configureFlags = [ "--with-openssl=${openssl.dev}" ];
+  configureFlags = [ "--with-openssl=${openssl}" ];
 
   meta = {
     homepage = http://www.centerim.org/;

@@ -4,9 +4,6 @@ let
   version = "1.0.9";
   webpage = "http://mjambon.com/${pname}.html";
 in
-
-assert stdenv.lib.versionAtLeast (stdenv.lib.getVersion ocaml) "3.11";
-
 stdenv.mkDerivation rec {
 
   name = "${pname}-${version}";
@@ -26,11 +23,10 @@ stdenv.mkDerivation rec {
     mkdir $out/bin
   '';
 
-  meta = with stdenv.lib; {
+  meta = {
     description = "A binary data format designed for speed, safety, ease of use and backward compatibility as protocols evolve";
     homepage = "${webpage}";
-    license = licenses.bsd3;
-    maintainers = [ maintainers.vbgl ];
-    platforms = ocaml.meta.platforms or [];
+    license = stdenv.lib.licenses.bsd3;
+    platforms = ocaml.meta.platforms;
   };
 }

@@ -3,7 +3,7 @@
 , perl
 , groff
 , cmake
-, python2
+, python
 , libffi
 , binutils
 , libxml2
@@ -12,11 +12,10 @@
 , version
 , zlib
 , compiler-rt_src
-, debugVersion ? false
 }:
 
 let
-  src = fetch "llvm" "1mzgy7r0dma0npi1qrbr1s5n4nbj1ipxgbiw0q671l4s0r3qs0qp";
+  src = fetch "llvm" "0fprxrilnlwk9qv7f0kplxc7kd8mp4x781asssv2nfi4r9pbna3x";
 in stdenv.mkDerivation rec {
   name = "llvm-${version}";
 
@@ -28,10 +27,7 @@ in stdenv.mkDerivation rec {
     mv compiler-rt-* $sourceRoot/projects/compiler-rt
   '';
 
-  buildInputs =
-    [ perl groff cmake libxml2 libffi ]
-    ++ stdenv.lib.optional (!stdenv.isDarwin) python2 /*
-    ++ stdenv.lib.optional stdenv.isLinux valgrind */;
+  buildInputs = [ perl groff cmake libxml2 python libffi ] ++ stdenv.lib.optional stdenv.isLinux valgrind;
 
   propagatedBuildInputs = [ ncurses zlib ];
 
@@ -42,11 +38,10 @@ in stdenv.mkDerivation rec {
   '';
 
   cmakeFlags = with stdenv; [
-    "-DCMAKE_BUILD_TYPE=${if debugVersion then "Debug" else "Release"}"
+    "-DCMAKE_BUILD_TYPE=Release"
     "-DLLVM_BUILD_TESTS=ON"
     "-DLLVM_ENABLE_FFI=ON"
-    "-DLLVM_REQUIRES_RTTI=1"
-    "-DLLVM_BINUTILS_INCDIR=${binutils.dev or binutils}/include"
+    "-DLLVM_BINUTILS_INCDIR=${binutils}/include"
     "-DCMAKE_CXX_FLAGS=-std=c++11"
   ] ++ stdenv.lib.optional (!isDarwin) "-DBUILD_SHARED_LIBS=ON";
 
@@ -67,8 +62,9 @@ in stdenv.mkDerivation rec {
   meta = {
     description = "Collection of modular and reusable compiler and toolchain technologies";
     homepage    = http://llvm.org/;
-    license     = stdenv.lib.licenses.ncsa;
-    maintainers = with stdenv.lib.maintainers; [ lovek323 raskin viric ];
+    license     = stdenv.lib.licenses.bsd3;
+    maintainers = with stdenv.lib.maintainers; [ shlevy lovek323 raskin viric ];
     platforms   = stdenv.lib.platforms.all;
+    broken      = stdenv.isDarwin;
   };
 }

@@ -15,10 +15,10 @@ stdenv.mkDerivation rec {
 
   meta = {
     homepage = "http://sourceforge.net/projects/buddy/";
-    description = "Binary decision diagram package";
+    description = "binary decision diagram package";
     license = "as-is";
 
-    platforms = with stdenv.lib.platforms; allBut cygwin;
-    maintainers = [ stdenv.lib.maintainers.peti ];
+    platforms = stdenv.lib.platforms.allBut "i686-cygwin";
+    maintainers = [ stdenv.lib.maintainers.simons ];
   };
 }

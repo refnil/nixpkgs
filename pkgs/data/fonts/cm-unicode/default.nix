@@ -1,28 +1,44 @@
-{ stdenv, fetchurl }:
+x@{builderDefsPackage
+  , ...}:
+builderDefsPackage
+(a :  
+let 
+  helperArgNames = ["stdenv" "fetchurl" "builderDefsPackage"] ++ 
+    [];
 
-stdenv.mkDerivation rec {
-  name = "cm-unicode-${version}";
-  version = "0.7.0";
-
-  src = fetchurl {
-    url = "mirror://sourceforge/cm-unicode/cm-unicode/${version}/${name}-otf.tar.xz";
-    sha256 = "0a0w9qm9g8qz2xh3lr61bj1ymqslqsvk4w2ybc3v2qa89nz7x2jl";
+  buildInputs = map (n: builtins.getAttr n x)
+    (builtins.attrNames (builtins.removeAttrs x helperArgNames));
+  sourceInfo = rec {
+    version="0.6.3a";
+    baseName="cm-unicode";
+    name="${baseName}-${version}";
+    url="ftp://canopus.iacp.dvo.ru/pub/Font/cm_unicode/${name}-otf.tar.gz";
+    hash="1018gmvh7wl7sm6f3fqd917syd1yy0gz3pxmrc9lkxckcr7wz0zp";
+  };
+in
+rec {
+  src = a.fetchurl {
+    url = sourceInfo.url;
+    sha256 = sourceInfo.hash;
   };
 
-  phases = [ "unpackPhase" "installPhase" ];
+  inherit (sourceInfo) name version;
+  inherit buildInputs;
 
-  installPhase = ''
-    mkdir -p $out/share/fonts/opentype
-    mkdir -p $out/share/doc/${name}
-    cp -v *.otf $out/share/fonts/opentype/
-    cp -v README FontLog.txt $out/share/doc/${name}
-  '';
+  phaseNames = ["doUnpack" "installFonts"];
 
-  meta = with stdenv.lib; {
-    homepage = http://canopus.iacp.dvo.ru/~panov/cm-unicode/;
-    description = "Computer Modern Unicode fonts";
-    maintainers = with maintainers; [ raskin rycee ];
-    license = licenses.ofl;
-    platforms = platforms.all;
+  meta = {
+    maintainers = with a.lib.maintainers;
+    [
+      raskin
+    ];
+    platforms = with a.lib.platforms;
+      all;
   };
-}
+  passthru = {
+    updateInfo = {
+      downloadPage = "http://canopus.iacp.dvo.ru/~panov/cm-unicode/download.html";
+    };
+  };
+}) x
+

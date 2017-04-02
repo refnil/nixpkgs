@@ -1,15 +1,19 @@
-{ stdenv, fetchurl, libftdi, libusb1, pkgconfig, hidapi }:
+{ stdenv, fetchurl, libftdi, libusb1, pkgconfig }:
+
+# TODO: Add "hidapi" as dependency to gain access to CMSIS-DAP debuggers.
+# Support should be auto-detected, but if not, pass "--enable-cmsis-dap" to
+# configure.
 
 stdenv.mkDerivation rec {
   name = "openocd-${version}";
-  version = "0.10.0";
+  version = "0.8.0";
 
   src = fetchurl {
     url = "mirror://sourceforge/openocd/openocd-${version}.tar.bz2";
-    sha256 = "1bhn2c85rdz4gf23358kg050xlzh7yxbbwmqp24c0akmh3bff4kk";
+    sha256 = "0byk7hnccgmhw0f84qlkfhps38gp2xp628bfrsc03vq08hr6q1sv";
   };
 
-  buildInputs = [ libftdi libusb1 pkgconfig hidapi ];
+  buildInputs = [ libftdi libusb1 pkgconfig ];
 
   configureFlags = [
     "--enable-jtag_vpi"
@@ -26,12 +30,7 @@ stdenv.mkDerivation rec {
 
   postInstall = ''
     mkdir -p "$out/etc/udev/rules.d"
-    rules="$out/share/openocd/contrib/60-openocd.rules"
-    if [ ! -f "$rules" ]; then
-        echo "$rules is missing, must update the Nix file."
-        exit 1
-    fi
-    ln -s "$rules" "$out/etc/udev/rules.d/"
+    ln -s "$out/share/openocd/contrib/99-openocd.rules" "$out/etc/udev/rules.d/99-openocd.rules"
   '';
 
   meta = with stdenv.lib; {

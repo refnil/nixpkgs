@@ -10,16 +10,9 @@ coverageReportPhase() {
     mkdir -p $out/coverage
     genhtml app.info $lcovExtraTraceFiles -o $out/coverage > log
 
-    # Grab the overall coverage percentage so that Hydra can plot it over time.
+    # Grab the overall coverage percentage for use in release overviews.
     mkdir -p $out/nix-support
-    lineCoverage="$(sed 's/.*lines\.*: \([0-9\.]\+\)%.*/\1/; t ; d' log)"
-    functionCoverage="$(sed 's/.*functions\.*: \([0-9\.]\+\)%.*/\1/; t ; d' log)"
-    if [ -z "$lineCoverage" -o -z "$functionCoverage" ]; then
-        echo "failed to get coverage statistics"
-        exit 1
-    fi
-    echo "lineCoverage $lineCoverage %" >> $out/nix-support/hydra-metrics
-    echo "functionCoverage $functionCoverage %" >> $out/nix-support/hydra-metrics
+    grep "Overall coverage rate" log | sed 's/^.*(\(.*\)%).*$/\1/' > $out/nix-support/coverage-rate
 
     echo "report coverage $out/coverage" >> $out/nix-support/hydra-build-products
 }

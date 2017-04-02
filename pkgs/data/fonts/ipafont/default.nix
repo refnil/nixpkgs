@@ -4,7 +4,7 @@ stdenv.mkDerivation {
   name = "ipafont-003.03";
 
   src = fetchurl {
-    url = "http://ipafont.ipa.go.jp/old/ipafont/IPAfont00303.php";
+    url = "http://ipafont.ipa.go.jp/ipafont/IPAfont00303.php";
     sha256 = "f755ed79a4b8e715bed2f05a189172138aedf93db0f465b4e20c344a02766fe5";
   };
 
@@ -29,6 +29,5 @@ stdenv.mkDerivation {
     homepage = http://ipafont.ipa.go.jp/ipafont/;
     license = stdenv.lib.licenses.ipa;
     maintainers = [ stdenv.lib.maintainers.auntie ];
-    platforms = stdenv.lib.platforms.unix;
   };
 }

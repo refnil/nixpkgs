@@ -14,7 +14,7 @@ stdenv.mkDerivation rec {
 
   meta = {
     homepage = http://libmms.sourceforge.net;
-    maintainers = [ ];
+    maintainers = [ stdenv.lib.maintainers.urkud ];
     platforms = stdenv.lib.platforms.all;
   };
 }

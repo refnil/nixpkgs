@@ -1,26 +1,23 @@
-{ stdenv, fetchFromGitHub, autoreconfHook, pkgconfig, utilmacros, python
-, mesa, libX11
+{ stdenv, fetchurl, autoconf, autogen, automake, gettext, libX11
+, mesa, pkgconfig, python, utilmacros
 }:
 
 stdenv.mkDerivation rec {
   name = "epoxy-${version}";
-  version = "1.3.1";
+  version = "1.2";
 
-  src = fetchFromGitHub {
-    owner = "anholt";
-    repo = "libepoxy";
-    rev = "v${version}";
-    sha256 = "0dfkd4xbp7v5gwsf6qwaraz54yzizf3lj5ymyc0msjn0adq3j5yl";
+  src = fetchurl {
+    url = "https://github.com/anholt/libepoxy/archive/v${version}.tar.gz";
+    sha256 = "1xp8g6b7xlbym2rj4vkbl6xpb7ijq7glpv656mc7k9b01x22ihs2";
   };
 
-  outputs = [ "out" "dev" ];
+  buildInputs = [
+    autoconf autogen automake gettext libX11 mesa pkgconfig python
+    utilmacros
+  ];
 
-  nativeBuildInputs = [ autoreconfHook pkgconfig utilmacros python ];
-  buildInputs = [ mesa libX11 ];
-
-  preConfigure = stdenv.lib.optional stdenv.isDarwin ''
-    substituteInPlace configure --replace build_glx=no build_glx=yes
-    substituteInPlace src/dispatch_common.h --replace "PLATFORM_HAS_GLX 0" "PLATFORM_HAS_GLX 1"
+  configureScript = ''
+    ./autogen.sh --prefix="$out"
   '';
 
   meta = with stdenv.lib; {
@@ -28,6 +25,6 @@ stdenv.mkDerivation rec {
     homepage = https://github.com/anholt/libepoxy;
     license = licenses.mit;
     maintainers = [ maintainers.goibhniu ];
-    platforms = platforms.unix;
+    platforms = platforms.linux;
   };
 }

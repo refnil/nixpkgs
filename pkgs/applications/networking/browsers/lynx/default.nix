@@ -4,27 +4,26 @@
 
 assert sslSupport -> openssl != null;
 
-stdenv.mkDerivation rec {
-  name = "lynx-${version}";
-  version = "2.8.9dev.11";
-
+stdenv.mkDerivation {
+  name = "lynx-2.8.8";
+  
   src = fetchurl {
-    url = "http://invisible-mirror.net/archives/lynx/tarballs/lynx${version}.tar.bz2";
-    sha256 = "1cqm1i7d209brkrpzaqqf2x951ra3l67dw8x9yg10vz7rpr9441a";
+    url = http://lynx.isc.org/lynx2.8.8/lynx2.8.8.tar.bz2;
+    sha256 = "1rxysl08acqll5b87368f04kckl8sggy1qhnq59gsxyny1ffg039";
   };
-
-  configureFlags = []
-    ++ stdenv.lib.optionals sslSupport [ "--with-ssl=${openssl.dev}" ];
-
+  
+  configureFlags = if sslSupport then "--with-ssl=${openssl}" else "";
+  
   buildInputs = [ ncurses gzip ];
+  nativeBuildInputs = [ ncurses ];
 
   crossAttrs = {
-    configureFlags = configureFlags ++ [ "--enable-widec" ];
+    configureFlags = "--enable-widec" +
+      (if sslSupport then " --with-ssl" else "");
   };
 
-  meta = with stdenv.lib; {
+  meta = {
     homepage = http://lynx.isc.org/;
     description = "A text-mode web browser";
-    platforms = platforms.unix;
   };
 }

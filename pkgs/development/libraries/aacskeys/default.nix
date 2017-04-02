@@ -25,7 +25,7 @@ stdenv.mkDerivation {
   buildInputs = [openssl jdk premake3];
 
   installPhase = ''
-    mkdir -p $out/{bin,lib,share/${baseName}}
+    ensureDir $out/{bin,lib,share/${baseName}}
 
     # Install lib
     install -Dm444 lib/linux/libaacskeys.so $out/lib
@@ -41,6 +41,5 @@ stdenv.mkDerivation {
   meta = {
     homepage = http://forum.doom9.org/showthread.php?t=123311;
     description = "A library and program to retrieve decryption keys for HD discs";
-    platforms = stdenv.lib.platforms.linux;
   };
 }

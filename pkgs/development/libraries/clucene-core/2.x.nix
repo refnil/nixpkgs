@@ -18,7 +18,7 @@ stdenv.mkDerivation rec {
     [ ./Fix-pkgconfig-file-by-adding-clucene-shared-library.patch
       ./Fixing_ZLIB_configuration_in_shared_CMakeLists.patch
       ./Install-contribs-lib.patch
-    ] ++ stdenv.lib.optionals stdenv.isDarwin [ ./fix-darwin.patch ];
+    ];
 
   postInstall = stdenv.lib.optionalString stdenv.isDarwin ''
     install_name_tool -change libclucene-shared.1.dylib \
@@ -39,6 +39,5 @@ stdenv.mkDerivation rec {
       CLucene is a port of the very popular Java Lucene text search engine API.
     '';
     homepage = http://clucene.sourceforge.net;
-    platforms = stdenv.lib.platforms.unix;
   };
 }

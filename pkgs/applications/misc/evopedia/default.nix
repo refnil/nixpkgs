@@ -1,24 +1,25 @@
-{ stdenv, fetchFromGitHub, bzip2, qt4, qmake4Hook, libX11 }:
+{stdenv, fetchgit, bzip2, qt4, libX11}:
 
 stdenv.mkDerivation rec {
-  name = "evopedia-${version}";
-  version = "0.4.4";
+  name = "evopedia-0.4.2";
 
-  src = fetchFromGitHub {
-    owner = "evopedia";
-    repo = "evopedia_qt";
-    rev = "v${version}";
-    sha256 = "0snp5qiywj306kfaywvkl7j34fivgxcb8dids1lzmbqq5xcpqqvc";
+  src = fetchgit {
+    url = git://gitorious.org/evopedia/evopedia.git;
+    rev = "v0.4.2" ;
+    md5 = "a2f19ed6e4d936c28cee28d44387b682";
   };
 
-  buildInputs = [ bzip2 qt4 libX11 ];
-  nativeBuildInputs = [ qmake4Hook ];
+  configurePhase = ''
+    qmake PREFIX=$out
+  '';
 
-  meta = with stdenv.lib; {
+  buildInputs = [ bzip2 qt4 libX11 ];
+
+  meta = {
     description = "Offline Wikipedia Viewer";
     homepage = http://www.evopedia.info;
-    license = licenses.gpl3Plus;
-    maintainers = [ maintainers.qknight ];
-    platforms = platforms.linux;
+    license = stdenv.lib.licenses.gpl3Plus;
+    maintainers = with stdenv.lib.maintainers; [viric];
+    platforms = with stdenv.lib.platforms; linux;
   };
 }

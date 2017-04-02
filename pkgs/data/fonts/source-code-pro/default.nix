@@ -1,29 +1,42 @@
-{ stdenv, fetchFromGitHub }:
+x@{builderDefsPackage
+  , unzip
+  , ...}:
+builderDefsPackage
+(a :
+let
+  helperArgNames = ["stdenv" "fetchurl" "builderDefsPackage"] ++
+    [];
 
-stdenv.mkDerivation rec {
-  name = "source-code-pro-${version}";
-  version = "2.030";
-
-  src = fetchFromGitHub {
-    owner = "adobe-fonts";
-    repo = "source-code-pro";
-    rev = "2.030R-ro/1.050R-it";
-    name = "2.030R-ro-1.050R-it";
-    sha256 = "0hc5kflr8xzqgdm0c3gbgb1paygznxmnivkylid69ipc7wnicx1n";
+  buildInputs = map (n: builtins.getAttr n x)
+    (builtins.attrNames (builtins.removeAttrs x helperArgNames));
+  sourceInfo = rec {
+    version="1.017";
+    name="SourceCodePro";
+    url="mirror://sourceforge/sourcecodepro.adobe/${name}_FontsOnly-${version}.zip";
+    hash="07xjfxin883a3g3admdddxxqyzigihbsnmik0zpjii09cdlb8dl1";
+  };
+in
+rec {
+  src = a.fetchurl {
+    url = sourceInfo.url;
+    sha256 = sourceInfo.hash;
   };
 
-  phases = "unpackPhase installPhase";
+  name = "${sourceInfo.name}-${sourceInfo.version}";
+  inherit buildInputs;
 
-  installPhase = ''
-    mkdir -p $out/share/fonts/opentype
-    find . -name "*.otf" -exec cp {} $out/share/fonts/opentype \;
-  '';
+  phaseNames = ["doUnpack" "installFonts"];
+
+  doUnpack = a.fullDepEntry (''
+    unzip ${src}
+    cd ${sourceInfo.name}*/OTF/
+  '') ["addInputs"];
 
   meta = {
     description = "A set of monospaced OpenType fonts designed for coding environments";
-    maintainers = with stdenv.lib.maintainers; [ relrod ];
-    platforms = with stdenv.lib.platforms; all;
+    maintainers = with a.lib.maintainers; [ relrod ];
+    platforms = with a.lib.platforms; all;
     homepage = "http://blog.typekit.com/2012/09/24/source-code-pro/";
-    license = stdenv.lib.licenses.ofl;
+    license = "OFL";
   };
-}
+}) x

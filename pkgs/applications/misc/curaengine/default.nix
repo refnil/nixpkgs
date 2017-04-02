@@ -1,26 +1,22 @@
-{ stdenv, fetchFromGitHub, cmake, libarcus }:
+{ stdenv, fetchgit }:
+stdenv.mkDerivation {
+    name = "curaengine";
 
-stdenv.mkDerivation rec {
-  name = "curaengine-${version}";
-  version = "2.4.0";
+    src = fetchgit {
+        url = "https://github.com/Ultimaker/CuraEngine";
+        rev = "62667ff2e7479b55d75e3d1dc9136242adf4a6a0";
+        sha256 = "0c68xmnq4c49vzg2cyqb375kc72rcnghj21wp3919w8sfwil00vr";
+    };
 
-  src = fetchFromGitHub {
-    owner = "Ultimaker";
-    repo = "CuraEngine";
-    rev = version;
-    sha256 = "1n587cqm310kzb2zbc31199x7ybgxzjq91hslb1zcb8qg8qqmixm";
-  };
+    installPhase = ''
+        mkdir -p $out/bin
+        cp CuraEngine $out/bin/
+    '';
 
-  nativeBuildInputs = [ cmake ];
-  buildInputs = [ libarcus ];
-
-  enableParallelBuilding = true;
-
-  meta = with stdenv.lib; {
-    description = "A powerful, fast and robust engine for processing 3D models into 3D printing instruction";
-    homepage = "https://github.com/Ultimaker/CuraEngine";
-    license = licenses.agpl3;
-    platforms = platforms.linux;
-    maintainers = with maintainers; [ abbradar ];
-  };
+    meta = with stdenv.lib; {
+        description = "Engine for processing 3D models into 3D printing instructions";
+        homepage = https://github.com/Ultimaker/CuraEngine;
+        license = licenses.agpl3;
+        platforms = platforms.linux;
+    };
 }

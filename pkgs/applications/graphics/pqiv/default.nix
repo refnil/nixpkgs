@@ -1,26 +1,26 @@
-{ stdenv, fetchFromGitHub, getopt, which, pkgconfig, gtk2 } :
+{ stdenv, fetchurl, getopt, which, pkgconfig, gtk } :
 
 stdenv.mkDerivation (rec {
-  name = "pqiv-${version}";
-  version = "2.8.3";
+  name = "pqiv-0.12";
 
-  src = fetchFromGitHub {
-    owner = "phillipberndt";
-    repo = "pqiv";
-    rev = version;
-    sha256 = "0fhmqa1q1y5y0ivrgx9xv864zqvd5dk4fiqi4bgi1ybdfx7vv2fy";
+  src = fetchurl {
+    url = "https://github.com/downloads/phillipberndt/pqiv/${name}.tbz";
+    sha256 = "646c69f2f4e7289913f6b8e8ae984befba9debf0d2b4cc8af9955504a1fccf1e";
   };
 
-  nativeBuildInputs = [ pkgconfig ];
-  buildInputs = [ getopt which gtk2 ];
+  buildInputs = [ getopt which pkgconfig gtk ];
 
-  prePatch = "patchShebangs .";
+  preConfigure=''
+    substituteInPlace configure --replace /bin/bash "$shell"
+    sed -i -e 's|$(tempfile -s.*)|temp.c|' -e 's|tempfile|mktemp|' configure
+  '';
 
-  meta = with stdenv.lib; {
+  unpackCmd = ''
+    tar -xf ${src}
+  '';
+
+  meta = {
     description = "Rewrite of qiv (quick image viewer)";
     homepage = http://www.pberndt.com/Programme/Linux/pqiv;
-    license = licenses.gpl3;
-    maintainers = [ maintainers.ndowens ];
-    platforms = platforms.unix;
   };
 })

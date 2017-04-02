@@ -15,7 +15,7 @@ in {
 
       user = mkOption {
         default = "jenkins";
-        type = types.str;
+        type = with types; string;
         description = ''
           User the jenkins server should execute under.
         '';
@@ -23,64 +23,32 @@ in {
 
       group = mkOption {
         default = "jenkins";
-        type = types.str;
+        type = with types; string;
         description = ''
           If the default user "jenkins" is configured then this is the primary
           group of that user.
         '';
       };
 
-      extraGroups = mkOption {
-        type = types.listOf types.str;
-        default = [ ];
-        example = [ "wheel" "dialout" ];
-        description = ''
-          List of extra groups that the "jenkins" user should be a part of.
-        '';
-      };
-
       home = mkOption {
         default = "/var/lib/jenkins";
-        type = types.path;
+        type = with types; string;
         description = ''
           The path to use as JENKINS_HOME. If the default user "jenkins" is configured then
           this is the home of the "jenkins" user.
         '';
       };
 
-      listenAddress = mkOption {
-        default = "0.0.0.0";
-        example = "localhost";
-        type = types.str;
-        description = ''
-          Specifies the bind address on which the jenkins HTTP interface listens.
-          The default is the wildcard address.
-        '';
-      };
-
       port = mkOption {
         default = 8080;
-        type = types.int;
+        type = types.uniq types.int;
         description = ''
-          Specifies port number on which the jenkins HTTP interface listens.
-          The default is 8080.
-        '';
-      };
-
-      prefix = mkOption {
-        default = "";
-        example = "/jenkins";
-        type = types.str;
-        description = ''
-          Specifies a urlPrefix to use with jenkins.
-          If the example /jenkins is given, the jenkins server will be
-          accessible using localhost:8080/jenkins.
+          Specifies port number on which the jenkins HTTP interface listens. The default is 8080.
         '';
       };
 
       packages = mkOption {
-        default = [ pkgs.stdenv pkgs.git pkgs.jdk config.programs.ssh.package pkgs.nix ];
-        defaultText = "[ pkgs.stdenv pkgs.git pkgs.jdk config.programs.ssh.package pkgs.nix ]";
+        default = [ pkgs.stdenv pkgs.git pkgs.jdk pkgs.openssh pkgs.nix ];
         type = types.listOf types.package;
         description = ''
           Packages to add to PATH for the jenkins process.
@@ -88,25 +56,11 @@ in {
       };
 
       environment = mkOption {
-        default = { };
-        type = with types; attrsOf str;
+        default = { NIX_REMOTE = "daemon"; };
+        type = with types; attrsOf string;
         description = ''
           Additional environment variables to be passed to the jenkins process.
-          As a base environment, jenkins receives NIX_PATH from
-          <option>environment.sessionVariables</option>, NIX_REMOTE is set to
-          "daemon" and JENKINS_HOME is set to the value of
-          <option>services.jenkins.home</option>.
-          This option has precedence and can be used to override those
-          mentioned variables.
-        '';
-      };
-
-      extraOptions = mkOption {
-        type = types.listOf types.str;
-        default = [ ];
-        example = [ "--debug=9" ];
-        description = ''
-          Additional command line arguments to pass to Jenkins.
+          The environment will always include JENKINS_HOME.
         '';
       };
     };
@@ -124,7 +78,6 @@ in {
       createHome = true;
       home = cfg.home;
       group = cfg.group;
-      extraGroups = cfg.extraGroups;
       useDefaultShell = true;
       uid = config.ids.uids.jenkins;
     };
@@ -134,35 +87,27 @@ in {
       after = [ "network.target" ];
       wantedBy = [ "multi-user.target" ];
 
-      environment =
-        let
-          selectedSessionVars =
-            lib.filterAttrs (n: v: builtins.elem n [ "NIX_PATH" ])
-              config.environment.sessionVariables;
-        in
-          selectedSessionVars //
-          { JENKINS_HOME = cfg.home;
-            NIX_REMOTE = "daemon";
-          } //
-          cfg.environment;
+      environment = {
+        JENKINS_HOME = cfg.home;
+      } // cfg.environment;
 
       path = cfg.packages;
 
-      # Force .war (re)extraction, or else we might run stale Jenkins.
-      preStart = ''
-        rm -rf ${cfg.home}/war
-      '';
-
       script = ''
-        ${pkgs.jdk}/bin/java -jar ${pkgs.jenkins}/webapps/jenkins.war --httpListenAddress=${cfg.listenAddress} \
-                                                  --httpPort=${toString cfg.port} \
-                                                  --prefix=${cfg.prefix} \
-                                                  ${concatStringsSep " " cfg.extraOptions}
+        ${pkgs.jdk}/bin/java -jar ${pkgs.jenkins} --httpPort=${toString cfg.port}
       '';
 
       postStart = ''
-        until [[ $(${pkgs.curl.bin}/bin/curl -s --head -w '\n%{http_code}' http://${cfg.listenAddress}:${toString cfg.port}${cfg.prefix} | tail -n1) =~ ^(200|403)$ ]]; do
-          sleep 1
+        until ${pkgs.curl}/bin/curl -s -L localhost:${toString cfg.port} ; do
+          sleep 10
+        done
+        while true ; do
+          index=`${pkgs.curl}/bin/curl -s -L localhost:${toString cfg.port}`
+          if [[ !("$index" =~ 'Please wait while Jenkins is restarting' ||
+                  "$index" =~ 'Please wait while Jenkins is getting ready to work') ]]; then
+            exit 0
+          fi
+          sleep 30
         done
       '';
 

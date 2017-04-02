@@ -7,7 +7,7 @@ stdenv.mkDerivation rec {
   
   src = fetchurl {
     url = "http://upstart.ubuntu.com/download/${version}/${name}.tar.gz";
-    sha256 = "01w4ab6nlisz5blb0an1sxjkndwikr7sjp0cmz4lg00g3n7gahmx";
+    md5 = "870920a75f8c13f3a3af4c35916805ac";
   };
 
   buildInputs = [ pkgconfig dbus libnih ];
@@ -38,6 +38,5 @@ stdenv.mkDerivation rec {
   meta = {
     homepage = "http://upstart.ubuntu.com/";
     description = "An event-based replacement for the /sbin/init daemon";
-    platforms = stdenv.lib.platforms.linux;
   };
 }

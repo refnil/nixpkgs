@@ -1,28 +1,27 @@
-{ stdenv, fetchurl, pkgconfig
-, djvulibre, qt4, xorg, libtiff }:
+{stdenv, fetchurl, djvulibre, qt4, pkgconfig }:
 
 stdenv.mkDerivation rec {
-  name = "djview-${version}";
-  version = "4.10.6";
+	name = "djview-4.8";
+	src = fetchurl {
+		url = "mirror://sourceforge/djvu/${name}.tar.gz";
+		sha256 = "17y8jvbvj98h25qwsr93v24x75famv8d0jbb0h46xjj555y6wx4c";
+	};
 
-  src = fetchurl {
-    url = "mirror://sourceforge/djvu/${name}.tar.gz";
-    sha256 = "08bwv8ppdzhryfcnifgzgdilb12jcnivl4ig6hd44f12d76z6il4";
-  };
+	buildInputs = [djvulibre qt4];
 
   nativeBuildInputs = [ pkgconfig ];
 
-  buildInputs = [ djvulibre qt4 xorg.libXt libtiff ];
+  patches = [ ./djview4-qt-4.8.patch ];
 
   passthru = {
     mozillaPlugin = "/lib/netscape/plugins";
   };
 
-  meta = with stdenv.lib; {
-    homepage = http://djvu.sourceforge.net/djview4.html;
-    description = "A portable DjVu viewer and browser plugin";
-    license = licenses.gpl2;
-    platforms = platforms.unix;
-    maintainers = [ ];
-  };
+	meta = {
+		homepage = http://djvu.sourceforge.net/djview4.html;
+		description = "A new portable DjVu viewer and browser plugin";
+		license = stdenv.lib.licenses.gpl2;
+    inherit (qt4.meta) platforms;
+    maintainers = [ stdenv.lib.maintainers.urkud ];
+	};
 }

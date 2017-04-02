@@ -1,7 +1,5 @@
-{ fetchurl, stdenv, zlib, bzip2, libgcrypt
-, gdbm, gperf, tdb, gnutls, db, libuuid
-, lzo, pkgconfig, guile
-}:
+{ fetchurl, stdenv, zlib, bzip2, libgcrypt, gdbm, gperf, tdb, gnutls, db
+, libuuid, lzo, pkgconfig, guile }:
 
 stdenv.mkDerivation rec {
   name = "libchop-0.5.2";
@@ -11,7 +9,7 @@ stdenv.mkDerivation rec {
     sha256 = "0fpdyxww41ba52d98blvnf543xvirq1v9xz1i3x1gm9lzlzpmc2g";
   };
 
-  patches = [ ./gets-undeclared.patch ./size_t.patch ];
+  patches = [ ./gets-undeclared.patch ];
 
   nativeBuildInputs = [ pkgconfig gperf ];
   
@@ -23,14 +21,10 @@ stdenv.mkDerivation rec {
       guile
     ];
 
-  doCheck = false;
+  doCheck = true;
 
-  preConfigure = ''
-    sed -re 's%@GUILE@%&/guile%' -i */Makefile.* Makefile.*
-  '';
-
-  meta = with stdenv.lib; {
-    description = "Tools & library for data backup and distributed storage";
+  meta = {
+    description = "libchop, tools & library for data backup and distributed storage";
 
     longDescription =
       '' Libchop is a set of utilities and library for data backup and
@@ -48,8 +42,9 @@ stdenv.mkDerivation rec {
       '';
 
     homepage = http://nongnu.org/libchop/;
-    license = licenses.gpl3Plus;
-    maintainers = with maintainers; [ viric ];
-    platforms = platforms.gnu;
+    license = stdenv.lib.licenses.gpl3Plus;
+
+    maintainers = with stdenv.lib.maintainers; [ ludo viric ];
+    platforms = stdenv.lib.platforms.gnu;
   };
 }

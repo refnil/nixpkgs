@@ -1,18 +1,16 @@
 { stdenv, fetchurl }:
 
 stdenv.mkDerivation rec {
-  name = "gdbm-1.12";
+  name = "gdbm-1.11";
 
   src = fetchurl {
     url = "mirror://gnu/gdbm/${name}.tar.gz";
-    sha256 = "1smwz4x5qa4js0zf1w3asq6z7mh20zlgwbh2bk5dczw6xrk22yyr";
+    sha256 = "1hz3jgh3pd4qzp6jy0l8pd8x01g9abw7csnrlnj1a2sxy122z4cd";
   };
 
   doCheck = true;
 
-  configureFlags = [ "--enable-libgdbm-compat" ];
-
-  meta = with stdenv.lib; {
+  meta = {
     description = "GNU dbm key/value database library";
 
     longDescription =
@@ -35,8 +33,8 @@ stdenv.mkDerivation rec {
       '';
 
     homepage = http://www.gnu.org/software/gdbm/;
-    license = licenses.gpl3Plus;
-    platforms = platforms.all;
-    maintainers = [ maintainers.vrthra ];
+    license = stdenv.lib.licenses.gpl3Plus;
+    platforms = stdenv.lib.platforms.all;
+    maintainers = [ stdenv.lib.maintainers.ludo ];
   };
 }

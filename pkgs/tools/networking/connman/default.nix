@@ -1,26 +1,25 @@
-{ stdenv, fetchurl, pkgconfig, openconnect, file, gawk,
-  openvpn, vpnc, glib, dbus, iptables, gnutls, polkit,
-  wpa_supplicant, readline6, pptp, ppp }:
+{ stdenv, fetchgit, autoconf, automake, libtool, pkgconfig, openconnect, file,
+  openvpn, vpnc, glib, dbus, iptables, gnutls, policykit, polkit,
+  wpa_supplicant, readline6, pptp, ppp, tree }:
 
-stdenv.mkDerivation rec {
-  name = "connman-${version}";
-  version = "1.33";
-  src = fetchurl {
-    url = "mirror://kernel/linux/network/connman/${name}.tar.xz";
-    sha256 = "187mknq2i907gf8dz0i79359gn1qc9mryvqkcgb280d7dw1ld2dw";
+stdenv.mkDerivation {
+  name = "connman-1.24";
+  src = fetchgit {
+    url = "git://git.kernel.org/pub/scm/network/connman/connman.git";
+    rev = "11b8a873988ab5fc3f360c5b6fb25a6761fe7683";
+    sha256 = "12z1krm5qnjyamc3qr2px7wvz7qkss7jk5brnmhyalqmcnkwcbrm";
   };
 
-  buildInputs = [ openconnect polkit
-                  openvpn vpnc glib dbus iptables gnutls
-                  wpa_supplicant readline6 pptp ppp ];
-
-  nativeBuildInputs = [ pkgconfig file gawk ];
+  buildInputs = [ autoconf automake libtool pkgconfig openconnect polkit
+                  file openvpn vpnc glib dbus iptables gnutls policykit
+                  wpa_supplicant readline6 pptp ppp tree ];
 
   preConfigure = ''
     export WPASUPPLICANT=${wpa_supplicant}/sbin/wpa_supplicant
-    export PPPD=${ppp}/sbin/pppd
-    export AWK=${gawk}/bin/gawk
+    ./bootstrap
     sed -i "s/\/usr\/bin\/file/file/g" ./configure
+    substituteInPlace configure --replace /usr/sbin/pptp ${pptp}/sbin/pptp
+    substituteInPlace configure --replace /usr/sbin/pppd ${ppp}/sbin/pppd
   '';
 
   configureFlags = [
@@ -43,18 +42,18 @@ stdenv.mkDerivation rec {
     "--enable-tools"
     "--enable-datafiles"
     "--enable-pptp"
-    "--with-pptp=${pptp}/sbin/pptp"
   ];
 
   postInstall = ''
     cp ./client/connmanctl $out/sbin/connmanctl
   '';
 
-  meta = with stdenv.lib; {
-    description = "A daemon for managing internet connections";
-    homepage = https://connman.net/;
-    maintainers = [ maintainers.matejc ];
-    platforms = platforms.linux;
-    license = licenses.gpl2;
+  meta = {
+    description = "The ConnMan project provides a daemon for managing internet connections";
+    homepage = "https://connman.net/";
+    maintainers = [ stdenv.lib.maintainers.matejc ];
+    # tested only on linux, might work on others also
+    platforms = stdenv.lib.platforms.linux;
+    license = stdenv.lib.licenses.gpl2;
   };
 }

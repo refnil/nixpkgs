@@ -7,23 +7,17 @@ stdenv.mkDerivation rec {
   src = fetchgit {
     url = "git://git.osmocom.org/rtl-sdr.git";
     rev = "refs/tags/v${version}";
-    sha256 = "1dh52xcvxkjb3mj80wlm20grz8cqf5wipx2ksi91ascz12b5pym6";
+    sha256 = "00r5d08r12zzkd0xggd7l7p4r2278rzdhqdaihwjlajmr9qd3hs1";
   };
 
   buildInputs = [ cmake pkgconfig libusb1 ];
 
-  # TODO: get these fixes upstream:
-  # * Building with -DINSTALL_UDEV_RULES=ON tries to install udev rules to
-  #   /etc/udev/rules.d/, and there is no option to install elsewhere. So install
-  #   rules manually.
-  # * Propagate libusb-1.0 dependency in pkg-config file.
+  # Building with -DINSTALL_UDEV_RULES=ON tries to install udev rules to
+  # /etc/udev/rules.d/, and there is no option to install elsewhere. So install
+  # rules manually.
   postInstall = ''
     mkdir -p "$out/etc/udev/rules.d/"
     cp ../rtl-sdr.rules "$out/etc/udev/rules.d/99-rtl-sdr.rules"
-
-    pcfile="$out"/lib/pkgconfig/librtlsdr.pc
-    grep -q "Requires:" "$pcfile" && { echo "Upstream has added 'Requires:' in $(basename "$pcfile"); update nix expression."; exit 1; }
-    echo "Requires: libusb-1.0" >> "$pcfile"
   '';
 
   meta = with stdenv.lib; {

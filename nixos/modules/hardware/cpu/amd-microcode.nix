@@ -22,8 +22,8 @@ with lib;
   ###### implementation
 
   config = mkIf config.hardware.cpu.amd.updateMicrocode {
-    # Microcode updates must be the first item prepended in the initrd
-    boot.initrd.prepend = mkOrder 1 [ "${pkgs.microcodeAmd}/amd-ucode.img" ];
+    hardware.firmware = [ "${pkgs.amdUcode}/lib/firmware" ];
+    boot.kernelModules = [ "microcode" ];
   };
 
 }

@@ -3,11 +3,8 @@
 #   2. jenkins user can be extended on both master and slave
 #   3. jenkins service not started on slave node
 
-import ./make-test.nix ({ pkgs, ...} : {
+import ./make-test.nix {
   name = "jenkins";
-  meta = with pkgs.stdenv.lib.maintainers; {
-    maintainers = [ bjornfor coconnor domenkozar eelco chaoflow ];
-  };
 
   nodes = {
 
@@ -19,8 +16,6 @@ import ./make-test.nix ({ pkgs, ...} : {
         services.jenkinsSlave.enable = true;
 
         users.extraUsers.jenkins.extraGroups = [ "users" ];
-
-        systemd.services.jenkins.serviceConfig.TimeoutStartSec = "6min";
       };
 
     slave =
@@ -44,4 +39,4 @@ import ./make-test.nix ({ pkgs, ...} : {
 
     $slave->mustFail("systemctl is-enabled jenkins.service");
   '';
-})
+}

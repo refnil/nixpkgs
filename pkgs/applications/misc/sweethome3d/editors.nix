@@ -1,5 +1,5 @@
 { stdenv, fetchurl, fetchcvs, makeWrapper, makeDesktopItem, jdk, jre, ant
-, gtk3, gsettings_desktop_schemas, p7zip, sweethome3dApp }:
+, p7zip, sweethome3dApp }:
 
 let
 
@@ -9,28 +9,25 @@ let
     + "-editor";
   sweetName = m: v: sweetExec m + "-" + v;
 
-  getDesktopFileName = drvName: (builtins.parseDrvName drvName).name;
-
   mkEditorProject =
-  { name, module, version, src, license, description, desktopName }:
+  { name, module, version, src, license, description }:
 
   stdenv.mkDerivation rec {
     application = sweethome3dApp;
     inherit name module version src description;
     exec = sweetExec module;
     editorItem = makeDesktopItem {
-      inherit exec desktopName;
-      name = getDesktopFileName name;
+      inherit name exec;
       comment =  description;
+      desktopName = name;
       genericName = "Computer Aided (Interior) Design";
-      categories = "Application;Graphics;2DGraphics;3DGraphics;";
+      categories = "Application;CAD;";
     };
 
-    buildInputs = [ ant jre jdk makeWrapper gtk3 gsettings_desktop_schemas ];
+    buildInputs = [ ant jre jdk makeWrapper ];
 
     patchPhase = ''
       sed -i -e 's,../SweetHome3D,${application.src},g' build.xml
-      sed -i -e 's,lib/macosx/java3d-1.6/jogl-all.jar,lib/java3d-1.6/jogl-all.jar,g' build.xml
     '';
 
     buildPhase = ''
@@ -41,9 +38,8 @@ let
       mkdir -p $out/bin
       mkdir -p $out/share/{java,applications}
       cp ${module}-${version}.jar $out/share/java/.
-      cp "${editorItem}/share/applications/"* $out/share/applications
+      cp ${editorItem}/share/applications/* $out/share/applications
       makeWrapper ${jre}/bin/java $out/bin/$exec \
-        --prefix XDG_DATA_DIRS : "$XDG_ICON_DIRS:${gtk3.out}/share:${gsettings_desktop_schemas}/share:$out/share:$GSETTINGS_SCHEMAS_PATH" \
         --add-flags "-jar $out/share/java/${module}-${version}.jar ${if stdenv.system == "x86_64-linux" then "-d64" else "-d32"}"
     '';
 
@@ -61,36 +57,34 @@ let
 
   d2u = stdenv.lib.replaceChars ["."] ["_"];
 
-in {
+in rec {
 
   textures-editor = mkEditorProject rec {
-    version = "1.5";
+    version = "1.3";
     module = "TexturesLibraryEditor";
     name = sweetName module version;
     description = "Easily create SH3T files and edit the properties of the texture images it contain";
     license = stdenv.lib.licenses.gpl2Plus;
     src = fetchcvs {
       cvsRoot = ":pserver:anonymous@sweethome3d.cvs.sourceforge.net:/cvsroot/sweethome3d";
-      sha256 = "15wxdns3hc8yq362x0rj53bcxran2iynxznfcb9js85psd94zq7h";
+      sha256 = "1caf1hmf87bj5dr7w2swnlbvkb3q1jdjr1zgjn1k07d0fxh0ikbx";
       module = module;
       tag = "V_" + d2u version;
     };
-    desktopName = "Sweet Home 3D - Textures Library Editor";
   };
 
   furniture-editor = mkEditorProject rec {
-    version = "1.19";
+    version = "1.13";
     module = "FurnitureLibraryEditor";
     name = sweetName module version;
     description = "Quickly create SH3F files and edit the properties of the 3D models it contain";
     license = stdenv.lib.licenses.gpl2;
     src = fetchcvs {
       cvsRoot = ":pserver:anonymous@sweethome3d.cvs.sourceforge.net:/cvsroot/sweethome3d";
-      sha256 = "0rr4nqil1mngak3ds5vz7f1whrgcgzpk6fb0qcr5ljms0jx0ylvs";
+      sha256 = "1nll5589rc0g71zd86cwmzl4p2icynykj106schmxric9v17jbv5";
       module = module;
       tag = "V_" + d2u version;
     };
-    desktopName = "Sweet Home 3D - Furniture Library Editor";
   };
 
 }

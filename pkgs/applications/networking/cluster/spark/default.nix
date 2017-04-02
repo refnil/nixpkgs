@@ -1,72 +1,128 @@
-{ stdenv, fetchzip, makeWrapper, jre, pythonPackages
-, RSupport? true, R
-, mesosSupport ? true, mesos
-, version
-}:
-
-let
-  versionMap = {
-    "1.6.3" = {
-                hadoopVersion = "cdh4";
-                sparkSha256 = "00il083cjb9xqzsma2ifphq9ggichwndrj6skh2z5z9jk3z0lgyn";
-              };
-    "2.1.0" = {
-                hadoopVersion = "hadoop2.4";
-                sparkSha256 = "0pbsmbjwijsfgbnm56kgwnmnlqkz3w010ma0d7vzlkdklj40vqn2";
-              };
-  };
-in
-
-with versionMap.${version};
-
-with stdenv.lib;
+{ stdenv, fetchurl, jre, bash, simpleBuildTool, python27Packages }:
 
 stdenv.mkDerivation rec {
+  name    = "spark-${version}";
+  version = "0.9.1";
 
-  name = "spark-${version}";
-
-  src = fetchzip {
-    url    = "mirror://apache/spark/${name}/${name}-bin-${hadoopVersion}.tgz";
-    sha256 = sparkSha256;
+  src = fetchurl {
+    url    = "http://d3kbcqa49mib13.cloudfront.net/${name}-bin-cdh4.tgz";
+    sha256 = "1k3954srx3km3ckmfi6wn8rldrljxc039g0pf5m3azgkmaz0gld5";
   };
 
-  buildInputs = [ makeWrapper jre pythonPackages.python pythonPackages.numpy ]
-    ++ optional RSupport R
-    ++ optional mesosSupport mesos;
+  unpackPhase = ''tar zxf $src'';
 
-  untarDir = "${name}-bin-${hadoopVersion}";
+  untarDir = "${name}-bin-cdh4";
   installPhase = ''
-    mkdir -p $out/{lib/${untarDir}/conf,bin,/share/java}
-    mv * $out/lib/${untarDir}
+    set -x
+    mkdir -p $out/lib $out/bin
+    mv ${untarDir} $out/lib
 
-    sed -e 's/INFO, console/WARN, console/' < \
-       $out/lib/${untarDir}/conf/log4j.properties.template > \
-       $out/lib/${untarDir}/conf/log4j.properties
+    cat > $out/bin/spark-class <<EOF
+    #!${bash}/bin/bash
+    export JAVA_HOME=${jre}
+    export SPARK_HOME=$out/lib/${untarDir}
 
-    cat > $out/lib/${untarDir}/conf/spark-env.sh <<- EOF
-    export JAVA_HOME="${jre}"
-    export SPARK_HOME="$out/lib/${untarDir}"
-    export PYSPARK_PYTHON="${pythonPackages.python}/bin/${pythonPackages.python.executable}"
-    export PYTHONPATH="\$PYTHONPATH:$PYTHONPATH"
-    ${optionalString RSupport
-      ''export SPARKR_R_SHELL="${R}/bin/R"
-        export PATH=$PATH:"${R}/bin/R"''}
-    ${optionalString mesosSupport
-      ''export MESOS_NATIVE_LIBRARY="$MESOS_NATIVE_LIBRARY"''}
+    if [ -z "\$1" ]; then
+      echo "Usage: spark-class <class> [<args>]" >&2
+      exit 1
+    fi
+
+    export SPARK_MEM=\''${SPARK_MEM:-1024m}
+
+    JAVA_OPTS=""
+    JAVA_OPTS="\$JAVA_OPTS -Djava.library.path=\"\$SPARK_LIBRARY_PATH\""
+    JAVA_OPTS="\$JAVA_OPTS -Xms\$SPARK_MEM -Xmx\$SPARK_MEM"
+    export JAVA_OPTS
+
+    CLASSPATH=\`$out/lib/${untarDir}/bin/compute-classpath.sh\`
+    export CLASSPATH
+
+    exec ${jre}/bin/java -cp "\$CLASSPATH" \$JAVA_OPTS "\$@"
     EOF
+    chmod +x $out/bin/spark-class
 
-    for n in $(find $out/lib/${untarDir}/bin -type f ! -name "*.*"); do
-      makeWrapper "$n" "$out/bin/$(basename $n)"
+    cat > $out/bin/spark-shell <<EOF
+    #!${bash}/bin/bash
+    set -o posix
+    export JAVA_HOME=${jre}
+    export SPARK_HOME=$out/lib/${untarDir}
+    for o in "\$@"; do
+      if [ "\$1" = "-c" -o "\$1" = "--cores" ]; then
+        shift
+        if [ -n "\$1" ]; then
+          OPTIONS="-Dspark.cores.max=\$1"
+          shift
+        fi
+      fi
     done
-    ln -s $out/lib/${untarDir}/lib/spark-assembly-*.jar $out/share/java
+
+    exit_status=127
+    saved_stty=""
+
+    function restoreSttySettings() {
+      stty \$saved_stty
+      saved_stty=""
+    }
+
+    function onExit() {
+      if [[ "\$saved_stty" != "" ]]; then
+        restoreSttySettings
+      fi
+      exit \$exit_status
+    }
+
+    trap onExit INT
+
+    saved_stty=\$(stty -g 2>/dev/null)
+    if [[ ! \$? ]]; then
+      saved_stty=""
+    fi
+
+    $out/bin/spark-class \$OPTIONS org.apache.spark.repl.Main "\$@"
+
+    exit_status=\$?
+    onExit
+    EOF
+    chmod +x $out/bin/spark-shell
+
+    cat > $out/bin/pyspark <<EOF
+    #!${bash}/bin/bash
+    export JAVA_HOME=${jre}
+    export SPARK_HOME=$out/lib/${untarDir}
+    export PYTHONPATH=$out/lib/${untarDir}/python:\$PYTHONPATH
+    export OLD_PYTHONSTARTUP=\$PYTHONSTARTUP
+    export PYTHONSTARTUP=$out/lib/${untarDir}/python/pyspark/shell.py
+    export SPARK_MEM=\''${SPARK_MEM:-1024m}
+    exec ${python27Packages.ipythonLight}/bin/ipython \$@
+    EOF
+    chmod +x $out/bin/pyspark
+
+    cat > $out/bin/spark-upload-scala <<EOF
+    #!${bash}/bin/bash
+    export JAVA_HOME=${jre}
+    export SPARK_HOME=$out/lib/${untarDir}
+    export SPARK_MEM=\''${SPARK_MEM:-1024m}
+
+    CLASS=\$1; shift
+    exec ${simpleBuildTool}/bin/sbt package "run-main \$CLASS \$@"
+    EOF
+    chmod +x $out/bin/spark-upload-scala
+
+    cat > $out/bin/spark-upload-python <<EOF
+    #!${bash}/bin/bash
+    exec $out/bin/pyspark \$@
+    EOF
+    chmod +x $out/bin/spark-upload-python
   '';
 
+  phases = "unpackPhase installPhase";
+
   meta = {
-    description      = "Apache Spark is a fast and general engine for large-scale data processing";
+    description      = "Lightning-fast cluster computing";
     homepage         = "http://spark.apache.org";
     license          = stdenv.lib.licenses.asl20;
     platforms        = stdenv.lib.platforms.all;
-    maintainers      = with maintainers; [ thoughtpolice offline ];
+    maintainers      = [ stdenv.lib.maintainers.thoughtpolice ];
     repositories.git = git://git.apache.org/spark.git;
   };
 }

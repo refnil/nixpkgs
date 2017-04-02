@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, boost, gtkmm2, lv2, pkgconfig, python }:
+{ stdenv, fetchurl, boost, gtkmm, lv2, pkgconfig, python }:
 
 stdenv.mkDerivation rec {
   name = "lvtk-${version}";
@@ -9,20 +9,10 @@ stdenv.mkDerivation rec {
     sha256 = "03nbj2cqcklqwh50zj2gwm07crh5iwqbpxbpzwbg5hvgl4k4rnjd";
   };
 
-  nativeBuildInputs = [ pkgconfig python ];
-  buildInputs = [ boost gtkmm2 lv2 ];
-
-  enableParallelBuilding = true;
-
-  # Fix including the boost libraries during linking
-  postPatch = ''
-    sed -i '/target[ ]*= "ttl2c"/ ilib=["boost_system"],' tools/wscript_build
-  '';
+  buildInputs = [ boost gtkmm lv2 pkgconfig python ];
 
   configurePhase = ''
-    python waf configure --prefix=$out \
-      --boost-includes="${boost.dev}/include" \
-      --boost-libs="${boost.out}/lib"
+    python waf configure --prefix=$out --boost-includes=${boost}/include
   '';
 
   buildPhase = "python waf";

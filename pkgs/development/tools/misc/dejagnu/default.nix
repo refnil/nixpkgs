@@ -1,11 +1,11 @@
 { fetchurl, stdenv, expect, makeWrapper }:
 
 stdenv.mkDerivation rec {
-  name = "dejagnu-1.6";
+  name = "dejagnu-1.5.1";
 
   src = fetchurl {
     url = "mirror://gnu/dejagnu/${name}.tar.gz";
-    sha256 = "0qypaakd2065jgpcv84zcsibl8gph3p334gb2qdmhsrbirhlmdh0";
+    sha256 = "1lik8h4qi7x0mhsi8xmj91an1yb63rjbk6v4xrmzgiy5lk8lgrv0";
   };
 
   patches = [ ./wrapped-runtest-program-name.patch ];
@@ -32,7 +32,7 @@ stdenv.mkDerivation rec {
       --prefix PATH ":" "${expect}/bin"
   '';
 
-  meta = with stdenv.lib; {
+  meta = {
     description = "Framework for testing other programs";
 
     longDescription = ''
@@ -47,9 +47,9 @@ stdenv.mkDerivation rec {
     '';
 
     homepage = http://www.gnu.org/software/dejagnu/;
-    license = licenses.gpl2Plus;
+    license = stdenv.lib.licenses.gpl2Plus;
 
-    platforms = platforms.linux;
-    maintainers = with maintainers; [ wkennington vrthra ];
+    platforms = stdenv.lib.platforms.all;
+    maintainers = [ stdenv.lib.maintainers.ludo ];
   };
 }

@@ -5,34 +5,33 @@ stdenv.mkDerivation rec {
   name = "swec-0.4";
 
   src = fetchurl {
-    url = "http://files.zerodogg.org/swec/${name}.tar.bz2";
+    url = "http://random.zerodogg.org/files/${name}.tar.bz2";
     sha256 = "1m3971z4z1wr0paggprfz0n8ng8vsnkc9m6s3bdplgyz7qjk6jwx";
   };
 
   buildInputs = [ makeWrapper perl LWP URI HTMLParser ]
-   ++ stdenv.lib.optionals doCheck [ HTTPServerSimple Parent ];
+   ++ stdenv.lib.optional doCheck [ HTTPServerSimple Parent ];
 
-  configurePhase = ''
-    for i in swec tests/{runTests,testServer}
-    do
-      sed -i "$i" -e's|/usr/bin/perl|${perl}/bin/perl|g'
-    done
-  '';
+  configurePhase =
+    '' for i in swec tests/{runTests,testServer}
+       do
+         sed -i "$i" -e's|/usr/bin/perl|${perl}/bin/perl|g'
+       done
+    '';
 
-  dontBuild = true;
+  buildPhase  = "true";
+  installPhase =
+    '' make install prefix="$out"
 
-  installPhase = ''
-    make install prefix="$out"
+       mkdir -p "$out/share/${name}"
+       cp -v default.sdf "$out/share/${name}"
+       sed -i "$out/bin/swec" -e"s|realpath(\$0)|'$out/share/${name}/swec'|g"
 
-    mkdir -p "$out/share/${name}"
-    cp -v default.sdf "$out/share/${name}"
-    sed -i "$out/bin/swec" -e"s|realpath(\$0)|'$out/share/${name}/swec'|g"
-
-    wrapProgram "$out/bin/swec" \
-      --prefix PERL5LIB : \
-      ${stdenv.lib.concatStringsSep ":"
-          (map (x: "${x}/lib/perl5/site_perl") [ LWP URI HTMLParser ])}
-  '';
+       wrapProgram "$out/bin/swec" \
+         --prefix PERL5LIB : \
+         ${stdenv.lib.concatStringsSep ":"
+             (map (x: "${x}/lib/perl5/site_perl") [ LWP URI HTMLParser ])}
+    '';
 
   doCheck = true;
   checkPhase = "make test";
@@ -70,6 +69,5 @@ stdenv.mkDerivation rec {
     license = stdenv.lib.licenses.gpl3Plus;
 
     maintainers = [ ];
-    platforms = stdenv.lib.platforms.linux;
   };
 }

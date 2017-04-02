@@ -1,18 +1,12 @@
-{ stdenv, fetchgit, cmake, mesa, sfml, fribidi, taglib }:
+{ stdenv, fetchurl, cmake, mesa, sfml_git, fribidi, taglib }:
 stdenv.mkDerivation rec {
-  name = "mars-${version}-${rev}";
-  version = "0.7.5";
-  rev = "c855d04409";
-  src = fetchgit {
-    url = "https://github.com/thelaui/M.A.R.S..git";
-    inherit rev;
-    sha256 = "1r4c5gap1z2zsv4yjd34qriqkxaq4lb4rykapyzkkdf4g36lc3nh";
+  name = "mars-${version}";
+  version = "0.7.2";
+  src = fetchurl {
+    url = "mirror://sourceforge/mars-game/mars_source_${version}.tar.gz";
+    sha256 = "092y0y1dghkvs0syjg9cv8iq0w29hkin8bznqc8sqm21v0swk451";
   };
-  buildInputs = [ cmake mesa sfml fribidi taglib ];
-  patches = [
-    ./unbind_fix.patch
-    ./fix-gluortho2d.patch
-  ];
+  buildInputs = [ cmake mesa sfml_git fribidi taglib ];
   installPhase = ''
     cd ..
     find -name '*.svn' -exec rm -rf {} \;
@@ -32,6 +26,5 @@ stdenv.mkDerivation rec {
     description = "A game about fighting with ships in a 2D space setting";
     license = licenses.gpl3Plus;
     maintainers = [ maintainers.astsmtl ];
-    platforms = platforms.linux;
   };
 }

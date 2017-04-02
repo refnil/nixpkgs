@@ -1,34 +1,24 @@
-{ stdenv, fetchgit, autoreconfHook, libcap }:
-
+{ stdenv, fetchgit, autoreconfHook }:
 stdenv.mkDerivation rec {
-  name = "torsocks-${version}";
-  version = "2.2.0";
-
+  pname = "torsocks";
+  name = "${pname}-${version}";
+  version = "1.3";
+  
   src = fetchgit {
-    url    = meta.repositories.git;
-    rev    = "refs/tags/v${version}";
-    sha256 = "1xwkmfaxhhnbmvp37agnby1n53hznwhvx0dg1hj35467qfx985zc";
+    url = meta.repositories.git;
+    rev = "refs/tags/${version}";
+    sha256 = "1cqplb36fkdb81kzf48xlxclf64wnp8r56x1gjayax1h6x4aal1w";
   };
 
-  nativeBuildInputs = [ autoreconfHook ];
-
-  postPatch = ''
-    # Patch torify_app()
-    sed -i \
-      -e 's,\(local app_path\)=`which $1`,\1=`type -P $1`,' \
-      -e 's,\(local getcap\)=.*,\1=${libcap}/bin/getcap,' \
-      src/bin/torsocks.in
+  buildInputs = [ autoreconfHook ];
+  preConfigure = ''
+      export configureFlags="$configureFlags --libdir=$out/lib"
   '';
 
-  doInstallCheck = true;
-  installCheckTarget = "check-recursive";
-
   meta = {
-    description      = "Wrapper to safely torify applications";
-    homepage         = http://code.google.com/p/torsocks/;
+    description = "use socks-friendly applications with Tor";
+    homepage = http://code.google.com/p/torsocks/;
     repositories.git = https://git.torproject.org/torsocks.git;
-    license          = stdenv.lib.licenses.gpl2;
-    platforms        = stdenv.lib.platforms.unix;
-    maintainers      = with stdenv.lib.maintainers; [ phreedom thoughtpolice ];
+    license = stdenv.lib.licenses.gpl2;
   };
 }

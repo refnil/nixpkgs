@@ -1,24 +1,24 @@
-{stdenv, fetchurl, gettext, python3, xz}:
+{stdenv, fetchurl, gettext, python, xz}:
 
 stdenv.mkDerivation rec {
-  name = "iso-codes-3.74";
-
+  name = "iso-codes-3.51";
   src = fetchurl {
     url = "http://pkg-isocodes.alioth.debian.org/downloads/${name}.tar.xz";
-    sha256 = "1vkaxkcx8h8lbg3z3jjfjs1x1rz1l01j6ll46ysza2gym37g7x11";
+    sha256 = "0zyp99l4m8cd6301x8zi3xxhziam6v0ic1h8qxb1l0mcjafzf8jj";
   };
   patchPhase = ''
     for i in `find . -name \*.py`
     do
-        sed -i -e "s|#!/usr/bin/env python|#!${python3}/bin/python|" $i
+        sed -i -e "s|#!/usr/bin/env python|#!${python}/bin/python|" $i
     done
   '';
-  buildInputs = [ gettext python3 ];
+  buildInputs = [ gettext ];
+  nativeBuildInputs = [ xz ];
 
-  meta = with stdenv.lib; {
+  meta = {
     homepage = http://pkg-isocodes.alioth.debian.org/;
     description = "Various ISO codes packaged as XML files";
-    maintainers = [ ];
-    platforms = platforms.all;
+    maintainers = [ stdenv.lib.maintainers.urkud ];
+    platforms = stdenv.lib.platforms.all;
   };
 }

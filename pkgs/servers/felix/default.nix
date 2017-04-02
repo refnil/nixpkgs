@@ -1,11 +1,10 @@
 {stdenv, fetchurl}:
 
-stdenv.mkDerivation rec {
-  name = "apache-felix-${version}";
-  version = "5.6.1";
+stdenv.mkDerivation {
+  name = "apache-felix-2.0.5";
   src = fetchurl {
-    url = "mirror://apache/felix/org.apache.felix.main.distribution-${version}.tar.gz";
-    sha256 = "0kis26iajzdid162j4i7g558q09x4hn9z7pqqys6ipb0fj84hz1x";
+    url = http://apache.xl-mirror.nl/felix/org.apache.felix.main.distribution-2.0.5.tar.gz;
+    sha256 = "14nva0q1b45kmmalcls5yx97syd4vn3vcp8gywck1098qhidi66g";
   };
   buildCommand =
   ''
@@ -14,10 +13,10 @@ stdenv.mkDerivation rec {
     mkdir -p $out
     cp -av * $out
   '';
-  meta = with stdenv.lib; {
-    description = "An OSGi gateway";
-    homepage = https://felix.apache.org;
-    license = licenses.asl20;
-    maintainers = [ maintainers.sander ];
+  meta = {
+    description = "Apache Felix OSGi gateway";
+    homepage = http://felix.apache.org;
+    license = "ASF";
+    maintainers = [ stdenv.lib.maintainers.sander ];
   };
 }

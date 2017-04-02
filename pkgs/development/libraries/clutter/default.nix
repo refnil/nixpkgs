@@ -4,15 +4,15 @@ gobjectIntrospection
 }:
 
 let
-  ver_maj = "1.26";
-  ver_min = "0";
+  ver_maj = "1.16";
+  ver_min = "2";
 in
 stdenv.mkDerivation rec {
   name = "clutter-${ver_maj}.${ver_min}";
 
   src = fetchurl {
     url = "mirror://gnome/sources/clutter/${ver_maj}/${name}.tar.xz";
-    sha256 = "01nfjd4k7j2n3agpx2d9ncff86nfsqv4n23465rb9zmk4iw4wlb7";
+    sha256 = "0hnz6fnrkc7ixrm2x83sxyha32p9896d7ilzhvxwfgzlh26fidqc";
   };
 
   nativeBuildInputs = [ pkgconfig ];
@@ -26,7 +26,7 @@ stdenv.mkDerivation rec {
   #doCheck = true; # no tests possible without a display
 
   meta = {
-    description = "Library for creating fast, dynamic graphical user interfaces";
+    description = "Clutter, a library for creating fast, dynamic graphical user interfaces";
 
     longDescription =
       '' Clutter is free software library for creating fast, compelling,
@@ -46,7 +46,7 @@ stdenv.mkDerivation rec {
     license = stdenv.lib.licenses.lgpl2Plus;
     homepage = http://www.clutter-project.org/;
 
-    maintainers = with stdenv.lib.maintainers; [ lethalman ];
+    maintainers = with stdenv.lib.maintainers; [ urkud ];
     platforms = stdenv.lib.platforms.mesaPlatforms;
   };
 }

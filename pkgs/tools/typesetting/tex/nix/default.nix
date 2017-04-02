@@ -10,31 +10,24 @@ rec {
     , extraFiles ? []
     , compressBlanksInIndex ? true
     , packages ? []
-    , texPackages ? {}
     , copySources ? false
     }:
 
     assert generatePDF -> !generatePS;
-
-    let
-      tex = pkgs.texlive.combine
-        # always include basic stuff you need for LaTeX
-        ({inherit (pkgs.texlive) scheme-basic;} // texPackages);
-    in
-
+    
     pkgs.stdenv.mkDerivation {
       name = "doc";
-
+      
       builder = ./run-latex.sh;
       copyIncludes = ./copy-includes.pl;
-
+      
       inherit rootFile generatePDF generatePS extraFiles
         compressBlanksInIndex copySources;
 
       includes = map (x: [x.key (baseNameOf (toString x.key))])
         (findLaTeXIncludes {inherit rootFile;});
-
-      buildInputs = [ tex pkgs.perl ] ++ packages;
+      
+      buildInputs = [ pkgs.tetex pkgs.perl ] ++ packages;
     };
 
 
@@ -48,7 +41,7 @@ rec {
 
     builtins.genericClosure {
       startSet = [{key = rootFile;}];
-
+      
       operator =
         {key, ...}:
 
@@ -79,7 +72,7 @@ rec {
 
         in pkgs.lib.fold foundDeps [] deps;
     };
-
+    
 
   findLhs2TeXIncludes =
     { rootFile
@@ -87,7 +80,7 @@ rec {
 
     builtins.genericClosure {
       startSet = [{key = rootFile;}];
-
+      
       operator =
         {key, ...}:
 
@@ -110,10 +103,10 @@ rec {
       builder = ./dot2pdf.sh;
       inherit dotGraph fontsConf;
       buildInputs = [
-        pkgs.perl pkgs.graphviz
+        pkgs.perl pkgs.tetex pkgs.graphviz
       ];
     };
-
+  
 
   dot2ps =
     { dotGraph
@@ -124,7 +117,7 @@ rec {
       builder = ./dot2ps.sh;
       inherit dotGraph;
       buildInputs = [
-        pkgs.perl pkgs.graphviz pkgs.ghostscript
+        pkgs.perl pkgs.tetex pkgs.graphviz pkgs.ghostscript
       ];
     };
 
@@ -139,7 +132,7 @@ rec {
       includes = map (x: [x.key (baseNameOf (toString x.key))])
         (findLhs2TeXIncludes {rootFile = source;});
     };
-
+  
   animateDot = dotGraph: nrFrames: pkgs.stdenv.mkDerivation {
     name = "dot-frames";
     builder = ./animatedot.sh;
@@ -170,7 +163,7 @@ rec {
 
 
   # Convert a Postscript file to a PNG image, trimming it so that
-  # there is no unnecessary surrounding whitespace.
+  # there is no unnecessary surrounding whitespace.    
   postscriptToPNG =
     { postscript
     }:
@@ -180,12 +173,12 @@ rec {
       inherit postscript;
 
       buildInputs = [pkgs.imagemagick pkgs.ghostscript];
-
+      
       buildCommand = ''
         if test -d $postscript; then
           input=$(ls $postscript/*.ps)
         else
-          input=$(stripHash $postscript)
+          input=$(stripHash $postscript; echo $strippedName)
           ln -s $postscript $input
         fi
 
@@ -247,5 +240,5 @@ rec {
       "${pkgs.ghostscript}/share/ghostscript/fonts"
     ];
   };
-
+  
 }

@@ -1,7 +1,7 @@
 { avahiSupport ? false # build support for Avahi in libinfinity
 , gnomeSupport ? false # build support for Gnome(gnome-vfs)
 , stdenv, fetchurl, pkgconfig
-, gtkmm2, gsasl, gtksourceview, libxmlxx, libinfinity, intltool
+, gtkmm, gsasl, gtksourceview, libxmlxx, libinfinity, intltool
 , gnome_vfs ? null}:
 
 let
@@ -9,13 +9,13 @@ let
   
 in stdenv.mkDerivation rec {
 
-  name = "gobby-0.5.0";
+  name = "gobby-0.4.94";
   src = fetchurl {
     url = "http://releases.0x539.de/gobby/${name}.tar.gz";
-    sha256 = "165x0r668ma5blziisvbr8qig3jw9hf7i6w8r7wwvz3wsac3bswc";
+    sha256 = "b9798808447cd94178430f0fb273d0e45d0ca30ab04560e3790bac469e03bb00";
   };
 
-  buildInputs = [ pkgconfig gtkmm2 gsasl gtksourceview libxmlxx libinf intltool ]
+  buildInputs = [ pkgconfig gtkmm gsasl gtksourceview libxmlxx libinf intltool ]
     ++ stdenv.lib.optional gnomeSupport gnome_vfs;
   
   configureFlags = ''
