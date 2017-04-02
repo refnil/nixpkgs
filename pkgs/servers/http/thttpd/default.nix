@@ -2,11 +2,11 @@
 
 stdenv.mkDerivation rec {
   name = "thttpd-${version}";
-  version = "2.25b";
+  version = "2.27";
 
   src = fetchurl {
     url = "http://acme.com/software/thttpd/${name}.tar.gz";
-    sha256 = "0q13sfkh6amn5wk0ccbmxq3mnhlm8g5pnyk910fa5xngn449nw87";
+    sha256 = "0ykda5k1zzzag59zbd4bkzj1psavq0xnpy7vpk19rhx7mlvvri5i";
   };
 
   prePatch = ''
@@ -14,7 +14,7 @@ stdenv.mkDerivation rec {
   '';
 
   preInstall = ''
-    ensureDir "$out/man/man1"
+    mkdir -p "$out/man/man1"
     sed -i -e 's/-o bin -g bin *//' Makefile
     sed -i -e '/chgrp/d' extras/Makefile
   '';
@@ -23,5 +23,6 @@ stdenv.mkDerivation rec {
     description = "Tiny/turbo/throttling HTTP server";
     homepage = "http://www.acme.com/software/thttpd/";
     license = stdenv.lib.licenses.bsd2;
+    platforms = stdenv.lib.platforms.linux;
   };
 }

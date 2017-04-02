@@ -1,33 +1,44 @@
-{ stdenv, fetchurl, pkgconfig, gettext, x11, glib, cairo, libpng, harfbuzz, fontconfig
-, libintlOrEmpty, gobjectIntrospection }:
+{ stdenv, fetchurl, pkgconfig, libXft, cairo, harfbuzz
+, libintlOrEmpty, gobjectIntrospection, darwin
+}:
 
+with stdenv.lib;
+
+let
+  ver_maj = "1.40";
+  ver_min = "3";
+in
 stdenv.mkDerivation rec {
-  name = "pango-1.32.5"; #.6 and higher need fontconfig-2.11.* which is troublesome
+  name = "pango-${ver_maj}.${ver_min}";
 
   src = fetchurl {
-    url = "mirror://gnome/sources/pango/1.32/${name}.tar.xz";
-    sha256 = "08aqis6j8nd1lb4f2h4h9d9kjvp54iwf8zvqzss0qn4v7nfcjyvx";
+    url = "mirror://gnome/sources/pango/${ver_maj}/${name}.tar.xz";
+    sha256 = "abba8b5ce728520c3a0f1535eab19eac3c14aeef7faa5aded90017ceac2711d3";
   };
 
-  buildInputs = with stdenv.lib;
-    optional (!stdenv.isDarwin) gobjectIntrospection # build problems of itself and flex
-    ++ optionals stdenv.isDarwin [ gettext fontconfig ];
+  outputs = [ "bin" "dev" "out" "devdoc" ];
 
-  nativeBuildInputs = [ pkgconfig ];
-
-  propagatedBuildInputs = [ x11 glib cairo libpng harfbuzz ] ++ libintlOrEmpty;
+  buildInputs = [ gobjectIntrospection ];
+  nativeBuildInputs = [ pkgconfig ]
+    ++ optionals stdenv.isDarwin (with darwin.apple_sdk.frameworks; [
+       Carbon
+       CoreGraphics
+       CoreText
+    ]);
+  propagatedBuildInputs = [ cairo harfbuzz libXft ] ++ libintlOrEmpty;
 
   enableParallelBuilding = true;
 
+  doCheck = false; # test-layout fails on 1.40.3 (fails to find font config)
   # jww (2014-05-05): The tests currently fail on Darwin:
   #
   # ERROR:testiter.c:139:iter_char_test: assertion failed: (extents.width == x1 - x0)
   # .../bin/sh: line 5: 14823 Abort trap: 6 srcdir=. PANGO_RC_FILE=./pangorc ${dir}$tst
   # FAIL: testiter
-  doCheck = !stdenv.isDarwin;
-  postInstall = "rm -rf $out/share/gtk-doc";
 
-  meta = {
+  configureFlags = optional stdenv.isDarwin "--without-x";
+
+  meta = with stdenv.lib; {
     description = "A library for laying out and rendering of text, with an emphasis on internationalization";
 
     longDescription = ''
@@ -39,9 +50,9 @@ stdenv.mkDerivation rec {
     '';
 
     homepage = http://www.pango.org/;
-    license = stdenv.lib.licenses.lgpl2Plus;
+    license = licenses.lgpl2Plus;
 
-    maintainers = with stdenv.lib.maintainers; [ raskin urkud ];
-    hydraPlatforms = stdenv.lib.platforms.linux ++ stdenv.lib.platforms.darwin;
+    maintainers = with maintainers; [ raskin ];
+    platforms = platforms.linux ++ platforms.darwin;
   };
 }

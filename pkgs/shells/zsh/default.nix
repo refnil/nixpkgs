@@ -1,12 +1,12 @@
-{ stdenv, fetchurl, ncurses, coreutils }:
+{ stdenv, fetchurl, ncurses, pcre }:
 
 let
 
-  version = "5.0.5";
+  version = "5.3.1";
 
   documentation = fetchurl {
-    url = "mirror://sourceforge/zsh/zsh-${version}-doc.tar.bz2";
-    sha256 = "1wljqii2lkz5kc4y3xs65isnahvnlj678b9zv31bn444mapjpwp4";
+    url = "mirror://sourceforge/zsh/zsh-${version}-doc.tar.gz";
+    sha256 = "0hbqn1zg3x5i9klqfzhizk88jzy8pkg65r9k41b3cn42lg3ncsy1";
   };
 
 in
@@ -15,20 +15,28 @@ stdenv.mkDerivation {
   name = "zsh-${version}";
 
   src = fetchurl {
-    url = "mirror://sourceforge/zsh/zsh-${version}.tar.bz2";
-    sha256 = "1bwfz9n850pclzmzrb437icfhzv1s5pgh2dhs92f194gdkxx4936";
+    url = "mirror://sourceforge/zsh/zsh-${version}.tar.gz";
+    sha256 = "03h42gjqx7yb7qggi7ha0ndsggnnav1qm9vx737jwmiwzy8ab51x";
   };
 
-  buildInputs = [ ncurses coreutils ];
+  buildInputs = [ ncurses pcre ];
 
   preConfigure = ''
-    configureFlags="--enable-maildir-support --enable-multibyte --enable-zprofile=$out/etc/zprofile --with-tcsetpgrp"
+    configureFlags="--enable-maildir-support --enable-multibyte --enable-zprofile=$out/etc/zprofile --with-tcsetpgrp --enable-pcre"
+  '';
+
+  # the zsh/zpty module is not available on hydra
+  # so skip groups Y Z
+  checkFlagsArray = ''
+    (TESTNUM=A TESTNUM=B TESTNUM=C TESTNUM=D TESTNUM=E TESTNUM=V TESTNUM=W)
   '';
 
   # XXX: think/discuss about this, also with respect to nixos vs nix-on-X
   postInstall = ''
-    mkdir -p $out/share/
+    mkdir -p $out/share/info
     tar xf ${documentation} -C $out/share
+    ln -s $out/share/zsh-*/Doc/zsh.info* $out/share/info/
+
     mkdir -p $out/etc/
     cat > $out/etc/zprofile <<EOF
 if test -e /etc/NIXOS; then
@@ -68,8 +76,12 @@ EOF
       a host of other features.
     '';
     license = "MIT-like";
-    homePage = "http://www.zsh.org/";
-    maintainers = with stdenv.lib.maintainers; [ chaoflow ];
+    homepage = "http://www.zsh.org/";
+    maintainers = with stdenv.lib.maintainers; [ chaoflow pSub ];
     platforms = stdenv.lib.platforms.unix;
+  };
+
+  passthru = {
+    shellPath = "/bin/zsh";
   };
 }

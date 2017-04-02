@@ -1,29 +1,17 @@
-{stdenv, fetchurl, python, makeWrapper}:
+{stdenv, fetchurl, python2Packages}:
 
 let
   name = "scons";
-  version = "2.3.1";
-in
-
-stdenv.mkDerivation {
+  version = "2.5.1";
+in python2Packages.buildPythonApplication {
   name = "${name}-${version}";
 
   src = fetchurl {
     url = "mirror://sourceforge/scons/${name}-${version}.tar.gz";
-    sha256 = "00822ax62cfi2fvz9zhw80hl1273524d97xfycq4q276z1lb86h9";
+    sha256 = "1wji1z9jdkhnmm99apx6fhld9cs52rr56aigniyrcsmlwy52298b";
   };
-
-  buildInputs = [python makeWrapper];
-
-  preConfigure = ''
-    for i in "script/"*; do
-     substituteInPlace $i --replace "/usr/bin/env python" "${python}/bin/python"
-    done
-  '';
-  buildPhase = "python setup.py install --prefix=$out --install-data=$out/share --install-lib=$(toPythonPath $out) --symlink-scons -O1";
-  installPhase = "for n in $out/bin/*-${version}; do wrapProgram $n --suffix PYTHONPATH ':' \"$(toPythonPath $out)\"; done";
-
-  pythonPath = [];
+  # No tests
+  doCheck = false;
 
   meta = {
     homepage = "http://scons.org/";
@@ -38,6 +26,5 @@ stdenv.mkDerivation {
       software.
     '';
     platforms = stdenv.lib.platforms.all;
-    maintainers = [ stdenv.lib.maintainers.simons ];
   };
 }

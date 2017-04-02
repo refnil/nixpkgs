@@ -2,12 +2,14 @@
 
 stdenv.mkDerivation rec {
   name = "movit-${version}";
-  version = "1.1.1";
+  version = "1.2.0";
 
   src = fetchurl {
     url = "http://movit.sesse.net/${name}.tar.gz";
-    sha256 = "1k3qbkxapcplpsx22xh4m4ccp9fhsjfcj3pjzbcnrc51103aklag";
+    sha256 = "0wyl5xl4pkw17pkxsdg8idqvsgm4fxapd0r4dw9wlxw250915nmf";
   };
+
+  outputs = [ "out" "dev" ];
 
   GTEST_DIR = "${gtest}";
 

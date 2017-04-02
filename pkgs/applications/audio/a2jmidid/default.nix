@@ -1,6 +1,9 @@
-{ stdenv, fetchurl, alsaLib, dbus, jack2, pkgconfig, python }:
+{ stdenv, fetchurl, makeWrapper, pkgconfig, alsaLib, dbus, libjack2
+, python2Packages}:
 
-stdenv.mkDerivation rec {
+let
+  inherit (python2Packages) python dbus-python;
+in stdenv.mkDerivation rec {
   name = "a2jmidid-${version}";
   version = "8";
 
@@ -9,13 +12,16 @@ stdenv.mkDerivation rec {
     sha256 = "0pzm0qk5ilqhwz74pydg1jwrds27vm47185dakdrxidb5bv3b5ia";
   };
 
-  buildInputs = [ alsaLib dbus jack2 pkgconfig python ];
+  buildInputs = [ makeWrapper pkgconfig alsaLib dbus libjack2 python dbus-python ];
 
-  configurePhase = "python waf configure --prefix=$out";
+  configurePhase = "${python.interpreter} waf configure --prefix=$out";
 
-  buildPhase = "python waf";
+  buildPhase = "${python.interpreter} waf";
 
-  installPhase = "python waf install";
+  installPhase = ''
+    ${python.interpreter} waf install
+    wrapProgram $out/bin/a2j_control --set PYTHONPATH $PYTHONPATH
+  '';
 
   meta = with stdenv.lib; {
     homepage = http://home.gna.org/a2jmidid;

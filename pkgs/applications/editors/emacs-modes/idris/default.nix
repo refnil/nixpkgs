@@ -3,11 +3,11 @@
 stdenv.mkDerivation rec {
   name = "${pname}-${version}";
   pname = "idris-mode";
-  version = "0.9.13.1";
+  version = "0.9.18";
 
   src = fetchurl {
     url = "https://github.com/idris-hackers/${pname}/archive/${version}.tar.gz";
-    sha256 = "0ymjbkwsq7qra691wyldw91xcdgrbx3468vvrha5jj92v7nwb8wx";
+    sha256 = "06rw5lrxqqnw0kni3x9jm73x352d1vb683d41v8x3yzqfa2sxmwg";
   };
 
   buildInputs = [ emacs ];

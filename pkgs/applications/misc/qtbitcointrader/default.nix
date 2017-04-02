@@ -1,33 +1,35 @@
-{ stdenv, fetchurl, qt4 }:
+{ stdenv, fetchurl, qt5 }:
 
 let
-  version = "1.07.98";
+  version = "1.10.01";
 in
 stdenv.mkDerivation {
   name = "qtbitcointrader-${version}";
 
   src = fetchurl {
-    url = "mirror://sourceforge/bitcointrader/SRC/QtBitcoinTrader-${version}.tar.gz";
-    sha256 = "1irz17q71fx64dfkmgajlyva7d1wifv4bxgb2iwz7d69rvhzaqzx";
+    url = "https://github.com/JulyIGHOR/QtBitcoinTrader/archive/v${version}.tar.gz";
+    sha256 = "0pgj8rsk9yxvls7yjpzblzbci2vvd0mlf9c7wdbjhwf6qyi7dfi3";
   };
 
-  buildInputs = [ qt4 ];
+  buildInputs = [ qt5.qtbase qt5.qtmultimedia qt5.qtscript ];
 
   postUnpack = "sourceRoot=\${sourceRoot}/src";
 
   configurePhase = ''
-    qmake \
+    runHook preConfigure
+    qmake $qmakeFlags \
       PREFIX=$out \
       DESKTOPDIR=$out/share/applications \
       ICONDIR=$out/share/pixmaps \
-        QtBitcoinTrader_Desktop.pro
+      QtBitcoinTrader_Desktop.pro
+    runHook postConfigure
   '';
 
-  meta = {
-    description = "Secure bitcoin trading client";
-    homepage = http://qtopentrader.com;
-    license = stdenv.lib.licenses.lgpl21Plus;
-    platforms = stdenv.lib.platforms.linux;  # arbitrary choice
-    maintainers = [ stdenv.lib.maintainers.emery ];
-  };
+  meta = with stdenv.lib;
+    { description = "Bitcoin trading client";
+      homepage = https://centrabit.com/;
+      license = licenses.lgpl3;
+      platforms = qt5.qtbase.meta.platforms;
+      maintainers = [ maintainers.ehmry ];
+    };
 }

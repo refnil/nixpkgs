@@ -1,23 +1,26 @@
-{ stdenv, fetchurl, perl, gdb }:
+{ stdenv, fetchurl, fetchpatch, perl, gdb, llvm, cctools, xnu, bootstrap_cmds }:
 
 stdenv.mkDerivation rec {
-  name = "valgrind-3.9.0";
+  name = "valgrind-3.12.0";
 
   src = fetchurl {
     url = "http://valgrind.org/downloads/${name}.tar.bz2";
-    sha256 = "1w6n5qvxy2ssbczcl1c2yd2ggjn3ipay2hvpn10laly2dfh73bz6";
+    sha256 = "18bnrw9b1d55wi1wnl68n25achsp9w48n51n1xw4fwjjnaal7jk7";
   };
 
-  patches = [ ./glibc-2.19.patch ];
+  outputs = [ "out" "dev" "man" "doc" ];
+
+  hardeningDisable = [ "stackprotector" ];
 
   # Perl is needed for `cg_annotate'.
   # GDB is needed to provide a sane default for `--db-command'.
-  nativeBuildInputs = [ perl ];
-  buildInputs = stdenv.lib.optional (!stdenv.isDarwin) gdb;
+  buildInputs = [ perl gdb ]  ++ stdenv.lib.optionals (stdenv.isDarwin) [ bootstrap_cmds xnu ];
 
   enableParallelBuilding = true;
 
-  postPatch =
+  patches = stdenv.lib.optionals (stdenv.isDarwin) [ ./valgrind-bzero.patch ];
+
+  postPatch = stdenv.lib.optionalString (stdenv.isDarwin)
     # Apple's GCC doesn't recognize `-arch' (as of version 4.2.1, build 5666).
     ''
       echo "getting rid of the \`-arch' GCC option..."
@@ -26,6 +29,23 @@ stdenv.mkDerivation rec {
 
       sed -i coregrind/link_tool_exe_darwin.in \
           -e 's/^my \$archstr = .*/my $archstr = "x86_64";/g'
+
+      echo "substitute hardcoded /usr/include/mach with ${xnu}/include/mach"
+      substituteInPlace coregrind/Makefile.in \
+         --replace /usr/include/mach ${xnu}/include/mach
+
+      echo "substitute hardcoded dsymutil with ${llvm}/bin/llvm-dsymutil"
+      find -name "Makefile.in" | while read file; do
+         substituteInPlace "$file" \
+           --replace dsymutil ${llvm}/bin/llvm-dsymutil
+      done
+
+      substituteInPlace coregrind/m_debuginfo/readmacho.c \
+         --replace /usr/bin/dsymutil ${llvm}/bin/llvm-dsymutil
+
+      echo "substitute hardcoded /usr/bin/ld with ${cctools}/bin/ld"
+      substituteInPlace coregrind/link_tool_exe_darwin.in \
+        --replace /usr/bin/ld ${cctools}/bin/ld
     '';
 
   configureFlags =
@@ -38,11 +58,13 @@ stdenv.mkDerivation rec {
         --replace 'obj:/usr/X11R6/lib' 'obj:*/lib' \
         --replace 'obj:/usr/lib' 'obj:*/lib'
     done
+
+    paxmark m $out/lib/valgrind/*-*-linux
   '';
 
   meta = {
     homepage = http://www.valgrind.org/;
-    description = "Valgrind, a debugging and profiling tool suite";
+    description = "Debugging and profiling tool suite";
 
     longDescription = ''
       Valgrind is an award-winning instrumentation framework for
@@ -55,6 +77,6 @@ stdenv.mkDerivation rec {
     license = stdenv.lib.licenses.gpl2Plus;
 
     maintainers = [ stdenv.lib.maintainers.eelco ];
-    platforms = stdenv.lib.platforms.linux ++ stdenv.lib.platforms.darwin;
+    platforms = stdenv.lib.platforms.unix;
   };
 }

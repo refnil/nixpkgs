@@ -1,31 +1,63 @@
-{ stdenv, fetchgit, pkgconfig, which
-, SDL, mesa, alsaLib
-, libXxf86vm, libXinerama, libXv
+{ stdenv, fetchFromGitHub, makeDesktopItem, coreutils, which, pkgconfig
+, ffmpeg, mesa, freetype, libxml2, python34
+, enableNvidiaCgToolkit ? false, nvidia_cg_toolkit ? null
+, alsaLib ? null, libv4l ? null
+, udev ? null, libX11 ? null, libXext ? null, libXxf86vm ? null
+, libXdmcp ? null, SDL ? null, libpulseaudio ? null
 }:
 
-stdenv.mkDerivation rec {
-  name = "retroarch-0.9.9.7";
+with stdenv.lib;
 
-  src = fetchgit {
-    url = "https://github.com/libretro/RetroArch.git";
-    rev = "ea0c4880556e0f9d1fe8253ddc713bc743b00e1b";
-    sha256 = "1jhyh7f8ijy67fxslxqsp8pjl2lwayjljp06hp4n5cn33yajpbd7";
+let
+  desktopItem = makeDesktopItem {
+    name = "retroarch";
+    exec = "retroarch";
+    icon = "retroarch";
+    comment = "Multi-Engine Platform";
+    desktopName = "RetroArch";
+    genericName = "Libretro Frontend";
+    categories = "Game;Emulator;";
+    #keywords = "multi;engine;emulator;xmb;";
+  };
+in
+
+stdenv.mkDerivation rec {
+  name = "retroarch-bare-${version}";
+  version = "1.3.4";
+
+  src = fetchFromGitHub {
+    owner = "libretro";
+    repo = "RetroArch";
+    sha256 = "0ccp17580w0884baxj5kcynlm03jgd7i62dprz1ajxbi2s7b3mi3";
+    rev = "v${version}";
   };
 
-  buildInputs = [
-    pkgconfig which SDL mesa alsaLib
-    libXxf86vm libXinerama libXv
-  ];
+  buildInputs = [ pkgconfig ffmpeg mesa freetype libxml2 coreutils python34 which SDL ]
+                ++ optional enableNvidiaCgToolkit nvidia_cg_toolkit
+                ++ optionals stdenv.isLinux [ udev alsaLib libX11 libXext libXxf86vm libXdmcp libv4l libpulseaudio ];
 
-  preConfigure = ''
-    configureFlags="--global-config-dir=$out/etc"
+  configureScript = "sh configure";
+
+  patchPhase = ''
+    export GLOBAL_CONFIG_DIR=$out/etc
+    sed -e 's#/bin/true#${coreutils}/bin/true#' -i qb/qb.libs.sh
   '';
- 
+
+  postInstall = ''
+    mkdir -p $out/share/icons/hicolor/scalable/apps
+    cp -p -T ./media/retroarch.svg $out/share/icons/hicolor/scalable/apps/retroarch.svg
+
+    mkdir -p "$out/share/applications"
+    cp ${desktopItem}/share/applications/* $out/share/applications
+  '';
+
+  enableParallelBuilding = true;
+
   meta = {
-    description = "Modular multi-system game/emulator system";
-    homepage = "http://www.libretro.com/";
-    license = stdenv.lib.licenses.gpl3Plus;
-    platforms = stdenv.lib.platforms.linux;
-    maintainers = with stdenv.lib.maintainers; [ iyzsong ];
+    homepage = http://libretro.org/;
+    description = "Multi-platform emulator frontend for libretro cores";
+    license = licenses.gpl3;
+    platforms = platforms.all;
+    maintainers = with maintainers; [ MP2E edwtjo matthewbauer ];
   };
 }

@@ -2,12 +2,12 @@
 
 stdenv.mkDerivation rec {
   name = "ninja-${version}";
-  version = "1.4.0";
+  version = "1.7.1";
 
   src = fetchurl {
     name = "${name}.tar.gz";
-    url = "https://github.com/martine/ninja/archive/v${version}.tar.gz";
-    sha256 = "05y3whnp0fvfv1wsp862x0w1vrn3yjzzg8ypvbpcv6y6qlrsn73h";
+    url = "https://github.com/ninja-build/ninja/archive/v${version}.tar.gz";
+    sha256 = "06dy2dc1aafm61ynw9gzig88la3km9dsh53bxf4mnw7l7kjisn2i";
   };
 
   buildInputs = [ python asciidoc re2c ];
@@ -37,6 +37,6 @@ stdenv.mkDerivation rec {
     homepage = http://martine.github.io/ninja/;
     license = licenses.asl20;
     platforms = platforms.unix;
-    maintainers = [ maintainers.bjornfor ];
+    maintainers = [ maintainers.thoughtpolice maintainers.bjornfor ];
   };
 }

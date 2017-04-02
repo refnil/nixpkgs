@@ -1,5 +1,6 @@
-{ stdenv, fetchurl, pkgconfig, glib, systemd
+{ stdenv, fetchurl, fetchpatch, pkgconfig, glib, systemd, boost, darwin
 , alsaSupport ? true, alsaLib
+, avahiSupport ? true, avahi, dbus
 , flacSupport ? true, flac
 , vorbisSupport ? true, libvorbis
 , madSupport ? true, libmad
@@ -17,25 +18,38 @@
 , mmsSupport ? true, libmms
 , mpg123Support ? true, mpg123
 , aacSupport ? true, faad2
-, pulseaudioSupport ? true, pulseaudio
+, pulseaudioSupport ? true, libpulseaudio
+, jackSupport ? true, libjack2
+, gmeSupport ? true, game-music-emu
+, icuSupport ? true, icu
+, clientSupport ? true, mpd_clientlib
+, opusSupport ? true, libopus
+, soundcloudSupport ? true, yajl
 }:
 
+assert avahiSupport -> avahi != null && dbus != null;
+
 let
-
   opt = stdenv.lib.optional;
-
   mkFlag = c: f: if c then "--enable-${f}" else "--disable-${f}";
+  major = "0.20";
+  minor = "6";
 
 in stdenv.mkDerivation rec {
-  name = "mpd-0.18.11";
+  name = "mpd-${major}${if minor == "" then "" else "." + minor}";
   src = fetchurl {
-    url    = "http://www.musicpd.org/download/mpd/stable/${name}.tar.gz";
-    sha256 = "1j3jdwmxfnn4z1vjry2g54vcbrdrgi41nv3bf2i26xkgy5708icw";
+    url    = "http://www.musicpd.org/download/mpd/${major}/${name}.tar.xz";
+    sha256 = "0isbpa79m7zf09w3s1ry638cw96rxasy1ch66zl01k75i48mw1gl";
   };
 
-  buildInputs = [ pkgconfig glib ]
+  patches = [ ./x86.patch ];
+
+  buildInputs = [ pkgconfig glib boost ]
+    ++ opt stdenv.isDarwin darwin.apple_sdk.frameworks.CoreAudioKit
     ++ opt stdenv.isLinux systemd
     ++ opt (stdenv.isLinux && alsaSupport) alsaLib
+    ++ opt avahiSupport avahi
+    ++ opt avahiSupport dbus
     ++ opt flacSupport flac
     ++ opt vorbisSupport libvorbis
     # using libmad to decode mp3 files on darwin is causing a segfault -- there
@@ -55,7 +69,13 @@ in stdenv.mkDerivation rec {
     ++ opt mpg123Support mpg123
     ++ opt aacSupport faad2
     ++ opt zipSupport zziplib
-    ++ opt pulseaudioSupport pulseaudio;
+    ++ opt (!stdenv.isDarwin && pulseaudioSupport) libpulseaudio
+    ++ opt (!stdenv.isDarwin && jackSupport) libjack2
+    ++ opt gmeSupport game-music-emu
+    ++ opt icuSupport icu
+    ++ opt clientSupport mpd_clientlib
+    ++ opt opusSupport libopus
+    ++ opt soundcloudSupport yajl;
 
   configureFlags =
     [ (mkFlag (!stdenv.isDarwin && alsaSupport) "alsa")
@@ -77,9 +97,16 @@ in stdenv.mkDerivation rec {
       (mkFlag mmsSupport "mms")
       (mkFlag mpg123Support "mpg123")
       (mkFlag aacSupport "aac")
-      (mkFlag pulseaudioSupport "pulse")
+      (mkFlag (!stdenv.isDarwin && pulseaudioSupport) "pulse")
+      (mkFlag (!stdenv.isDarwin && jackSupport) "jack")
       (mkFlag stdenv.isDarwin "osx")
+      (mkFlag icuSupport "icu")
+      (mkFlag gmeSupport "gme")
+      (mkFlag clientSupport "libmpdclient")
+      (mkFlag opusSupport "opus")
+      (mkFlag soundcloudSupport "soundcloud")
       "--enable-debug"
+      "--with-zeroconf=avahi"
     ]
     ++ opt stdenv.isLinux
       "--with-systemdsystemunitdir=$(out)/etc/systemd/system";
@@ -92,7 +119,7 @@ in stdenv.mkDerivation rec {
     description = "A flexible, powerful daemon for playing music";
     homepage    = http://mpd.wikia.com/wiki/Music_Player_Daemon_Wiki;
     license     = licenses.gpl2;
-    maintainers = with maintainers; [ astsmtl ];
+    maintainers = with maintainers; [ astsmtl fuuzetsu ehmry fpletz ];
     platforms   = platforms.unix;
 
     longDescription = ''

@@ -4,7 +4,7 @@
 # python wrappers
 , python, swig2, numpy, scipy, matplotlib
 # grc - the gnu radio companion
-, cheetahTemplate, pygtk
+, cheetah, pygtk
 # gr-wavelet: collection of wavelet blocks
 , gsl
 # gr-qtgui: the Qt-based GUI
@@ -23,21 +23,23 @@
 
 stdenv.mkDerivation rec {
   name = "gnuradio-${version}";
-  version = "3.7.3";
+  version = "3.7.10.1";
 
   src = fetchurl {
     url = "http://gnuradio.org/releases/gnuradio/${name}.tar.gz";
-    sha256 = "0caj7dqppav53nhn0ima106hpsn0sakw57v1ihac9fk7ka0x2w8w";
+    sha256 = "0ds9mcw8hgm03f82jvp3j4mm02ha6zvsl77lp13jzqmbqifbdmv3";
   };
 
   buildInputs = [
-    cmake pkgconfig git boost cppunit fftw python swig2 orc lxml qt4 qwt
-    alsaLib SDL libusb1 uhd gsl makeWrapper
+    cmake pkgconfig git boost cppunit fftw python swig2 orc lxml qt4
+    qwt alsaLib SDL libusb1 uhd gsl makeWrapper
   ];
 
   propagatedBuildInputs = [
-    cheetahTemplate numpy scipy matplotlib pyqt4 pygtk wxPython pyopengl
+    cheetah numpy scipy matplotlib pyqt4 pygtk wxPython pyopengl
   ];
+
+  enableParallelBuilding = true;
 
   preConfigure = ''
     export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE -Wno-unused-variable"
@@ -72,6 +74,6 @@ stdenv.mkDerivation rec {
     homepage = http://www.gnuradio.org;
     license = licenses.gpl3;
     platforms = platforms.linux;
-    maintainers = [ maintainers.bjornfor ];
+    maintainers = with maintainers; [ bjornfor fpletz ];
   };
 }

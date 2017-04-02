@@ -1,27 +1,24 @@
-{stdenv, fetchurl, ocaml, findlib}:
+{stdenv, fetchurl, ocaml, findlib, camlp4}:
 
-let
-  ocaml_version = (builtins.parseDrvName ocaml.name).version;
-  version = "0.8.2";
-in
-
-stdenv.mkDerivation {
+stdenv.mkDerivation rec {
   name = "camomile-${version}";
+  version = "0.8.2";
 
   src = fetchurl {
     url = "mirror://sourceforge/camomile/camomile-${version}.tar.bz2";
     sha256 = "0x43pjxx70kgip86mmdn08s97k4qzdqc8i79xfyyx28smy1bsa00";
   };
 
-  buildInputs = [ocaml findlib];
+  buildInputs = [ocaml findlib camlp4];
 
   createFindlibDestdir = true;
 
   meta = {
     homepage = http://camomile.sourceforge.net/;
     description = "A comprehensive Unicode library for OCaml";
-    license = "LGPL";
-    platforms = ocaml.meta.platforms;
+    license = stdenv.lib.licenses.lgpl21;
+    branch = "0.8.2";
+    platforms = ocaml.meta.platforms or [];
     maintainers = [
       stdenv.lib.maintainers.z77z
     ];

@@ -1,18 +1,25 @@
-{ stdenv, fetchurl, pkgconfig, expat, gettext, libiconvOrEmpty, dbus, glib }:
+{ stdenv, fetchurl, pkgconfig, expat, gettext, libiconv, dbus, glib }:
 
 stdenv.mkDerivation rec {
-  name = "dbus-glib-0.102";
+  name = "dbus-glib-0.108";
 
   src = fetchurl {
     url = "${meta.homepage}/releases/dbus-glib/${name}.tar.gz";
-    sha256 = "177j5p2vrvpmzk2xrrj6akn73kvpbvnmsjvlmca9l55qbdcfsr39";
+    sha256 = "0b307hw9j41npzr6niw1bs6ryp87m5yafg492gqwvsaj4dz0qd4z";
   };
+
+  outputs = [ "out" "dev" "devdoc" ];
+  outputBin = "dev";
 
   nativeBuildInputs = [ pkgconfig gettext ];
 
-  buildInputs = [ expat ] ++ libiconvOrEmpty;
+  buildInputs = [ expat libiconv ];
 
-  propagatedBuildInputs = [ dbus.libs glib ];
+  propagatedBuildInputs = [ dbus glib ];
+
+  preConfigure = ''
+    configureFlagsArray+=("--exec-prefix=$dev")
+  '';
 
   doCheck = true;
 
@@ -20,8 +27,9 @@ stdenv.mkDerivation rec {
 
   meta = {
     homepage = http://dbus.freedesktop.org;
-    license = "AFL-2.1 or GPL-2";
+    license = with stdenv.lib.licenses; [ afl21 gpl2 ];
     description = "Obsolete glib bindings for D-Bus lightweight IPC mechanism";
-    maintainers = [ stdenv.lib.maintainers.urkud ];
+    maintainers = [ ];
+    platforms = stdenv.lib.platforms.unix;
   };
 }

@@ -1,7 +1,7 @@
 # This module generates nixos-install, nixos-rebuild,
 # nixos-generate-config, etc.
 
-{ config, pkgs, modulesPath, lib, ... }:
+{ config, pkgs, modulesPath, ... }:
 
 let
 
@@ -21,24 +21,33 @@ let
     name = "nixos-install";
     src = ./nixos-install.sh;
 
-    inherit (pkgs) perl pathsFromGraph;
-    nix = config.nix.package;
+    inherit (pkgs) perl pathsFromGraph rsync;
+    nix = config.nix.package.out;
+    cacert = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+    root_uid = config.ids.uids.root;
+    nixbld_gid = config.ids.gids.nixbld;
 
     nixClosure = pkgs.runCommand "closure"
-      { exportReferencesGraph = ["refs" config.nix.package]; }
+      { exportReferencesGraph = ["refs" config.nix.package.out]; }
       "cp refs $out";
   };
 
-  nixos-rebuild = makeProg {
-    name = "nixos-rebuild";
-    src = ./nixos-rebuild.sh;
-    nix = config.nix.package;
-  };
+  nixos-rebuild =
+    let fallback = import ./nix-fallback-paths.nix; in
+    makeProg {
+      name = "nixos-rebuild";
+      src = ./nixos-rebuild.sh;
+      nix = config.nix.package.out;
+      nix_x86_64_linux = fallback.x86_64-linux;
+      nix_i686_linux = fallback.i686-linux;
+    };
 
   nixos-generate-config = makeProg {
     name = "nixos-generate-config";
     src = ./nixos-generate-config.pl;
+    path = [ pkgs.btrfs-progs ];
     perl = "${pkgs.perl}/bin/perl -I${pkgs.perlPackages.FileSlurp}/lib/perl5/site_perl";
+    inherit (config.system) nixosRelease;
   };
 
   nixos-option = makeProg {
@@ -49,50 +58,15 @@ let
   nixos-version = makeProg {
     name = "nixos-version";
     src = ./nixos-version.sh;
-    inherit (config.system) nixosVersion nixosCodeName;
+    inherit (config.system) nixosVersion nixosCodeName nixosRevision;
   };
-
-  /*
-  nixos-gui = pkgs.xulrunnerWrapper {
-    launcher = "nixos-gui";
-    application = pkgs.stdenv.mkDerivation {
-      name = "nixos-gui";
-      buildCommand = ''
-        cp -r "$gui" "$out"
-
-        # Do not force the copy if the file exists in the sources (this
-        # happens for developpers)
-        test -e "$out/chrome/content/jquery-1.5.2.js" ||
-          cp -f "$jquery" "$out/chrome/content/jquery-1.5.2.js"
-      '';
-      gui = lib.cleanSource "${modulesPath}/../gui";
-      jquery = pkgs.fetchurl {
-        url = http://code.jquery.com/jquery-1.5.2.min.js;
-        sha256 = "8f0a19ee8c606b35a10904951e0a27da1896eafe33c6e88cb7bcbe455f05a24a";
-      };
-    };
-  };
-  */
 
 in
 
 {
-  /*
-  options = {
-
-    installer.enableGraphicalTools = mkOption {
-      default = false;
-      type = types.bool;
-      example = true;
-      description = ''
-        Enable the installation of graphical tools.
-      '';
-    };
-
-  };
-  */
 
   config = {
+
     environment.systemPackages =
       [ nixos-build-vms
         nixos-install
@@ -105,5 +79,7 @@ in
     system.build = {
       inherit nixos-install nixos-generate-config nixos-option nixos-rebuild;
     };
+
   };
+
 }

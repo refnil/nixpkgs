@@ -3,31 +3,30 @@
 , gstreamerSupport ? true, gst_all_1 }:
 
 let
-  ver_maj = "1.16";
-  ver_min = "0";
+  ver_maj = "1.22";
+  ver_min = "2";
 in
 stdenv.mkDerivation rec {
   name = "cogl-${ver_maj}.${ver_min}";
 
   src = fetchurl {
     url = "mirror://gnome/sources/cogl/${ver_maj}/${name}.tar.xz";
-    sha256 = "153014xygwyz9wmvgfwjxncqgc0qqvcy6b3jx1zdl3q5d9iw9hkm";
+    sha256 = "03f0ha3qk7ca0nnkkcr1garrm1n1vvfqhkz9lwjm592fnv6ii9rr";
   };
 
   nativeBuildInputs = [ pkgconfig ];
 
   configureFlags = [
     "--enable-introspection"
-    "--enable-gles1"
-    "--enable-gles2"
     "--enable-kms-egl-platform"
     "--enable-wayland-egl-platform"
     "--enable-wayland-egl-server"
-  ] ++ stdenv.lib.optional gstreamerSupport "--enable-cogl-gst";
+  ] ++ stdenv.lib.optional gstreamerSupport "--enable-cogl-gst"
+    ++ stdenv.lib.optionals (!stdenv.isDarwin) [ "--enable-gles1" "--enable-gles2" ];
 
   propagatedBuildInputs = with xorg; [
-      glib gdk_pixbuf gobjectIntrospection
-      mesa_noglu libXrandr libXfixes libXcomposite libXdamage wayland
+      glib gdk_pixbuf gobjectIntrospection wayland
+      mesa_noglu libXrandr libXfixes libXcomposite libXdamage
     ]
     ++ libintlOrEmpty
     ++ stdenv.lib.optionals gstreamerSupport [ gst_all_1.gstreamer
@@ -37,7 +36,7 @@ stdenv.mkDerivation rec {
 
   COGL_PANGO_DEP_CFLAGS
     = stdenv.lib.optionalString (stdenv.isDarwin && pangoSupport)
-      "-I${pango}/include/pango-1.0 -I${cairo}/include/cairo";
+      "-I${pango.dev}/include/pango-1.0 -I${cairo.dev}/include/cairo";
 
   NIX_LDFLAGS = stdenv.lib.optionalString stdenv.isDarwin "-lintl";
 

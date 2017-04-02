@@ -14,7 +14,7 @@ in stdenv.mkDerivation {
   };
 
   installPhase = ''
-    ensureDir "$out/include/"
+    mkdir -p "$out/include/"
     cp OCamlMakefile "$out/include/"
   '';
 
@@ -24,5 +24,6 @@ in stdenv.mkDerivation {
     homepage = "http://www.ocaml.info/home/ocaml_sources.html";
     description = "Generic OCaml Makefile for GNU Make";
     license = "LGPL";
+    platforms = stdenv.lib.platforms.unix;
   };
 }

@@ -1,7 +1,7 @@
 { stdenv, fetchurl, libX11, libXpm, libXext, xextproto, byacc }:
 
 stdenv.mkDerivation {
-  name = "micropolis";
+  name = "micropolis-2010-12-18"; # version from the patch timestamp
 
   src = fetchurl {
     url = http://www.donhopkins.com/home/micropolis/micropolis-activity-source.tgz;
@@ -11,7 +11,7 @@ stdenv.mkDerivation {
   patches =
     [ (fetchurl {
         url = http://rmdir.de/~michael/micropolis_git.patch;
-        sha256 = "13419a4394242cd11d5cabd8b1b50787282ea16b55fdcfbeadf8505af46b0592";
+        sha256 = "10j0svcs576ip7v5mn99gvqx9ki8jfd5w5yvsxj57xh56dd0by2p";
       })
     ];
 
@@ -20,7 +20,7 @@ stdenv.mkDerivation {
   preConfigure =
     ''
       cd src
-      sed -i "s@^CFLAGS.*\$@&\nCFLAGS += -I${libXpm}/include/X11@" tk/makefile
+      sed -i "s@^CFLAGS.*\$@&\nCFLAGS += -I${libXpm.dev}/include/X11@" tk/makefile
       sed -i "s@^INCLUDES.*\$@&\n\t-I$PWD/tcl \\\\@" sim/makefile
     '';
 
@@ -33,15 +33,15 @@ stdenv.mkDerivation {
         cp -R $d $out/usr/share/games/micropolis
       done
       cp Micropolis $out/usr/share/games/micropolis
-      cat > $out/bin/micropolis << EOF 
-      #!/bin/bash
+      cat > $out/bin/micropolis << EOF
+      #!${stdenv.shell}
       cd $out/usr/share/games/micropolis
       ./Micropolis
       EOF
       chmod 755 $out/bin/micropolis
     '';
 
-  meta = { 
+  meta = {
     description = "GPL'ed version of S*m C*ty";
     homepage = http://www.donhopkins.com/home/micropolis/;
     license = "GPL";

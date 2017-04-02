@@ -1,54 +1,56 @@
-{stdenv, stdenv_32bit, fetchurl, unzip, zlib_32bit}:
+{stdenv, stdenv_32bit, fetchurl, unzip, zlib_32bit, ncurses_32bit, file, zlib, ncurses}:
 
-stdenv.mkDerivation {
-  name = "android-build-tools-r18.1.0";
+stdenv.mkDerivation rec {
+  version = "25.0.1";
+  name = "android-build-tools-r${version}";
   src = if (stdenv.system == "i686-linux" || stdenv.system == "x86_64-linux")
     then fetchurl {
-      url = https://dl-ssl.google.com/android/repository/build-tools_r18.1-linux.zip;
-      sha1 = "f314a0599e51397f0886fe888b50dd98f2f050d8";
+      url = "https://dl.google.com/android/repository/build-tools_r${version}-linux.zip";
+      sha256 = "0kyrazmcckikn6jiz9hwy6nlqjssf95h5iq7alswg1mryl04w6v7";
     }
     else if stdenv.system == "x86_64-darwin" then fetchurl {
-      url = https://dl-ssl.google.com/android/repository/build-tools_r18.1-macosx.zip;
-      sha1 = "16ddb299b8b43063e5bb3387ec17147c5053dfd8";
+      url = "https://dl.google.com/android/repository/build-tools_r${version}-macosx.zip";
+      sha256 = "116i5xxbwz229m9z98n6bfkjk2xf3kbhdnqhbbnaagjsjzqdirki";
     }
     else throw "System ${stdenv.system} not supported!";
-  
+
   buildCommand = ''
     mkdir -p $out/build-tools
     cd $out/build-tools
     unzip $src
+    mv android-* ${version}
     
     ${stdenv.lib.optionalString (stdenv.system == "i686-linux" || stdenv.system == "x86_64-linux")
       ''
-        cd android-*
-        
-        # Patch the interpreter
-        for i in aapt aidl dexdump llvm-rs-cc
+        cd ${version}
+
+        ln -s ${ncurses.out}/lib/libncurses.so.5 `pwd`/lib64/libtinfo.so.5
+
+        find . -type f -print0 | while IFS= read -r -d "" file
         do
-            patchelf --set-interpreter ${stdenv_32bit.gcc.libc}/lib/ld-linux.so.2 $i
-        done
-        
-        # These binaries need to find libstdc++ and libgcc_s
-        for i in aidl libLLVM.so
-        do
-            patchelf --set-rpath ${stdenv_32bit.gcc.gcc}/lib $i
-        done
-        
-        # These binaries need to find libstdc++, libgcc_s and libraries in the current folder
-        for i in libbcc.so libbcinfo.so libclang.so llvm-rs-cc
-        do
-            patchelf --set-rpath ${stdenv_32bit.gcc.gcc}/lib:`pwd` $i
-        done
-        
-        # These binaries need to find libstdc++, libgcc_s, and zlib
-        for i in aapt dexdump
-        do
-            patchelf --set-rpath ${stdenv_32bit.gcc.gcc}/lib:${zlib_32bit}/lib $i
+          type=$(file "$file")
+          ## Patch 64-bit binaries
+          if grep -q "ELF 64-bit" <<< "$type"
+          then
+            if grep -q "interpreter" <<< "$type"
+            then
+              patchelf --set-interpreter ${stdenv.cc.libc.out}/lib/ld-linux-x86-64.so.2 "$file"
+            fi
+            patchelf --set-rpath `pwd`/lib64:${stdenv.cc.cc.lib.out}/lib:${zlib.out}/lib:${ncurses.out}/lib "$file"
+          ## Patch 32-bit binaries
+          elif grep -q "ELF 32-bit" <<< "$type"
+          then
+            if grep -q "interpreter" <<< "$type"
+            then
+              patchelf --set-interpreter ${stdenv_32bit.cc.libc.out}/lib/ld-linux.so.2 "$file"
+            fi
+            patchelf --set-rpath ${stdenv_32bit.cc.cc.lib.out}/lib:${zlib_32bit.out}/lib:${ncurses_32bit.out}/lib "$file"
+          fi
         done
       ''}
       
       patchShebangs .
   '';
   
-  buildInputs = [ unzip ];
+  buildInputs = [ unzip file ];
 }

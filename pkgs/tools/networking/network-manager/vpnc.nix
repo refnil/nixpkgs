@@ -1,20 +1,20 @@
-{ stdenv, fetchurl, vpnc, intltool, pkgconfig, networkmanager
-, withGnome ? true, gnome3, procps, module_init_tools }:
+{ stdenv, fetchurl, vpnc, intltool, pkgconfig, networkmanager, libsecret
+, withGnome ? true, gnome3, procps, kmod }:
 
 stdenv.mkDerivation rec {
-  name = "${pname}${if withGnome then "-gnome" else ""}-${version}";
-  pname = "NetworkManager-vpnc";
-  # TODO: version doesn't match due to bad release
-  #version = networkmanager.version;
-  version = "0.9.8.6";
+  name    = "${pname}${if withGnome then "-gnome" else ""}-${version}";
+  pname   = "NetworkManager-vpnc";
+  major   = "1.2";
+  version = "${major}.4";
 
   src = fetchurl {
-    url = "mirror://gnome/sources/${pname}/0.9/${pname}-${version}.tar.xz";
-    sha256 = "1mmbm3q27b3dbbs4vs976cxif8jdcs92j3ajdbgykrnl2gbnqc20";
+    url    = "mirror://gnome/sources/${pname}/${major}/${pname}-${version}.tar.xz";
+    sha256 = "39c7516418e90208cb534c19628ce40fd50eba0a08b2ebaef8da85720b10fb05";
   };
 
-  buildInputs = [ vpnc networkmanager ]
-    ++ stdenv.lib.optionals withGnome [ gnome3.gtk gnome3.libgnome_keyring ];
+  buildInputs = [ vpnc networkmanager libsecret ]
+    ++ stdenv.lib.optionals withGnome [ gnome3.gtk gnome3.libgnome_keyring
+                                        gnome3.networkmanagerapplet ];
 
   nativeBuildInputs = [ intltool pkgconfig ];
 
@@ -25,19 +25,10 @@ stdenv.mkDerivation rec {
 
   preConfigure = ''
      substituteInPlace "configure" \
-       --replace "/sbin/sysctl" "${procps}/sbin/sysctl"
+       --replace "/sbin/sysctl" "${procps}/bin/sysctl"
      substituteInPlace "src/nm-vpnc-service.c" \
-       --replace "/sbin/vpnc" "${vpnc}/sbin/vpnc" \
-       --replace "/sbin/modprobe" "${module_init_tools}/sbin/modprobe"
-  '';
-
-  postConfigure = ''
-     substituteInPlace "./auth-dialog/Makefile" \
-       --replace "-Wstrict-prototypes" "" \
-       --replace "-Werror" ""
-     substituteInPlace "properties/Makefile" \
-       --replace "-Wstrict-prototypes" "" \
-       --replace "-Werror" ""
+       --replace "/sbin/vpnc" "${vpnc}/bin/vpnc" \
+       --replace "/sbin/modprobe" "${kmod}/bin/modprobe"
   '';
 
   meta = {

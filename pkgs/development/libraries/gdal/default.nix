@@ -1,34 +1,57 @@
 { stdenv, fetchurl, composableDerivation, unzip, libjpeg, libtiff, zlib
-, postgresql, mysql, libgeotiff }:
+, postgresql, mysql, libgeotiff, pythonPackages, proj, geos, openssl
+, libpng
+, netcdf, hdf5 , curl
+, netcdfSupport ? true
+ }:
 
-composableDerivation.composableDerivation {} (fixed: {
-  name = "gdal-1.7.1";
+composableDerivation.composableDerivation {} (fixed: rec {
+  version = "2.1.3";
+  name = "gdal-${version}";
 
   src = fetchurl {
-    url = ftp://ftp.remotesensing.org/gdal/gdal171.zip;
-    md5 = "f5592cff69b239166c9b64ff81943b1a";
+    url = "http://download.osgeo.org/gdal/${version}/${name}.tar.gz";
+    sha256 = "0jh7filpf5dk5iz5acj7y3y49ihnzqypxckdlj0sjigbqq6hlsmf";
   };
 
-  buildInputs = [ unzip libjpeg libtiff ];
+  buildInputs = [ unzip libjpeg libtiff libpng proj openssl ]
+  ++ (with pythonPackages; [ python numpy wrapPython ])
+  ++ (stdenv.lib.optionals netcdfSupport [ netcdf hdf5 curl ]);
 
-  # don't use optimization for gcc >= 4.3. That's said to be causeing segfaults
-  preConfigure = "export CFLAGS=-O0; export CXXFLAGS=-O0";
+  hardeningDisable = [ "format" ];
+
+  # Unset CC and CXX as they confuse libtool.
+  preConfigure = "unset CC CXX";
 
   configureFlags = [
-    "--with-jpeg=${libjpeg}"
-    "--with-libtiff=${libtiff}"  # optional (without largetiff support
-    "--with-libz=${zlib}"        # optional
+    "--with-jpeg=${libjpeg.dev}"
+    "--with-libtiff=${libtiff.dev}" # optional (without largetiff support)
+    "--with-png=${libpng.dev}"      # optional
+    "--with-libz=${zlib.dev}"       # optional
 
     "--with-pg=${postgresql}/bin/pg_config"
-    "--with-mysql=${mysql}/bin/mysql_config"
+    "--with-mysql=${mysql.lib.dev}/bin/mysql_config"
     "--with-geotiff=${libgeotiff}"
+    "--with-python"               # optional
+    "--with-static-proj4=${proj}" # optional
+    "--with-geos=${geos}/bin/geos-config"# optional
+    (if netcdfSupport then "--with-netcdf=${netcdf}" else "")
   ];
+
+  preBuild = ''
+    substituteInPlace swig/python/GNUmakefile \
+      --replace "ifeq (\$(STD_UNIX_LAYOUT),\"TRUE\")" "ifeq (1,1)"
+  '';
+
+  postInstall = ''
+    wrapPythonPrograms
+  '';
 
   meta = {
     description = "Translator library for raster geospatial data formats";
     homepage = http://www.gdal.org/;
     license = stdenv.lib.licenses.mit;
     maintainers = [ stdenv.lib.maintainers.marcweber ];
-    platforms = stdenv.lib.platforms.linux;
+    platforms = with stdenv.lib.platforms; linux ++ darwin;
   };
 })

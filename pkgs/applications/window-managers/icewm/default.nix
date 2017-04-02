@@ -1,37 +1,39 @@
-{ stdenv, fetchurl, gettext, libjpeg, libtiff, libungif, libpng, freetype
-, fontconfig, xlibs, automake, pkgconfig, gdk_pixbuf }:
+{ stdenv, fetchurl, cmake, gettext
+, libjpeg, libtiff, libungif, libpng, imlib, expat
+, freetype, fontconfig, pkgconfig, gdk_pixbuf
+, mkfontdir, libX11, libXft, libXext, libXinerama
+, libXrandr, libICE, libSM, libXpm, libXdmcp, libxcb
+, libpthreadstubs }:
 
+with stdenv.lib;
 stdenv.mkDerivation rec {
-  name = "icewm-1.3.7";
+  name = "icewm-${version}";
+  version = "1.3.12";
 
   buildInputs =
-    [ gettext libjpeg libtiff libungif libpng
-      xlibs.libX11 xlibs.libXft xlibs.libXext xlibs.libXinerama xlibs.libXrandr
-      xlibs.libICE xlibs.libSM freetype fontconfig
-      pkgconfig gdk_pixbuf
-    ];
+  [ cmake gettext libjpeg libtiff libungif libpng imlib expat
+    freetype fontconfig pkgconfig gdk_pixbuf mkfontdir libX11
+    libXft libXext libXinerama libXrandr libICE libSM libXpm
+    libXdmcp libxcb libpthreadstubs ];
 
   src = fetchurl {
-    url = "mirror://sourceforge/icewm/${name}.tar.gz";
-    sha256 = "0yw813d8amrl0n1fvdiyznxah92wcylj9kj1qhjc6h73d827h6na";
+    url = "https://github.com/bbidulock/icewm/archive/${version}.tar.gz";
+    sha256 = "0cmjnf0yvafwg73qy5wq7ghiknpn1jf1978c1yj7yabyn07zxq77";
   };
 
-  patches = [ ./deprecated.patch ];
-
-  NIX_LDFLAGS = "-lfontconfig";
-
-  # The fuloong2f is not supported by 1.3.6 still
-  #
-  # Don't know whether 1.3.7 supports fuloong2f and don't know how to test it
-  # on x86_64 hardware. So I left this 'cp' -- urkud
-
   preConfigure = ''
-    cp -v ${automake}/share/automake*/config.{sub,guess} .
+    export cmakeFlags="-DPREFIX=$out -DCFGDIR=/etc/icewm"
   '';
 
   meta = {
-    description = "A window manager for the X Window System";
+    description = "A simple, lightweight X window manager";
+    longDescription = ''
+      IceWM is a window manager for the X Window System. The goal of
+      IceWM is speed, simplicity, and not getting in the user's way.
+    '';
     homepage = http://www.icewm.org/;
-    platforms = stdenv.lib.platforms.unix;
+    license = licenses.lgpl2;
+    maintainers = [ maintainers.AndersonTorres ];
+    platforms = platforms.unix;
   };
 }

@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, saneBackends, saneFrontends, libX11, gtk, pkgconfig, libpng
+{ stdenv, fetchurl, sane-backends, sane-frontends, libX11, gtk2, pkgconfig, libpng
 , libusb ? null
 , gimpSupport ? false, gimp_2_8 ? null
 }:
@@ -15,9 +15,10 @@ stdenv.mkDerivation rec {
 
   preConfigure = ''
     sed -e '/SANE_CAP_ALWAYS_SETTABLE/d' -i src/xsane-back-gtk.c
+    chmod a+rX -R .
   '';
 
-  buildInputs = [libpng saneBackends saneFrontends libX11 gtk pkgconfig ]
+  buildInputs = [libpng sane-backends sane-frontends libX11 gtk2 pkgconfig ]
     ++ (if libusb != null then [libusb] else [])
     ++ stdenv.lib.optional gimpSupport gimp_2_8;
 
@@ -25,7 +26,7 @@ stdenv.mkDerivation rec {
     homepage = http://www.sane-project.org/;
     description = "Graphical scanning frontend for sane";
     license = stdenv.lib.licenses.gpl2Plus;
-    maintainers = with stdenv.lib.maintainers; [viric simons];
+    maintainers = with stdenv.lib.maintainers; [viric peti];
     platforms = with stdenv.lib.platforms; linux;
   };
 }

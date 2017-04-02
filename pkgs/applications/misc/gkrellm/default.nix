@@ -1,13 +1,21 @@
-{ fetchurl, stdenv, gettext, pkgconfig, glib, gtk, libX11, libSM, libICE }:
+{ fetchurl, stdenv, gettext, pkgconfig, glib, gtk2, libX11, libSM, libICE
+, IOKit ? null }:
+
+with stdenv.lib;
 
 stdenv.mkDerivation rec {
-  name = "gkrellm-2.3.5";
+  name = "gkrellm-2.3.10";
+
   src = fetchurl {
-    url = "http://members.dslextreme.com/users/billw/gkrellm/${name}.tar.bz2";
-    sha256 = "12rc6zaa7kb60b9744lbrlfkxxfniprm6x0mispv63h4kh75navh";
+    url = "http://gkrellm.srcbox.net/releases/${name}.tar.bz2";
+    sha256 = "0rnpzjr0ys0ypm078y63q4aplcgdr5nshjzhmz330n6dmnxci7lb";
   };
 
-  buildInputs = [gettext pkgconfig glib gtk libX11 libSM libICE];
+  nativeBuildInputs = [ pkgconfig ];
+  buildInputs = [gettext glib gtk2 libX11 libSM libICE]
+    ++ optionals stdenv.isDarwin [ IOKit ];
+
+  hardeningDisable = [ "format" ];
 
   # Makefiles are patched to fix references to `/usr/X11R6' and to add
   # `-lX11' to make sure libX11's store path is in the RPATH.
@@ -15,15 +23,14 @@ stdenv.mkDerivation rec {
      echo "patching makefiles..."
      for i in Makefile src/Makefile server/Makefile
      do
-       sed -i "$i" -e "s|/usr/X11R6|${libX11}|g ; s|-lICE|-lX11 -lICE|g"
+       sed -i "$i" -e "s|/usr/X11R6|${libX11.dev}|g ; s|-lICE|-lX11 -lICE|g"
      done '';
 
-  buildPhase = ''
-     make PREFIX="$out" '';
-  installPhase = ''
-     make install PREFIX="$out" '';
+   installPhase = ''
+     make DESTDIR=$out install
+     '';
 
-  meta = {
+   meta = {
     description = "Themeable process stack of system monitors";
     longDescription =
       '' GKrellM is a single process stack of system monitors which supports
@@ -31,10 +38,9 @@ stdenv.mkDerivation rec {
          or any other theme.
       '';
 
-    homepage = http://members.dslextreme.com/users/billw/gkrellm/gkrellm.html;
-    license = stdenv.lib.licenses.gpl3Plus;
-
-    maintainers = [ stdenv.lib.maintainers.ludo ];
-    platforms = stdenv.lib.platforms.unix;
+    homepage = http://gkrellm.srcbox.net;
+    license = licenses.gpl3Plus;
+    maintainers = [ ];
+    platforms = platforms.unix;
   };
 }

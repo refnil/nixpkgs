@@ -1,28 +1,34 @@
-{ stdenv, fetchurl, ncurses }:
+{ stdenv, fetchFromGitHub, ncurses }:
 
-stdenv.mkDerivation {
-  name = "sl-3.03";
+stdenv.mkDerivation rec {
+  name = "sl-${version}";
+  version = "5.02";
 
-  src = fetchurl {
-    url = "http://www.tkl.iis.u-tokyo.ac.jp/~toyoda/sl/sl.tar";
-    sha256 = "1x3517aza0wm9hhb02npl8s7xy947cdidxmans27q0gjmj3bvg5j";
+  src = fetchFromGitHub {
+    owner = "mtoyoda";
+    repo = "sl";
+    rev = version;
+    sha256 = "1zrfd71zx2px2xpapg45s8xvi81xii63yl0h60q72j71zh4sif8b";
   };
-
-  patchPhase = ''
-    sed -i "s/-lcurses -ltermcap/-lncurses/" Makefile
-  '';
 
   buildInputs = [ ncurses ];
 
+  buildFlags = [ "CC=cc" ];
+
   installPhase = ''
-    ensureDir $out/bin
+    mkdir -p $out/bin $out/share/man/man1
     cp sl $out/bin
+    cp sl.1 $out/share/man/man1
   '';
 
   meta = {
     homepage = http://www.tkl.iis.u-tokyo.ac.jp/~toyoda/index_e.html;
-    license = stdenv.lib.licenses.unfree; # I couldn't find its license, only a copyright.
+    license = rec {
+      shortName = "Toyoda Masashi's free software license";
+      fullName = shortName;
+      url = https://github.com/mtoyoda/sl/blob/master/LICENSE;
+    };
     description = "Steam Locomotive runs across your terminal when you type 'sl'";
-    platforms = with stdenv.lib.platforms; linux;
+    platforms = with stdenv.lib.platforms; unix;
   };
 }

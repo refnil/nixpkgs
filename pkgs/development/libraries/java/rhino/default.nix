@@ -14,11 +14,13 @@ stdenv.mkDerivation {
   name = "rhino-${version}";
 
   src = fetchurl {
-    url = "ftp://ftp.mozilla.org/pub/mozilla.org/js/rhino1_7R2.zip";
+    url = "mirror://mozilla/js/rhino1_7R2.zip";
     sha256 = "1p32hkghi6bkc3cf2dcqyaw5cjj7403mykcp0fy8f5bsnv0pszv7";
   };
 
   patches = [ ./gcj-type-mismatch.patch ];
+
+  hardeningDisable = [ "fortify" "format" ];
 
   preConfigure =
     ''
@@ -41,8 +43,8 @@ stdenv.mkDerivation {
       cp -v *.jar "$out/share/java"
     '';
 
-  meta = {
-    description = "Mozilla Rhino: JavaScript for Java";
+  meta = with stdenv.lib; {
+    description = "An implementation of JavaScript written in Java";
 
     longDescription =
       '' Rhino is an open-source implementation of JavaScript written
@@ -52,6 +54,7 @@ stdenv.mkDerivation {
 
     homepage = http://www.mozilla.org/rhino/;
 
-    license = [ "MPLv1.1" /* or */ "GPLv2+" ];
+    license = with licenses; [ mpl11 /* or */ gpl2Plus ];
+    platforms = platforms.linux;
   };
 }

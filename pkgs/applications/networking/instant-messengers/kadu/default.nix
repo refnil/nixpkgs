@@ -3,11 +3,11 @@
 
 stdenv.mkDerivation {
 
-  name = "kadu-0.12.2";
+  name = "kadu-0.12.3";
 
   src = fetchurl {
-    url = http://download.kadu.im/stable/kadu-0.12.2.tar.bz2;
-    sha256 = "0rqhkiyn8c7jigpxmvwh7daxsgjxlvd16zjdss1azdzd9x2dbym1";
+    url = http://download.kadu.im/stable/kadu-0.12.3.tar.bz2;
+    sha256 = "1a5q5b8pm253cwg6ahahjdm8jxj0pv41apyi1nvvy08bs38bn1yn";
   };
 
   buildInputs = [ cmake qt4 libgadu libXScrnSaver libsndfile libX11 alsaLib aspell libidn qca2 phonon pkgconfig
@@ -15,7 +15,11 @@ stdenv.mkDerivation {
 
   configureFlags = "CPPFLAGS=-DQT_NO_DEBUG";
 
-  cmakeFlags = "-DENABLE_AUTODOWNLOAD=OFF -DBUILD_DESCRIPTION='NixOS' -DCMAKE_BUILD_TYPE=Release";
+  preConfigure = ''
+    export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:${phonon}/lib64/pkgconfig:${phonon}/lib32/pkgconfig"
+  '';
+
+  cmakeFlags = "-DENABLE_AUTODOWNLOAD=OFF -DBUILD_DESCRIPTION='NixOS'";
 
   prePatch = ''
     patchShebangs .

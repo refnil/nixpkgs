@@ -1,20 +1,23 @@
-{ stdenv, fetchurl, perl }:
+{ stdenv, fetchurl, perl, libunwind }:
 
 stdenv.mkDerivation rec {
-  name = "strace-4.8";
+  name = "strace-${version}";
+  version = "4.15";
 
   src = fetchurl {
     url = "mirror://sourceforge/strace/${name}.tar.xz";
-    sha256 = "1y6pw4aj4rw5470lqks1ml0n8jh5xbhwr5c3gb00bj570wgjk4pl";
+    sha256 = "1a9wb2nzfqgwazd0yrlbk48awlfn898n1bdayvdxj7qlssac1kf0";
   };
 
   nativeBuildInputs = [ perl ];
+
+  buildInputs = [ libunwind ]; # support -k
 
   meta = with stdenv.lib; {
     homepage = http://strace.sourceforge.net/;
     description = "A system call tracer for Linux";
     license = licenses.bsd3;
     platforms = platforms.linux;
-    maintainers = maintainers.mornfall;
+    maintainers = with maintainers; [ mornfall jgeerds globin ];
   };
 }

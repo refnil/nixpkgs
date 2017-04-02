@@ -1,15 +1,17 @@
-{fetchurl, buildPerlPackage, DBI, mysql}:
+{ fetchurl, buildPerlPackage, DBI, mysql }:
 
-buildPerlPackage {
-  name = "DBD-mysql-4.023";
+buildPerlPackage rec {
+  name = "DBD-mysql-4.041";
 
   src = fetchurl {
-    url = mirror://cpan/authors/id/C/CA/CAPTTOFU/DBD-mysql-4.023.tar.gz;
-    sha256 = "0j4i0i6apjwx5klk3wigh6yysssn7bs6p8c5sh31m6qxsbgyk9xa";
+    url = "mirror://cpan/authors/id/M/MI/MICHIELB/${name}.tar.gz";
+    sha256 = "0h4h6zwzj8fwh9ljb8svnsa0a3ch4p10hp59kpdibdb4qh8xwxs7";
   };
 
-  buildInputs = [mysql] ;
-  propagatedBuildInputs = [DBI];
+  buildInputs = [ mysql.lib ] ;
+  propagatedBuildInputs = [ DBI ];
+
+  doCheck = false;
 
 #  makeMakerFlags = "MYSQL_HOME=${mysql}";
 }

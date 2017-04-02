@@ -1,5 +1,5 @@
 { stdenv, fetchurl, cmake, pkgconfig
-, qt4, jack2
+, qt4, libjack2
 }:
 
 let
@@ -12,7 +12,6 @@ in stdenv.mkDerivation rec {
     homepage    = "http://vmpk.sourceforge.net/";
     license     = licenses.gpl3Plus;
     platforms   = platforms.linux;
-    maintainers = with maintainers; [ iyzsong ];
   };
 
   src = fetchurl {
@@ -22,5 +21,5 @@ in stdenv.mkDerivation rec {
 
   nativeBuildInputs = [ cmake pkgconfig ];
 
-  buildInputs = [ qt4 jack2 ];
+  buildInputs = [ qt4 libjack2 ];
 }

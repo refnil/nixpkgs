@@ -2,24 +2,29 @@
 , fetchurl
 , bison
 , pkgconfig
+, python27 # >= 2.6
+, swig2 # 2.0
 , multipleOutputs ? false #Uses incomplete features of nix!
 }:
 
 stdenv.mkDerivation (rec {
-  name = "sphinxbase-0.7";
+  name = "sphinxbase-5prealpha";
 
   src = fetchurl {
     url = "mirror://sourceforge/cmusphinx/${name}.tar.gz";
-    sha256 = "1v3kfzw42ahxmr002i6wqigs832958vgghrv5dd62zazajdbk71q";
+    sha256 = "0vr4k8pv5a8nvq9yja7kl13b5lh0f9vha8fc8znqnm8bwmcxnazp";
   };
 
-  buildInputs = [ pkgconfig bison ];
+  buildInputs = [ swig2 python27 pkgconfig bison ];
 
   meta = {
     description = "Support Library for Pocketsphinx";
     homepage = http://cmusphinx.sourceforge.net;
-    license = "free-non-copyleft";
+    license = stdenv.lib.licenses.bsd2;
+    platforms = stdenv.lib.platforms.unix;
+    maintainers = with stdenv.lib.maintainers; [ fuuzetsu ];
   };
+
 } // (stdenv.lib.optionalAttrs multipleOutputs {
   outputs = [ "out" "lib" "headers" ];
 
@@ -31,4 +36,3 @@ stdenv.mkDerivation (rec {
     cp -av $out/include $headers
   '';
 }))
-

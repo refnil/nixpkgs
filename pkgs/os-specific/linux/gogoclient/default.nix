@@ -16,10 +16,12 @@ stdenv.mkDerivation rec {
   makeFlags = ["target=linux"];
   installFlags = ["installdir=$(out)"];
 
+  hardeningDisable = [ "format" ];
+
   buildInputs = [openssl];
 
   preFixup = ''
-    ensureDir $out/share/${name}
+    mkdir -p $out/share/${name}
     chmod 444 $out/bin/gogoc.conf
     mv $out/bin/gogoc.conf $out/share/${name}/gogoc.conf.sample
     rm $out/bin/gogoc.conf.sample
@@ -36,5 +38,6 @@ stdenv.mkDerivation rec {
     homepage = http://gogonet.gogo6.com;
     description = "Client to connect to the Freenet6 IPv6 tunnel broker service";
     maintainers = [stdenv.lib.maintainers.bluescreen303];
+    platforms = stdenv.lib.platforms.linux;
   };
 }

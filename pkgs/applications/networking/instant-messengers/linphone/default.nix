@@ -1,32 +1,47 @@
-{ stdenv, fetchurl, intltool, pkgconfig, gtk, libglade, libosip, libexosip
-, speex, readline, mediastreamer, libsoup, udev, libnotify }:
+{ stdenv, fetchurl, intltool, pkgconfig, readline, openldap, cyrus_sasl, libupnp
+, zlib, libxml2, gtk2, libnotify, speex, ffmpeg, libX11, libsoup, udev
+, ortp, mediastreamer, sqlite, belle-sip, libosip, libexosip
+, mediastreamer-openh264, bctoolbox, makeWrapper, fetchFromGitHub, cmake
+, libmatroska, bcunit, doxygen, gdk_pixbuf, glib, cairo, pango, polarssl
+}:
 
 stdenv.mkDerivation rec {
-  name = "linphone-3.6.1";
+  baseName = "linphone";
+  version = "3.10.2";
+  name = "${baseName}-${version}";
 
-  src = fetchurl {
-    url = "mirror://savannah/linphone/3.6.x/sources/${name}.tar.gz";
-    sha256 = "186jm4nd4ggb0j8cs8wnpm4sy9cr7chq0c6kx2yc6y4k7qi83fh5";
+  src = fetchFromGitHub {
+    owner = "BelledonneCommunications";
+    repo = "${baseName}";
+    rev = "${version}";
+    sha256 = "053gad4amdbq5za8f2n9j5q59nkky0w098zbsa3dvpcqvv7ar16p";
   };
 
-  buildInputs = [ gtk libglade libosip libexosip readline mediastreamer speex libsoup udev
-    libnotify ];
+  buildInputs = [
+    readline openldap cyrus_sasl libupnp zlib libxml2 gtk2 libnotify speex ffmpeg libX11
+    polarssl libsoup udev ortp mediastreamer sqlite belle-sip libosip libexosip
+    bctoolbox libmatroska bcunit gdk_pixbuf glib cairo pango
+  ];
 
-  nativeBuildInputs = [ intltool pkgconfig ];
+  nativeBuildInputs = [ intltool pkgconfig makeWrapper cmake doxygen ];
 
-  preConfigure = ''
-    rm -r mediastreamer2 oRTP
-    sed -i s,/bin/echo,echo, coreapi/Makefile*
+  NIX_CFLAGS_COMPILE = " -Wno-error -I${glib.dev}/include/glib-2.0
+    -I${glib.out}/lib/glib-2.0/include -I${gtk2.dev}/include/gtk-2.0/
+    -I${cairo.dev}/include/cairo -I${pango.dev}/include/pango-1.0
+    -I${gtk2}/lib/gtk-2.0/include
+    -DLIBLINPHONE_GIT_VERSION=\"v${version}\"
+    ";
+
+  postInstall = ''
+    for i in $(cd $out/bin && ls); do
+      wrapProgram $out/bin/$i --set MEDIASTREAMER_PLUGINS_DIR ${mediastreamer-openh264}/lib/mediastreamer/plugins
+    done
   '';
 
-  configureFlags = "--enable-external-ortp --enable-external-mediastreamer";
-
-  NIX_CFLAGS_COMPILE = "-Wno-error=deprecated-declarations"; # I'm lazy to fix these for them
-
-  meta = {
+  meta = with stdenv.lib; {
     homepage = http://www.linphone.org/;
     description = "Open Source video SIP softphone";
-    license = stdenv.lib.licenses.gpl2Plus;
-    platforms = stdenv.lib.platforms.gnu;
+    license = licenses.gpl2Plus;
+    platforms = platforms.linux;
   };
 }

@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, ncurses, x11 }:
+{ stdenv, fetchurl, ncurses, xlibsWrapper }:
 
 let
    useX11 = !stdenv.isArm && !stdenv.isMips;
@@ -7,8 +7,8 @@ let
 in
 
 stdenv.mkDerivation rec {
-  
-  name = "ocaml-4.00.1";
+  name = "ocaml-${version}";
+  version = "4.00.1";
   
   src = fetchurl {
     url = "http://caml.inria.fr/pub/distrib/ocaml-4.00/${name}.tar.bz2";
@@ -16,9 +16,9 @@ stdenv.mkDerivation rec {
   };
 
   prefixKey = "-prefix ";
-  configureFlags = ["-no-tk"] ++ optionals useX11 [ "-x11lib" x11 ];
+  configureFlags = ["-no-tk"] ++ optionals useX11 [ "-x11lib" xlibsWrapper ];
   buildFlags = "world" + optionalString useNativeCompilers " bootstrap world.opt";
-  buildInputs = [ncurses] ++ optionals useX11 [ x11 ];
+  buildInputs = [ncurses] ++ optionals useX11 [ xlibsWrapper ];
   installTargets = "install" + optionalString useNativeCompilers " installopt";
   preConfigure = ''
     CAT=$(type -tp cat)
@@ -33,10 +33,14 @@ stdenv.mkDerivation rec {
     nativeCompilers = useNativeCompilers;
   };
 
-  meta = {
+  meta = with stdenv.lib; {
     homepage = http://caml.inria.fr/ocaml;
-    license = [ "QPL" /* compiler */ "LGPLv2" /* library */ ];
-    description = "OCaml, the most popular variant of the Caml language";
+    branch = "4.00";
+    license = with licenses; [
+      qpl /* compiler */
+      lgpl2 /* library */
+    ];
+    description = "Most popular variant of the Caml language";
 
     longDescription =
       ''
@@ -57,7 +61,7 @@ stdenv.mkDerivation rec {
         and a documentation generator (ocamldoc).
       '';
 
-    platforms = stdenv.lib.platforms.linux ++ stdenv.lib.platforms.darwin;
+    platforms = with platforms; linux;
   };
 
 }

@@ -1,16 +1,17 @@
 {stdenv, fetchurl, ocaml, transitional ? false}:
 
 let
-  ocaml_version = (builtins.parseDrvName ocaml.name).version;
   pname = "camlp5";
-  version = "5.15";
   webpage = http://pauillac.inria.fr/~ddr/camlp5/;
   metafile = ./META;
 in
 
-stdenv.mkDerivation {
+assert !stdenv.lib.versionOlder "4.00" ocaml.version;
+
+stdenv.mkDerivation rec {
 
   name = "${pname}${if transitional then "_transitional" else ""}-${version}";
+  version = "5.15";
 
   src = fetchurl {
     url = "${webpage}/distrib/src/${pname}-${version}.tgz";
@@ -22,11 +23,11 @@ stdenv.mkDerivation {
   prefixKey = "-prefix ";
 
   preConfigure = "configureFlagsArray=(" +  (if transitional then "--transitional" else "--strict") +
-                  " --libdir $out/lib/ocaml/${ocaml_version}/site-lib)";
+                  " --libdir $out/lib/ocaml/${ocaml.version}/site-lib)";
 
   buildFlags = "world.opt";
 
-  postInstall = "cp ${metafile} $out/lib/ocaml/${ocaml_version}/site-lib/camlp5/META";
+  postInstall = "cp ${metafile} $out/lib/ocaml/${ocaml.version}/site-lib/camlp5/META";
 
   meta = {
     description = "Preprocessor-pretty-printer for OCaml";
@@ -35,8 +36,9 @@ stdenv.mkDerivation {
       It also provides parsing and printing tools.
     '';
     homepage = "${webpage}";
-    license = "BSD";
-    platforms = ocaml.meta.platforms;
+    license = stdenv.lib.licenses.bsd3;
+    branch = "5";
+    platforms = ocaml.meta.platforms or [];
     maintainers = [
       stdenv.lib.maintainers.z77z
     ];

@@ -1,23 +1,28 @@
-{ stdenv, fetchurl, mcpp, bzip2, expat, openssl, db5 }:
+{ stdenv, fetchFromGitHub, mcpp, bzip2, expat, openssl, db5 }:
 
 stdenv.mkDerivation rec {
-  name = "zeroc-ice-3.5.1";
+  name = "zeroc-ice-${version}";
+  version = "3.6.3";
 
-  src = fetchurl {
-    url = "http://www.zeroc.com/download/Ice/3.5/Ice-3.5.1.tar.gz";
-    sha256 = "14pk794p0fq3hcp50xmqnf9pp15dggiqhcnsav8xpnka9hcm37lq";
+  src = fetchFromGitHub {
+    owner = "zeroc-ice";
+    repo = "ice";
+    rev = "v${version}";
+    sha256 = "05xympbns32aalgcfcpxwfd7bvg343f16xpg6jv5s335ski3cjy2";
   };
 
   buildInputs = [ mcpp bzip2 expat openssl db5 ];
 
   buildPhase = ''
     cd cpp
-    make OPTIMIZE=yes
+    make -j $NIX_BUILD_CORES OPTIMIZE=yes
   '';
 
   installPhase = ''
-    make prefix=$out install
+    make -j $NIX_BUILD_CORES prefix=$out install
   '';
+
+  enableParallelBuilding = true;
 
   meta = with stdenv.lib; {
     homepage = "http://www.zeroc.com/ice.html";

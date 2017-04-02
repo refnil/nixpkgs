@@ -30,7 +30,7 @@ in
     };
 
     services.minidlna.mediaDirs = mkOption {
-      type = types.listOf types.string;
+      type = types.listOf types.str;
       default = [];
       example = [ "/data/media" "V,/home/alice/video" ];
       description =
@@ -58,9 +58,9 @@ in
     services.minidlna.config =
       ''
         port=${toString port}
-        friendly_name=NixOS Media Server
+        friendly_name=${config.networking.hostName} MiniDLNA
         db_dir=/var/cache/minidlna
-        log_dir=/var/log/minidlna
+        log_level=warn
         inotify=yes
         ${concatMapStrings (dir: ''
           media_dir=${dir}
@@ -79,25 +79,22 @@ in
       { description = "MiniDLNA Server";
 
         wantedBy = [ "multi-user.target" ];
-        after = [ "network.target" ];
+        after = [ "network.target" "local-fs.target" ];
 
         preStart =
           ''
-            mkdir -p /var/cache/minidlna /var/log/minidlna /run/minidlna
-            chown minidlna /var/cache/minidlna /var/log/minidlna /run/minidlna
+            mkdir -p /var/cache/minidlna
+            chown -R minidlna:minidlna /var/cache/minidlna
           '';
 
-        # FIXME: log through the journal rather than
-        # /var/log/minidlna.  The -d flag does that, but also raises
-        # the log level to debug...
         serviceConfig =
           { User = "minidlna";
-            Group = "nogroup";
+            Group = "minidlna";
             PermissionsStartOnly = true;
-            Type = "forking";
+            RuntimeDirectory = "minidlna";
             PIDFile = "/run/minidlna/pid";
             ExecStart =
-              "@${pkgs.minidlna}/sbin/minidlna minidlna -P /run/minidlna/pid" +
+              "${pkgs.minidlna}/sbin/minidlnad -S -P /run/minidlna/pid" +
               " -f ${pkgs.writeText "minidlna.conf" cfg.config}";
           };
       };

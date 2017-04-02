@@ -1,27 +1,29 @@
-{ stdenv, fetchurl, perl, jdk, icu, zlib, gmp, readline }:
+{ stdenv, fetchurl, perl, icu, zlib, gmp, readline
+, CoreServices, ApplicationServices }:
 
 stdenv.mkDerivation rec {
   name = "rakudo-star-${version}";
-  version = "2014.04";
+  version = "2017.01";
 
   src = fetchurl {
     url    = "http://rakudo.org/downloads/star/${name}.tar.gz";
-    sha256 = "0spdrxc2kiidpgni1vl71brgs4d76h8029w5jxvah3yvjcqixz7l";
+    sha256 = "07zjqdzxm30pmjqwlnr669d75bsbimy09sk0dvgm0pnn3zr92fjq";
   };
 
-  buildInputs = [ icu zlib gmp readline jdk perl ];
+  buildInputs = [ icu zlib gmp readline perl ]
+    ++ stdenv.lib.optionals stdenv.isDarwin [ CoreServices ApplicationServices ];
   configureScript = "perl ./Configure.pl";
   configureFlags =
-    [ "--gen-moar"
+    [ "--backends=moar"
+      "--gen-moar"
       "--gen-nqp"
-      "--gen-parrot"
     ];
 
-  meta = {
+  meta = with stdenv.lib; {
     description = "A Perl 6 implementation";
     homepage    = "http://www.rakudo.org";
-    license     = stdenv.lib.licenses.artistic2;
-    platforms   = stdenv.lib.platforms.unix;
-    maintainers = [ stdenv.lib.maintainers.thoughtpolice ];
+    license     = licenses.artistic2;
+    platforms   = platforms.unix;
+    maintainers = with maintainers; [ thoughtpolice vrthra ];
   };
 }

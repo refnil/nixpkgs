@@ -4,17 +4,11 @@
 }:
 
 stdenv.mkDerivation rec {
-  name = "snd-14.3";
-
-  meta = {
-    description = "Sound editor";
-    homepage = http://ccrma.stanford.edu/software/snd;
-    platforms = stdenv.lib.platforms.linux;
-  };
+  name = "snd-16.9";
 
   src = fetchurl {
     url = "mirror://sourceforge/snd/${name}.tar.gz";
-    sha256 = "04shk34pza507kvm40dc6sdz5jz533z4q2h7m9hgqvw1r3f57ms6";
+    sha256 = "1rw9wrj1f0g413ya32s9mwhvv3c6iasjza22irzf6xlv49b9s5dp";
   };
 
   nativeBuildInputs = [ pkgconfig ];
@@ -23,4 +17,14 @@ stdenv.mkDerivation rec {
     gtk2 alsaLib
     fftw gsl
   ];
+
+  meta = {
+    description = "Sound editor";
+    homepage = http://ccrma.stanford.edu/software/snd;
+    platforms = stdenv.lib.platforms.linux;
+    license = stdenv.lib.licenses.free;
+    maintainers = with stdenv.lib.maintainers; [ fuuzetsu ];
+  };
+
+
 }

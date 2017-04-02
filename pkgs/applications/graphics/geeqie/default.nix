@@ -1,38 +1,33 @@
-{ stdenv, fetchurl, pkgconfig, gtk, libpng, exiv2, lcms
-, intltool, gettext, libchamplain_0_6, fbida }:
+{ stdenv, fetchurl, pkgconfig, autoconf, automake, gtk2, libpng, exiv2
+, lcms, intltool, gettext, fbida
+}:
 
 stdenv.mkDerivation rec {
-  name = "geeqie-1.1";
+  name = "geeqie-${version}";
+  version = "1.3";
 
   src = fetchurl {
-    url = "mirror://sourceforge/geeqie/${name}.tar.gz";
-    sha256 = "1kzy39z9505xkayyx7rjj2wda76xy3ch1s5z35zn8yli54ffhi2m";
+    url = "http://geeqie.org/${name}.tar.xz";
+    sha256 = "0gzc82sy66pbsmq7lnmq4y37zqad1zfwfls3ik3dmfm8s5nmcvsb";
   };
 
-  preConfigure =
-    # XXX: Trick to have Geeqie use the version we have.
-    '' sed -i "configure" \
-           -e 's/champlain-0.4/champlain-0.6/g ;
-               s/champlain-gtk-0.4/champlain-gtk-0.6/g'
-    '';
+  preConfigure = "./autogen.sh";
 
   configureFlags = [ "--enable-gps" ];
 
-  buildInputs =
-    [ pkgconfig gtk libpng exiv2 lcms intltool gettext
-      libchamplain_0_6
-    ];
+  buildInputs = [
+    pkgconfig autoconf automake gtk2 libpng exiv2 lcms intltool gettext
+  ];
 
-  postInstall =
-    ''
-      # Allow geeqie to find exiv2 and exiftran, necessary to
-      # losslessly rotate JPEG images.
-      sed -i $out/lib/geeqie/geeqie-rotate \
-          -e '1 a export PATH=${exiv2}/bin:${fbida}/bin:$PATH'
-    '';
+  postInstall = ''
+    # Allow geeqie to find exiv2 and exiftran, necessary to
+    # losslessly rotate JPEG images.
+    sed -i $out/lib/geeqie/geeqie-rotate \
+        -e '1 a export PATH=${stdenv.lib.makeBinPath [ exiv2 fbida ]}:$PATH'
+  '';
 
-  meta = {
-    description = "Geeqie, a lightweight GTK+ based image viewer";
+  meta = with stdenv.lib; {
+    description = "Lightweight GTK+ based image viewer";
 
     longDescription =
       ''
@@ -45,11 +40,11 @@ stdenv.mkDerivation rec {
         initially based on GQview.
       '';
 
-    license = stdenv.lib.licenses.gpl2Plus;
+    license = licenses.gpl2Plus;
 
     homepage = http://geeqie.sourceforge.net;
 
-    maintainers = [ ];
-    platforms = stdenv.lib.platforms.gnu;
+    maintainers = with maintainers; [ pSub ];
+    platforms = platforms.gnu;
   };
 }

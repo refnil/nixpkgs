@@ -1,29 +1,28 @@
-{ stdenv, fetchurl, writeText, lib, dmd }:
+{stdenv, lib, fetchurl, dmd}:
 
 stdenv.mkDerivation {
-  name = "rdmd-2.064";
-
-  src = fetchurl {
-    url = https://raw2.github.com/D-Programming-Language/tools/2.064/rdmd.d;
-    sha256 = "0b1g3ng6bkanvg00r6xb4ycpbh9x8b9dw589av665azxbcraqrs1";
-    name = "rdmd-src";
-  };
+  name = "rdmd-2.067.0";
 
   buildInputs = [ dmd ];
 
-  builder = writeText "drmd-builder.sh" ''
-      source $stdenv/setup
-      cp $src rdmd.d
-      dmd rdmd.d
-      mkdir -p $out/bin
-      cp rdmd $out/bin/
+  src = fetchurl {
+    url = "https://github.com/D-Programming-Language/tools/archive/v2.067.0.tar.gz";
+    sha256 = "2702ecda0427c675084d9b688449bc8c8392fd73e30257d79e2488640d5a9982";
+  };
+
+  buildPhase = ''
+    dmd rdmd.d
   '';
 
+  installPhase = ''
+    mkdir -p $out/bin
+    cp rdmd $out/bin/
+	'';
+
   meta = {
-    description = "rdmd wrapper for D language compiler";
+    description = "Wrapper for D language compiler";
     homepage = http://dlang.org/rdmd.html;
     license = lib.licenses.boost;
-    maintainers = with stdenv.lib.maintainers; [ vlstill ];
     platforms = stdenv.lib.platforms.unix;
   };
 }

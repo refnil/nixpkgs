@@ -1,54 +1,54 @@
-{ stdenv, fetchgit, cmake, boost, libunwind, mariadb, libmemcached, pcre
-, libevent, gd, curl, libxml2, icu, flex, bison, openssl, zlib, php, re2c
-, expat, libcap, oniguruma, libdwarf, libmcrypt, tbb, gperftools, glog
+{ stdenv, fetchgit, cmake, pkgconfig, boost, libunwind, libmemcached, pcre
+, libevent, gd, curl, libxml2, icu, flex, bison, openssl, zlib, php
+, expat, libcap, oniguruma, libdwarf, libmcrypt, tbb, gperftools, glog, libkrb5
 , bzip2, openldap, readline, libelf, uwimap, binutils, cyrus_sasl, pam, libpng
-, libxslt, ocaml
+, libxslt, ocaml, freetype, gdb, git, perl, mariadb, gmp, libyaml, libedit
+, libvpx, imagemagick, fribidi, gperf
 }:
 
 stdenv.mkDerivation rec {
   name    = "hhvm-${version}";
-  version = "3.2.0";
+  version = "3.15.0";
 
+  # use git version since we need submodules
   src = fetchgit {
     url    = "https://github.com/facebook/hhvm.git";
-    rev    = "01228273b8cf709aacbd3df1c51b1e690ecebac8";
-    sha256 = "418d5a55ac4ba5335a42329ebfb7dd96fdb8d5edbc2700251c86e9fa2ae4a967";
+    rev    = "92a682ebaa3c85b84857852d8621f528607fe27d";
+    sha256 = "0mn3bfvhdf6b4lflyjfjyr7nppkq505xkaaagk111fqy91rdzd3b";
     fetchSubmodules = true;
   };
 
   buildInputs =
-    [ cmake boost libunwind mariadb libmemcached pcre libevent gd curl
-      libxml2 icu flex bison openssl zlib php expat libcap oniguruma
-      libdwarf libmcrypt tbb gperftools bzip2 openldap readline
-      libelf uwimap binutils cyrus_sasl pam glog libpng libxslt ocaml
+    [ cmake pkgconfig boost libunwind mariadb.client libmemcached pcre gdb git perl
+      libevent gd curl libxml2 icu flex bison openssl zlib php expat libcap
+      oniguruma libdwarf libmcrypt tbb gperftools bzip2 openldap readline
+      libelf uwimap binutils cyrus_sasl pam glog libpng libxslt ocaml libkrb5
+      gmp libyaml libedit libvpx imagemagick fribidi gperf
     ];
 
-  enableParallelBuilding = true;
+  enableParallelBuilding = false; # occasional build problems;
   dontUseCmakeBuildDir = true;
-  dontUseCmakeConfigure = true;
   NIX_LDFLAGS = "-lpam -L${pam}/lib";
-  USE_HHVM=1;
-  MYSQL_INCLUDE_DIR="${mariadb}/include/mysql";
-  MYSQL_DIR=mariadb;
 
-  patchPhase = ''
+  # work around broken build system
+  NIX_CFLAGS_COMPILE = "-I${freetype.dev}/include/freetype2";
+
+  # the cmake package does not handle absolute CMAKE_INSTALL_INCLUDEDIR correctly
+  # (setting it to an absolute path causes include files to go to $out/$out/include,
+  #  because the absolute path is interpreted with root at $out).
+  cmakeFlags = "-DCMAKE_INSTALL_INCLUDEDIR=include";
+
+  prePatch = ''
     substituteInPlace hphp/util/generate-buildinfo.sh \
       --replace /bin/bash ${stdenv.shell}
     substituteInPlace ./configure \
       --replace "/usr/bin/env bash" ${stdenv.shell}
-  '';
-  installPhase = ''
-    mkdir -p $out/bin $out/lib
-    mv hphp/hhvm/hhvm          $out/bin
-    mv hphp/hack/bin/hh_server $out/bin
-    mv hphp/hack/bin/hh_client $out/bin
-    mv hphp/hack/hhi           $out/lib/hack-hhi
-
-    cat > $out/bin/hhvm-hhi-copy <<EOF
-    #!${stdenv.shell}
-    cp -R $out/lib/hack-hhi \$1
-    EOF
-    chmod +x $out/bin/hhvm-hhi-copy
+    perl -pi -e 's/([ \t(])(isnan|isinf)\(/$1std::$2(/g' \
+      hphp/runtime/base/*.cpp \
+      hphp/runtime/ext/std/*.cpp \
+      hphp/runtime/ext_zend_compat/php-src/main/*.cpp \
+      hphp/runtime/ext_zend_compat/php-src/main/*.h
+    patchShebangs .
   '';
 
   meta = {

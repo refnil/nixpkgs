@@ -10,8 +10,8 @@ stdenv.mkDerivation {
   };
 
   /* On Darwin, there are 3 test failures that haven't been investigated
-     yet.  */
-  doCheck = !stdenv.isDarwin && !stdenv.isFreeBSD;
+     yet. On cygwin at least parallelsim test hangs. */
+  doCheck = !stdenv.isDarwin && !stdenv.isFreeBSD && !stdenv.isCygwin;
 
   patches =
     [
@@ -57,7 +57,7 @@ stdenv.mkDerivation {
     homepage = http://www.gnu.org/software/make/;
 
     license = stdenv.lib.licenses.gpl3Plus;
-    maintainers = [ stdenv.lib.maintainers.ludo ];
+    maintainers = [ ];
     platforms = stdenv.lib.platforms.all;
   };
 }

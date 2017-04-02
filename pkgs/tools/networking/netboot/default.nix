@@ -1,47 +1,20 @@
-x@{builderDefsPackage
-  , fetchurl, yacc, bison, ...}:
-builderDefsPackage
-(a :
-let
-  helperArgNames = ["stdenv" "fetchurl" "builderDefsPackage"] ++
-    [];
+{ stdenv, fetchurl, yacc, lzo, db4 }:
 
-  buildInputs = map (n: builtins.getAttr n x)
-    (builtins.attrNames (builtins.removeAttrs x helperArgNames));
-  sourceInfo = rec {
-    version="0.10.2";
-    baseName="netboot";
-    name="${baseName}-${version}";
-    url="mirror://sourceforge/netboot/${name}.tar.gz";
-    hash="09w09bvwgb0xzn8hjz5rhi3aibysdadbg693ahn8rylnqfq4hwg0";
-  };
-in
-rec {
-  src = a.fetchurl {
-    url = sourceInfo.url;
-    sha256 = sourceInfo.hash;
+stdenv.mkDerivation rec {
+  name = "netboot-0.10.2";
+  src = fetchurl {
+    url = "mirror://sourceforge/netboot/${name}.tar.gz";
+    sha256 = "09w09bvwgb0xzn8hjz5rhi3aibysdadbg693ahn8rylnqfq4hwg0";
   };
 
-  inherit (sourceInfo) name version;
-  inherit buildInputs;
+  buildInputs = [ yacc lzo db4 ];
 
-  /* doConfigure should be removed if not needed */
-  phaseNames = ["doUnpack" "doConfigure" "doMakeInstall"];
+  hardeningDisable = [ "format" ];
 
-  meta = {
+  meta = with stdenv.lib; {
     description = "Mini PXE server";
-    maintainers = with a.lib.maintainers;
-    [
-      raskin
-    ];
-    platforms = with a.lib.platforms;
-      linux;
-    license = "free-noncopyleft";
+    maintainers = [ maintainers.raskin ];
+    platforms = ["x86_64-linux"];
+    license = stdenv.lib.licenses.free;
   };
-  passthru = {
-    updateInfo = {
-      downloadPage = "https://github.com/ITikhonov/netboot";
-    };
-  };
-}) x
-
+}

@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, pkgconfig, utillinux, kmod }:
+{ stdenv, fetchurl, pkgconfig, utillinux }:
 
 stdenv.mkDerivation rec {
   name = "bcache-tools-${version}";
@@ -19,9 +19,12 @@ stdenv.mkDerivation rec {
         -e "/INSTALL.*initcpio\/install/d" \
         -e "/INSTALL.*dracut\/module-setup.sh/d" \
         -i Makefile
-
-    sed -e "s|/sbin/modprobe|${kmod}/sbin/modprobe|" -i bcache-register
   '';
+
+  patches = [
+    ./bcache-udev-modern.patch
+    ./fix-static.patch
+  ];
 
   preBuild = ''
     export makeFlags="$makeFlags PREFIX=\"$out\" UDEVLIBDIR=\"$out/lib/udev/\"";

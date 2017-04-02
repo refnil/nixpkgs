@@ -21,7 +21,7 @@ in
         description = ''
           Whether to enable GNOME Keyring daemon, a service designed to
           take care of the user's security credentials,
-          such as user names and passwordsa search engine.
+          such as user names and passwords.
         '';
       };
 
@@ -36,7 +36,7 @@ in
 
     environment.systemPackages = [ gnome3.gnome_keyring ];
 
-    services.dbus.packages = [ gnome3.gnome_keyring ];
+    services.dbus.packages = [ gnome3.gnome_keyring gnome3.gcr ];
 
   };
 

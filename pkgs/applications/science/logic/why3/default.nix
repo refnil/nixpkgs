@@ -1,22 +1,27 @@
-{ fetchurl, stdenv, ocaml, ocamlPackages, coq }:
+{ fetchurl, stdenv, ocamlPackages, coq }:
 
 stdenv.mkDerivation rec {
   name    = "why3-${version}";
-  version = "0.83";
+  version = "0.87.3";
 
   src = fetchurl {
-    url    = "https://gforge.inria.fr/frs/download.php/33490/${name}.tar.gz";
-    sha256 = "1jcs5vj91ppbgh4q4hch89b63wgakjhg35pm3r4jwhp377lnggya";
+    url    = https://gforge.inria.fr/frs/download.php/file/36398/why3-0.87.3.tar.gz;
+    sha256 = "1fn9v6w1ilkrm2n4rz31w8qvjnchyvwxiqs67z3f59b5k99wb2ka";
   };
 
-  buildInputs = with ocamlPackages;
-    [ coq ocaml findlib lablgtk ocamlgraph zarith ];
+  buildInputs = (with ocamlPackages; [
+      ocaml findlib lablgtk ocamlgraph zarith menhir ]) ++
+    stdenv.lib.optionals (ocamlPackages.ocaml == coq.ocaml ) [
+      coq coq.camlp5
+    ];
 
-  meta = {
-    description = "why is a software verification platform";
+  installTargets = [ "install" "install-lib" ];
+
+  meta = with stdenv.lib; {
+    description = "A platform for deductive program verification";
     homepage    = "http://why3.lri.fr/";
-    license     = stdenv.lib.licenses.lgpl21;
-    platforms   = stdenv.lib.platforms.linux;
-    maintainers = [ stdenv.lib.maintainers.thoughtpolice ];
+    license     = licenses.lgpl21;
+    platforms   = platforms.unix;
+    maintainers = with maintainers; [ thoughtpolice vbgl ];
   };
 }

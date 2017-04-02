@@ -4,7 +4,14 @@
 let
   version = virtualbox.version;
   xserverVListFunc = builtins.elemAt (stdenv.lib.splitString "." xorg.xorgserver.version);
-  xserverABI = xserverVListFunc 0 + xserverVListFunc 1;
+
+  # Forced to 1.18 in <nixpkgs/nixos/modules/services/x11/xserver.nix>
+  # as it even fails to build otherwise.  Still, override this even here,
+  # in case someone does just a standalone build
+  # (not via videoDrivers = ["vboxvideo"]).
+  # It's likely to work again in some future update.
+  xserverABI = let abi = xserverVListFunc 0 + xserverVListFunc 1;
+    in if abi == "119" then "118" else abi;
 in
 
 stdenv.mkDerivation {
@@ -12,17 +19,20 @@ stdenv.mkDerivation {
 
   src = fetchurl {
     url = "http://download.virtualbox.org/virtualbox/${version}/VBoxGuestAdditions_${version}.iso";
-    sha256 = "c76dd5ec86f61ad72263ab6d2405723b06badfc2fae57f83ffa5de96f553400d";
+    sha256 = "f2951b49f48a560fbc1afe9d135d1f3f82a3e158b9002278d05d978428adca8a";
   };
 
   KERN_DIR = "${kernel.dev}/lib/modules/*/build";
+
+  hardeningDisable = [ "pic" ];
+
+  NIX_CFLAGS_COMPILE = "-Wno-error=incompatible-pointer-types";
 
   buildInputs = [ patchelf cdrkit makeWrapper dbus ];
 
   installPhase = ''
     mkdir -p $out
     cp -r install/* $out
-
   '';
 
   buildCommand = with xorg; ''
@@ -63,29 +73,32 @@ stdenv.mkDerivation {
     for i in sbin/VBoxService bin/{VBoxClient,VBoxControl} lib/VBoxGuestAdditions/mount.vboxsf
     do
         ${if stdenv.system == "i686-linux" then ''
-          patchelf --set-interpreter ${stdenv.glibc}/lib/ld-linux.so.2 $i
+          patchelf --set-interpreter ${stdenv.glibc.out}/lib/ld-linux.so.2 $i
         ''
         else if stdenv.system == "x86_64-linux" then ''
-          patchelf --set-interpreter ${stdenv.glibc}/lib/ld-linux-x86-64.so.2 $i
+          patchelf --set-interpreter ${stdenv.glibc.out}/lib/ld-linux-x86-64.so.2 $i
         ''
         else throw ("Architecture: "+stdenv.system+" not supported for VirtualBox guest additions")
         }
-        patchelf --set-rpath ${stdenv.gcc.gcc}/lib:${dbus}/lib:${libX11}/lib:${libXt}/lib:${libXext}/lib:${libXmu}/lib:${libXfixes}/lib:${libXrandr}/lib:${libXcursor}/lib $i
+        patchelf --set-rpath ${lib.makeLibraryPath [ stdenv.cc.cc dbus libX11 libXt libXext libXmu libXfixes libXrandr libXcursor ]} $i
     done
 
     for i in lib/VBoxOGL*.so
     do
-        patchelf --set-rpath $out/lib:${dbus}/lib $i
+        patchelf --set-rpath ${lib.makeLibraryPath [ "$out" dbus libXcomposite libXdamage libXext libXfixes ]} $i
     done
+
+    # FIXME: Virtualbox 4.3.22 moved VBoxClient-all (required by Guest Additions
+    # NixOS module) to 98vboxadd-xclient. For now, just work around it:
+    mv lib/VBoxGuestAdditions/98vboxadd-xclient bin/VBoxClient-all
 
     # Remove references to /usr from various scripts and files
     sed -i -e "s|/usr/bin|$out/bin|" share/VBoxGuestAdditions/vboxclient.desktop
     sed -i -e "s|/usr/bin|$out/bin|" bin/VBoxClient-all
 
     # Install binaries
-    mkdir -p $out/sbin
-    install -m 4755 lib/VBoxGuestAdditions/mount.vboxsf $out/sbin/mount.vboxsf
-    install -m 755 sbin/VBoxService $out/sbin
+    install -D -m 4755 lib/VBoxGuestAdditions/mount.vboxsf $out/bin/mount.vboxsf
+    install -D -m 755 sbin/VBoxService $out/bin/VBoxService
 
     mkdir -p $out/bin
     install -m 755 bin/VBoxClient $out/bin

@@ -1,53 +1,86 @@
-{ stdenv, fetchurl, libX11, libXtst, libXext, libXdamage, libXfixes, wine, makeWrapper
-, bash, findutils, coreutils }:
+{ stdenv, lib, fetchurl, xdg_utils, pkgs, pkgsi686Linux }:
 
-assert stdenv.system == "i686-linux";
 let
-  topath = "${wine}/bin";
+  ld32 =
+    if stdenv.system == "i686-linux" then "${stdenv.cc}/nix-support/dynamic-linker"
+    else if stdenv.system == "x86_64-linux" then "${stdenv.cc}/nix-support/dynamic-linker-m32"
+    else abort "Unsupported architecture";
+  ld64 = "${stdenv.cc}/nix-support/dynamic-linker";
 
-  toldpath = stdenv.lib.concatStringsSep ":" (map (x: "${x}/lib") 
-    [ stdenv.gcc.gcc libX11 libXtst libXext libXdamage libXfixes wine ]);
+  mkLdPath = ps: lib.makeLibraryPath (with ps; [ qt4 dbus alsaLib ]);
+
+  deps = ps: (with ps; [ dbus alsaLib fontconfig freetype libpng12 libjpeg ]) ++ (with ps.xlibs; [ libX11 libXext libXdamage libXrandr libXrender libXfixes libSM libXtst ]);
+  tvldpath32 = lib.makeLibraryPath (with pkgsi686Linux; [ qt4 "$out/share/teamviewer/tv_bin/wine" ] ++ deps pkgsi686Linux);
+  tvldpath64 = lib.makeLibraryPath (deps pkgs);
 in
-stdenv.mkDerivation {
-  name = "teamviewer-7.0.9377";
+
+stdenv.mkDerivation rec {
+  name = "teamviewer-${version}";
+  version = "12.0.71510";
+
   src = fetchurl {
-    url = "http://download.teamviewer.com/download/version_7x/teamviewer_linux.tar.gz";
-    sha256 = "1f8934jqj093m1z56yl6k2ah6njkk6pz1rjvpqnryi29pp5piaiy";
+    # There is a 64-bit package, but it has no differences apart from Debian dependencies.
+    # Generic versioned packages (teamviewer_${version}_i386.tar.xz) are not available for some reason.
+    url = "http://download.teamviewer.com/download/teamviewer_${version}_i386.deb";
+    sha256 = "0f2qc2rpxk7zsyfxlsfr5gwbs9vhnzc3z7ib677pnr99bz06hbqp";
   };
 
-  buildInputs = [ makeWrapper ];
-
-  # I need patching, mainly for it not try to use its own 'wine' (in the tarball).
-  installPhase = ''
-    mkdir -p $out/share/teamviewer $out/bin
-    cp -a .tvscript/* $out/share/teamviewer
-    cp -a .wine/drive_c $out/share/teamviewer
-    sed -i -e 's/^tv_Run//' \
-      -e 's/^  setup_tar_env//' \
-      -e 's/^  setup_env//' \
-      -e 's,^  TV_Wine_dir=.*,  TV_Wine_dir=${wine},' \
-      -e 's,progsrc=.*drive_c,progsrc='$out'"/share/teamviewer/drive_c,' \
-      $out/share/teamviewer/wrapper
-
-    cat > $out/bin/teamviewer << EOF
-    #!${bash}/bin/sh
-    # Teamviewer puts symlinks to nix store paths in ~/.teamviewer. When those
-    # paths become garbage collected, teamviewer crashes upon start because of
-    # those broken symlinks. An easy workaround to this behaviour is simply to
-    # delete all symlinks before we start teamviewer. Teamviewer will fixup the
-    # symlinks, just like it did the first time the user ran it.
-    ${findutils}/bin/find "\$HOME"/.teamviewer/*/*/"Program Files/TeamViewer/" -type l -print0 | ${findutils}/bin/xargs -0 ${coreutils}/bin/rm
-
-    export LD_LIBRARY_PATH=${toldpath}\''${LD_LIBRARY_PATH:+:\$LD_LIBRARY_PATH}
-    export PATH=${topath}\''${PATH:+:\$PATH}
-    $out/share/teamviewer/wrapper wine "c:\Program Files\TeamViewer\Version7\TeamViewer.exe" "\$@"
-    EOF
-    chmod +x $out/bin/teamviewer
+  unpackPhase = ''
+    ar x $src
+    tar xf data.tar.*
   '';
 
-  meta = {
+  installPhase = ''
+    mkdir -p $out/share/teamviewer $out/bin $out/share/applications
+    cp -a opt/teamviewer/* $out/share/teamviewer
+    rm -R \
+      $out/share/teamviewer/logfiles \
+      $out/share/teamviewer/config \
+      $out/share/teamviewer/tv_bin/{xdg-utils,RTlib} \
+      $out/share/teamviewer/tv_bin/script/{teamviewer_setup,teamviewerd.sysv,teamviewerd.service,teamviewerd.*.conf,libdepend,tv-delayed-start.sh}
+
+    ln -s $out/share/teamviewer/tv_bin/script/teamviewer $out/bin
+    ln -s $out/share/teamviewer/tv_bin/teamviewerd $out/bin
+    ln -s $out/share/teamviewer/tv_bin/desktop/com.teamviewer.*.desktop $out/share/applications
+    ln -s /var/lib/teamviewer $out/share/teamviewer/config
+    ln -s /var/log/teamviewer $out/share/teamviewer/logfiles
+    ln -s ${xdg_utils}/bin $out/share/teamviewer/tv_bin/xdg-utils
+
+    pushd $out/share/teamviewer/tv_bin
+
+    sed -i "s,TV_LD32_PATH=.*,TV_LD32_PATH=$(cat ${ld32})," script/tvw_config
+    ${if stdenv.system == "x86_64-linux" then ''
+      sed -i "s,TV_LD64_PATH=.*,TV_LD64_PATH=$(cat ${ld64})," script/tvw_config
+    '' else ''
+      sed -i "/TV_LD64_PATH=.*/d" script/tvw_config
+    ''}
+
+    sed -i "s,/opt/teamviewer,$out/share/teamviewer,g" desktop/com.teamviewer.*.desktop
+
+    for i in teamviewer-config teamviewerd TeamViewer_Desktop TVGuiDelegate TVGuiSlave.32 wine/bin/*; do
+      echo "patching $i"
+      patchelf --set-interpreter $(cat ${ld32}) --set-rpath ${tvldpath32} $i || true
+    done
+    for i in resources/*.so wine/drive_c/TeamViewer/tvwine.dll.so wine/lib/*.so* wine/lib/wine/*.so; do
+      echo "patching $i"
+      patchelf --set-rpath ${tvldpath32} $i || true
+    done
+    ${if stdenv.system == "x86_64-linux" then ''
+      patchelf --set-interpreter $(cat ${ld64}) --set-rpath ${tvldpath64} TVGuiSlave.64
+    '' else ''
+      rm TVGuiSlave.64
+    ''}
+    popd
+  '';
+
+  dontPatchELF = true;
+  dontStrip = true;
+
+  meta = with stdenv.lib; {
     homepage = "http://www.teamviewer.com";
-    license = stdenv.lib.licenses.unfree;
+    license = licenses.unfree;
     description = "Desktop sharing application, providing remote support and online meetings";
+    platforms = [ "i686-linux" "x86_64-linux" ];
+    maintainers = with maintainers; [ jagajaga ];
   };
 }

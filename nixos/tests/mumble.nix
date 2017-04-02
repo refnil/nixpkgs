@@ -1,4 +1,4 @@
-import ./make-test.nix (
+import ./make-test.nix ({ pkgs, ...} : 
 
 let
   client = { config, pkgs, ... }: {
@@ -8,6 +8,9 @@ let
 in
 {
   name = "mumble";
+  meta = with pkgs.stdenv.lib.maintainers; {
+    maintainers = [ thoughtpolice eelco chaoflow ];
+  };
 
   nodes = {
     server = { config, pkgs, ... }: {
@@ -33,18 +36,29 @@ in
     # cancel client audio configuration
     $client1->waitForWindow(qr/Audio Tuning Wizard/);
     $client2->waitForWindow(qr/Audio Tuning Wizard/);
+    $server->sleep(5); # wait because mumble is slow to register event handlers
     $client1->sendKeys("esc");
     $client2->sendKeys("esc");
 
     # cancel client cert configuration
     $client1->waitForWindow(qr/Certificate Management/);
     $client2->waitForWindow(qr/Certificate Management/);
+    $server->sleep(5); # wait because mumble is slow to register event handlers
     $client1->sendKeys("esc");
     $client2->sendKeys("esc");
 
     # accept server certificate
     $client1->waitForWindow(qr/^Mumble$/);
     $client2->waitForWindow(qr/^Mumble$/);
+    $server->sleep(5); # wait because mumble is slow to register event handlers
+    $client1->sendChars("y");
+    $client2->sendChars("y");
+    $server->sleep(5); # wait because mumble is slow to register event handlers
+
+    # sometimes the wrong of the 2 windows is focused, we switch focus and try pressing "y" again
+    $client1->sendKeys("alt-tab");
+    $client2->sendKeys("alt-tab");
+    $server->sleep(5); # wait because mumble is slow to register event handlers
     $client1->sendChars("y");
     $client2->sendChars("y");
 

@@ -1,26 +1,42 @@
-{stdenv, fetchgit, zlib, gnutls, libgcrypt}:
+{ stdenv, fetchgit, zlib
+, gnutlsSupport ? false, gnutls ? null, nettle ? null
+, opensslSupport ? true, openssl ? null
+}:
 
-stdenv.mkDerivation {
-  name = "rtmpdump-2.4";
+# Must have an ssl library enabled
+assert (gnutlsSupport || opensslSupport);
+assert gnutlsSupport -> gnutlsSupport != null && nettle != null && !opensslSupport;
+assert opensslSupport -> openssl != null && !gnutlsSupport;
+
+with stdenv.lib;
+stdenv.mkDerivation rec {
+  name = "rtmpdump-${version}";
+  version = "2015-12-30";
+
   src = fetchgit {
     url = git://git.ffmpeg.org/rtmpdump;
-    rev = "79459a2b43f41ac44a2ec001139bcb7b1b8f7497";
-    sha256 = "5af22362004566794035f989879b13d721f85d313d752abd10a7e45806e3944c";
+    # Currently the latest commit is used (a release has not been made since 2011, i.e. '2.4')
+    rev = "fa8646daeb19dfd12c181f7d19de708d623704c0";
+    sha256 = "17m9rmnnqyyzsnnxcdl8258hjmw16nxbj1n1lr7fj3kmcs189iig";
   };
 
-  buildInputs = [ zlib gnutls libgcrypt ];
+  makeFlags = [ ''prefix=$(out)'' ]
+    ++ optional gnutlsSupport "CRYPTO=GNUTLS"
+    ++ optional opensslSupport "CRYPTO=OPENSSL"
+    ++ optional stdenv.isDarwin "SYS=darwin"
+    ++ optional stdenv.cc.isClang "CC=clang";
 
-  makeFlags = "CRYPTO=GNUTLS";
+  propagatedBuildInputs = [ zlib ]
+    ++ optionals gnutlsSupport [ gnutls nettle ]
+    ++ optional opensslSupport openssl;
 
-  configurePhase = ''
-    sed -i s,/usr/local,$out, Makefile librtmp/Makefile
-  '';
+  outputs = [ "out" "dev" ];
 
   meta = {
-    homepage = http://rtmpdump.mplayerhq.hu/;
     description = "Toolkit for RTMP streams";
-    license = stdenv.lib.licenses.gpl2Plus;
-    maintainers = with stdenv.lib.maintainers; [viric];
-    platforms = with stdenv.lib.platforms; all;
+    homepage    = http://rtmpdump.mplayerhq.hu/;
+    license     = licenses.gpl2;
+    platforms   = platforms.unix;
+    maintainers = with maintainers; [ codyopel viric ];
   };
 }

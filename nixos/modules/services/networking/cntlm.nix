@@ -61,6 +61,7 @@ in
       };
 
      extraConfig = mkOption {
+        type = types.lines;
         default = "";
         description = "Verbatim contents of <filename>cntlm.conf</filename>.";
      };
@@ -73,28 +74,27 @@ in
   ###### implementation
 
   config = mkIf config.services.cntlm.enable {
-
+    systemd.services.cntlm = {
+      description = "CNTLM is an NTLM / NTLM Session Response / NTLMv2 authenticating HTTP proxy";
+      after = [ "network.target" ];
+      wantedBy = [ "multi-user.target" ];
+      serviceConfig = {
+        Type = "forking";
+        User = "cntlm";
+        ExecStart = ''
+          ${pkgs.cntlm}/bin/cntlm -U cntlm \
+            -c ${pkgs.writeText "cntlm_config" cfg.extraConfig}
+        '';
+      };  
+    };
+   
     services.cntlm.netbios_hostname = mkDefault config.networking.hostName;
   
-    users.extraUsers = singleton { 
+    users.extraUsers.cntlm =  { 
       name = "cntlm";
       description = "cntlm system-wide daemon";
       home = "/var/empty";
     };
-
-    jobs.cntlm =
-      { description = "CNTLM is an NTLM / NTLM Session Response / NTLMv2 authenticating HTTP proxy";
-      
-        startOn = "started network-interfaces";
-
-        daemonType = "fork";
-
-        exec =
-          ''
-            ${pkgs.cntlm}/bin/cntlm -U cntlm \
-            -c ${pkgs.writeText "cntlm_config" cfg.extraConfig}
-          '';
-      };
 
     services.cntlm.extraConfig =
       ''
@@ -108,8 +108,7 @@ in
         ${concatMapStrings (port: ''
           Listen ${toString port}
         '') cfg.port}
-      '';
-      
+      '';      
   };
   
 }

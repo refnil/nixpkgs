@@ -11,9 +11,10 @@
 { swingSupport ? true
 , stdenv
 , requireFile
+, makeWrapper
 , unzip
 , file
-, xlibs ? null
+, xorg ? null
 , installjdk ? true
 , pluginSupport ? true
 , installjce ? false
@@ -25,7 +26,7 @@
 , mesa_noglu
 , freetype
 , fontconfig
-, gnome
+, gnome2
 , cairo
 , alsaLib
 , atk
@@ -34,7 +35,7 @@
 }:
 
 assert stdenv.system == "i686-linux" || stdenv.system == "x86_64-linux";
-assert swingSupport -> xlibs != null;
+assert swingSupport -> xorg != null;
 
 let
 
@@ -83,6 +84,8 @@ let result = stdenv.mkDerivation rec {
   nativeBuildInputs = [ file ]
     ++ stdenv.lib.optional installjce unzip;
 
+  buildInputs = [ makeWrapper ];
+
   # See: https://github.com/NixOS/patchelf/issues/10
   dontStrip = 1;
 
@@ -103,7 +106,8 @@ let result = stdenv.mkDerivation rec {
       mv $sourceRoot $out
     fi
 
-    for file in $out/*
+    shopt -s extglob
+    for file in $out/!(*src.zip)
     do
       if test -f $file ; then
         rm $file
@@ -119,12 +123,6 @@ let result = stdenv.mkDerivation rec {
       done
     fi
 
-    # construct the rpath
-    rpath=
-    for i in $libraries; do
-        rpath=$rpath''${rpath:+:}$i/lib:$i/lib64
-    done
-
     if test -z "$installjdk"; then
       jrePath=$out
     else
@@ -133,7 +131,7 @@ let result = stdenv.mkDerivation rec {
 
     if test -n "${jce}"; then
       unzip ${jce}
-      cp -v UnlimitedJCEPolicy/*.jar $jrePath/lib/security
+      cp -v UnlimitedJCEPolicy*/*.jar $jrePath/lib/security
     fi
 
     rpath=$rpath''${rpath:+:}$jrePath/lib/${architecture}/jli
@@ -142,8 +140,8 @@ let result = stdenv.mkDerivation rec {
     rpath=$rpath''${rpath:+:}$jrePath/lib/${architecture}
 
     # set all the dynamic linkers
-    find $out -type f -perm +100 \
-        -exec patchelf --interpreter "$(cat $NIX_GCC/nix-support/dynamic-linker)" \
+    find $out -type f -perm -0100 \
+        -exec patchelf --interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" \
         --set-rpath "$rpath" {} \;
 
     find $out -name "*.so" -exec patchelf --set-rpath "$rpath" {} \;
@@ -165,6 +163,12 @@ let result = stdenv.mkDerivation rec {
     cat <<EOF >> $out/nix-support/setup-hook
     if [ -z "\$JAVA_HOME" ]; then export JAVA_HOME=$out; fi
     EOF
+
+    # Oracle Java Mission Control needs to know where libgtk-x11 and related is
+    if test -n "$installjdk"; then
+      wrapProgram "$out/bin/jmc" \
+          --suffix-each LD_LIBRARY_PATH ':' "${rpath}"
+    fi
   '';
 
   inherit installjdk pluginSupport;
@@ -173,13 +177,22 @@ let result = stdenv.mkDerivation rec {
    * libXt is only needed on amd64
    */
   libraries =
-    [stdenv.gcc.libc glib libxml2 libav_0_8 ffmpeg libxslt mesa_noglu xlibs.libXxf86vm alsaLib fontconfig freetype gnome.pango gnome.gtk cairo gdk_pixbuf atk] ++
-    (if swingSupport then [xlibs.libX11 xlibs.libXext xlibs.libXtst xlibs.libXi xlibs.libXp xlibs.libXt xlibs.libXrender stdenv.gcc.gcc] else []);
+    [stdenv.cc.libc glib libxml2 libav_0_8 ffmpeg libxslt mesa_noglu xorg.libXxf86vm alsaLib fontconfig freetype gnome2.pango gnome2.gtk cairo gdk_pixbuf atk] ++
+    (if swingSupport then [xorg.libX11 xorg.libXext xorg.libXtst xorg.libXi xorg.libXp xorg.libXt xorg.libXrender stdenv.cc.cc] else []);
+
+  rpath = stdenv.lib.strings.makeLibraryPath libraries;
 
   passthru.mozillaPlugin = if installjdk then "/jre/lib/${architecture}/plugins" else "/lib/${architecture}/plugins";
 
   passthru.jre = result; # FIXME: use multiple outputs or return actual JRE package
 
-  meta.license = stdenv.lib.licenses.unfree;
+  passthru.home = result;
+
+  passthru.architecture = architecture;
+
+  meta = with stdenv.lib; {
+    license = licenses.unfree;
+    platforms = [ "i686-linux" "x86_64-linux" ]; # some inherit jre.meta.platforms
+  };
 
 }; in result

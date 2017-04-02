@@ -1,19 +1,35 @@
-{ stdenv, fetchurl, openssl, fuse, boost, rlog }:
+{ stdenv, fetchFromGitHub
+, cmake, pkgconfig, perl
+, gettext, fuse, openssl, tinyxml2
+}:
 
-stdenv.mkDerivation {
-  name = "encfs-1.7.4";
+stdenv.mkDerivation rec {
+  name = "encfs-${version}";
+  version = "1.9.1";
 
-  src = fetchurl {
-    url = "http://encfs.googlecode.com/files/encfs-1.7.4.tgz";
-    sha256 = "1a3h47f4h0qdc0bf3vic1i8wrdw5nkx22mml4wsvmmrd9zqg0bi8";
+  src = fetchFromGitHub {
+    sha256 = "1pyldd802db987m13jfmy491mp8mnsv2mwki0ra4wbnngbqgalhv";
+    rev = "v${version}";
+    repo = "encfs";
+    owner = "vgough";
   };
 
-  buildInputs = [ boost fuse openssl rlog ];
+  buildInputs = [ gettext fuse openssl tinyxml2 ];
+  nativeBuildInputs = [ cmake pkgconfig perl ];
 
-  configureFlags = "--with-boost-serialization=boost_wserialization --with-boost-filesystem=boost_filesystem";
+  cmakeFlags =
+    [ "-DUSE_INTERNAL_TINYXML=OFF"
+      "-DBUILD_SHARED_LIBS=ON"
+      "-DINSTALL_LIBENCFS=ON"
+    ];
 
-  meta = {
-    homepage = http://www.arg0.net/encfs;
-    description = "EncFS provides an encrypted filesystem in user-space via FUSE";
+  enableParallelBuilding = true;
+
+  meta = with stdenv.lib; {
+    description = "An encrypted filesystem in user-space via FUSE";
+    homepage = https://vgough.github.io/encfs;
+    license = with licenses; [ gpl3 lgpl3 ];
+    maintainers = with maintainers; [ nckx ];
+    platforms = with platforms; linux;
   };
 }

@@ -1,17 +1,17 @@
 { stdenv, fetchurl, pkgconfig, intltool, gobjectIntrospection, libsoup
-, libxslt, check, vala ? null
+, libxslt, check, vala_0_23 ? null
 }:
 
 stdenv.mkDerivation rec {
-  name = "libosinfo-0.2.10";
+  name = "libosinfo-0.2.12";
 
   src = fetchurl {
     url = "https://fedorahosted.org/releases/l/i/libosinfo/${name}.tar.gz";
-    sha256 = "564bd487a39dc09a10917c1d7a95f739ee7701d9cd0fbabcacea64f615e20a2d";
+    sha256 = "1vcg8ylh7q69s9y6hj94dqfffwfbann3i28yqgfc01navf6yl07s";
   };
 
   buildInputs = [
-    pkgconfig intltool gobjectIntrospection libsoup libxslt check vala
+    pkgconfig intltool gobjectIntrospection libsoup libxslt check vala_0_23
   ];
 
   meta = with stdenv.lib; {

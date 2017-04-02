@@ -1,18 +1,23 @@
-{ stdenv, fetchurl }:
+{ stdenv, fetchurl, kerberos, keyutils, pam, talloc }:
 
 stdenv.mkDerivation rec {
-  name = "cifs-utils-6.3";
+  name = "cifs-utils-${version}";
+  version = "6.5";
 
   src = fetchurl {
-    url = "ftp://ftp.samba.org/pub/linux-cifs/cifs-utils/${name}.tar.bz2";
-    sha256 = "0nrpd3ibzfhdxgq1pw0jhzx163z5jvq4qcjxl35qlqj74lm3pxzz";
+    url = "mirror://samba/pub/linux-cifs/cifs-utils/${name}.tar.bz2";
+    sha256 = "1xs9rwqfpx8qj5mcmagw6y1hzwc71zhzb5r8hv06sz16p1w6axz2";
   };
+
+  buildInputs = [ kerberos keyutils pam talloc ];
 
   makeFlags = "root_sbindir=$(out)/sbin";
 
-  meta = {
+  meta = with stdenv.lib; {
     homepage = http://www.samba.org/linux-cifs/cifs-utils/;
     description = "Tools for managing Linux CIFS client filesystems";
-    platforms = stdenv.lib.platforms.linux;
+    platforms = platforms.linux;
+    license = licenses.lgpl3;
+    maintainers = with maintainers; [ nckx ];
   };
 }

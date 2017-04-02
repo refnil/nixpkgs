@@ -1,5 +1,8 @@
 import ./make-test.nix ({ pkgs, ... }: {
   name = "phabricator";
+  meta = with pkgs.stdenv.lib.maintainers; {
+    maintainers = [ chaoflow ];
+  };
 
   nodes = {
     storage =
@@ -32,9 +35,16 @@ import ./make-test.nix ({ pkgs, ... }: {
             }];
           };
 
+          phd = {
+            enable = true;
+          };
+
           mysql = {
             enable = true;
             package = pkgs.mysql;
+            extraOptions = ''
+              sql_mode=STRICT_ALL_TABLES
+            '';
           };
         };
 
@@ -44,7 +54,7 @@ import ./make-test.nix ({ pkgs, ... }: {
     client =
       { config, pkgs, ... }:
       { imports = [ ./common/x11.nix ];
-        services.xserver.desktopManager.kde4.enable = true;
+        services.xserver.desktopManager.plasma5.enable = true;
       };
   };
 

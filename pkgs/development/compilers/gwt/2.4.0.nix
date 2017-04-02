@@ -11,13 +11,14 @@ stdenv.mkDerivation {
   buildInputs = [ unzip ];
 
   installPhase = ''
-    ensureDir $out
+    mkdir -p $out
     unzip $src
     mv gwt-2.4.0 $out/bin
   '';
 
   meta = {
     homepage = http://code.google.com/webtoolkit/;
-    description = "Google Web Toolkit (GWT) is a development toolkit for building and optimizing complex browser-based applications";
+    description = "A development toolkit for building and optimizing complex browser-based applications";
+    platforms = stdenv.lib.platforms.unix;
   };
 }

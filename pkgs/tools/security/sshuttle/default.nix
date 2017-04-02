@@ -1,34 +1,39 @@
-{ stdenv, fetchurl, iptables, python, pythonPackages }:
+{ stdenv, pythonPackages, fetchurl, makeWrapper, pandoc
+, coreutils, iptables, nettools, openssh, procps }:
   
-stdenv.mkDerivation rec {
+pythonPackages.buildPythonApplication rec {
   name = "sshuttle-${version}";
-  version = "0.61";
+  version = "0.78.0";
 
   src = fetchurl {
-    url = "https://github.com/apenwarr/sshuttle/archive/sshuttle-0.61.tar.gz";
-    sha256 = "1v2v1kbwnmx6ygzhbgqcmyafx914s2p7vjp7l0pf52sa7qkliy9b";
+    sha256 = "18hrwi2gyri1n2rq0nghvv7hfhbhh5h67am89524vc1yyx40vn3b";
+    url = "mirror://pypi/s/sshuttle/${name}.tar.gz";
   };
 
-  preBuild = ''
-   substituteInPlace Documentation/all.do --replace "/bin/ls" "$(type -tP ls)";
-   substituteInPlace Documentation/md2man.py --replace "/usr/bin/env python" "${python}/bin/python"
-  '';
+  patches = [ ./sudo.patch ];
 
-  phases = "unpackPhase installPhase";
+  propagatedBuildInputs = with pythonPackages; [ PyXAPI mock pytest ];
+  nativeBuildInputs = [ makeWrapper pandoc pythonPackages.setuptools_scm ];
+  buildInputs =
+    [ coreutils openssh ] ++
+    stdenv.lib.optionals stdenv.isLinux [ iptables nettools procps ];
 
-  installPhase = ''
-    mkdir -p $out/bin
-    cp -R . $out
-    ln -s $out/sshuttle $out/bin/sshuttle
+  postInstall = let
+    mapPath = f: x: stdenv.lib.concatStringsSep ":" (map f x);
+  in ''
+  wrapProgram $out/bin/sshuttle \
+    --prefix PATH : "${mapPath (x: "${x}/bin") buildInputs}" \
   '';
   
-
-  buildInputs = [ iptables python pythonPackages.markdown pythonPackages.beautifulsoup ];
-
   meta = with stdenv.lib; {
-    homepage = https://github.com/apenwarr/sshuttle;
+    homepage = https://github.com/sshuttle/sshuttle/;
     description = "Transparent proxy server that works as a poor man's VPN";
-    maintainers = with maintainers; [ iElectric ];
+    longDescription = ''
+      Forward connections over SSH, without requiring administrator access to the
+      target network (though it does require Python 2 at both ends).
+      Works with Linux and Mac OS and supports DNS tunneling.
+    '';
+    maintainers = with maintainers; [ domenkozar nckx ];
     platforms = platforms.unix;
   };
 }

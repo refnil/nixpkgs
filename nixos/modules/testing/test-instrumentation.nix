@@ -9,6 +9,15 @@ let kernel = config.boot.kernelPackages.kernel; in
 
 {
 
+  # This option is a dummy that if used in conjunction with
+  # modules/virtualisation/qemu-vm.nix gets merged with the same option defined
+  # there and only is declared here because some modules use
+  # test-instrumentation.nix but not qemu-vm.nix.
+  #
+  # One particular example are the boot tests where we want instrumentation
+  # within the images but not other stuff like setting up 9p filesystems.
+  options.virtualisation.qemu.program = mkOption { type = types.path; };
+
   config = {
 
     systemd.services.backdoor =
@@ -20,7 +29,15 @@ let kernel = config.boot.kernelPackages.kernel; in
             export USER=root
             export HOME=/root
             export DISPLAY=:0.0
+
             source /etc/profile
+
+            # Don't use a pager when executing backdoor
+            # actions. Because we use a tty, commands like systemctl
+            # or nix-store get confused into thinking they're running
+            # interactively.
+            export PAGER=
+
             cd /tmp
             exec < /dev/hvc0 > /dev/hvc0
             while ! exec 2> /dev/ttyS0; do sleep 0.1; done
@@ -37,6 +54,11 @@ let kernel = config.boot.kernelPackages.kernel; in
     # with EIO).  Likewise for hvc0.
     systemd.services."serial-getty@ttyS0".enable = false;
     systemd.services."serial-getty@hvc0".enable = false;
+
+    boot.initrd.preDeviceCommands =
+      ''
+        echo 600 > /proc/sys/kernel/hung_task_timeout_secs
+      '';
 
     boot.initrd.postDeviceCommands =
       ''
@@ -66,13 +88,22 @@ let kernel = config.boot.kernelPackages.kernel; in
     # Panic if an error occurs in stage 1 (rather than waiting for
     # user intervention).
     boot.kernelParams =
-      [ "console=tty1" "console=ttyS0" "panic=1" "boot.panic_on_fail" ];
+      [ "console=ttyS0" "panic=1" "boot.panic_on_fail" ];
 
     # `xwininfo' is used by the test driver to query open windows.
     environment.systemPackages = [ pkgs.xorg.xwininfo ];
 
     # Log everything to the serial console.
-    services.journald.console = "/dev/console";
+    services.journald.extraConfig =
+      ''
+        ForwardToConsole=yes
+        MaxLevelConsole=debug
+      '';
+
+    # Don't clobber the console with duplicate systemd messages.
+    systemd.extraConfig = "ShowStatus=no";
+
+    boot.consoleLogLevel = 7;
 
     # Prevent tests from accessing the Internet.
     networking.defaultGateway = mkOverride 150 "";
@@ -88,6 +119,10 @@ let kernel = config.boot.kernelPackages.kernel; in
 
     networking.usePredictableInterfaceNames = false;
 
+    # Make it easy to log in as root when running the test interactively.
+    users.extraUsers.root.initialHashedPassword = mkOverride 150 "";
+
+    services.xserver.displayManager.logToJournal = true;
   };
 
 }

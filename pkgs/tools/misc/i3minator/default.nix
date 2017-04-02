@@ -1,19 +1,6 @@
-{ stdenv, fetchurl, buildPythonPackage, pythonPackages, python }:
+{ stdenv, fetchurl, pythonPackages, glibcLocales }:
 
-let
-  i3-py = buildPythonPackage rec {
-    version = "0.6.4";
-    name = "i3-py-${version}";
-
-    src = fetchurl {
-      url = "https://pypi.python.org/packages/source/i/i3-py/i3-py-${version}.tar.gz";
-      sha256 = "1sgl438jrb4cdyl7hbc3ymwsf7y3zy09g1gh7ynilxpllp37jc8y";
-    };
-
-    # no tests in tarball
-    doCheck = false;
-  };
-in buildPythonPackage rec {
+pythonPackages.buildPythonApplication rec {
   name = "i3minator-${version}";
   version = "0.0.4";
 
@@ -22,7 +9,12 @@ in buildPythonPackage rec {
     sha256 = "11dn062788kwfs8k2ry4v8zr2gn40r6lsw770s9g2gvhl5n469dw";
   };
 
-  propagatedBuildInputs = [ pythonPackages.pyyaml i3-py ];
+  LC_ALL = "en_US.UTF-8";
+  buildInputs = [ glibcLocales ];
+  propagatedBuildInputs = [ pythonPackages.pyyaml pythonPackages.i3-py ];
+
+  # No tests
+  doCheck = false;
 
   meta = with stdenv.lib; {
     description = "i3 project manager similar to tmuxinator";
@@ -32,8 +24,8 @@ in buildPythonPackage rec {
       project is inspired by tmuxinator and uses i3-py.
     '';
     homepage = https://github.com/carlesso/i3minator;
-    license = "WTFPL"; # http://sam.zoy.org/wtfpl/
-    maintainers = with maintainers; [ iElectric ];
+    license = stdenv.lib.licenses.wtfpl;
+    maintainers = with maintainers; [ domenkozar ];
     platforms = stdenv.lib.platforms.linux;
   };
 

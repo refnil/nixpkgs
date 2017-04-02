@@ -1,15 +1,20 @@
-{ stdenv, fetchurl, zlib, curl, expat, fuse, openssl }:
+{ stdenv, fetchFromGitHub, zlib, curl, expat, fuse, openssl
+, autoreconfHook, python
+}:
 
 stdenv.mkDerivation rec {
-  version = "3.7.4";
+  version = "3.7.15";
   name = "afflib-${version}";
 
-  src = fetchurl {
-    url = "http://digitalcorpora.org/downloads/afflib/${name}.tar.gz";
-    sha256 = "18j1gjb31qjcmz6lry4m2d933w2a80iagg9g5vrpw5ig80lv10f8";
+  src = fetchFromGitHub {
+    owner = "sshock";
+    repo = "AFFLIBv3";
+    rev = "v${version}";
+    sha256 = "0ckg49m15lz5cxg0k12z2ys6v4smjr6l8bbazrvsqlm649gwd2bw";
   };
 
-  buildInputs = [ zlib curl expat fuse openssl ];
+  buildInputs = [ zlib curl expat fuse openssl autoreconfHook python ];
+
 
   meta = {
     homepage = http://afflib.sourceforge.net/;
@@ -18,7 +23,6 @@ stdenv.mkDerivation rec {
     license = stdenv.lib.licenses.bsdOriginal;
     maintainers = [ stdenv.lib.maintainers.raskin ];
     inherit version;
-    downloadPage = "http://digitalcorpora.org/downloads/afflib/";
-    updateWalker = true;
+    downloadPage = "https://github.com/sshock/AFFLIBv3/tags";
   };
 }

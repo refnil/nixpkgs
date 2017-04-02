@@ -1,18 +1,19 @@
 { config, lib }:
 
 with lib;
+with import ./systemd-lib.nix { inherit config lib pkgs; };
 
 let
+  checkService = checkUnitConfig "Service" [
+    (assertValueOneOf "Type" [
+      "simple" "forking" "oneshot" "dbus" "notify" "idle"
+    ])
+    (assertValueOneOf "Restart" [
+      "no" "on-success" "on-failure" "on-abnormal" "on-abort" "always"
+    ])
+  ];
 
-  checkService = v:
-    let assertValueOneOf = name: values: attr:
-          let val = getAttr name attr;
-          in optional ( hasAttr name attr && !elem val values) "Systemd service field `${name}' cannot have value `${val}'.";
-        checkType = assertValueOneOf "Type" ["simple" "forking" "oneshot" "dbus" "notify" "idle"];
-        checkRestart = assertValueOneOf "Restart" ["no" "on-success" "on-failure" "on-abort" "always"];
-        errors = concatMap (c: c v) [checkType checkRestart];
-    in if errors == [] then true
-       else builtins.trace (concatStringsSep "\n" errors) false;
+in rec {
 
   unitOption = mkOptionType {
     name = "systemd option";
@@ -25,8 +26,6 @@ let
         then concatLists defs''
         else mergeOneOption loc defs';
   };
-
-in rec {
 
   sharedOptions = {
 
@@ -43,14 +42,20 @@ in rec {
 
     requiredBy = mkOption {
       default = [];
-      type = types.listOf types.string;
+      type = types.listOf types.str;
       description = "Units that require (i.e. depend on and need to go down with) this unit.";
     };
 
     wantedBy = mkOption {
       default = [];
-      type = types.listOf types.string;
+      type = types.listOf types.str;
       description = "Units that want (i.e. depend on) this unit.";
+    };
+
+    aliases = mkOption {
+      default = [];
+      type = types.listOf types.str;
+      description = "Aliases of that unit.";
     };
 
   };
@@ -76,6 +81,12 @@ in rec {
       default = "";
       type = types.str;
       description = "Description of this unit used in systemd messages and progress indicators.";
+    };
+
+    documentation = mkOption {
+      default = [];
+      type = types.listOf types.str;
+      description = "A list of URIs referencing documentation for this unit or its configuration.";
     };
 
     requires = mkOption {
@@ -140,6 +151,15 @@ in rec {
       '';
     };
 
+    requisite = mkOption {
+      default = [];
+      type = types.listOf types.str;
+      description = ''
+        Similar to requires. However if the units listed are not started,
+        they will not be started and the transaction will fail.
+      '';
+    };
+
     unitConfig = mkOption {
       default = {};
       example = { RequiresMountsFor = "/data"; };
@@ -162,6 +182,15 @@ in rec {
       '';
     };
 
+    onFailure = mkOption {
+      default = [];
+      type = types.listOf types.str;
+      description = ''
+        A list of one or more units that are activated when
+        this unit enters the "failed" state.
+      '';
+    };
+
   };
 
 
@@ -176,7 +205,7 @@ in rec {
 
     path = mkOption {
       default = [];
-      apply = ps: "${makeSearchPath "bin" ps}:${makeSearchPath "sbin" ps}";
+      apply = ps: "${makeBinPath ps}:${makeSearchPathOutput "bin" "sbin" ps}";
       description = ''
         Packages added to the service's <envar>PATH</envar>
         environment variable.  Both the <filename>bin</filename>
@@ -227,6 +256,15 @@ in rec {
       description = ''
         Shell commands executed after the service's main process
         is started.
+      '';
+    };
+
+    reload = mkOption {
+      type = types.lines;
+      default = "";
+      description = ''
+        Shell commands executed when the service's main process
+        is reloaded.
       '';
     };
 
@@ -283,17 +321,18 @@ in rec {
     };
 
     startAt = mkOption {
-      type = types.str;
-      default = "";
+      type = with types; either str (listOf str);
+      default = [];
       example = "Sun 14:00:00";
       description = ''
         Automatically start this unit at the given date/time, which
         must be in the format described in
         <citerefentry><refentrytitle>systemd.time</refentrytitle>
-        <manvolnum>5</manvolnum></citerefentry>.  This is equivalent
+        <manvolnum>7</manvolnum></citerefentry>.  This is equivalent
         to adding a corresponding timer unit with
         <option>OnCalendar</option> set to the value given here.
       '';
+      apply = v: if isList v then v else [ v ];
     };
 
   };
@@ -336,9 +375,9 @@ in rec {
         Each attribute in this set specifies an option in the
         <literal>[Timer]</literal> section of the unit.  See
         <citerefentry><refentrytitle>systemd.timer</refentrytitle>
-        <manvolnum>5</manvolnum></citerefentry> and
+        <manvolnum>7</manvolnum></citerefentry> and
         <citerefentry><refentrytitle>systemd.time</refentrytitle>
-        <manvolnum>5</manvolnum></citerefentry> for details.
+        <manvolnum>7</manvolnum></citerefentry> for details.
       '';
     };
 
@@ -431,5 +470,21 @@ in rec {
   };
 
   targetOptions = commonUnitOptions;
+
+  sliceOptions = commonUnitOptions // {
+
+    sliceConfig = mkOption {
+      default = {};
+      example = { MemoryMax = "2G"; };
+      type = types.attrsOf unitOption;
+      description = ''
+        Each attribute in this set specifies an option in the
+        <literal>[Slice]</literal> section of the unit.  See
+        <citerefentry><refentrytitle>systemd.slice</refentrytitle>
+        <manvolnum>5</manvolnum></citerefentry> for details.
+      '';
+    };
+
+  };
 
 }

@@ -1,21 +1,30 @@
-{ stdenv, fetchurl, less }:
+{ stdenv, fetchurl, xz }:
 
 stdenv.mkDerivation rec {
-  name = "gzip-1.6";
+  name = "gzip-${version}";
+  version = "1.8";
 
   src = fetchurl {
     url = "mirror://gnu/gzip/${name}.tar.xz";
-    sha256 = "0ivqnbhiwd12q8hp3qw6rpsrpw2jg5y2mymk8cn22lsx90dfvprp";
+    sha256 = "1lxv3p4iyx7833mlihkn5wfwmz4cys5nybwpz3dfawag8kn6f5zz";
   };
 
+  outputs = [ "out" "man" "info" ];
+
   enableParallelBuilding = true;
+
+  nativeBuildInputs = [ xz.bin ];
+
+  preConfigure = if stdenv.isCygwin then ''
+    sed -i lib/fpending.h -e 's,include <stdio_ext.h>,,'
+  '' else null;
 
   # In stdenv-linux, prevent a dependency on bootstrap-tools.
   makeFlags = "SHELL=/bin/sh GREP=grep";
 
   meta = {
-    homepage = http://www.gnu.org/software/gzip/;
-    description = "Gzip, the GNU zip compression program";
+    homepage = https://www.gnu.org/software/gzip/;
+    description = "GNU zip compression program";
 
     longDescription =
       ''gzip (GNU zip) is a popular data compression program written by
@@ -28,6 +37,8 @@ stdenv.mkDerivation rec {
         and we needed a replacement.  The superior compression ratio of gzip
         is just a bonus.
       '';
+
+    platforms = stdenv.lib.platforms.all;
 
     license = stdenv.lib.licenses.gpl3Plus;
   };

@@ -10,7 +10,9 @@ stdenv.mkDerivation {
     sha256= "11a615225baa5f8bb686824423f50e4427acd3f70d394765bdff32801f0fd5b0";
   };
 
-  meta = {
+  configureFlags = stdenv.lib.optional stdenv.isFreeBSD "--with-pic";
+
+  meta = with stdenv.lib; {
     homepage = http://www.ossp.org/pkg/lib/uuid/;
     description = "OSSP uuid ISO-C and C++ shared library";
     longDescription =
@@ -35,6 +37,7 @@ stdenv.mkDerivation {
         short lifetime and to reliably identifying very persistent
         objects across a network.
       '';
-    license = stdenv.lib.licenses.bsd2;
+    license = licenses.bsd2;
+    platforms = platforms.all;
   };
 }

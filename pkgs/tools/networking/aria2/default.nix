@@ -1,17 +1,33 @@
-{ stdenv, fetchurl, pkgconfig, openssl, libxml2, sqlite, zlib }:
+{ stdenv, fetchFromGitHub, pkgconfig, autoreconfHook
+, openssl, c-ares, libxml2, sqlite, zlib, libssh2
+, Security
+}:
 
 stdenv.mkDerivation rec {
-  name = "aria2-1.18.5";
+  name = "aria2-${version}";
+  version = "1.31.0";
 
-  src = fetchurl {
-    url = "mirror://sourceforge/aria2/stable/${name}/${name}.tar.bz2";
-    sha256 = "0gyfp4zw7rlaxcxhb402azazf1fi83kk3qg4w0j8d2i7pfa1zqi5";
+  src = fetchFromGitHub {
+    owner = "aria2";
+    repo = "aria2";
+    rev = "release-${version}";
+    sha256 = "0d7z4bss1plkvlw5kfwzivxryrh13zi58ii3vf8q4csaz4yqhcjy";
   };
 
-  buildInputs = [ pkgconfig openssl libxml2 sqlite zlib ];
+  nativeBuildInputs = [ pkgconfig autoreconfHook ];
 
-  meta = {
-    homepage = http://aria2.sourceforge.net/;
+  buildInputs = [ openssl c-ares libxml2 sqlite zlib libssh2 ] ++
+    stdenv.lib.optional stdenv.isDarwin Security;
+
+  configureFlags = [ "--with-ca-bundle=/etc/ssl/certs/ca-certificates.crt" ];
+
+  enableParallelBuilding = true;
+
+  meta = with stdenv.lib; {
+    homepage = https://aria2.github.io;
     description = "A lightweight, multi-protocol, multi-source, command-line download utility";
+    license = licenses.gpl2Plus;
+    platforms = platforms.unix;
+    maintainers = with maintainers; [ koral jgeerds ];
   };
 }

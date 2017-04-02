@@ -1,20 +1,26 @@
 { stdenv, fetchurl, pkgconfig, perl, zlib, libjpeg, freetype, libpng, giflib
-, enableX11 ? true, xlibs
+, enableX11 ? true, xorg
 , enableSDL ? true, SDL }:
 
-let s = import ./src-for-default.nix; in
+let s = 
+rec {
+   version = "1.7.7";
+   name="directfb-${version}";
+   sha256 = "18r7h0pwbyyk8z3pgdv77nmma8lvr1si9gl1ghxgxf1ivhwcd1dp";
+   url="http://directfb.org/downloads/Core/DirectFB-1.7/DirectFB-${version}.tar.gz";
+}
+; in
 stdenv.mkDerivation {
   inherit (s) name;
   src = fetchurl {
-    url = s.url;
-    sha256 = s.hash;
+    inherit (s) url sha256;
   };
 
   nativeBuildInputs = [ perl ];
 
   buildInputs = [ pkgconfig zlib libjpeg freetype giflib libpng ]
     ++ stdenv.lib.optional enableSDL SDL
-    ++ stdenv.lib.optionals enableX11 (with xlibs; [
+    ++ stdenv.lib.optionals enableX11 (with xorg; [
       xproto libX11 libXext #xextproto
       #renderproto libXrender
     ]);

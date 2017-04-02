@@ -9,7 +9,7 @@ stdenv.mkDerivation {
     sha256 = "10hdd6mrk26kyh4bnng4ah5h1pnanhsrhqa7qwqy6dyv3rng44y9";
   };
   preBuild = ''
-    ensureDir $out/lib/noweb
+    mkdir -p $out/lib/noweb
     cd src
     makeFlags="BIN=$out/bin LIB=$out/lib/noweb MAN=$out/share/man TEXINPUTS=$out/share/texmf/tex/latex"
   '';
@@ -17,9 +17,13 @@ stdenv.mkDerivation {
   postInstall= ''
     substituteInPlace $out/bin/cpif --replace "PATH=/bin:/usr/bin" ""
     for f in $out/bin/{noweb,nountangle,noroots,noroff,noindex} \
-             $out/lib/noweb/{toroff,btdefn,totex,pipedoc,noidx,unmarkup,toascii,tohtml,emptydefn}; do
+             $out/lib/noweb/{toroff,btdefn,totex,noidx,unmarkup,toascii,tohtml,emptydefn}; do
       substituteInPlace $f --replace "nawk" "${gawk}/bin/awk"
     done
   '';
   patches = [ ./no-FAQ.patch ];
+
+  meta = {
+    platforms = stdenv.lib.platforms.linux;
+  };
 }

@@ -1,6 +1,6 @@
-# alsaLib vorbisTools python can be made optional
+# alsaLib vorbis-tools python can be made optional
 
-{ stdenv, fetchurl, python, tcl, tk, vorbisTools, pkgconfig, x11 }:
+{ stdenv, fetchurl, python, tcl, tk, vorbis-tools, pkgconfig, xlibsWrapper }:
 
 stdenv.mkDerivation {
   name = "snack-2.2.10";
@@ -14,7 +14,9 @@ stdenv.mkDerivation {
 
   postUnpack = ''sourceRoot="$sourceRoot/unix"'';
 
-  buildInputs = [ python tcl tk vorbisTools pkgconfig x11 ];
+  buildInputs = [ python tcl tk vorbis-tools pkgconfig xlibsWrapper ];
+
+  hardeningDisable = [ "format" ];
 
   postInstall = "aoeu";
 
@@ -27,5 +29,6 @@ stdenv.mkDerivation {
     description = "The Snack Sound Toolkit (Tcl)";
     homepage = http://www.speech.kth.se/snack/;
     license = stdenv.lib.licenses.gpl2;
+    broken = true;
   };
 }

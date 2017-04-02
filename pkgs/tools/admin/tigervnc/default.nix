@@ -1,93 +1,97 @@
-{ stdenv, fetchurl, libX11, libXext, gettext, libICE, libXtst, libXi, libSM, xorgserver
-, autoconf, automake, cvs, libtool, nasm, utilmacros, pixman, xkbcomp, xkeyboard_config
-, fontDirectories, fontutil, libgcrypt, gnutls, pam, flex, bison
-, fixesproto, damageproto, xcmiscproto, bigreqsproto, randrproto, renderproto
-, fontsproto, videoproto, compositeproto, scrnsaverproto, resourceproto
-, libxkbfile, libXfont, libpciaccess, cmake, libjpeg_turbo, libXft, fltk, libXinerama
-, xineramaproto, libXcursor, fetchsvn
+{ stdenv, fetchFromGitHub, xorg
+, autoconf, automake, cvs, libtool, nasm, pixman, xkeyboard_config
+, fontDirectories, libgcrypt, gnutls, pam, flex, bison, gettext
+, cmake, libjpeg_turbo, fltk, nettle, libiconv, libtasn1
 }:
 
 with stdenv.lib;
 
 stdenv.mkDerivation rec {
-  # Release version = "1.3.0";
-  revision = 5129;
-  version = "r${toString revision}";
+  version = "1.8.0pre20170211";
   name = "tigervnc-${version}";
 
-  src = fetchsvn {
-    # Release url = "mirror://sourceforge/tigervnc/${version}/${name}.tar.gz";
-    url = "https://tigervnc.svn.sourceforge.net/svnroot/tigervnc/trunk";
-    rev = revision;
-    sha256 = "1qszlqr8z16iqkm05gbs0knj4fxc3bb6gjayky1abmf8pjazi0j8";
+  src = fetchFromGitHub {
+    owner = "TigerVNC";
+    repo = "tigervnc";
+    sha256 = "10bs6394ya953gmak8g2d3n133vyfrryq9zq6dc27g8s6lw0mrbh";
+    rev = "b6c46a1a99a402d5d17b1afafc4784ce0958d6ec";
   };
 
   inherit fontDirectories;
 
   patchPhase = ''
     sed -i -e 's,$(includedir)/pixman-1,${if stdenv ? cross then pixman.crossDrv else pixman}/include/pixman-1,' unix/xserver/hw/vnc/Makefile.am
-    sed -i -e '/^$pidFile/a$ENV{XKB_BINDIR}="${if stdenv ? cross then xkbcomp.crossDrv else xkbcomp}/bin";' unix/vncserver
     sed -i -e '/^\$cmd \.= " -pn";/a$cmd .= " -xkbdir ${if stdenv ? cross then xkeyboard_config.crossDrv else xkeyboard_config}/etc/X11/xkb";' unix/vncserver
-
     fontPath=
     for i in $fontDirectories; do
       for j in $(find $i -name fonts.dir); do
         addToSearchPathWithCustomDelimiter "," fontPath $(dirname $j)
       done
     done
-
     sed -i -e '/^\$cmd \.= " -pn";/a$cmd .= " -fp '"$fontPath"'";' unix/vncserver
   '';
 
-  # I don't know why I can't use in the script
-  # this:  ${concatStringsSep " " (map (f: "${f}") xorgserver.patches)}
-  xorgPatches = xorgserver.patches;
-
-  dontUseCmakeBuildDir = "yes";
+  dontUseCmakeBuildDir = true;
 
   postBuild = ''
-    export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE -fpermissive -Wno-error=int-to-pointer-cast"
-
+    export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE -Wno-error=int-to-pointer-cast -Wno-error=pointer-to-int-cast"
+    export CXXFLAGS="$CXXFLAGS -fpermissive"
     # Build Xvnc
-    tar xf ${xorgserver.src}
+    tar xf ${xorg.xorgserver.src}
     cp -R xorg*/* unix/xserver
     pushd unix/xserver
-    for a in $xorgPatches ../xserver114.patch
-    do
-      patch -p1 < $a
-    done
+    version=$(echo ${xorg.xorgserver.name} | sed 's/.*-\([0-9]\+\).\([0-9]\+\).*/\1\2/g')
+    patch -p1 < ${src}/unix/xserver$version.patch
     autoreconf -vfi
-    ./configure $configureFlags --disable-xinerama --disable-xvfb --disable-xnest --disable-xorg --disable-dmx --disable-dri --disable-dri2 --disable-glx --prefix="$out" --disable-unit-tests
+    ./configure $configureFlags  --disable-devel-docs --disable-docs \
+        --disable-xorg --disable-xnest --disable-xvfb --disable-dmx \
+        --disable-xwin --disable-xephyr --disable-kdrive --with-pic \
+        --disable-xorgcfg --disable-xprint --disable-static \
+        --disable-composite --disable-xtrap --enable-xcsecurity \
+        --disable-{a,c,m}fb \
+        --disable-xwayland \
+        --disable-config-dbus --disable-config-udev --disable-config-hal \
+        --disable-xevie \
+        --disable-dri --disable-dri2 --disable-dri3 --enable-glx \
+        --enable-install-libxf86config \
+        --prefix="$out" --disable-unit-tests \
+        --with-xkb-path=${xkeyboard_config}/share/X11/xkb \
+        --with-xkb-bin-directory=${xorg.xkbcomp}/bin \
+        --with-xkb-output=$out/share/X11/xkb/compiled
     make TIGERVNC_SRCDIR=`pwd`/../..
     popd
   '';
 
   postInstall = ''
-    pushd unix/xserver
+    pushd unix/xserver/hw/vnc
     make TIGERVNC_SRCDIR=`pwd`/../.. install
+    popd
+    rm -f $out/lib/xorg/protocol.txt
   '';
 
   crossAttrs = {
     buildInputs = (map (x : x.crossDrv) (buildInputs ++ [
-      fixesproto damageproto xcmiscproto bigreqsproto randrproto renderproto
-      fontsproto videoproto compositeproto scrnsaverproto resourceproto
-      libxkbfile libXfont libpciaccess xineramaproto
+      xorg.fixesproto xorg.damageproto xorg.xcmiscproto xorg.bigreqsproto xorg.randrproto xorg.renderproto
+      xorg.fontsproto xorg.videoproto xorg.compositeproto xorg.scrnsaverproto xorg.resourceproto
+      xorg.libxkbfile xorg.libXfont xorg.libpciaccess xorg.xineramaproto
     ]));
   };
 
   buildInputs =
-    [ libX11 libXext gettext libICE libXtst libXi libSM libXft
-      nasm libgcrypt gnutls pam pixman libjpeg_turbo fltk xineramaproto
-      libXinerama libXcursor
+    [ xorg.libX11 xorg.libXext gettext xorg.libICE xorg.libXtst xorg.libXi xorg.libSM xorg.libXft
+      nasm libgcrypt gnutls pam pixman libjpeg_turbo fltk xorg.xineramaproto
+      xorg.libXinerama xorg.libXcursor nettle libiconv libtasn1
     ];
 
   nativeBuildInputs =
-    [ autoconf automake cvs utilmacros fontutil libtool flex bison
-      cmake
+    [ autoconf automake cvs xorg.utilmacros xorg.fontutil libtool flex bison
+      cmake gettext
     ]
-      ++ xorgserver.nativeBuildInputs;
+      ++ xorg.xorgserver.nativeBuildInputs;
 
-  propagatedNativeBuildInputs = xorgserver.propagatedNativeBuildInputs;
+  propagatedNativeBuildInputs = xorg.xorgserver.propagatedNativeBuildInputs;
+
+  enableParallelBuilding = true;
 
   meta = {
     homepage = http://www.tigervnc.org/;
@@ -95,5 +99,7 @@ stdenv.mkDerivation rec {
     description = "Fork of tightVNC, made in cooperation with VirtualGL";
     maintainers = with stdenv.lib.maintainers; [viric];
     platforms = with stdenv.lib.platforms; linux;
+    # Prevent a store collision.
+    priority = 4;
   };
 }

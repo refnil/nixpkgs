@@ -1,19 +1,22 @@
-{stdenv, fetchurl, ocaml, findlib}:
+{ stdenv, fetchFromGitHub, ocaml, findlib, ocamlbuild }:
 let
   pname = "cppo";
-  version = "0.9.4";
+  version = "1.3.2";
   webpage = "http://mjambon.com/${pname}.html";
 in
+assert stdenv.lib.versionAtLeast (stdenv.lib.getVersion ocaml) "3.12";
 stdenv.mkDerivation rec {
 
   name = "${pname}-${version}";
 
-  src = fetchurl {
-    url = "http://mjambon.com/releases/${pname}/${name}.tar.gz";
-    sha256 = "1m7cbja7cf74l45plqnmjrjjz55v8x65rvx0ikk9mg1ak8lcmvxa";
+  src = fetchFromGitHub {
+    owner = "mjambon";
+    repo = pname;
+    rev = "v${version}";
+    sha256 = "06j0zr78f04ahxi2459vjn61z25hkvs4dfj76200ydg3g6ifb3k1";
   };
 
-  buildInputs = [ ocaml findlib ];
+  buildInputs = [ ocaml findlib ocamlbuild ];
 
   createFindlibDestdir = true;
 
@@ -23,15 +26,13 @@ stdenv.mkDerivation rec {
     mkdir $out/bin
   '';
 
-  meta = {
+  meta = with stdenv.lib; {
     description = "The C preprocessor for OCaml";
     longDescription = ''
       Cppo is an equivalent of the C preprocessor targeted at the OCaml language and its variants.
     '';
     homepage = "${webpage}";
-    license = "bsd";
+    maintainers = [ maintainers.vbgl ];
+    license = licenses.bsd3;
   };
 }
-
-
-

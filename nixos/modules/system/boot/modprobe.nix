@@ -8,33 +8,6 @@ with lib;
 
   options = {
 
-    system.sbin.modprobe = mkOption {
-      internal = true;
-      default = pkgs.writeTextFile {
-        name = "modprobe";
-        destination = "/sbin/modprobe";
-        executable = true;
-        text =
-          ''
-            #! ${pkgs.stdenv.shell}
-            export MODULE_DIR=/run/current-system/kernel-modules/lib/modules
-
-            # Fall back to the kernel modules used at boot time if the
-            # modules in the current configuration don't match the
-            # running kernel.
-            if [ ! -d "$MODULE_DIR/$(${pkgs.coreutils}/bin/uname -r)" ]; then
-                MODULE_DIR=/run/booted-system/kernel-modules/lib/modules/
-            fi
-
-            exec ${pkgs.kmod}/sbin/modprobe "$@"
-          '';
-      };
-      description = ''
-        Wrapper around modprobe that sets the path to the modules
-        tree.
-      '';
-    };
-
     boot.blacklistedKernelModules = mkOption {
       type = types.listOf types.str;
       default = [];
@@ -68,22 +41,18 @@ with lib;
 
   config = mkIf (!config.boot.isContainer) {
 
-    environment.etc = [
-      { source = "${pkgs.kmod-blacklist-ubuntu}/modprobe.conf";
-        target = "modprobe.d/ubuntu.conf";
-      }
-      { source = pkgs.writeText "modprobe.conf"
-          ''
-            ${flip concatMapStrings config.boot.blacklistedKernelModules (name: ''
-              blacklist ${name}
-            '')}
-            ${config.boot.extraModprobeConfig}
-          '';
-        target = "modprobe.d/nixos.conf";
-      }
-    ];
+    environment.etc."modprobe.d/ubuntu.conf".source = "${pkgs.kmod-blacklist-ubuntu}/modprobe.conf";
 
-    environment.systemPackages = [ config.system.sbin.modprobe pkgs.kmod ];
+    environment.etc."modprobe.d/nixos.conf".text =
+      ''
+        ${flip concatMapStrings config.boot.blacklistedKernelModules (name: ''
+          blacklist ${name}
+        '')}
+        ${config.boot.extraModprobeConfig}
+      '';
+    environment.etc."modprobe.d/debian.conf".source = pkgs.kmod-debian-aliases;
+
+    environment.systemPackages = [ pkgs.kmod ];
 
     system.activationScripts.modprobe =
       ''
@@ -91,10 +60,8 @@ with lib;
         # in the right location in the Nix store for kernel modules).
         # We need this when the kernel (or some module) auto-loads a
         # module.
-        echo ${config.system.sbin.modprobe}/sbin/modprobe > /proc/sys/kernel/modprobe
+        echo ${pkgs.kmod}/bin/modprobe > /proc/sys/kernel/modprobe
       '';
-
-    environment.variables.MODULE_DIR = "/run/current-system/kernel-modules/lib/modules";
 
   };
 

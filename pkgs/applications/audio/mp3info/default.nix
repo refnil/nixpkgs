@@ -1,4 +1,4 @@
-{ fetchurl, stdenv, ncurses, pkgconfig, gtk }:
+{ fetchurl, stdenv, ncurses, pkgconfig, gtk2 }:
 
 stdenv.mkDerivation rec {
   name = "mp3info-0.8.5a";
@@ -8,7 +8,9 @@ stdenv.mkDerivation rec {
     sha256 = "042f1czcs9n2sbqvg4rsvfwlqib2gk976mfa2kxlfjghx5laqf04";
   };
 
-  buildInputs = [ ncurses pkgconfig gtk ];
+  buildInputs = [ ncurses pkgconfig gtk2 ];
+
+  hardeningDisable = [ "format" ];
 
   configurePhase =
     '' sed -i Makefile \
@@ -23,7 +25,7 @@ stdenv.mkDerivation rec {
     '';
 
   meta = {
-    description = "MP3Info, an MP3 technical info viewer and ID3 1.x tag editor";
+    description = "MP3 technical info viewer and ID3 1.x tag editor";
 
     longDescription =
       '' MP3Info is a little utility used to read and modify the ID3 tags of
@@ -36,7 +38,7 @@ stdenv.mkDerivation rec {
 
     license = stdenv.lib.licenses.gpl2Plus;
 
-    maintainers = [ stdenv.lib.maintainers.ludo ];
+    maintainers = [ ];
     platforms = stdenv.lib.platforms.unix;
   };
 }

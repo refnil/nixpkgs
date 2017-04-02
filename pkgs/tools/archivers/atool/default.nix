@@ -1,4 +1,4 @@
-{stdenv, fetchurl, perl}:
+{stdenv, fetchurl, perl, bash}:
 
 stdenv.mkDerivation rec {
   name = "atool-0.39.0";
@@ -8,10 +8,11 @@ stdenv.mkDerivation rec {
   };
 
   buildInputs = [ perl ];
+  configureScript = "${bash}/bin/bash configure";
 
   meta = {
     homepage = http://www.nongnu.org/atool;
     description = "Archive command line helper";
-    hydraPlatforms = stdenv.lib.platforms.linux;
+    platforms = stdenv.lib.platforms.unix;
   };
 }

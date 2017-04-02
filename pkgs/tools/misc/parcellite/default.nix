@@ -1,20 +1,24 @@
-{ stdenv, fetchurl, pkgconfig, intltool, gtk2 }:
+{ stdenv, fetchFromGitHub, autoreconfHook
+, gtk2, intltool, pkgconfig }:
 
 stdenv.mkDerivation rec {
-  name = "parcellite-1.1.7";
+  name = "parcellite-${version}";
+  version = "1.2.1";
 
-  src = fetchurl {
-    url = "mirror://sourceforge/parcellite/${name}.tar.gz";
-    sha256 = "0pszw3yd4a08p6jsz7asayr7jir08bxbwvfb16k01cj7ya4kf3w7";
+  src = fetchFromGitHub {
+    owner = "rickyrockrat";
+    repo = "parcellite";
+    rev = version;
+    sha256 = "19q4x6x984s6gxk1wpzaxawgvly5vnihivrhmja2kcxhzqrnfhiy";
   };
 
-  buildInputs = [ pkgconfig intltool gtk2 ];
+  nativeBuildInputs = [ autoreconfHook intltool pkgconfig ];
+  buildInputs = [ gtk2 ];
 
-  meta = {
+  meta = with stdenv.lib; {
     description = "Lightweight GTK+ clipboard manager";
-    homepage = "http://parcellite.sourceforge.net";
-    license = stdenv.lib.licenses.gpl3Plus;
-    platforms = stdenv.lib.platforms.linux;
-    maintainers = with stdenv.lib.maintainers; [ iyzsong ];
+    homepage = https://github.com/rickyrockrat/parcellite;
+    license = licenses.gpl3Plus;
+    platforms = platforms.linux;
   };
 }

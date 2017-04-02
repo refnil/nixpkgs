@@ -1,54 +1,54 @@
 { stdenv, fetchurl, libsoup, graphicsmagick, SDL, json_glib
 , GConf, atk, cairo, cmake, curl, dbus_glib, exiv2, glib
-, libgnome_keyring, gtk, ilmbase, intltool, lcms, lcms2
+, libgnome_keyring, gtk3, ilmbase, intltool, lcms, lcms2
 , lensfun, libXau, libXdmcp, libexif, libglade, libgphoto2, libjpeg
-, libpng, libpthreadstubs, libraw1394, librsvg, libtiff, libxcb
-, openexr, pixman, pkgconfig, sqlite, bash, libxslt, openjpeg
-, mesa }:
+, libpng, libpthreadstubs, librsvg, libtiff, libxcb
+, openexr, osm-gps-map, pixman, pkgconfig, sqlite, bash, libxslt, openjpeg
+, mesa, lua, pugixml, colord, colord-gtk, libxshmfence, libxkbcommon
+, epoxy, at_spi2_core, libwebp, libsecret, wrapGAppsHook, gnome3
+}:
 
 assert stdenv ? glibc;
 
 stdenv.mkDerivation rec {
-  version = "1.4.2";
+  version = "2.2.3";
   name = "darktable-${version}";
 
   src = fetchurl {
-    url = "mirror://sourceforge/darktable/darktable/1.2/darktable-${version}.tar.xz";
-    sha256 = "02875rnabw5m9aqfls59901889iyxkmm4xk445fvh1v06dp1lcf1";
+    url = "https://github.com/darktable-org/darktable/releases/download/release-${version}/darktable-${version}.tar.xz";
+    sha256 = "1b33859585bf283577680c61e3c0ea4e48214371453b9c17a86664d2fbda48a0";
   };
 
   buildInputs =
-    [ GConf atk cairo cmake curl dbus_glib exiv2 glib libgnome_keyring gtk
+    [ GConf atk cairo cmake curl dbus_glib exiv2 glib libgnome_keyring gtk3
       ilmbase intltool lcms lcms2 lensfun libXau libXdmcp libexif
-      libglade libgphoto2 libjpeg libpng libpthreadstubs libraw1394
+      libglade libgphoto2 libjpeg libpng libpthreadstubs
       librsvg libtiff libxcb openexr pixman pkgconfig sqlite libxslt
-      libsoup graphicsmagick SDL json_glib openjpeg mesa
+      libsoup graphicsmagick SDL json_glib openjpeg mesa lua pugixml
+      colord colord-gtk libxshmfence libxkbcommon epoxy at_spi2_core
+      libwebp libsecret wrapGAppsHook gnome3.adwaita-icon-theme
+      osm-gps-map
     ];
 
-  preConfigure = ''
-    export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE -I${gtk}/include/gtk-2.0"
-    export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE -I${gtk}/lib/gtk-2.0/include"
-    export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE -I${cairo}/include/cairo"
-    export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE -I${atk}/include/atk-1.0"
-    export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE -I${ilmbase}/include/OpenEXR"
-    export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE -I${openexr}/include/OpenEXR"
-  '';
-
   cmakeFlags = [
-    "-DPTHREAD_INCLUDE_DIR=${stdenv.glibc}/include"
-    "-DPTHREAD_LIBRARY=${stdenv.glibc}/lib/libpthread.so"
-    "-DCMAKE_BUILD_TYPE=Release"
-    "-DBINARY_PACKAGE_BUILD=1"
-    "-DGTK2_GLIBCONFIG_INCLUDE_DIR=${glib}/lib/glib-2.0/include"
-    "-DGTK2_GDKCONFIG_INCLUDE_DIR=${gtk}/lib/gtk-2.0/include"
     "-DBUILD_USERMANUAL=False"
   ];
 
+  # darktable changed its rpath handling in commit
+  # 83c70b876af6484506901e6b381304ae0d073d3c and as a result the
+  # binaries can't find libdarktable.so, so change LD_LIBRARY_PATH in
+  # the wrappers:
+  preFixup = ''
+    gappsWrapperArgs+=(
+      --prefix LD_LIBRARY_PATH ":" "$out/lib/darktable"
+    )
+  '';
+
   meta = with stdenv.lib; {
     description = "Virtual lighttable and darkroom for photographers";
-    homepage = http://darktable.sourceforge.net;
+    homepage = https://www.darktable.org;
     license = licenses.gpl3Plus;
     platforms = platforms.linux;
-    maintainers = [ maintainers.goibhniu maintainers.rickynils ];
+    maintainers = [ maintainers.goibhniu maintainers.rickynils maintainers.flosse ];
   };
 }

@@ -3,12 +3,12 @@
 , Xaw3d, withXaw3d ? false
 #, withPVMlib ? false
 , tcl, tk, withTk ? false
-, gtk, withGtk ? false # working ?
+, gtk2, withGtk ? false # working ?
 #, withF2c ? false
 , ocaml, withOCaml ? false
 #, withJava ? false
 #, atlasMath, withAtlas ? false
-, x11, withX ? false
+, xlibsWrapper, withX ? false
 }:
 
 stdenv.mkDerivation rec {
@@ -16,14 +16,13 @@ stdenv.mkDerivation rec {
   name = "scilab-${version}";
   src = fetchurl {
     url = "http://www.scilab.org/download/${version}/${name}-src.tar.gz";
-    # md5 coming from http://www.scilab.org/download/index_download.php
-    md5 = "17a7a6aa52918f33d96777a0dc423658";
+    sha256 = "1adk6jqlj7i3gjklvlf1j3il1nb22axnp4rvwl314an62siih0sc";
   };
 
   buildInputs = [gfortran ncurses]
-  ++ lib.optionals withGtk [gtk]
+  ++ lib.optionals withGtk [gtk2]
   ++ lib.optionals withOCaml [ocaml]
-  ++ lib.optionals withX [x11]
+  ++ lib.optional withX xlibsWrapper
   ;
 
 
@@ -58,11 +57,7 @@ stdenv.mkDerivation rec {
   # do not compile Java interface
   + " --without-java"
   # use the X Window System
-  + (lib.optionalString withX "
-      --with-x
-      --x-libraries=${x11}/lib
-      --x-includes=${x11}/include
-    ")
+  + lib.optionalString withX "--with-x"
   ;
 
   makeFlags = "all";
@@ -72,5 +67,6 @@ stdenv.mkDerivation rec {
     description = "Scientific software package for numerical computations (Matlab lookalike)";
     # see http://www.scilab.org/legal
     license = "SciLab";
+    broken = true;
   };
 }

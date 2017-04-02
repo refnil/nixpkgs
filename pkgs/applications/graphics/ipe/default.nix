@@ -1,12 +1,14 @@
-{ stdenv, fetchurl, pkgconfig, zlib, qt4, freetype, cairo, lua5, texLive, ghostscriptX
-, makeWrapper }:
-let ghostscript = ghostscriptX; in
+{ stdenv, fetchurl, pkgconfig, zlib, freetype, cairo, lua5, texlive, ghostscript
+, libjpeg, qtbase
+, makeQtWrapper
+}:
+
 stdenv.mkDerivation rec {
-  name = "ipe-7.1.2";
+  name = "ipe-7.1.10";
 
   src = fetchurl {
-    url = "mirror://sourceforge/ipe7/ipe/7.1.0/${name}-src.tar.gz";
-    sha256 = "04fs5slci3bmpgz8d038h3hnzzdw57xykcpsmisdxci2xrkxx41k";
+    url = "https://dl.bintray.com/otfried/generic/ipe/7.1/${name}-src.tar.gz";
+    sha256 = "0kwk8l2jasb4fdixaca08g661d0sdmx2jkk3ch7pxh0f4xkdxkkz";
   };
 
   # changes taken from Gentoo portage
@@ -19,16 +21,21 @@ stdenv.mkDerivation rec {
     sed -i -e 's/install -s/install/' common.mak || die
   '';
 
+  NIX_CFLAGS_COMPILE = [ "-std=c++11" ]; # build with Qt 5.7
+
   IPEPREFIX="$$out";
-  URWFONTDIR="${texLive}/texmf-dist/fonts/type1/urw/";
+  URWFONTDIR="${texlive}/texmf-dist/fonts/type1/urw/";
+  LUA_PACKAGE = "lua";
 
   buildInputs = [
-    pkgconfig zlib qt4 freetype cairo lua5 texLive ghostscript makeWrapper
+    libjpeg pkgconfig zlib qtbase freetype cairo lua5 texlive ghostscript
   ];
 
-  postInstall = ''
+  nativeBuildInputs = [ makeQtWrapper ];
+
+  postFixup = ''
     for prog in $out/bin/*; do
-      wrapProgram "$prog" --prefix PATH : "${texLive}/bin"
+      wrapQtProgram "$prog" --prefix PATH : "${texlive}/bin"
     done
   '';
 
@@ -36,12 +43,14 @@ stdenv.mkDerivation rec {
 
   meta = {
     description = "An editor for drawing figures";
-    homepage = http://ipe7.sourceforge.net;
+    homepage = http://ipe.otfried.org;
     license = stdenv.lib.licenses.gpl3Plus;
     longDescription = ''
       Ipe is an extensible drawing editor for creating figures in PDF and Postscript format.
       It supports making small figures for inclusion into LaTeX-documents
       as well as presentations in PDF.
     '';
+    maintainers = [ stdenv.lib.maintainers.ttuegel ];
+    platforms = stdenv.lib.platforms.linux;
   };
 }

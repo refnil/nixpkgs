@@ -1,23 +1,25 @@
-{ stdenv, fetchurl, blas, bzip2, gfortran, liblapack, libX11, libXmu, libXt
-, libjpeg, libpng, libtiff, ncurses, pango, pcre, perl, readline, tcl
-, texLive, tk, xz, zlib, less, texinfo, graphviz, icu, pkgconfig, bison
-, imake, which, jdk, atlas
+{ stdenv, fetchurl, bzip2, gfortran, libX11, libXmu, libXt, libjpeg, libpng
+, libtiff, ncurses, pango, pcre, perl, readline, tcl, texLive, tk, xz, zlib
+, less, texinfo, graphviz, icu, pkgconfig, bison, imake, which, jdk, openblas
+, curl, Cocoa, Foundation, cf-private, libobjc, tzdata
 , withRecommendedPackages ? true
+, enableStrictBarrier ? false
 }:
 
 stdenv.mkDerivation rec {
-  name = "R-3.1.0";
+  name = "R-3.3.3";
 
   src = fetchurl {
     url = "http://cran.r-project.org/src/base/R-3/${name}.tar.gz";
-    sha256 = "1qjzbw341bvi1h4jwbvdkvq8j0z9l3m85mpgrlfw0n2cz2806s4a";
+    sha256 = "0v7wpj89b0i3ad3fi1wak5c93hywmbxv8sdnixhq8l17782nidss";
   };
 
-  buildInputs = [ blas bzip2 gfortran liblapack libX11 libXmu libXt
-    libXt libjpeg libpng libtiff ncurses pango pcre perl readline tcl
-    texLive tk xz zlib less texinfo graphviz icu pkgconfig bison imake
-    which jdk atlas
-  ];
+  buildInputs = [
+    bzip2 gfortran libX11 libXmu libXt libXt libjpeg libpng libtiff ncurses
+    pango pcre perl readline texLive xz zlib less texinfo graphviz icu
+    pkgconfig bison imake which jdk openblas curl
+  ] ++ stdenv.lib.optionals (!stdenv.isDarwin) [ tcl tk ]
+    ++ stdenv.lib.optionals stdenv.isDarwin [ Cocoa Foundation cf-private libobjc ];
 
   patches = [ ./no-usr-local-search-paths.patch ];
 
@@ -25,19 +27,16 @@ stdenv.mkDerivation rec {
     configureFlagsArray=(
       --disable-lto
       --with${stdenv.lib.optionalString (!withRecommendedPackages) "out"}-recommended-packages
-      --with-blas="-L${atlas}/lib -lf77blas -latlas"
-      --with-lapack="-L${liblapack}/lib -llapack"
+      --with-blas="-L${openblas}/lib -lopenblas"
+      --with-lapack="-L${openblas}/lib -lopenblas"
       --with-readline
       --with-tcltk --with-tcl-config="${tcl}/lib/tclConfig.sh" --with-tk-config="${tk}/lib/tkConfig.sh"
       --with-cairo
       --with-libpng
       --with-jpeglib
       --with-libtiff
-      --with-system-zlib
-      --with-system-bzlib
-      --with-system-pcre
-      --with-system-xz
       --with-ICU
+      ${stdenv.lib.optionalString enableStrictBarrier "--enable-strict-barrier"}
       --enable-R-shlib
       AR=$(type -p ar)
       AWK=$(type -p gawk)
@@ -45,25 +44,34 @@ stdenv.mkDerivation rec {
       CXX=$(type -p g++)
       FC="${gfortran}/bin/gfortran" F77="${gfortran}/bin/gfortran"
       JAVA_HOME="${jdk}"
-      LDFLAGS="-L${gfortran.gcc}/lib"
       RANLIB=$(type -p ranlib)
       R_SHELL="${stdenv.shell}"
+  '' + stdenv.lib.optionalString stdenv.isDarwin ''
+      --without-tcltk
+      --without-aqua
+      --disable-R-framework
+      CC="clang"
+      CXX="clang++"
+      OBJC="clang"
+  '' + ''
     )
-    echo "TCLLIBPATH=${tk}/lib" >>etc/Renviron.in
+    echo >>etc/Renviron.in "TCLLIBPATH=${tk}/lib"
+    echo >>etc/Renviron.in "TZDIR=${tzdata}/share/zoneinfo"
   '';
 
   installTargets = [ "install" "install-info" "install-pdf" ];
 
   doCheck = true;
+  preCheck = "bin/Rscript -e 'sessionInfo()'";
 
   enableParallelBuilding = true;
 
   setupHook = ./setup-hook.sh;
 
-  meta = {
+  meta = with stdenv.lib; {
     homepage = "http://www.r-project.org/";
     description = "Free software environment for statistical computing and graphics";
-    license = stdenv.lib.licenses.gpl2Plus;
+    license = licenses.gpl2Plus;
 
     longDescription = ''
       GNU R is a language and environment for statistical computing and
@@ -84,7 +92,9 @@ stdenv.mkDerivation rec {
       user-defined recursive functions and input and output facilities.
     '';
 
-    hydraPlatforms = stdenv.lib.platforms.linux;
-    maintainers = [ stdenv.lib.maintainers.simons ];
+    platforms = platforms.all;
+    hydraPlatforms = platforms.linux;
+
+    maintainers = [ maintainers.peti ];
   };
 }

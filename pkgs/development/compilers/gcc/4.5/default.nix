@@ -8,11 +8,11 @@
 , enableShared ? true
 , texinfo ? null
 , perl ? null # optional, for texi2pod (then pod2man); required for Java
-, gmp, mpfr, mpc, gettext, which
+, gmp, mpfr, libmpc, gettext, which
 , libelf                      # optional, for link-time optimizations (LTO)
 , ppl ? null, cloogppl ? null # optional, for the Graphite optimization framework
 , zlib ? null, boehmgc ? null
-, zip ? null, unzip ? null, pkgconfig ? null, gtk ? null, libart_lgpl ? null
+, zip ? null, unzip ? null, pkgconfig ? null, gtk2 ? null, libart_lgpl ? null
 , libX11 ? null, libXt ? null, libSM ? null, libICE ? null, libXtst ? null
 , libXrender ? null, xproto ? null, renderproto ? null, xextproto ? null
 , libXrandr ? null, libXi ? null, inputproto ? null, randrproto ? null
@@ -62,7 +62,7 @@ let version = "4.5.4";
       xproto renderproto xextproto inputproto randrproto
     ];
 
-    javaAwtGtk = langJava && gtk != null;
+    javaAwtGtk = langJava && gtk2 != null;
 
     /* Cross-gcc settings */
     gccArch = stdenv.lib.attrByPath [ "gcc" "arch" ] null cross;
@@ -122,25 +122,34 @@ let version = "4.5.4";
 in
 
 # We need all these X libraries when building AWT with GTK+.
-assert gtk != null -> (filter (x: x == null) xlibs) == [];
+assert gtk2 != null -> (filter (x: x == null) xlibs) == [];
 
 stdenv.mkDerivation ({
   name = "${name}-${version}" + crossNameAddon;
 
-  builder = ./builder.sh;
+  builder = ../builder.sh;
 
   src = (import ./sources.nix) {
     inherit fetchurl optional version;
     inherit langC langCC langFortran langJava langAda;
   };
 
+  hardeningDisable = [ "format" ] ++ optional (name != "gnat") "all";
+
+  outputs = if (stdenv.is64bit && langAda) then [ "out" "doc" ]
+    else [ "out" "lib" "doc" ];
+  setOutputFlags = false;
+  NIX_NO_SELF_RPATH = true;
+
+  libc_dev = stdenv.cc.libc_dev;
+
   patches =
     [ ]
-    ++ optional (cross != null) ./libstdc++-target.patch
+    ++ optional (cross != null) ../libstdc++-target.patch
     ++ optional noSysDirs ./no-sys-dirs.patch
     # The GNAT Makefiles did not pay attention to CFLAGS_FOR_TARGET for its
     # target libraries and tools.
-    ++ optional langAda ./gnat-cflags.patch
+    ++ optional langAda ../gnat-cflags.patch
     ++ optional langVhdl ./ghdl-ortho-cflags.patch
     ;
 
@@ -165,7 +174,7 @@ stdenv.mkDerivation ({
           ++ stdenv.lib.optional (libpthread != null) libpthread;
         extraCPPSpec =
           concatStrings (intersperse " "
-                          (map (x: "-I${x}/include") extraCPPDeps));
+                          (map (x: "-I${x.dev or x}/include") extraCPPDeps));
         extraLibSpec =
           if libpthreadCross != null
           then "-L${libpthreadCross}/lib ${libpthreadCross.TARGET_LDFLAGS}"
@@ -179,17 +188,17 @@ stdenv.mkDerivation ({
            sed -i "${gnu_h}" \
                -es'|LIB_SPEC *"\(.*\)$|LIB_SPEC "${extraLibSpec} \1|g'
 
-           echo "setting \`NATIVE_SYSTEM_HEADER_DIR' and \`STANDARD_INCLUDE_DIR' to \`${libc}/include'..."
+           echo "setting \`NATIVE_SYSTEM_HEADER_DIR' and \`STANDARD_INCLUDE_DIR' to \`${libc.dev}/include'..."
            sed -i "${gnu_h}" \
-               -es'|#define STANDARD_INCLUDE_DIR.*$|#define STANDARD_INCLUDE_DIR "${libc}/include"|g'
+               -es'|#define STANDARD_INCLUDE_DIR.*$|#define STANDARD_INCLUDE_DIR "${libc.dev}/include"|g'
            sed -i gcc/config/t-gnu \
-               -es'|NATIVE_SYSTEM_HEADER_DIR.*$|NATIVE_SYSTEM_HEADER_DIR = ${libc}/include|g'
+               -es'|NATIVE_SYSTEM_HEADER_DIR.*$|NATIVE_SYSTEM_HEADER_DIR = ${libc.dev}/include|g'
         ''
-    else if cross != null || stdenv.gcc.libc != null then
+    else if cross != null || stdenv.cc.libc != null then
       # On NixOS, use the right path to the dynamic linker instead of
       # `/lib/ld*.so'.
       let
-        libc = if libcCross != null then libcCross else stdenv.gcc.libc;
+        libc = if libcCross != null then libcCross else stdenv.cc.libc;
       in
         '' echo "fixing the \`GLIBC_DYNAMIC_LINKER' and \`UCLIBC_DYNAMIC_LINKER' macros..."
            for header in "gcc/config/"*-gnu.h "gcc/config/"*"/"*.h
@@ -197,7 +206,7 @@ stdenv.mkDerivation ({
              grep -q LIBC_DYNAMIC_LINKER "$header" || continue
              echo "  fixing \`$header'..."
              sed -i "$header" \
-                 -e 's|define[[:blank:]]*\([UCG]\+\)LIBC_DYNAMIC_LINKER\([0-9]*\)[[:blank:]]"\([^\"]\+\)"$|define \1LIBC_DYNAMIC_LINKER\2 "${libc}\3"|g'
+                 -e 's|define[[:blank:]]*\([UCG]\+\)LIBC_DYNAMIC_LINKER\([0-9]*\)[[:blank:]]"\([^\"]\+\)"$|define \1LIBC_DYNAMIC_LINKER\2 "${libc.out}\3"|g'
            done
         ''
     else null;
@@ -205,16 +214,16 @@ stdenv.mkDerivation ({
   inherit noSysDirs profiledCompiler staticCompiler langJava crossStageStatic
     libcCross crossMingw;
 
-  nativeBuildInputs = [ texinfo which ]
+  nativeBuildInputs = [ texinfo which gettext ]
     ++ optional (perl != null) perl;
-    
-  buildInputs = [ gmp mpfr mpc libelf gettext ]
+
+  buildInputs = [ gmp mpfr libmpc libelf ]
     ++ (optional (ppl != null) ppl)
     ++ (optional (cloogppl != null) cloogppl)
     ++ (optional (zlib != null) zlib)
     ++ (optional langJava boehmgc)
     ++ (optionals langJava [zip unzip])
-    ++ (optionals javaAwtGtk ([gtk pkgconfig libart_lgpl] ++ xlibs))
+    ++ (optionals javaAwtGtk ([gtk2 pkgconfig libart_lgpl] ++ xlibs))
     ++ (optionals (cross != null) [binutilsCross])
     ++ (optionals langAda [gnatboot])
     ++ (optionals langVhdl [gnat])
@@ -234,9 +243,9 @@ stdenv.mkDerivation ({
       else ""}
     ${if javaAwtGtk then "--enable-java-awt=gtk" else ""}
     ${if langJava && javaAntlr != null then "--with-antlr-jar=${javaAntlr}" else ""}
-    --with-gmp=${gmp}
-    --with-mpfr=${mpfr}
-    --with-mpc=${mpc}
+    --with-gmp=${gmp.dev}
+    --with-mpfr=${mpfr.dev}
+    --with-mpc=${libmpc}
     ${if libelf != null then "--with-libelf=${libelf}" else ""}
     --disable-libstdcxx-pch
     --without-included-gettext
@@ -272,7 +281,7 @@ stdenv.mkDerivation ({
     NM_FOR_TARGET = "${stdenv.cross.config}-nm";
     CXX_FOR_TARGET = "${stdenv.cross.config}-g++";
     # If we are making a cross compiler, cross != null
-    NIX_GCC_CROSS = if cross == null then "${stdenv.gccCross}" else "";
+    NIX_CC_CROSS = if cross == null then "${stdenv.ccCross}" else "";
     dontStrip = true;
     configureFlags = ''
       ${if enableMultilib then "" else "--disable-multilib"}
@@ -284,6 +293,7 @@ stdenv.mkDerivation ({
       ${if langJava && javaAntlr != null then "--with-antlr-jar=${javaAntlr.crossDrv}" else ""}
       --with-gmp=${gmp.crossDrv}
       --with-mpfr=${mpfr.crossDrv}
+      --with-mpc=${libmpc.crossDrv}
       --disable-libstdcxx-pch
       --without-included-gettext
       --with-system-zlib
@@ -322,43 +332,54 @@ stdenv.mkDerivation ({
   #
   # Likewise, the LTO code doesn't find zlib.
 
-  CPATH = concatStrings
-            (intersperse ":" (map (x: x + "/include")
-                                  (optionals (zlib != null) [ zlib ]
-                                   ++ optionals langJava [ boehmgc ]
-                                   ++ optionals javaAwtGtk xlibs
-                                   ++ optionals javaAwtGtk [ gmp mpfr ]
-                                   ++ optional (libpthread != null) libpthread
-                                   ++ optional (libpthreadCross != null) libpthreadCross
+  CPATH = makeSearchPathOutput "dev" "include" ([]
+    ++ optional (zlib != null) zlib
+    ++ optional langJava boehmgc
+    ++ optionals javaAwtGtk xlibs
+    ++ optionals javaAwtGtk [ gmp mpfr ]
+    ++ optional (libpthread != null) libpthread
+    ++ optional (libpthreadCross != null) libpthreadCross
 
-                                   # On GNU/Hurd glibc refers to Mach & Hurd
-                                   # headers.
-                                   ++ optionals (libcCross != null &&
-                                                 hasAttr "propagatedBuildInputs" libcCross)
-                                        libcCross.propagatedBuildInputs)));
+    # On GNU/Hurd glibc refers to Mach & Hurd
+    # headers.
+    ++ optionals (libcCross != null &&
+                  hasAttr "propagatedBuildInputs" libcCross)
+                 libcCross.propagatedBuildInputs);
 
-  LIBRARY_PATH = concatStrings
-                   (intersperse ":" (map (x: x + "/lib")
-                                         (optionals (zlib != null) [ zlib ]
-                                          ++ optionals langJava [ boehmgc ]
-                                          ++ optionals javaAwtGtk xlibs
-                                          ++ optionals javaAwtGtk [ gmp mpfr ]
-                                          ++ optional (libpthread != null) libpthread)));
+  LIBRARY_PATH = makeLibraryPath ([]
+    ++ optional (zlib != null) zlib
+    ++ optional langJava boehmgc
+    ++ optionals javaAwtGtk xlibs
+    ++ optionals javaAwtGtk [ gmp mpfr ]
+    ++ optional (libpthread != null) libpthread);
 
   EXTRA_TARGET_CFLAGS =
-    if cross != null && libcCross != null
-    then "-idirafter ${libcCross}/include"
+    if cross != null && libcCross != null then [
+        "-idirafter ${libcCross.dev}/include"
+      ]
+      ++ optionals (! crossStageStatic) [
+        "-B${libcCross.out}/lib"
+      ]
     else null;
 
   EXTRA_TARGET_LDFLAGS =
-    if cross != null && libcCross != null
-    then "-B${libcCross}/lib -Wl,-L${libcCross}/lib" +
-         (optionalString (libpthreadCross != null)
-           " -L${libpthreadCross}/lib -Wl,${libpthreadCross.TARGET_LDFLAGS}")
+    if cross != null && libcCross != null then [
+        "-Wl,-L${libcCross.out}/lib"
+      ]
+      ++ (if crossStageStatic then [
+        "-B${libcCross.out}/lib"
+      ] else [
+        "-Wl,-rpath,${libcCross.out}/lib"
+        "-Wl,-rpath-link,${libcCross.out}/lib"
+      ])
+      ++ optionals (libpthreadCross != null) [
+        "-L${libpthreadCross}/lib"
+        "-Wl,${libpthreadCross.TARGET_LDFLAGS}"
+      ]
     else null;
 
   passthru = { inherit langC langCC langAda langFortran langVhdl
-      enableMultilib version; };
+      enableMultilib version; isGNU = true; };
 
   enableParallelBuilding = !langAda;
 
@@ -378,7 +399,6 @@ stdenv.mkDerivation ({
     '';
 
     maintainers = [
-      stdenv.lib.maintainers.ludo
       stdenv.lib.maintainers.viric
     ];
 

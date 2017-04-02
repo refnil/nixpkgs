@@ -1,42 +1,85 @@
 { stdenv, fetchurl, perl, gnum4, ncurses, openssl
 , gnused, gawk, makeWrapper
-, wxSupport ? false, mesa ? null, wxGTK ? null, xlibs ? null }:
+, Carbon, Cocoa
+, odbcSupport ? false, unixODBC ? null
+, wxSupport ? true, mesa ? null, wxGTK ? null, xorg ? null, wxmac ? null
+, javacSupport ? false, openjdk ? null
+, enableHipe ? true
+, enableDebugInfo ? false
+, enableDirtySchedulers ? false
+}:
 
-assert wxSupport -> mesa != null && wxGTK != null && xlibs != null;
+assert wxSupport -> (if stdenv.isDarwin
+  then wxmac != null
+  else mesa != null && wxGTK != null && xorg != null);
+
+assert odbcSupport -> unixODBC != null;
+assert javacSupport ->  openjdk != null;
 
 with stdenv.lib;
 
 stdenv.mkDerivation rec {
-  name = "erlang-" + version;
-  version = "17.0";
+  name = "erlang-" + version + "${optionalString odbcSupport "-odbc"}"
+  + "${optionalString javacSupport "-javac"}";
+  version = "17.5";
 
   src = fetchurl {
     url = "http://www.erlang.org/download/otp_src_${version}.tar.gz";
-    sha256 = "1nyaka6238vh4kdgaynmg8hm5y5zj7hhyl1c971d2pjylsm2nzr9";
+    sha256 = "0x34hj1a4j3rphqdaapdld7la4sqiqillamcz06wac0vk0684a1w";
   };
 
   buildInputs =
     [ perl gnum4 ncurses openssl makeWrapper
-    ] ++ optional wxSupport [ mesa wxGTK xlibs.libX11 ];
+    ] ++ optionals wxSupport (if stdenv.isDarwin then [ wxmac ] else [ mesa wxGTK xorg.libX11 ])
+      ++ optional odbcSupport unixODBC
+      ++ optional javacSupport openjdk
+      ++ stdenv.lib.optionals stdenv.isDarwin [ Carbon Cocoa ];
 
-  patchPhase = '' sed -i "s@/bin/rm@rm@" lib/odbc/configure erts/configure '';
+  patchPhase = ''
+    # Clang 4 (rightfully) thinks signed comparisons of pointers with NULL are nonsense
+    substituteInPlace lib/wx/c_src/wxe_impl.cpp --replace 'temp > NULL' 'temp != NULL'
+
+    sed -i "s@/bin/rm@rm@" lib/odbc/configure erts/configure
+  '';
+
+  debugInfo = enableDebugInfo;
 
   preConfigure = ''
     export HOME=$PWD/../
     sed -e s@/bin/pwd@pwd@g -i otp_build
   '';
 
-  configureFlags= "--with-ssl=${openssl} ${optionalString stdenv.isDarwin "--enable-darwin-64bit"}";
+  configureFlags= [
+    "--with-ssl=${openssl.dev}"
+  ] ++ optional enableHipe "--enable-hipe"
+    ++ optional enableDirtySchedulers "--enable-dirty-schedulers"
+    ++ optional wxSupport "--enable-wx"
+    ++ optional odbcSupport "--with-odbc=${unixODBC}"
+    ++ optional javacSupport "--with-javac"
+    ++ optional stdenv.isDarwin "--enable-darwin-64bit";
 
-  postInstall = ''
+  postInstall = let
+    manpages = fetchurl {
+      url = "http://www.erlang.org/download/otp_doc_man_${version}.tar.gz";
+      sha256 = "1hspm285bl7i9a0d4r6j6lm5yk4sb5d9xzpia3simh0z06hv5cc5";
+    };
+  in ''
     ln -s $out/lib/erlang/lib/erl_interface*/bin/erl_call $out/bin/erl_call
+    tar xf "${manpages}" -C "$out/lib/erlang"
+    for i in "$out"/lib/erlang/man/man[0-9]/*.[0-9]; do
+      prefix="''${i%/*}"
+      ensureDir "$out/share/man/''${prefix##*/}"
+      ln -s "$i" "$out/share/man/''${prefix##*/}/''${i##*/}erl"
+    done
   '';
 
   # Some erlang bin/ scripts run sed and awk
   postFixup = ''
     wrapProgram $out/lib/erlang/bin/erl --prefix PATH ":" "${gnused}/bin/"
-    wrapProgram $out/lib/erlang/bin/start_erl --prefix PATH ":" "${gnused}/bin/:${gawk}/bin"
+    wrapProgram $out/lib/erlang/bin/start_erl --prefix PATH ":" "${stdenv.lib.makeBinPath [ gnused gawk ]}"
   '';
+
+  setupHook = ./setup-hook.sh;
 
   meta = {
     homepage = "http://www.erlang.org/";
@@ -52,8 +95,6 @@ stdenv.mkDerivation rec {
     '';
 
     platforms = platforms.unix;
-    # Note: Maintainer of prev. erlang version was simons. If he wants
-    # to continue maintaining erlang I'm totally ok with that.
-    maintainers = [ maintainers.the-kenny ];
+    maintainers = [ maintainers.the-kenny maintainers.sjmackenzie ];
   };
 }

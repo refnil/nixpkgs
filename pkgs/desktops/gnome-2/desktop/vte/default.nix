@@ -1,7 +1,9 @@
 { stdenv, fetchurl, intltool, pkgconfig, glib, gtk, ncurses
-, pythonSupport ? false, python, pygtk}:
+, pythonSupport ? false, python27Packages}:
 
-stdenv.mkDerivation rec {
+let
+  inherit (python27Packages) python pygtk;
+in stdenv.mkDerivation rec {
   name = "vte-0.28.2";
 
   src = fetchurl {
@@ -11,6 +13,7 @@ stdenv.mkDerivation rec {
 
   patches = [
     ./alt.patch
+    ./change-scroll-region.patch
     # CVE-2012-2738
     ./vte-0.28.2-limit-arguments.patch
   ];

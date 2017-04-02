@@ -8,7 +8,7 @@
 {
 
   # The initrd has to contain any module that might be necessary for
-  # mounting the CD/DVD.
+  # supporting the most important parts of HW like drives.
   boot.initrd.availableKernelModules =
     [ # SATA/PATA support.
       "ahci"
@@ -40,10 +40,13 @@
       "ohci1394" "sbp2"
 
       # Virtio (QEMU, KVM etc.) support.
-      "virtio_net" "virtio_pci" "virtio_blk" "virtio_balloon" "virtio_console"
+      "virtio_net" "virtio_pci" "virtio_blk" "virtio_scsi" "virtio_balloon" "virtio_console"
+
+      # Hyper-V support.
+      "hv_storvsc"
 
       # Keyboards
-      "hid_apple"
+      "usbhid" "hid_apple" "hid_logitech_dj" "hid_lenovo_tpkbd" "hid_roccat"
     ];
 
   # Include lots of firmware.

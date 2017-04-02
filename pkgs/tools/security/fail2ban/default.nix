@@ -1,35 +1,21 @@
-{ stdenv, fetchurl, pythonPackages, unzip, gamin }:
+{ stdenv, fetchFromGitHub, python, pythonPackages, gamin }:
 
-let version = "0.8.13"; in
+let version = "0.9.6"; in
 
-pythonPackages.buildPythonPackage {
+pythonPackages.buildPythonApplication {
   name = "fail2ban-${version}";
-  namePrefix = "";
 
-  src = fetchurl {
-    url    = "https://github.com/fail2ban/fail2ban/zipball/${version}";
-    name   = "fail2ban-${version}.zip";
-    sha256 = "0c63i5jsn2n6hv6fb6q922ksxfpppah9415vpydiv0vpf23pq0cb";
+  src = fetchFromGitHub {
+    owner  = "fail2ban";
+    repo   = "fail2ban";
+    rev    = version;
+    sha256 = "1a75xjjqhn98zd9i51k15vjvcy0ql0gmcv9xf8pbd0bpvblgdah8";
   };
 
-  buildInputs = [ unzip ];
-
-  pythonPath = [ gamin ];
+  propagatedBuildInputs = [ gamin ]
+    ++ (stdenv.lib.optional stdenv.isLinux pythonPackages.systemd);
 
   preConfigure = ''
-    substituteInPlace setup.cfg \
-      --replace /usr $out
-
-    substituteInPlace setup.py \
-      --replace /usr $out \
-      --replace /etc $out/etc \
-      --replace /var $TMPDIR/var \
-
-    for i in fail2ban-client fail2ban-regex fail2ban-server; do
-      substituteInPlace $i \
-        --replace /usr/share/fail2ban $out/share/fail2ban
-    done
-
     for i in config/action.d/sendmail*.conf; do
       substituteInPlace $i \
         --replace /usr/sbin/sendmail sendmail \
@@ -39,11 +25,23 @@ pythonPackages.buildPythonPackage {
 
   doCheck = false;
 
+  preInstall = ''
+    # see https://github.com/NixOS/nixpkgs/issues/4968
+    ${python}/bin/${python.executable} setup.py install_data --install-dir=$out --root=$out
+  '';
+
+  postInstall = let
+    sitePackages = "$out/lib/${python.libPrefix}/site-packages";
+  in ''
+    # see https://github.com/NixOS/nixpkgs/issues/4968
+    rm -rf ${sitePackages}/etc ${sitePackages}/usr ${sitePackages}/var;
+  '';
+
   meta = with stdenv.lib; {
     homepage    = http://www.fail2ban.org/;
     description = "A program that scans log files for repeated failing login attempts and bans IP addresses";
     license     = licenses.gpl2Plus;
-    maintainers = with maintainers; [ eelco lovek323 ];
+    maintainers = with maintainers; [ eelco lovek323 fpletz ];
     platforms   = platforms.linux ++ platforms.darwin;
   };
 }

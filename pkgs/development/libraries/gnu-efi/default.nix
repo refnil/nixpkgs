@@ -1,42 +1,32 @@
-{ stdenv, fetchurl }:
+{ stdenv, fetchurl, pciutils }: with stdenv.lib;
 
 stdenv.mkDerivation rec {
-  name = "gnu-efi_${version}";
-  version = "3.0u";
+  name = "gnu-efi-${version}";
+  version = "3.0.5";
 
   src = fetchurl {
-    url = "mirror://sourceforge/gnu-efi/${name}.orig.tar.gz";
-    sha256 = "0klkdxh1aqwwfm393q67nxww6liffyp2lfybbnh4q819b06la39w";
+    url = "mirror://sourceforge/gnu-efi/${name}.tar.bz2";
+    sha256 = "08hb2gpzcj5p743wcagm0j2m4gh100xv12llpbjc13zi2icwv3xx";
   };
 
-  arch = with stdenv.lib; head (splitString "-" stdenv.system);
+  buildInputs = [ pciutils ];
+
+  hardeningDisable = [ "stackprotector" ];
 
   makeFlags = [
+    "PREFIX=\${out}"
     "CC=gcc"
     "AS=as"
     "LD=ld"
     "AR=ar"
     "RANLIB=ranlib"
     "OBJCOPY=objcopy"
-  ];
-
-  buildPhase = ''
-    make $makeFlags
-    make $makeFlags -C apps clean all
-  '';
-
-  installPhase = ''
-    mkdir -pv $out/include/efi/{protocol,$arch}
-    make PREFIX="$out" $makeFlags install
-    mkdir -pv $out/share/gnu-efi
-    install -D -m644 apps/*.efi $out/share/gnu-efi
-  '';
+  ] ++ stdenv.lib.optional stdenv.isArm "ARCH=arm";
 
   meta = with stdenv.lib; {
     description = "GNU EFI development toolchain";
     homepage = http://sourceforge.net/projects/gnu-efi/;
     license = licenses.bsd3;
-    maintainers = [ stdenv.lib.maintainers.shlevy ];
     platforms = platforms.linux;
   };
 }

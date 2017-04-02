@@ -1,26 +1,38 @@
-{ stdenv, fetchurl, flac, libogg, libvorbis, pkgconfig }:
+{ stdenv, fetchurl, flac, libogg, libvorbis, pkgconfig
+, Carbon, AudioToolbox
+}:
 
 stdenv.mkDerivation rec {
-  name = "libsndfile-1.0.25";
+  name = "libsndfile-1.0.27";
 
   src = fetchurl {
     url = "http://www.mega-nerd.com/libsndfile/files/${name}.tar.gz";
-    sha256 = "10j8mbb65xkyl0kfy0hpzpmrp0jkr12c7mfycqipxgka6ayns0ar";
+    sha256 = "1h7s61nhf7vklh9sdsbbqzb6x287q4x4j1jc5gmjragl4wprb4d3";
   };
 
-  buildInputs = [ pkgconfig flac libogg libvorbis ];
+  buildInputs = [ pkgconfig flac libogg libvorbis ]
+    ++ stdenv.lib.optionals stdenv.isDarwin [ Carbon AudioToolbox ];
+
+  enableParallelBuilding = true;
+
+  outputs = [ "bin" "dev" "out" "doc" ];
 
   # need headers from the Carbon.framework in /System/Library/Frameworks to
   # compile this on darwin -- not sure how to handle
-  NIX_CFLAGS_COMPILE = stdenv.lib.optionalString stdenv.isDarwin
-    "-I/System/Library/Frameworks/Carbon.framework/Versions/A/Headers";
+  preConfigure = stdenv.lib.optionalString stdenv.isDarwin
+    ''
+      NIX_CFLAGS_COMPILE+=" -I$SDKROOT/System/Library/Frameworks/Carbon.framework/Versions/A/Headers"
+    '';
+
+  # Needed on Darwin.
+  NIX_CFLAGS_LINK = "-logg -lvorbis";
 
   meta = with stdenv.lib; {
     description = "A C library for reading and writing files containing sampled sound";
     homepage    = http://www.mega-nerd.com/libsndfile/;
     license     = licenses.lgpl2Plus;
     maintainers = with maintainers; [ lovek323 ];
-    platfomrs   = platforms.unix;
+    platforms   = platforms.unix;
 
     longDescription = ''
       Libsndfile is a C library for reading and writing files containing

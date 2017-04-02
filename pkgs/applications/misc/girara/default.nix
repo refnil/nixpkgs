@@ -1,27 +1,41 @@
-{ stdenv, fetchurl, pkgconfig, gtk, gettext }:
+{ stdenv, fetchurl, pkgconfig, gtk, gettext, ncurses
+, withBuildColors ? true
+}:
+
+assert withBuildColors -> ncurses != null;
 
 stdenv.mkDerivation rec {
-  name = "girara-0.2.0";
+  name = "girara-${version}";
+  version = "0.2.7";
 
   src = fetchurl {
-    url = "http://pwmt.org/projects/girara/download/${name}.tar.gz";
-    sha256 = "0k8p5sgazqw7r78ssqh8bm2hn98xjml5w76l9awa66yq0k5m8jyi";
+    url    = "http://pwmt.org/projects/girara/download/${name}.tar.gz";
+    sha256 = "1r9jbhf9n40zj4ddqv1q5spijpjm683nxg4hr5lnir4a551s7rlq";
   };
+
+  preConfigure = ''
+    substituteInPlace colors.mk \
+      --replace 'ifdef TPUT_AVAILABLE' 'ifneq ($(TPUT_AVAILABLE), 0)'
+  '';
 
   buildInputs = [ pkgconfig gtk gettext ];
 
-  makeFlags = "PREFIX=$(out)";
+  makeFlags = [
+    "PREFIX=$(out)"
+    (if withBuildColors
+      then "TPUT=${ncurses.out}/bin/tput"
+      else "TPUT_AVAILABLE=0")
+  ];
 
-  meta = {
+  meta = with stdenv.lib; {
     homepage = http://pwmt.org/projects/girara/;
     description = "User interface library";
     longDescription = ''
       girara is a library that implements a GTK+ based VIM-like user interface
       that focuses on simplicity and minimalism.
     '';
-    license = stdenv.lib.licenses.zlib;
-    platforms = stdenv.lib.platforms.linux;
-    maintainers = [ stdenv.lib.maintainers.garbas ];
+    license = licenses.zlib;
+    platforms = platforms.linux;
+    maintainers = [ maintainers.garbas ];
   };
 }
-

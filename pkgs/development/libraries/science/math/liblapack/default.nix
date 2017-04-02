@@ -1,32 +1,50 @@
-{ stdenv, fetchurl, gfortran, atlas, cmake, python, shared ? false }:
+{
+  stdenv,
+  fetchurl,
+  gfortran,
+  cmake,
+  python2,
+  atlas ? null,
+  shared ? false
+}:
 let
-  atlasMaybeShared = atlas.override { inherit shared; };
+  atlasMaybeShared = if atlas != null then atlas.override { inherit shared; }
+                     else null;
   usedLibExtension = if shared then ".so" else ".a";
+  inherit (stdenv.lib) optional optionals concatStringsSep;
+  inherit (builtins) hasAttr attrNames;
+  version = "3.4.1";
 in
-stdenv.mkDerivation {
-  name = "liblapack-3.4.1";
+
+stdenv.mkDerivation rec {
+  name = "liblapack-${version}";
   src = fetchurl {
-    url = "http://www.netlib.org/lapack/lapack-3.4.1.tgz";
+    url = "http://www.netlib.org/lapack/lapack-${version}.tgz";
     sha256 = "93b910f94f6091a2e71b59809c4db4a14655db527cfc5821ade2e8c8ab75380f";
   };
 
   propagatedBuildInputs = [ atlasMaybeShared ];
   buildInputs = [ gfortran cmake ];
-  nativeBuildInputs = [ python ];
+  nativeBuildInputs = [ python2 ];
 
   cmakeFlags = [
     "-DUSE_OPTIMIZED_BLAS=ON"
-    "-DBLAS_ATLAS_f77blas_LIBRARY=${atlasMaybeShared}/lib/libf77blas${usedLibExtension}"
-    "-DBLAS_ATLAS_atlas_LIBRARY=${atlasMaybeShared}/lib/libatlas${usedLibExtension}"
     "-DCMAKE_Fortran_FLAGS=-fPIC"
   ]
-  ++ (stdenv.lib.optional shared "-DBUILD_SHARED_LIBS=ON")
+  ++ (optionals (atlas != null) [
+    "-DBLAS_ATLAS_f77blas_LIBRARY=${atlasMaybeShared}/lib/libf77blas${usedLibExtension}"
+    "-DBLAS_ATLAS_atlas_LIBRARY=${atlasMaybeShared}/lib/libatlas${usedLibExtension}"
+  ])
+  ++ (optional shared "-DBUILD_SHARED_LIBS=ON")
+  # If we're on darwin, CMake will automatically detect impure paths. This switch
+  # prevents that.
+  ++ (optional stdenv.isDarwin "-DCMAKE_OSX_SYSROOT:PATH=''")
   ;
 
   doCheck = ! shared;
 
   checkPhase = "
-    sed -i 's,^#!.*,#!${python}/bin/python,' lapack_testing.py
+    sed -i 's,^#!.*,#!${python2.interpreter},' lapack_testing.py
     ctest
   ";
 
@@ -36,12 +54,11 @@ stdenv.mkDerivation {
     blas = atlas;
   };
 
-  meta = {
+  meta = with stdenv.lib; {
+    inherit version;
     description = "Linear Algebra PACKage";
     homepage = "http://www.netlib.org/lapack/";
-    license = "revised-BSD";
-
-    platforms = stdenv.lib.platforms.all;
-    maintainers = [ stdenv.lib.maintainers.simons ];
+    license = licenses.bsd3;
+    platforms = platforms.all;
   };
 }

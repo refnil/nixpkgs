@@ -1,6 +1,4 @@
-{ stdenv, fetchurl, nspr, perl, zlib, sqlite
-, includeTools ? false
-}:
+{ stdenv, fetchurl, nspr, perl, zlib, sqlite }:
 
 let
 
@@ -11,24 +9,36 @@ let
 
 in stdenv.mkDerivation rec {
   name = "nss-${version}";
-  version = "3.16.3";
+  version = "3.28.3";
 
   src = fetchurl {
-    url = "http://ftp.mozilla.org/pub/mozilla.org/security/nss/releases/NSS_3_16_3_RTM/src/${name}.tar.gz";
-    sha256 = "657711ff7a4058043b69019a66f44101d0234eae2b6b80ab900439dbf02add60";
+    url = "mirror://mozilla/security/nss/releases/NSS_3_28_3_RTM/src/${name}.tar.gz";
+    sha256 = "1wrx2ig6yvgywjs25hzy4szgml21hwhd7ds0ghyfybhkiq7lyg6x";
   };
 
-  buildInputs = [ nspr perl zlib sqlite ];
+  buildInputs = [ perl zlib sqlite ];
+
+  propagatedBuildInputs = [ nspr ];
 
   prePatch = ''
     xz -d < ${nssPEM} | patch -p1
   '';
 
   patches =
-    [ ./nss-3.15-gentoo-fixups.patch
+    [ # Install a nss.pc (pkgconfig) file and nss-config script
+      # Upstream issue: https://bugzilla.mozilla.org/show_bug.cgi?id=530672
+      (fetchurl {
+        name = "nss-3.28-gentoo-fixups.patch";
+        url = "https://gitweb.gentoo.org/repo/gentoo.git/plain/"
+            + "dev-libs/nss/files/nss-3.28-gentoo-fixups.patch"
+            + "?id=05c31f8cca591b3ce8219e4def7c26c7b1b130d6";
+        sha256 = "0z58axd1n7vq4kdp5mrb3dsg6di39a1g40s3shl6n2dzs14c1y2q";
+      })
       # Based on http://patch-tracker.debian.org/patch/series/dl/nss/2:3.15.4-1/85_security_load.patch
       ./85_security_load.patch
     ];
+
+  patchFlags = "-p0";
 
   postPatch = ''
     # Fix up the patch from Gentoo.
@@ -46,17 +56,22 @@ in stdenv.mkDerivation rec {
     INSTALL_TARGET
   '';
 
+  outputs = [ "out" "dev" "tools" ];
+
   preConfigure = "cd nss";
 
   makeFlags = [
-    "NSPR_INCLUDE_DIR=${nspr}/include/nspr"
-    "NSPR_LIB_DIR=${nspr}/lib"
+    "NSPR_INCLUDE_DIR=${nspr.dev}/include/nspr"
+    "NSPR_LIB_DIR=${nspr.out}/lib"
     "NSDISTMODE=copy"
     "BUILD_OPT=1"
     "SOURCE_PREFIX=\$(out)"
     "NSS_ENABLE_ECC=1"
+    "USE_SYSTEM_ZLIB=1"
     "NSS_USE_SYSTEM_SQLITE=1"
   ] ++ stdenv.lib.optional stdenv.is64bit "USE_64=1";
+
+  NIX_CFLAGS_COMPILE = "-Wno-error";
 
   postInstall = ''
     rm -rf $out/private
@@ -75,12 +90,16 @@ in stdenv.mkDerivation rec {
       libfile="$out/lib/lib$libname.so"
       LD_LIBRARY_PATH=$out/lib $out/bin/shlibsign -v -i "$libfile"
     done
-  '' + stdenv.lib.optionalString (!includeTools) ''
-    find $out/bin -type f \( -name nss-config -o -delete \)
+
+    moveToOutput bin "$tools"
+    moveToOutput bin/nss-config "$dev"
+    moveToOutput lib/libcrmf.a "$dev" # needed by firefox, for example
+    rm "$out"/lib/*.a
   '';
 
   meta = {
     homepage = https://developer.mozilla.org/en-US/docs/NSS;
     description = "A set of libraries for development of security-enabled client and server applications";
+    platforms = stdenv.lib.platforms.all;
   };
 }

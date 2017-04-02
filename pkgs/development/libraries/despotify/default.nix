@@ -1,5 +1,5 @@
 {
-  stdenv, fetchsvn, openssl, zlib, libvorbis, pulseaudio, gstreamer, libao,
+  stdenv, fetchsvn, openssl, zlib, libvorbis, libpulseaudio, gstreamer, libao,
   libtool, ncurses, glibc
 }:
 
@@ -8,12 +8,13 @@ stdenv.mkDerivation rec {
   name = "despotify-svn521";
 
   src = fetchsvn {
-    url = "https://despotify.svn.sourceforge.net/svnroot/despotify";
+    url = "http://svn.code.sf.net/p/despotify/code";
     rev = "521";
+    sha256 = "1vc453bv5ngkvaqkq7z5bj6x28m4kik59153jikcfah3k4qmxw21";
   };
 
   buildInputs = [
-    openssl zlib libvorbis pulseaudio gstreamer libao libtool ncurses glibc
+    openssl zlib libvorbis libpulseaudio gstreamer libao libtool ncurses glibc
   ];
 
   configurePhase = "cd src";
@@ -29,6 +30,7 @@ stdenv.mkDerivation rec {
     '';
     homepage = "http://despotify.se";
     license = stdenv.lib.licenses.bsd2;
+    platforms = stdenv.lib.platforms.linux;
   };
 
 }

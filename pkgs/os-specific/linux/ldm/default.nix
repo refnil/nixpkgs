@@ -3,7 +3,7 @@
 assert mountPath != "";
 
 let
-  version = "v0.4.2";
+  version = "0.5";
   git = https://github.com/LemonBoy/ldm.git;
 in
 stdenv.mkDerivation rec {
@@ -13,16 +13,19 @@ stdenv.mkDerivation rec {
   # contains important fixes for LVM setups.
   src = fetchgit {
     url = meta.repositories.git;
-    rev = "refs/tags/${version}";
-    sha256 = "1fdm3l00csjyvz40py6wlsh8s441rbp4az3sc2i14ag7srh2yim8";
+    rev = "refs/tags/v${version}";
+    sha256 = "0lxfypnbamfx6p9ar5k9wra20gvwn665l4pp2j4vsx4yi5q7rw2n";
   };
 
   buildInputs = [ udev utillinux ];
 
-  preBuild = ''
+  postPatch = ''
     substituteInPlace ldm.c \
       --replace "/mnt/" "${mountPath}"
+    sed '16i#include <sys/stat.h>' -i ldm.c
   '';
+
+  buildFlags = "ldm";
 
   installPhase = ''
     mkdir -p $out/bin

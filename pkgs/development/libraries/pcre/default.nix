@@ -1,30 +1,46 @@
-{ stdenv, fetchurl, unicodeSupport ? true, cplusplusSupport ? true
-, windows ? null
+{ stdenv, fetchurl
+, windows ? null, variant ? null, pcre
 }:
 
 with stdenv.lib;
 
-stdenv.mkDerivation rec {
-  name = "pcre-8.34";
+assert elem variant [ null "cpp" "pcre16" "pcre32" ];
+
+let
+  version = "8.40";
+  pname = if (variant == null) then "pcre"
+    else  if (variant == "cpp") then "pcre-cpp"
+    else  variant;
+
+in stdenv.mkDerivation rec {
+  name = "${pname}-${version}";
 
   src = fetchurl {
-    url = "ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/${name}.tar.bz2";
-    sha256 = "0gsqmsp0q0n3q0ba32gkjvgcsdy6nwidqa7sbxkbw817zzhkl15n";
+    url = "ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-${version}.tar.bz2";
+    sha256 = "1x7lpjn7jhk0n3sdvggxrlrhab8kkfjwl7qix0ypw9nlx8lpmqh0";
   };
 
-  # The compiler on Darwin crashes with an internal error while building the
-  # C++ interface. Disabling optimizations on that platform remedies the
-  # problem. In case we ever update the Darwin GCC version, the exception for
-  # that platform ought to be removed.
-  configureFlags = ''
-    --enable-jit
-    ${if unicodeSupport then "--enable-unicode-properties" else ""}
-    ${if !cplusplusSupport then "--disable-cpp" else ""}
-  '' + optionalString stdenv.isDarwin "CXXFLAGS=-O0";
+  outputs = [ "bin" "dev" "out" "doc" "man" ];
+
+  configureFlags = [
+    "--enable-jit"
+    "--enable-unicode-properties"
+    "--disable-cpp"
+  ]
+    ++ optional (variant != null) "--enable-${variant}";
+
+  patches = [ ./CVE-2017-7186.patch ];
 
   doCheck = with stdenv; !(isCygwin || isFreeBSD);
     # XXX: test failure on Cygwin
     # we are running out of stack on both freeBSDs on Hydra
+
+  postFixup = ''
+    moveToOutput bin/pcre-config "$dev"
+  ''
+    + optionalString (variant != null) ''
+    ln -sf -t "$out/lib/" '${pcre.out}'/lib/libpcre{,posix}.{so.*.*.*,*dylib}
+  '';
 
   crossAttrs = optionalAttrs (stdenv.cross.libc == "msvcrt") {
     buildInputs = [ windows.mingw_w64_pthreads.crossDrv ];
@@ -44,6 +60,5 @@ stdenv.mkDerivation rec {
     '';
 
     platforms = platforms.all;
-    maintainers = [ maintainers.simons ];
   };
 }

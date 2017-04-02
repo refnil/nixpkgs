@@ -1,19 +1,28 @@
 { stdenv, fetchurl, libuuid, zlib }:
 
-stdenv.mkDerivation {
-  name = "xapian-1.2.8";
+let
+  generic = version: sha256: stdenv.mkDerivation rec {
+    name = "xapian-${version}";
 
-  src = fetchurl {
-    url = http://oligarchy.co.uk/xapian/1.2.8/xapian-core-1.2.8.tar.gz;
-    sha256 = "00411ebac66a5592b87fc57ccfeb234c84b929ed23c185befb5df9929df3d4f9";
+    src = fetchurl {
+      url = "http://oligarchy.co.uk/xapian/${version}/xapian-core-${version}.tar.xz";
+      inherit sha256;
+    };
+
+    outputs = [ "out" "doc" ];
+
+    buildInputs = [ libuuid zlib ];
+
+    meta = {
+      description = "Search engine library";
+      homepage = http://xapian.org/;
+      license = stdenv.lib.licenses.gpl2Plus;
+      maintainers = [ stdenv.lib.maintainers.chaoflow ];
+      platforms = stdenv.lib.platforms.unix;
+    };
   };
-
-  buildInputs = [ libuuid zlib ];
-
-  meta = { 
-    description = "Xapian Probabilistic Information Retrieval library";
-    homepage = "http://xapian.org";
-    license = stdenv.lib.licenses.gpl2Plus;
-    maintainers = [ stdenv.lib.maintainers.chaoflow ];
-  };
+in {
+  # used by xapian-ruby
+  xapian_1_2_22 = generic "1.2.22" "0zsji22n0s7cdnbgj0kpil05a6bgm5cfv0mvx12d8ydg7z58g6r6";
+  xapian_1_4_0 = generic "1.4.0" "0xv4da5rmqqzkkkzx2v3jwh5hz5zxhd2b7m8x30fk99a25blyn0h";
 }

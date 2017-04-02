@@ -1,12 +1,12 @@
-{ stdenv, fetchurl, unzip, xulrunner, makeWrapper }:
+{ stdenv, fetchurl, unzip, firefox-unwrapped, makeWrapper }:
 
 stdenv.mkDerivation rec {
-  name = "chatzilla-0.9.90.1";
+  name = "chatzilla-0.9.92";
 
   src = fetchurl {
     # Obtained from http://chatzilla.rdmsoft.com/xulrunner/.
     url = "http://chatzilla.rdmsoft.com/xulrunner/download/${name}.en-US.xulapp";
-    sha256 = "0z38jig91h10cb14rvs30rpg2pgn3v890nyxyy8lxzbv5ncxmngw";
+    sha256 = "09asg7ixjrin46xd19ri71g4jdrgb1gg0pk0lwk0dlb1qjxyf1xy";
   };
 
   buildInputs = [ unzip makeWrapper ];
@@ -15,8 +15,8 @@ stdenv.mkDerivation rec {
     mkdir -p $out/libexec/chatzilla
     unzip $src -d $out/libexec/chatzilla
 
-    makeWrapper ${xulrunner}/bin/xulrunner $out/bin/chatzilla \
-      --add-flags $out/libexec/chatzilla/application.ini
+    makeWrapper ${firefox-unwrapped}/bin/firefox $out/bin/chatzilla \
+      --add-flags "-app $out/libexec/chatzilla/application.ini"
 
     sed -i $out/libexec/chatzilla/application.ini -e 's/.*MaxVersion.*/MaxVersion=99.*/'
   '';

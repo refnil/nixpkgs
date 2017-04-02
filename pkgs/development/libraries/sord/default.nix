@@ -2,20 +2,20 @@
 
 stdenv.mkDerivation rec {
   name = "sord-${version}";
-  version = "0.12.0";
+  version = "0.16.0";
 
   src = fetchurl {
     url = "http://download.drobilla.net/${name}.tar.bz2";
-    sha256 = "1f0wz7ynnk72hyr4jfi0lgvj90ld2va1kig8fkw30s8b903alsqj";
+    sha256 = "0nh3i867g9z4kdlnk82cg2kcw8r02qgifxvkycvzb4vfjv4v4g4x";
   };
 
   buildInputs = [ pkgconfig python serd ];
 
-  configurePhase = "python waf configure --prefix=$out";
+  configurePhase = "${python.interpreter} waf configure --prefix=$out";
 
-  buildPhase = "python waf";
+  buildPhase = "${python.interpreter} waf";
 
-  installPhase = "python waf install";
+  installPhase = "${python.interpreter} waf install";
 
   meta = with stdenv.lib; {
     homepage = http://drobilla.net/software/sord;

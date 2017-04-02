@@ -1,73 +1,113 @@
-{ stdenv, fetchurl, pkgconfig, gtk, perl, python, zip, unzip
-, libIDL, dbus_glib, bzip2, alsaLib, nspr, yasm, mesa, nss
-, libnotify, cairo, pixman, fontconfig
-, libjpeg
-, pythonPackages
-
+{ stdenv, lib, fetchurl, pkgconfig, which, m4, gtk2, pango, perl, python2, zip, libIDL
+, libjpeg, libpng, zlib, dbus, dbus_glib, bzip2, xorg
+, freetype, fontconfig, file, alsaLib, nspr, nss, libnotify
+, yasm, mesa, sqlite, unzip, makeWrapper
+, hunspell, libevent, libstartup_notification, libvpx
+, cairo, gstreamer, gst-plugins-base, icu
+, writeScript, xidel, common-updater-scripts, coreutils, gnused, gnugrep, curl
+, debugBuild ? false
 , # If you want the resulting program to call itself "Thunderbird"
-  # instead of "Shredder", enable this option.  However, those
+  # instead of "Earlybird", enable this option.  However, those
   # binaries may not be distributed without permission from the
   # Mozilla Foundation, see
   # http://www.mozilla.org/foundation/trademarks/.
   enableOfficialBranding ? false
 }:
 
-let version = "17.0.11"; in
-let verName = "${version}esr"; in
+let version = "45.8.0"; in
+let verName = "${version}"; in
 
-stdenv.mkDerivation {
+stdenv.mkDerivation rec {
   name = "thunderbird-${verName}";
 
   src = fetchurl {
-    url = "ftp://ftp.mozilla.org/pub/thunderbird/releases/${verName}/source/thunderbird-${verName}.source.tar.bz2";
-    sha256 = "1m2lph8x82kgxqzlyaxr1l1x7s4qnqfzfnqck4b777914mrv1mdp";
+    url = "mirror://mozilla/thunderbird/releases/${verName}/source/thunderbird-${verName}.source.tar.xz";
+    sha512 = "f8ba08d874fb1a09ac9ba5d4d1f46cefe801783ba4bf82eee682ac2ecc4e231d07033a80e036ad04bda7780c093fb7bc3122a23dc6e19c12f18fb7168dc78deb";
   };
 
-  #enableParallelBuilding = true;
+  patches = [ ./gcc6.patch ];
 
-  buildInputs =
-    [ pkgconfig perl python zip unzip bzip2 gtk dbus_glib alsaLib libIDL nspr
-      libnotify cairo pixman fontconfig yasm mesa nss
-      libjpeg pythonPackages.sqlite3
-    ];
+  # New sed no longer tolerates this mistake.
+  postPatch = ''
+    for f in mozilla/{js/src,}/configure; do
+      substituteInPlace "$f" --replace '[:space:]*' '[[:space:]]*'
+    done
+  '';
 
-  configureFlags =
-    [ "--enable-application=mail"
-      "--enable-optimize"
-      "--with-pthreads"
-      "--disable-debug"
-      "--enable-strip"
-      "--with-pthreads"
+  buildInputs = # from firefox30Pkgs.xulrunner, without gstreamer and libvpx
+    [ pkgconfig which libpng gtk2 perl zip libIDL libjpeg zlib bzip2
+      python2 dbus dbus_glib pango freetype fontconfig xorg.libXi
+      xorg.libX11 xorg.libXrender xorg.libXft xorg.libXt file
+      alsaLib nspr nss libnotify xorg.pixman yasm mesa
+      xorg.libXScrnSaver xorg.scrnsaverproto
+      xorg.libXext xorg.xextproto sqlite unzip makeWrapper
+      hunspell libevent libstartup_notification cairo icu
+    ] ++ [ m4 ];
+
+  configurePhase = let configureFlags = [ "--enable-application=mail" ]
+    # from firefox30Pkgs.commonConfigureFlags, but without gstreamer and libvpx
+    ++ [
       "--with-system-jpeg"
-      #"--with-system-png"
       "--with-system-zlib"
       "--with-system-bz2"
       "--with-system-nspr"
       "--with-system-nss"
-      # Broken: https://bugzilla.mozilla.org/show_bug.cgi?id=722975
-      #"--enable-system-cairo"
+      "--with-system-libevent"
+      #"--with-system-libvpx"
+      "--with-system-png"
+      "--with-system-icu"
+      "--enable-system-ffi"
+      "--enable-system-hunspell"
+      "--enable-system-pixman"
+      "--enable-system-sqlite"
+      "--enable-system-cairo"
+      "--disable-gconf"
+      "--disable-gstreamer"
+      "--enable-startup-notification"
+      # "--enable-content-sandbox"            # available since 26.0, but not much info available
+      # "--enable-content-sandbox-reporter"   # keeping disabled for now
       "--disable-crashreporter"
-      "--disable-necko-wifi"
-      "--disable-webm"
       "--disable-tests"
-      "--enable-calendar"
-      "--disable-ogg"
+      "--disable-necko-wifi" # maybe we want to enable this at some point
+      "--disable-installer"
+      "--disable-updater"
+      "--disable-pulseaudio"
+    ] ++ (if debugBuild then [ "--enable-debug" "--enable-profiling"]
+                        else [ "--disable-debug" "--enable-release"
+                               "--disable-debug-symbols"
+                               "--enable-optimize" "--enable-strip" ])
+    ++ [
+      "--disable-javaxpcom"
+      #"--enable-stdcxx-compat" # Avoid dependency on libstdc++ 4.7
     ]
     ++ stdenv.lib.optional enableOfficialBranding "--enable-official-branding";
+  in ''
+    mkdir -p objdir/mozilla
+    cd objdir
+    echo '${stdenv.lib.concatMapStrings (s : "ac_add_options ${s}\n") configureFlags}' > .mozconfig
+    echo 'ac_add_options --prefix="'"$out"'"' >> .mozconfig
+    # From version 38, we need to specify the source directory to build
+    # Thunderbird. Refer to mozilla/configure and search a line with
+    # "checking for application to build" and "# Support comm-central".
+    echo 'ac_add_options --with-external-source-dir="'`realpath ..`'"' >> .mozconfig
+    echo 'mk_add_options MOZ_MAKE_FLAGS="-j'"$NIX_BUILD_CORES"'"' >> .mozconfig
+    echo 'mk_add_options MOZ_OBJDIR="'`pwd`'"' >> .mozconfig
 
-  # The Thunderbird Makefiles refer to the variables LIBXUL_DIST,
-  # prefix, and PREFIX in some places where they are not set.  In
-  # particular, there are some linker flags like
-  # `-rpath-link=$(LIBXUL_DIST)/bin'.  Since this expands to
-  # `-rpath-link=/bin', the build fails due to the purity checks in
-  # the ld wrapper.  So disable the purity check for now.
-  preBuild = "NIX_ENFORCE_PURITY=0";
+    export MOZCONFIG=`realpath ./.mozconfig`
 
-  # This doesn't work:
-  #makeFlags = "LIBXUL_DIST=$(out) prefix=$(out) PREFIX=$(out)";
+    patchShebangs ../mozilla/mach
+    ../mozilla/mach configure
+  '';
 
-  postInstall =
+  enableParallelBuilding = true;
+  requiredSystemFeatures = [ "big-parallel" ];
+
+  buildPhase =  "../mozilla/mach build";
+
+  installPhase =
     ''
+      ../mozilla/mach install
+
       rm -rf $out/include $out/lib/thunderbird-devel-* $out/share/idl
 
       # Create a desktop item.
@@ -83,8 +123,13 @@ stdenv.mkDerivation {
       EOF
     '';
 
+    postFixup =
+      ''
+        paxmark m $out/lib/thunderbird-${version}/thunderbird
+      '';
+
   meta = with stdenv.lib; {
-    description = "Mozilla Thunderbird, a full-featured email client";
+    description = "A full-featured e-mail client";
     homepage = http://www.mozilla.org/thunderbird/;
     license =
       # Official branding implies thunderbird name and logo cannot be reuse,
@@ -92,5 +137,11 @@ stdenv.mkDerivation {
       if enableOfficialBranding then licenses.proprietary else licenses.mpl11;
     maintainers = [ maintainers.pierron maintainers.eelco ];
     platforms = platforms.linux;
+  };
+
+  passthru.updateScript = import ./../../browsers/firefox/update.nix {
+    attrPath = "thunderbird";
+    baseUrl = "http://archive.mozilla.org/pub/thunderbird/releases/";
+    inherit writeScript lib common-updater-scripts xidel coreutils gnused gnugrep curl;
   };
 }

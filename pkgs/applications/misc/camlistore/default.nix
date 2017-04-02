@@ -1,15 +1,17 @@
-{ stdenv, lib, go, fetchurl }:
+{ stdenv, lib, go, fetchgit, git }:
 
 stdenv.mkDerivation rec {
-  version = "0.7";
+  version = "0.9";
   name = "camlistore-${version}";
 
-  src = fetchurl {
-    url = "https://github.com/bradfitz/camlistore/archive/0.7.tar.gz";
-    sha256 = "0lc35x2b9llrnma0m5czivly0c3l4lh3ldw9hwn83lkh8n0bzn11";
+  src = fetchgit {
+    url = "https://github.com/camlistore/camlistore";
+    rev = "7b78c50007780643798adf3fee4c84f3a10154c9";
+    sha256 = "1vc4ca2rn8da0z0viv3vv2p8z211zdvq83jh2x2izdckdz204n17";
+    leaveDotGit = true;
   };
 
-  buildInputs = [ go ];
+  buildInputs = [ go git ];
 
   buildPhase = ''
     go run make.go
@@ -17,12 +19,12 @@ stdenv.mkDerivation rec {
   '';
 
   installPhase = ''
-    ensureDir $out/bin
+    mkdir -p $out/bin
     cp bin/* $out/bin
   '';
 
   meta = with stdenv.lib; {
-    description = "Camlistore is a way of storing, syncing, sharing, modelling and backing up content";
+    description = "A way of storing, syncing, sharing, modelling and backing up content";
     homepage = https://camlistore.org;
     license = licenses.asl20;
     maintainers = with maintainers; [ cstrahan ];

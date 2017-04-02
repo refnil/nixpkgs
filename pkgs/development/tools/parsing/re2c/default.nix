@@ -1,13 +1,25 @@
-{stdenv, fetchurl }:
+{ stdenv, fetchFromGitHub, autoreconfHook }:
 
-stdenv.mkDerivation {
-  name = "re2c-0.13.6";
-  src = fetchurl {
-    url = mirror://sourceforge/re2c/re2c/0.13.6/re2c-0.13.6.tar.gz;
-    sha256 = "1h3na1zacw3166k6wkdjzjs67frjca9wj07wgfas56c7m8wk0ilf";
+stdenv.mkDerivation rec {
+  name = "re2c-${version}";
+  version = "0.16";
+
+  sourceRoot = "${name}-src/re2c";
+
+  src = fetchFromGitHub {
+    owner = "skvadrik";
+    repo = "re2c";
+    rev = version;
+    sha256 = "0cijgmbyx34nwl2jmsswggkgvzy364871rkbxz8biq9x8xrhhjw5";
   };
+
+  nativeBuildInputs = [ autoreconfHook ];
 
   meta = {
     description = "Tool for writing very fast and very flexible scanners";
+    homepage    = "http://re2c.org";
+    license     = stdenv.lib.licenses.publicDomain;
+    platforms   = stdenv.lib.platforms.all;
+    maintainers = [ stdenv.lib.maintainers.thoughtpolice ];
   };
 }

@@ -1,120 +1,55 @@
+# Configuration for Amazon EC2 instances. (Note that this file is a
+# misnomer - it should be "amazon-config.nix" or so, not
+# "amazon-image.nix", since it's used not only to build images but
+# also to reconfigure instances. However, we can't rename it because
+# existing "configuration.nix" files on EC2 instances refer to it.)
+
 { config, lib, pkgs, ... }:
 
 with lib;
-let
-  cfg = config.ec2;
-in
-{
-  imports = [ ../profiles/headless.nix ./ec2-data.nix ];
 
-  options = {
-    ec2 = {
-      hvm = mkOption {
-        default = false;
-        description = ''
-          Whether the EC2 instance is a HVM instance.
-        '';
-      };
-    };
-  };
+let cfg = config.ec2; in
+
+{
+  imports = [ ../profiles/headless.nix ./ec2-data.nix ./grow-partition.nix ./amazon-init.nix ];
 
   config = {
-    system.build.amazonImage =
-      pkgs.vmTools.runInLinuxVM (
-        pkgs.runCommand "amazon-image"
-          { preVM =
-              ''
-                mkdir $out
-                diskImage=$out/nixos.img
-                ${pkgs.vmTools.qemu}/bin/qemu-img create -f raw $diskImage "8G"
-                mv closure xchg/
-              '';
-            buildInputs = [ pkgs.utillinux pkgs.perl ];
-            exportReferencesGraph =
-              [ "closure" config.system.build.toplevel ];
-          }
-          ''
-            ${if cfg.hvm then ''
-              # Create a single / partition.
-              ${pkgs.parted}/sbin/parted /dev/vda mklabel msdos
-              ${pkgs.parted}/sbin/parted /dev/vda -- mkpart primary ext2 1M -1s
-              . /sys/class/block/vda1/uevent
-              mknod /dev/vda1 b $MAJOR $MINOR
 
-              # Create an empty filesystem and mount it.
-              ${pkgs.e2fsprogs}/sbin/mkfs.ext4 -L nixos /dev/vda1
-              ${pkgs.e2fsprogs}/sbin/tune2fs -c 0 -i 0 /dev/vda1
-              mkdir /mnt
-              mount /dev/vda1 /mnt
-            '' else ''
-              # Create an empty filesystem and mount it.
-              ${pkgs.e2fsprogs}/sbin/mkfs.ext4 -L nixos /dev/vda
-              ${pkgs.e2fsprogs}/sbin/tune2fs -c 0 -i 0 /dev/vda
-              mkdir /mnt
-              mount /dev/vda /mnt
-            ''}
+    virtualisation.growPartition = cfg.hvm;
 
-            # The initrd expects these directories to exist.
-            mkdir /mnt/dev /mnt/proc /mnt/sys
+    fileSystems."/" = {
+      device = "/dev/disk/by-label/nixos";
+      autoResize = true;
+    };
 
-            mount -o bind /proc /mnt/proc
-            mount -o bind /dev /mnt/dev
-            mount -o bind /sys /mnt/sys
+    boot.extraModulePackages =
+      [ config.boot.kernelPackages.ixgbevf
+        config.boot.kernelPackages.ena
+      ];
+    boot.initrd.kernelModules = [ "xen-blkfront" "xen-netfront" ];
+    boot.initrd.availableKernelModules = [ "ixgbevf" "ena" ];
+    boot.kernelParams = mkIf cfg.hvm [ "console=ttyS0" ];
 
-            # Copy all paths in the closure to the filesystem.
-            storePaths=$(perl ${pkgs.pathsFromGraph} /tmp/xchg/closure)
-
-            mkdir -p /mnt/nix/store
-            echo "copying everything (will take a while)..."
-            cp -prd $storePaths /mnt/nix/store/
-
-            # Register the paths in the Nix database.
-            printRegistration=1 perl ${pkgs.pathsFromGraph} /tmp/xchg/closure | \
-                chroot /mnt ${config.nix.package}/bin/nix-store --load-db
-
-            # Create the system profile to allow nixos-rebuild to work.
-            chroot /mnt ${config.nix.package}/bin/nix-env \
-                -p /nix/var/nix/profiles/system --set ${config.system.build.toplevel}
-
-            # `nixos-rebuild' requires an /etc/NIXOS.
-            mkdir -p /mnt/etc
-            touch /mnt/etc/NIXOS
-
-            # `switch-to-configuration' requires a /bin/sh
-            mkdir -p /mnt/bin
-            ln -s ${config.system.build.binsh}/bin/sh /mnt/bin/sh
-
-            # Install a configuration.nix.
-            mkdir -p /mnt/etc/nixos
-            cp ${./amazon-config.nix} /mnt/etc/nixos/configuration.nix
-
-            # Generate the GRUB menu.
-            ln -s vda /dev/xvda
-            chroot /mnt ${config.system.build.toplevel}/bin/switch-to-configuration boot
-
-            umount /mnt/proc /mnt/dev /mnt/sys
-            umount /mnt
-          ''
-      );
-
-    fileSystems."/".device = "/dev/disk/by-label/nixos";
-
-    boot.initrd.kernelModules = [ "xen-blkfront" ];
-    boot.kernelModules = [ "xen-netfront" ];
+    # Prevent the nouveau kernel module from being loaded, as it
+    # interferes with the nvidia/nvidia-uvm modules needed for CUDA.
+    # Also blacklist xen_fbfront to prevent a 30 second delay during
+    # boot.
+    boot.blacklistedKernelModules = [ "nouveau" "xen_fbfront" ];
 
     # Generate a GRUB menu.  Amazon's pv-grub uses this to boot our kernel/initrd.
     boot.loader.grub.version = if cfg.hvm then 2 else 1;
     boot.loader.grub.device = if cfg.hvm then "/dev/xvda" else "nodev";
-    boot.loader.grub.timeout = 0;
-    boot.loader.grub.extraPerEntryConfig = "root (hd0${lib.optionalString cfg.hvm ",0"})";
+    boot.loader.grub.extraPerEntryConfig = mkIf (!cfg.hvm) "root (hd0)";
+    boot.loader.timeout = 0;
 
     boot.initrd.postDeviceCommands =
       ''
         # Force udev to exit to prevent random "Device or resource busy
         # while trying to open /dev/xvda" errors from fsck.
         udevadm control --exit || true
-        kill -9 -1
       '';
+
+    boot.initrd.network.enable = true;
 
     # Mount all formatted ephemeral disks and activate all swap devices.
     # We cannot do this with the ‘fileSystems’ and ‘swapDevices’ options
@@ -127,6 +62,27 @@ in
     # Nix operations.
     boot.initrd.postMountCommands =
       ''
+        metaDir=$targetRoot/etc/ec2-metadata
+        mkdir -m 0755 -p "$metaDir"
+
+        echo "getting EC2 instance metadata..."
+
+        if ! [ -e "$metaDir/ami-manifest-path" ]; then
+          wget -q -O "$metaDir/ami-manifest-path" http://169.254.169.254/1.0/meta-data/ami-manifest-path
+        fi
+
+        if ! [ -e "$metaDir/user-data" ]; then
+          wget -q -O "$metaDir/user-data" http://169.254.169.254/1.0/user-data && chmod 600 "$metaDir/user-data"
+        fi
+
+        if ! [ -e "$metaDir/hostname" ]; then
+          wget -q -O "$metaDir/hostname" http://169.254.169.254/1.0/meta-data/hostname
+        fi
+
+        if ! [ -e "$metaDir/public-keys-0-openssh-key" ]; then
+          wget -q -O "$metaDir/public-keys-0-openssh-key" http://169.254.169.254/1.0/meta-data/public-keys/0/openssh-key
+        fi
+
         diskNr=0
         diskForUnionfs=
         for device in /dev/xvd[abcde]*; do
@@ -138,7 +94,6 @@ in
             elif [ "$fsType" = ext3 ]; then
                 mp="/disk$diskNr"
                 diskNr=$((diskNr + 1))
-                echo "mounting $device on $mp..."
                 if mountFS "$device" "$mp" "" ext3; then
                     if [ -z "$diskForUnionfs" ]; then diskForUnionfs="$mp"; fi
                 fi
@@ -153,7 +108,7 @@ in
             mkdir -m 1777 -p $targetRoot/$diskForUnionfs/root/tmp $targetRoot/tmp
             mount --bind $targetRoot/$diskForUnionfs/root/tmp $targetRoot/tmp
 
-            if [ ! -e $targetRoot/.ebs ]; then
+            if [ "$(cat "$metaDir/ami-manifest-path")" != "(unknown)" ]; then
                 mkdir -m 755 -p $targetRoot/$diskForUnionfs/root/var $targetRoot/var
                 mount --bind $targetRoot/$diskForUnionfs/root/var $targetRoot/var
 
@@ -172,7 +127,7 @@ in
     boot.initrd.extraUtilsCommands =
       ''
         # We need swapon in the initrd.
-        cp ${pkgs.utillinux}/sbin/swapon $out/bin
+        copy_bin_and_libs ${pkgs.utillinux}/sbin/swapon
       '';
 
     # Don't put old configurations in the GRUB menu.  The user has no
@@ -182,7 +137,7 @@ in
     # Allow root logins only using the SSH key that the user specified
     # at instance creation time.
     services.openssh.enable = true;
-    services.openssh.permitRootLogin = "without-password";
+    services.openssh.permitRootLogin = "prohibit-password";
 
     # Force getting the hostname from EC2.
     networking.hostName = mkDefault "";
@@ -191,10 +146,5 @@ in
     environment.systemPackages = [ pkgs.cryptsetup ];
 
     boot.initrd.supportedFilesystems = [ "unionfs-fuse" ];
-
-    # Prevent logging in as root without a password.  This doesn't really matter,
-    # since the only PAM services that allow logging in with a null
-    # password are local ones that are inaccessible on EC2 machines.
-    security.initialRootPassword = mkDefault "!";
   };
 }

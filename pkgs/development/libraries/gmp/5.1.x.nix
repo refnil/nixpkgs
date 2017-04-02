@@ -1,8 +1,8 @@
-{ stdenv, fetchurl, m4, cxx ? true, withStatic ? false }:
+{ stdenv, fetchurl, m4, cxx ? true, withStatic ? true }:
 
-with { inherit (stdenv.lib) optional; };
+let inherit (stdenv.lib) optional optionalString; in
 
-stdenv.mkDerivation (rec {
+let self = stdenv.mkDerivation rec {
   name = "gmp-5.1.3";
 
   src = fetchurl { # we need to use bz2, others aren't in bootstrapping stdenv
@@ -10,26 +10,49 @@ stdenv.mkDerivation (rec {
     sha256 = "0q5i39pxrasgn9qdxzpfbwhh11ph80p57x6hf48m74261d97j83m";
   };
 
+  #outputs TODO: split $cxx due to libstdc++ dependency
+  # maybe let ghc use a version with *.so shared with rest of nixpkgs and *.a added
+  # - see #5855 for related discussion
+  outputs = [ "out" "dev" "info" ];
+  passthru.static = self.out;
+
   nativeBuildInputs = [ m4 ];
+
+  # FIXME needs gcc 4.9 in bootstrap tools
+  hardeningDisable = [ "format" "stackprotector" ];
+
+  patches = if stdenv.isDarwin then [ ./need-size-t.patch ] else null;
 
   configureFlags =
     # Build a "fat binary", with routines for several sub-architectures
     # (x86), except on Solaris where some tests crash with "Memory fault".
     # See <http://hydra.nixos.org/build/2760931>, for instance.
+    #
+    # no darwin because gmp uses ASM that clang doesn't like
     optional (!stdenv.isSunOS) "--enable-fat"
     ++ (if cxx then [ "--enable-cxx"  ]
                else [ "--disable-cxx" ])
     ++ optional (cxx && stdenv.isDarwin) "CPPFLAGS=-fexceptions"
+    ++ optional stdenv.isDarwin "ABI=64"
     ++ optional stdenv.is64bit "--with-pic"
     ;
 
+  # The config.guess in GMP tries to runtime-detect various
+  # ARM optimization flags via /proc/cpuinfo (and is also
+  # broken on multicore CPUs). Avoid this impurity.
+  preConfigure = optionalString stdenv.isArm ''
+      configureFlagsArray+=("--build=$(./configfsf.guess)")
+    '';
+
   doCheck = true;
+
+  dontDisableStatic = withStatic;
 
   enableParallelBuilding = true;
 
   meta = with stdenv.lib; {
     homepage = "http://gmplib.org/";
-    description = "GMP, the GNU multiple precision arithmetic library";
+    description = "GNU multiple precision arithmetic library";
     license = licenses.gpl3Plus;
 
     longDescription =
@@ -55,9 +78,7 @@ stdenv.mkDerivation (rec {
       '';
 
     platforms = platforms.all;
-    maintainers = [ maintainers.simons ];
+    maintainers = [ maintainers.peti ];
   };
-}
-  // stdenv.lib.optionalAttrs withStatic { dontDisableStatic = true; }
-)
-
+};
+  in self

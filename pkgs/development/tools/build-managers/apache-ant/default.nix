@@ -1,6 +1,6 @@
-{ fetchurl, stdenv, makeWrapper }:
+{ fetchurl, stdenv, coreutils, makeWrapper }:
 
-let version = "1.9.3"; in
+let version = "1.9.6"; in
 
 stdenv.mkDerivation {
   name = "ant-${version}";
@@ -9,7 +9,7 @@ stdenv.mkDerivation {
 
   src = fetchurl {
     url = "mirror://apache/ant/binaries/apache-ant-${version}-bin.tar.bz2";
-    sha1 = "efcf206e24b0dd1583c501182ad163af277951a4";
+    sha256 = "1cwd5vq175gyicw0hkm8idwa33zxwhf7xlxywaqxcqqdjql0jfx4";
   };
 
   contrib = fetchurl {
@@ -23,9 +23,14 @@ stdenv.mkDerivation {
       mv * $out/lib/ant/
 
       # Get rid of the manual (35 MiB).  Maybe we should put this in a
-      # separate output.  Also get rid of the Ant scripts since we
-      # provide our own.
+      # separate output.  Keep the antRun script since it's vanilla sh
+      # and needed for the <exec/> task (but since we set ANT_HOME to
+      # a weird value, we have to move antRun to a weird location).
+      # Get rid of the other Ant scripts since we provide our own.
+      mv $out/lib/ant/bin/antRun $out/bin/
       rm -rf $out/lib/ant/{manual,bin,WHATSNEW}
+      mkdir $out/lib/ant/bin
+      mv $out/bin/antRun $out/lib/ant/bin/
 
       # Install ant-contrib.
       unpackFile $contrib
@@ -43,7 +48,7 @@ stdenv.mkDerivation {
       if [ -z "\$JAVA_HOME" ]; then
           for i in javac java gij; do
               if p="\$(type -p \$i)"; then
-                  export JAVA_HOME="\$(dirname \$(dirname \$(readlink -f \$p)))"
+                  export JAVA_HOME="\$(${coreutils}/bin/dirname \$(${coreutils}/bin/dirname \$(${coreutils}/bin/readlink -f \$p)))"
                   break
               fi
           done

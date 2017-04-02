@@ -1,22 +1,32 @@
-{ stdenv, fetchurl, gzip, bzip2 }:
+{ stdenv, fetchurl, autoreconfHook, gzip, bzip2, pkgconfig, flex, check, pam }:
 
 stdenv.mkDerivation rec {
-  name = "kbd-1.15.3";
+  name = "kbd-${version}";
+  version = "2.0.3";
 
   src = fetchurl {
-    url = "ftp://ftp.altlinux.org/pub/people/legion/kbd/${name}.tar.gz";
-    sha256 = "1vcl2791xshjdpi4w88iy87gkb7zv0dbvi83f98v30dvqc9mfl46";
+    url = "mirror://kernel/linux/utils/kbd/${name}.tar.xz";
+    sha256 = "0ppv953gn2zylcagr4z6zg5y2x93dxrml29plypg6xgbq3hrv2bs";
   };
 
-  configureFlags = "--disable-nls";  
+  configureFlags = [
+    "--enable-optional-progs"
+    "--enable-libkeymap"
+    "--disable-nls"
+  ];
 
-  patchPhase =
+  patches = [ ./console-fix.patch ./search-paths.patch ];
+
+  postPatch =
     ''
+      # Add Neo keymap subdirectory
+      sed -i -e 's,^KEYMAPSUBDIRS *= *,&i386/neo ,' data/Makefile.am
+
       # Fix the path to gzip/bzip2.
-      substituteInPlace src/findfile.c \
+      substituteInPlace src/libkeymap/findfile.c \
         --replace gzip ${gzip}/bin/gzip \
-        --replace bzip2 ${bzip2}/bin/bzip2 \
-    
+        --replace bzip2 ${bzip2.bin}/bin/bzip2 \
+
       # We get a warning in armv5tel-linux and the fuloong2f, so we
       # disable -Werror in it.
       ${stdenv.lib.optionalString (stdenv.isArm || stdenv.system == "mips64el-linux") ''
@@ -24,10 +34,15 @@ stdenv.mkDerivation rec {
       ''}
     '';
 
-  makeFlags = "setowner= ";
+  buildInputs = [ check pam ];
+  nativeBuildInputs = [ autoreconfHook pkgconfig flex ];
 
-  meta = {
+  makeFlags = [ "setowner=" ];
+
+  meta = with stdenv.lib; {
     homepage = ftp://ftp.altlinux.org/pub/people/legion/kbd/;
     description = "Linux keyboard utilities and keyboard maps";
+    platforms = platforms.linux;
+    licenses = licenses.gpl2Plus;
   };
 }

@@ -1,22 +1,27 @@
-{ stdenv, fetchurl, libX11, imlib2, giflib }:
+{ stdenv, fetchFromGitHub, libX11, imlib2, giflib, libexif }:
 
-stdenv.mkDerivation {
-  name = "sxiv-1.1.1";
-
-  src = fetchurl {
-    url = "https://github.com/muennich/sxiv/archive/v1.1.1.tar.gz";
-    name = "sxiv-1.1.tar.gz";
-    sha256 = "07r8125xa8d5q71ql71s4i1dx4swy8hypxh2s5h7z2jnn5y9nmih";
+stdenv.mkDerivation rec {
+  name = "sxiv-${version}";
+  version = "v1.3.2";
+  #https://github.com/muennich/sxiv/archive/v1.3.2.zip
+  src = fetchFromGitHub {
+    owner = "muennich";
+    repo = "sxiv";
+    rev = version;
+    sha256 = "1f4gz1qjhb44bbb3q5fqk439zyipkwnr19zhg89yq2pgmzzzqr2h";
   };
 
-  buildInputs = [ libX11 imlib2 giflib ];
+  postUnpack = ''
+    substituteInPlace $sourceRoot/Makefile \
+      --replace /usr/local $out
+  '';
 
-  prePatch = ''sed -i "s@/usr/local@$out@" Makefile'';
-
+  buildInputs = [ libX11 imlib2 giflib libexif ];
   meta = {
     description = "Simple X Image Viewer";
     homepage = "https://github.com/muennich/sxiv";
     license = stdenv.lib.licenses.gpl2Plus;
     platforms = stdenv.lib.platforms.linux;
+    maintainers = with stdenv.lib.maintainers; [ fuuzetsu ];
   };
 }

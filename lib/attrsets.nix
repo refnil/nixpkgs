@@ -1,38 +1,75 @@
 # Operations on attribute sets.
 
-with {
-  inherit (builtins) head tail;
+let
+  inherit (builtins) head tail length;
   inherit (import ./trivial.nix) or;
   inherit (import ./default.nix) fold;
   inherit (import ./strings.nix) concatStringsSep;
   inherit (import ./lists.nix) concatMap concatLists all deepSeqList;
-  inherit (import ./misc.nix) maybeAttr;
-};
+in
 
 rec {
   inherit (builtins) attrNames listToAttrs hasAttr isAttrs getAttr;
 
 
-  /* Return an attribute from nested attribute sets.  For instance
-     ["x" "y"] applied to some set e returns e.x.y, if it exists.  The
-     default value is returned otherwise. */
+  /* Return an attribute from nested attribute sets.
+
+     Example:
+       x = { a = { b = 3; }; }
+       attrByPath ["a" "b"] 6 x
+       => 3
+       attrByPath ["z" "z"] 6 x
+       => 6
+  */
   attrByPath = attrPath: default: e:
     let attr = head attrPath;
     in
       if attrPath == [] then e
-      else if hasAttr attr e
-      then attrByPath (tail attrPath) default (getAttr attr e)
+      else if e ? ${attr}
+      then attrByPath (tail attrPath) default e.${attr}
       else default;
 
+  /* Return if an attribute from nested attribute set exists.
 
-  /* Return nested attribute set in which an attribute is set.  For instance
-     ["x" "y"] applied with some value v returns `x.y = v;' */
+     Example:
+       x = { a = { b = 3; }; }
+       hasAttrByPath ["a" "b"] x
+       => true
+       hasAttrByPath ["z" "z"] x
+       => false
+
+  */
+  hasAttrByPath = attrPath: e:
+    let attr = head attrPath;
+    in
+      if attrPath == [] then true
+      else if e ? ${attr}
+      then hasAttrByPath (tail attrPath) e.${attr}
+      else false;
+
+
+  /* Return nested attribute set in which an attribute is set.
+
+     Example:
+       setAttrByPath ["a" "b"] 3
+       => { a = { b = 3; }; }
+  */
   setAttrByPath = attrPath: value:
     if attrPath == [] then value
     else listToAttrs
       [ { name = head attrPath; value = setAttrByPath (tail attrPath) value; } ];
 
 
+  /* Like `getAttrPath' without a default value. If it doesn't find the
+     path it will throw.
+
+     Example:
+       x = { a = { b = 3; }; }
+       getAttrFromPath ["a" "b"] x
+       => 3
+       getAttrFromPath ["z" "z"] x
+       => error: cannot find attribute `z.z'
+  */
   getAttrFromPath = attrPath: set:
     let errorMsg = "cannot find attribute `" + concatStringsSep "." attrPath + "'";
     in attrByPath attrPath (abort errorMsg) set;
@@ -44,8 +81,7 @@ rec {
        attrVals ["a" "b" "c"] as
        => [as.a as.b as.c]
   */
-  attrVals = nameList: set:
-    map (x: getAttr x set) nameList;
+  attrVals = nameList: set: map (x: set.${x}) nameList;
 
 
   /* Return the values of all attributes in the given set, sorted by
@@ -55,7 +91,7 @@ rec {
        attrValues {c = 3; a = 1; b = 2;}
        => [1 2 3]
   */
-  attrValues = attrs: attrVals (attrNames attrs) attrs;
+  attrValues = builtins.attrValues or (attrs: attrVals (attrNames attrs) attrs);
 
 
   /* Collect each attribute named `attr' from a list of attribute
@@ -65,7 +101,8 @@ rec {
        catAttrs "a" [{a = 1;} {b = 0;} {a = 2;}]
        => [1 2]
   */
-  catAttrs = attr: l: concatLists (map (s: if hasAttr attr s then [(getAttr attr s)] else []) l);
+  catAttrs = builtins.catAttrs or
+    (attr: l: concatLists (map (s: if s ? ${attr} then [s.${attr}] else []) l));
 
 
   /* Filter an attribute set by removing all attributes for which the
@@ -76,17 +113,39 @@ rec {
        => { foo = 1; }
   */
   filterAttrs = pred: set:
-    listToAttrs (fold (n: ys: let v = getAttr n set; in if pred n v then [(nameValuePair n v)] ++ ys else ys) [] (attrNames set));
+    listToAttrs (concatMap (name: let v = set.${name}; in if pred name v then [(nameValuePair name v)] else []) (attrNames set));
 
 
-  /* foldAttrs: apply fold functions to values grouped by key. Eg accumulate values as list:
-     foldAttrs (n: a: [n] ++ a) [] [{ a = 2; } { a = 3; }]
-     => { a = [ 2 3 ]; }
+  /* Filter an attribute set recursivelly by removing all attributes for
+     which the given predicate return false.
+
+     Example:
+       filterAttrsRecursive (n: v: v != null) { foo = { bar = null; }; }
+       => { foo = {}; }
+  */
+  filterAttrsRecursive = pred: set:
+    listToAttrs (
+      concatMap (name:
+        let v = set.${name}; in
+        if pred name v then [
+          (nameValuePair name (
+            if isAttrs v then filterAttrsRecursive pred v
+            else v
+          ))
+        ] else []
+      ) (attrNames set)
+    );
+
+  /* Apply fold functions to values grouped by key.
+
+     Example:
+       foldAttrs (n: a: [n] ++ a) [] [{ a = 2; } { a = 3; }]
+       => { a = [ 2 3 ]; }
   */
   foldAttrs = op: nul: list_of_attrs:
     fold (n: a:
         fold (name: o:
-          o // (listToAttrs [{inherit name; value = op (getAttr name n) (maybeAttr name nul a); }])
+          o // (listToAttrs [{inherit name; value = op n.${name} (a.${name} or nul); }])
         ) a (attrNames n)
     ) {} list_of_attrs;
 
@@ -97,7 +156,7 @@ rec {
 
      Type:
        collect ::
-         (AttrSet -> Bool) -> AttrSet -> AttrSet
+         (AttrSet -> Bool) -> AttrSet -> [x]
 
      Example:
        collect isList { a = { b = ["b"]; }; c = [1]; }
@@ -117,7 +176,12 @@ rec {
 
 
   /* Utility function that creates a {name, value} pair as expected by
-     builtins.listToAttrs. */
+     builtins.listToAttrs.
+
+     Example:
+       nameValuePair "some" 6
+       => { name = "some"; value = 6; }
+  */
   nameValuePair = name: value: { inherit name value; };
 
 
@@ -132,7 +196,7 @@ rec {
        => { x = "x-foo"; y = "y-bar"; }
   */
   mapAttrs = f: set:
-    listToAttrs (map (attr: { name = attr; value = f attr (getAttr attr set); }) (attrNames set));
+    listToAttrs (map (attr: { name = attr; value = f attr set.${attr}; }) (attrNames set));
 
 
   /* Like `mapAttrs', but allows the name of each attribute to be
@@ -145,7 +209,7 @@ rec {
        => { foo_x = "bar-a"; foo_y = "bar-b"; }
   */
   mapAttrs' = f: set:
-    listToAttrs (map (attr: f attr (getAttr attr set)) (attrNames set));
+    listToAttrs (map (attr: f attr set.${attr}) (attrNames set));
 
 
   /* Call a function for each attribute in the given set and return
@@ -157,7 +221,7 @@ rec {
        => [ "xa" "yb" ]
   */
   mapAttrsToList = f: attrs:
-    map (name: f name (getAttr name attrs)) (attrNames attrs);
+    map (name: f name attrs.${name}) (attrNames attrs);
 
 
   /* Like `mapAttrs', except that it recursively applies itself to
@@ -218,35 +282,75 @@ rec {
     listToAttrs (map (n: nameValuePair n (f n)) names);
 
 
-  /* Check whether the argument is a derivation. */
+  /* Check whether the argument is a derivation. Any set with
+     { type = "derivation"; } counts as a derivation.
+
+     Example:
+       nixpkgs = import <nixpkgs> {}
+       isDerivation nixpkgs.ruby
+       => true
+       isDerivation "foobar"
+       => false
+  */
   isDerivation = x: isAttrs x && x ? type && x.type == "derivation";
 
+  /* Converts a store path to a fake derivation. */
+  toDerivation = path:
+    let
+      path' = builtins.storePath path;
+      res =
+        { type = "derivation";
+          name = builtins.unsafeDiscardStringContext (builtins.substring 33 (-1) (baseNameOf path'));
+          outPath = path';
+          outputs = [ "out" ];
+          out = res;
+          outputName = "out";
+        };
+    in res;
 
-  /* If the Boolean `cond' is true, return the attribute set `as',
-     otherwise an empty attribute set. */
+
+  /* If `cond' is true, return the attribute set `as',
+     otherwise an empty attribute set.
+
+     Example:
+       optionalAttrs (true) { my = "set"; }
+       => { my = "set"; }
+       optionalAttrs (false) { my = "set"; }
+       => { }
+  */
   optionalAttrs = cond: as: if cond then as else {};
 
 
   /* Merge sets of attributes and use the function f to merge attributes
-     values. */
+     values.
+
+     Example:
+       zipAttrsWithNames ["a"] (name: vs: vs) [{a = "x";} {a = "y"; b = "z";}]
+       => { a = ["x" "y"]; }
+  */
   zipAttrsWithNames = names: f: sets:
     listToAttrs (map (name: {
       inherit name;
       value = f name (catAttrs name sets);
     }) names);
 
-  # implentation note: Common names  appear multiple times in the list of
-  # names, hopefully this does not affect the system because the maximal
-  # laziness avoid computing twice the same expression and listToAttrs does
-  # not care about duplicated attribute names.
+  /* Implentation note: Common names  appear multiple times in the list of
+     names, hopefully this does not affect the system because the maximal
+     laziness avoid computing twice the same expression and listToAttrs does
+     not care about duplicated attribute names.
+
+     Example:
+       zipAttrsWith (name: values: values) [{a = "x";} {a = "y"; b = "z";}]
+       => { a = ["x" "y"]; b = ["z"] }
+  */
   zipAttrsWith = f: sets: zipAttrsWithNames (concatMap attrNames sets) f sets;
+  /* Like `zipAttrsWith' with `(name: values: value)' as the function.
 
+    Example:
+      zipAttrs [{a = "x";} {a = "y"; b = "z";}]
+      => { a = ["x" "y"]; b = ["z"] }
+  */
   zipAttrs = zipAttrsWith (name: values: values);
-
-  /* backward compatibility */
-  zipWithNames = zipAttrsWithNames;
-  zip = builtins.trace "lib.zip is deprecated, use lib.zipAttrsWith instead" zipAttrsWith;
-
 
   /* Does the same as the update operator '//' except that attributes are
      merged until the given pedicate is verified.  The predicate should
@@ -287,7 +391,7 @@ rec {
       );
     in f [] [rhs lhs];
 
-  /* A recursive variant of the update operator ‘//’.  The recusion
+  /* A recursive variant of the update operator ‘//’.  The recursion
      stops when one of the attribute values is not an attribute set,
      in which case the right hand side value takes precedence over the
      left hand side value.
@@ -311,6 +415,15 @@ rec {
       !(isAttrs lhs && isAttrs rhs)
     ) lhs rhs;
 
+  /* Returns true if the pattern is contained in the set. False otherwise.
+
+     FIXME(zimbatm): this example doesn't work !!!
+
+     Example:
+       sys = mkSystem { }
+       matchAttrs { cpu = { bits = 64; }; } sys
+       => true
+   */
   matchAttrs = pattern: attrs:
     fold or false (attrValues (zipAttrsWithNames (attrNames pattern) (n: values:
       let pat = head values; val = head (tail values); in
@@ -319,10 +432,40 @@ rec {
       else pat == val
     ) [pattern attrs]));
 
-  # override only the attributes that are already present in the old set
-  # useful for deep-overriding
-  overrideExisting = old: new:
-    old // listToAttrs (map (attr: nameValuePair attr (attrByPath [attr] (getAttr attr old) new)) (attrNames old));
+  /* Override only the attributes that are already present in the old set
+    useful for deep-overriding.
 
-  deepSeqAttrs = x: y: deepSeqList (attrValues x) y;
+    Example:
+      x = { a = { b = 4; c = 3; }; }
+      overrideExisting x { a = { b = 6; d = 2; }; }
+      => { a = { b = 6; d = 2; }; }
+  */
+  overrideExisting = old: new:
+    old // listToAttrs (map (attr: nameValuePair attr (attrByPath [attr] old.${attr} new)) (attrNames old));
+
+  /* Get a package output.
+     If no output is found, fallback to `.out` and then to the default.
+
+     Example:
+       getOutput "dev" pkgs.openssl
+       => "/nix/store/9rz8gxhzf8sw4kf2j2f1grr49w8zx5vj-openssl-1.0.1r-dev"
+  */
+  getOutput = output: pkg:
+    if pkg.outputUnspecified or false
+      then pkg.${output} or pkg.out or pkg
+      else pkg;
+
+  getBin = getOutput "bin";
+  getLib = getOutput "lib";
+  getDev = getOutput "dev";
+
+  /* Pick the outputs of packages to place in buildInputs */
+  chooseDevOutputs = drvs: builtins.map getDev drvs;
+
+  /*** deprecated stuff ***/
+
+  zipWithNames = zipAttrsWithNames;
+  zip = builtins.trace
+    "lib.zip is deprecated, use lib.zipAttrsWith instead" zipAttrsWith;
+
 }

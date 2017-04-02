@@ -7,12 +7,12 @@ stdenv.mkDerivation rec {
   name = "vboot_reference-${version}";
 
   src = fetchgit {
-    url = "http://git.chromium.org/git/chromiumos/platform/vboot_reference.git";
+    url = https://chromium.googlesource.com/chromiumos/platform/vboot_reference;
     rev = "refs/changes/${checkout}";
-    sha256 = "00qhwhh5ygrcfm9is8hrk1spqdvfs6aa744h10jbr03zics5bvac";
+    sha256 = "14d3a93ha5k4al4ib43nyn1ppx7kgb12xw6mkflhx8nxmx8827nc";
   };
 
-  buildInputs = [ pkgconfig openssl ] ++
+  buildInputs = [ pkgconfig openssl stdenv.cc.libc.static ] ++
                 (if libuuid == null
                  then []
                  else [ (stdenv.lib.overrideDerivation libuuid
@@ -31,7 +31,7 @@ stdenv.mkDerivation rec {
   '';
 
   installPhase = ''
-    ensureDir $out/bin
+    mkdir -p $out/bin
     cp build/cgpt/cgpt $out/bin
     cp build/utility/vbutil_kernel $out/bin
     cp build/utility/vbutil_key $out/bin

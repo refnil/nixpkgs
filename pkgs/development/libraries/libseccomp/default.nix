@@ -1,31 +1,30 @@
-{ stdenv, fetchurl, getopt, bash }:
+{ stdenv, fetchurl, getopt, makeWrapper }:
 
 stdenv.mkDerivation rec {
-  name    = "libseccomp-${version}";
-  version = "2.1.1";
+  name = "libseccomp-${version}";
+  version = "2.3.2";
 
   src = fetchurl {
-    url    = "mirror://sourceforge/libseccomp/libseccomp-${version}.tar.gz";
-    sha256 = "0744mjx5m3jl1hzz13zypivl88m0wn44mf5gsrd3yf3w80gc24l8";
+    url = "https://github.com/seccomp/libseccomp/releases/download/v${version}/libseccomp-${version}.tar.gz";
+    sha256 = "3ddc8c037956c0a5ac19664ece4194743f59e1ccd4adde848f4f0dae7f77bca1";
   };
 
-  # This fixes the check for 'getopt' to function appropriately.
-  # Additionally, this package can optionally include the kernel
-  # headers if they exist, or use its own inline copy of the source
-  # for talking to the seccomp filter - we opt to always use the
-  # inline copy
+  buildInputs = [ getopt makeWrapper ];
+
   patchPhase = ''
-    substituteInPlace ./configure --replace "/bin/bash" "${bash}/bin/bash"
-    substituteInPlace ./configure --replace "verify_deps getopt" ""
-    substituteInPlace ./configure --replace getopt ${getopt}/bin/getopt
-    substituteInPlace ./configure --replace 'opt_sysinc_seccomp="yes"' 'opt_sysinc_seccomp="no"'
+    patchShebangs .
   '';
 
-  meta = {
-    description = "high level library for the Linux Kernel seccomp filter";
-    homepage    = "http://sourceforge.net/projects/libseccomp";
-    license     = stdenv.lib.licenses.lgpl2;
-    platforms   = stdenv.lib.platforms.linux;
-    maintainers = [ stdenv.lib.maintainers.thoughtpolice ];
+  postInstall = ''
+    wrapProgram $out/bin/scmp_sys_resolver --prefix LD_LIBRARY_PATH ":" $out/lib
+  '';
+
+  meta = with stdenv.lib; {
+    description = "High level library for the Linux Kernel seccomp filter";
+    homepage    = "https://github.com/seccomp/libseccomp";
+    license     = licenses.lgpl21;
+    platforms   = platforms.linux;
+    maintainers = with maintainers; [ thoughtpolice wkennington ];
   };
 }
+

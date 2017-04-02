@@ -1,12 +1,12 @@
 { stdenv, fetchurl, unzip }:
 
 stdenv.mkDerivation rec {
-  name = "ubuntu-font-family-0.80";
+  name = "ubuntu-font-family-0.83";
   buildInputs = [unzip];
 
   src = fetchurl {
     url = "http://font.ubuntu.com/download/${name}.zip";
-    sha256 = "0k4f548riq23gmw4zhn30qqkcpaj4g2ab5rbc3lflfxwkc4p0w8h";
+    sha256 = "0hjvq2x758dx0sfwqhzflns0ns035qm7h6ygskbx1svzg517sva5";
   };
 
   installPhase =
@@ -22,7 +22,7 @@ stdenv.mkDerivation rec {
     contemporary style and contains characteristics unique to
     the Ubuntu brand that convey a precise, reliable and free attitude.";
     homepage = http://font.ubuntu.com/;
-    license = "free";
+    license = stdenv.lib.licenses.free;
     platforms = stdenv.lib.platforms.all;
     maintainers = [ stdenv.lib.maintainers.antono ];
   };

@@ -1,32 +1,45 @@
 { stdenv, fetchurl, pam, pkgconfig, libxcb, glib, libXdmcp, itstool, libxml2
-, intltool, x11, libxklavier, libgcrypt, dbus/*for tests*/ }:
+, intltool, xlibsWrapper, libxklavier, libgcrypt, libaudit, gcc6
+, qt4 ? null
+, withQt5 ? false, qtbase
+}:
+
+with stdenv.lib;
 
 let
-  ver_branch = "1.8";
-  version = "1.8.6";
+  ver_branch = "1.22";
+  version = "1.22.0";
 in
 stdenv.mkDerivation rec {
   name = "lightdm-${version}";
 
   src = fetchurl {
     url = "${meta.homepage}/${ver_branch}/${version}/+download/${name}.tar.xz";
-    sha256 = "17ivc0c4dbnc0fzd581j53cn6hdav34zz2hswjzy8aczbpk605qi";
+    sha256 = "0a5bvfl2h7r873al6q7c819h0kg564k9fh51rl6489z6lyvazfg4";
   };
 
-  patches = [ ./lightdm.patch ];
-  patchFlags = "-p1";
-
+  nativeBuildInputs = [ pkgconfig intltool ];
   buildInputs = [
-    pkgconfig pam libxcb glib libXdmcp itstool libxml2 intltool libxklavier libgcrypt
-  ] ++ stdenv.lib.optional doCheck dbus.daemon;
+    pam libxcb glib libXdmcp itstool libxml2 libxklavier libgcrypt
+    qt4 libaudit gcc6
+  ] ++ optional withQt5 qtbase;
 
-  configureFlags = [ "--enable-liblightdm-gobject" "--localstatedir=/var" ];
+  configureFlags = [
+    "--localstatedir=/var"
+    "--sysconfdir=/etc"
+    "--disable-tests"
+  ] ++ optional (qt4 != null) "--enable-liblightdm-qt"
+    ++ optional withQt5 "--enable-liblightdm-qt5";
 
-  doCheck = false; # some tests fail, don't know why
+  installFlags = [
+    "sysconfdir=\${out}/etc"
+    "localstatedir=\${TMPDIR}"
+  ];
 
   meta = {
-    homepage = http://launchpad.net/lightdm;
-    platforms = stdenv.lib.platforms.linux;
-    maintainers = [ stdenv.lib.maintainers.ocharles ];
+    homepage = https://launchpad.net/lightdm;
+    platforms = platforms.linux;
+    license = licenses.gpl3;
+    maintainers = with maintainers; [ ocharles wkennington ];
   };
 }

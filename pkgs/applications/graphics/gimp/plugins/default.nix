@@ -5,10 +5,8 @@
 
 { pkgs, gimp }:
 let
-  inherit (pkgs) stdenv fetchurl pkgconfig glib;
-  targetPluginDir = "$out/${gimp.name}-plugins";
-  targetScriptDir = "$out/${gimp.name}-scripts";
-  prefix = "plugin-gimp-";
+  inherit (pkgs) stdenv fetchurl pkgconfig glib fetchFromGitHub;
+  inherit (gimp) targetPluginDir targetScriptDir;
 
   pluginDerivation = a: stdenv.mkDerivation ({
     prePhases = "extraLib";
@@ -52,19 +50,20 @@ rec {
     name = "gap-2.6.0";
     buildInputs = [ gimp pkgconfig glib pkgs.intltool gimp.gtk ] ++ gimp.nativeBuildInputs;
     src = fetchurl {
-      url = ftp://ftp.gimp.org/pub/gimp/plug-ins/v2.6/gap/gimp-gap-2.6.0.tar.bz2;
+      url = http://ftp.gimp.org/pub/gimp/plug-ins/v2.6/gap/gimp-gap-2.6.0.tar.bz2;
       sha256 = "1jic7ixcmsn4kx2cn32nc5087rk6g8xsrz022xy11yfmgvhzb0ql";
     };
     patchPhase = ''
       sed -e 's,^\(GIMP_PLUGIN_DIR=\).*,\1'"$out/${gimp.name}-plugins", \
        -e 's,^\(GIMP_DATA_DIR=\).*,\1'"$out/share/${gimp.name}", -i configure
     '';
-    meta = { 
+    hardeningDisable = [ "format" ];
+    meta = with stdenv.lib; {
       description = "The GIMP Animation Package";
       homepage = http://www.gimp.org;
       # The main code is given in GPLv3, but it has ffmpeg in it, and I think ffmpeg license
       # falls inside "free".
-      license = [ "GPLv3" "free" ];
+      license = with licenses; [ gpl3 free ];
     };
   };
 
@@ -118,6 +117,25 @@ rec {
     ";
   };
 
+  resynthesizer2 = pluginDerivation {
+    /* menu:
+      Filters/Map/Resynthesize
+      Filters/Enhance/Smart enlarge
+      Filters/Enhance/Smart sharpen
+      Filters/Enhance/Smart remove selection
+    */
+    name = "resynthesizer-2.0.1";
+    buildInputs = [ gimp pkgs.fftw pkgs.autoreconfHook ]
+      ++ gimp.nativeBuildInputs;
+    makeFlags = "GIMP_LIBDIR=$out/lib/gimp/2.0/";
+    src = fetchFromGitHub {
+      owner = "bootchk";
+      repo = "resynthesizer";
+      rev = "2.0.1";
+      sha256 = "1d214s0jsqxz83l9dd8vhnz3siw9fyw7xdhhir25ra7jiwxc99hd";
+    };
+  };
+
   texturize = pluginDerivation {
     name = "texturize-2.1";
     buildInputs = [ gimp ] ++ gimp.nativeBuildInputs;
@@ -159,31 +177,17 @@ rec {
   };
 
   gmic =
-  let
-    imagemagick = pkgs.imagemagickBig; # maybe the non big version is enough?
-  in pluginDerivation rec {
-      name = "gmic-1.5.7.2";
-      buildInputs = [imagemagick pkgconfig pkgs.fftw gimp] ++ gimp.nativeBuildInputs;
-      src = fetchurl {
-        url = mirror://sourceforge/gmic/gmic_1.5.7.2.tar.gz;
-        sha256 = "1cpbxb3p2c8bcv2cbr150whapzjc7w09i3jza0z9x3xj8c0vdyv1";
-      };
-      preConfigure = ''
-        export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE -I${imagemagick}/include/ImageMagick"
-      '';
+    pluginDerivation rec {
+      inherit (pkgs.gmic) name src meta;
+
+      nativeBuildInputs = [ pkgconfig ];
+      buildInputs = [ pkgs.fftw pkgs.opencv gimp ] ++ gimp.nativeBuildInputs;
+
       sourceRoot = "${name}/src";
-      buildPhase = "make gimp";
+
+      buildFlags = "gimp";
+
       installPhase = "installPlugins gmic_gimp";
-      meta = { 
-        description = "script language for image processing which comes with its open-source interpreter";
-        homepage = http://gmic.sourceforge.net/repository.shtml;
-        license = "CeCILL FREE SOFTWARE LICENSE AGREEMENT";
-        /*
-        The purpose of this Free Software license agreement is to grant users
-        the right to modify and redistribute the software governed by this
-        license within the framework of an open source distribution model.
-        [ ... ] */
-      };
   };
 
   # this is more than a gimp plugin !
@@ -197,7 +201,7 @@ rec {
       # --enable-dst-correction - enable DST correction for file timestamps.
       # --enable-contrast - enable the contrast setting option.
       # --enable-interp-none: enable 'None' interpolation (mostly for debugging).
-      # --with-lensfun: use the lensfun library - experimental feature, read this before using it. 
+      # --with-lensfun: use the lensfun library - experimental feature, read this before using it.
       # --with-prefix=PREFIX - use also PREFIX as an input prefix for the build
       # --with-dosprefix=PREFIX - PREFIX in the the prefix in dos format (needed only for ms-window
     configureFlags = "--enable-extras --enable-dst-correction --enable-contrast";
@@ -214,21 +218,20 @@ rec {
   };
 
   gimplensfun = pluginDerivation rec {
-    name = "gimplensfun-0.1.1";
+    version = "0.2.4";
+    name = "gimplensfun-${version}";
 
-    src = fetchurl {
-      url = "http://lensfun.sebastiankraft.net/${name}.tar.gz";
-      sha256 = "0kr296n4k7gsjqg1abmvpysxi88iq5wrzdpcg7vm7l1ifvbs972q";
+    src = fetchFromGitHub {
+      owner = "seebk";
+      repo = "GIMP-Lensfun";
+      rev = version;
+      sha256 = "0zlmp9v732qmzj083mnk5z421s57mnckmpjhiw890wmmwzj2lhxz";
     };
-
-    patchPhase = '' sed -i Makefile -e's|/usr/bin/g++|g++|' '';
 
     buildInputs = [ gimp pkgconfig glib gimp.gtk pkgs.lensfun pkgs.exiv2 ];
 
     installPhase = "
-      installPlugins gimplensfun
-      mkdir -p $out/bin
-      cp gimplensfun $out/bin
+      installPlugins gimp-lensfun
     ";
 
     meta = {
@@ -237,14 +240,14 @@ rec {
       homepage = http://lensfun.sebastiankraft.net/;
 
       license = stdenv.lib.licenses.gpl3Plus;
-      maintainers = [ stdenv.lib.maintainers.ludo ];
+      maintainers = [ ];
       platforms = stdenv.lib.platforms.gnu;
     };
   };
 
   /* =============== simple script files ==================== */
 
-  # also have a look at enblendenfuse in all-packages.nix
+  # also have a look at enblend-enfuse in all-packages.nix
   exposureBlend = scriptDerivation {
     name = "exposure-blend";
     src = fetchurl {

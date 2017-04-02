@@ -1,7 +1,10 @@
 # Miscellaneous small tests that don't warrant their own VM run.
 
-import ./make-test.nix {
+import ./make-test.nix ({ pkgs, ...} : {
   name = "misc";
+  meta = with pkgs.stdenv.lib.maintainers; {
+    maintainers = [ eelco chaoflow ];
+  };
 
   machine =
     { config, lib, pkgs, ... }:
@@ -12,15 +15,18 @@ import ./make-test.nix {
       services.nixosManual.enable = mkOverride 0 true;
       systemd.tmpfiles.rules = [ "d /tmp 1777 root root 10d" ];
       fileSystems = mkVMOverride { "/tmp2" =
-        { device = "none";
-          fsType = "tmpfs";
-          options = "mode=1777,noauto";
+        { fsType = "tmpfs";
+          options = [ "mode=1777" "noauto" ];
         };
       };
       systemd.automounts = singleton
         { wantedBy = [ "multi-user.target" ];
           where = "/tmp2";
         };
+      users.users.sybil = { isNormalUser = true; group = "wheel"; };
+      security.sudo = { enable = true; wheelNeedsPassword = false; };
+      security.hideProcessInformation = true;
+      users.users.alice = { isNormalUser = true; extraGroups = [ "proc" ]; };
     };
 
   testScript =
@@ -78,6 +84,7 @@ import ./make-test.nix {
       };
 
       # Test whether systemd-udevd automatically loads modules for our hardware.
+      $machine->succeed("systemctl start systemd-udev-settle.service");
       subtest "udev-auto-load", sub {
           $machine->waitForUnit('systemd-udev-settle.service');
           $machine->succeed('lsmod | grep psmouse');
@@ -103,6 +110,21 @@ import ./make-test.nix {
       subtest "shell-vars", sub {
           $machine->succeed('[ -n "$NIX_PATH" ]');
       };
-    '';
 
-}
+      subtest "nix-db", sub {
+          $machine->succeed("nix-store -qR /run/current-system | grep nixos-");
+      };
+
+      # Test sudo
+      subtest "sudo", sub {
+          $machine->succeed("su - sybil -c 'sudo true'");
+      };
+
+      # Test hidepid
+      subtest "hidepid", sub {
+          $machine->succeed("grep -Fq hidepid=2 /etc/mtab");
+          $machine->succeed("[ `su - sybil -c 'pgrep -c -u root'` = 0 ]");
+          $machine->succeed("[ `su - alice -c 'pgrep -c -u root'` != 0 ]");
+      };
+    '';
+})

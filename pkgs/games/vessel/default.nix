@@ -1,4 +1,4 @@
-{ stdenv, requireFile, SDL, pulseaudio, alsaLib }:
+{ stdenv, requireFile, SDL, libpulseaudio, alsaLib }:
 
 stdenv.mkDerivation rec {
   name = "vessel-12082012";
@@ -15,17 +15,17 @@ stdenv.mkDerivation rec {
       message = goBuyItNow;
       name = "${name}-bin";
       sha256 = "1vpwcrjiln2mx43h7ib3jnccyr3chk7a5x2bw9kb4lw8ycygvg96";
-    } else throw "unsupported platform ${stdenv.s:ystem} only i686-linux supported for now.";
+    } else throw "unsupported platform ${stdenv.system} only i686-linux supported for now.";
 
   phases = "installPhase";
   ld_preload = ./isatty.c;
 
-  libPath = stdenv.lib.makeLibraryPath [ stdenv.gcc.gcc stdenv.gcc.libc ] 
-    + ":" + stdenv.lib.makeLibraryPath [ SDL pulseaudio alsaLib ] ;
+  libPath = stdenv.lib.makeLibraryPath [ stdenv.cc.cc stdenv.cc.libc ] 
+    + ":" + stdenv.lib.makeLibraryPath [ SDL libpulseaudio alsaLib ] ;
 
   installPhase = ''
-    ensureDir $out/libexec/strangeloop/vessel/
-    ensureDir $out/bin
+    mkdir -p $out/libexec/strangeloop/vessel/
+    mkdir -p $out/bin
 
     # allow scripting of the mojoinstaller
     gcc -fPIC -shared -o isatty.so $ld_preload
@@ -35,7 +35,7 @@ stdenv.mkDerivation rec {
     echo @@@ 
 
     # if we call ld.so $(bin) we don't need to set the ELF interpreter, and save a patchelf step. 
-    LD_PRELOAD=./isatty.so $(cat $NIX_GCC/nix-support/dynamic-linker) $src << IM_A_BOT
+    LD_PRELOAD=./isatty.so $(cat $NIX_CC/nix-support/dynamic-linker) $src << IM_A_BOT
     n
     $out/libexec/strangeloop/vessel/
     IM_A_BOT
@@ -47,7 +47,7 @@ stdenv.mkDerivation rec {
     # props to Ethan Lee (the Vessel porter) for understanding
     # how $ORIGIN works in rpath. There is hope for humanity. 
     patchelf \
-      --interpreter "$(cat $NIX_GCC/nix-support/dynamic-linker)" \
+      --interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" \
       --set-rpath $libPath:$out/libexec/strangeloop/vessel/x86/ \
       $out/libexec/strangeloop/vessel/x86/vessel.x86
 
@@ -67,7 +67,7 @@ stdenv.mkDerivation rec {
     chmod +x $out/bin/Vessel
   '';
 
-  meta = {
+  meta = with stdenv.lib; {
     description = "A fluid physics based puzzle game";
     longDescription = ''
       Living liquid machines have overrun this world of unstoppable progress,
@@ -76,8 +76,8 @@ stdenv.mkDerivation rec {
       to life, and all the consequences that ensue.
     '';
     homepage = http://www.strangeloopgames.com;
-    license = [ "unfree" ];
-    maintainers = with stdenv.lib.maintainers; [ jcumming ];
+    license = licenses.unfree;
+    maintainers = with maintainers; [ jcumming ];
   };
 
 }

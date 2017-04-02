@@ -14,6 +14,10 @@ stdenv.mkDerivation {
     makeFlags = "TREE=\$(out) MANTREE=\$(TREE)/share/man CC=${stdenv.cross.config}-gcc";
   };
 
+  preBuild = ''
+    sed -e "s@/bin/mv@$(type -P mv)@" -i replace.h
+  '';
+
   preInstall = "mkdir -p \$out/share/man";
   postInstall = "mv \$out/bin/replace \$out/bin/replace-literal";
 
@@ -22,5 +26,6 @@ stdenv.mkDerivation {
   meta = {
     homepage = http://replace.richardlloyd.org.uk/;
     description = "A tool to replace verbatim strings";
+    platforms = stdenv.lib.platforms.unix;
   };
 }

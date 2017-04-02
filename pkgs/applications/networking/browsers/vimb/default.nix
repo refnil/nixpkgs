@@ -1,28 +1,23 @@
-{ stdenv, fetchurl, pkgconfig, libsoup, webkit, gtk, glib_networking
+{ stdenv, fetchurl, pkgconfig, libsoup, webkit, gtk2, glib_networking
 , gsettings_desktop_schemas, makeWrapper
 }:
 
 stdenv.mkDerivation rec {
   name = "vimb-${version}";
-  version = "2.4";
+  version = "2.11";
 
   src = fetchurl {
     url = "https://github.com/fanglingsu/vimb/archive/${version}.tar.gz";
-    sha256 = "167ilbsd4y4zl493k6g4j5v85y784qz8z7qflzd1ccsjjznv7fm8";
+    sha256 = "0d9rankzgmnx5423pyfkbxy0qxw3ck2vrdjdnlhddy15wkk87i9f";
   };
 
-  # Nixos default ca bundle
-  patchPhase = ''
-    sed -i s,/etc/ssl/certs/ca-certificates.crt,/etc/ssl/certs/ca-bundle.crt, src/setting.c
-  '';
-
-  buildInputs = [ makeWrapper gtk libsoup pkgconfig webkit gsettings_desktop_schemas ];
+  buildInputs = [ makeWrapper gtk2 libsoup pkgconfig webkit gsettings_desktop_schemas ];
 
   makeFlags = [ "PREFIX=$(out)" ];
 
   preFixup = ''
     wrapProgram "$out/bin/vimb" \
-      --prefix GIO_EXTRA_MODULES : "${glib_networking}/lib/gio/modules" \
+      --prefix GIO_EXTRA_MODULES : "${glib_networking.out}/lib/gio/modules" \
       --prefix XDG_DATA_DIRS : "$GSETTINGS_SCHEMAS_PATH"
   '';
 

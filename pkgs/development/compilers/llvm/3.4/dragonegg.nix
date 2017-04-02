@@ -1,4 +1,4 @@
-{stdenv, fetch, fetchpatch, llvm, gmp, mpfr, mpc, ncurses, zlib, version}:
+{stdenv, fetch, fetchpatch, llvm, gmp, mpfr, libmpc, ncurses, zlib, version}:
 
 stdenv.mkDerivation rec {
   name = "dragonegg-${version}";
@@ -16,7 +16,7 @@ stdenv.mkDerivation rec {
   # The gcc the plugin will be built for (the same used building dragonegg)
   GCC = "gcc";
 
-  buildInputs = [ llvm gmp mpfr mpc ncurses zlib ];
+  buildInputs = [ llvm gmp mpfr libmpc ncurses zlib ];
 
   installPhase = ''
     mkdir -p $out/lib $out/share/doc/${name}
@@ -28,7 +28,8 @@ stdenv.mkDerivation rec {
     homepage = http://dragonegg.llvm.org/;
     description = "gcc plugin that replaces gcc's optimizers and code generators by those in LLVM";
     license = stdenv.lib.licenses.gpl2Plus;
-    maintainers = with stdenv.lib.maintainers; [viric shlevy];
+    maintainers = with stdenv.lib.maintainers; [viric];
     platforms = with stdenv.lib.platforms; linux;
+    broken = true;
   };
 }

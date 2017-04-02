@@ -2,24 +2,25 @@
 , clutter_gtk, libsoup /*, libmemphis */ }:
 
 stdenv.mkDerivation rec {
-  name = "libchamplain-0.12.2";
+  major = "0.12";
+  version = "${major}.14";
+  name = "libchamplain-${version}";
 
   src = fetchurl {
-    url = mirror://gnome/sources/libchamplain/0.12/libchamplain-0.12.2.tar.xz;
-    sha256 = "0bkyzm378gh6qs7grr2vgzrl4z1pi99yysy8iwzdqzs0bs3rfgyj";
+    url = "mirror://gnome/sources/libchamplain/${major}/${name}.tar.xz";
+    sha256 = "13snnka1jqc5qrgij8bm22xy02pncf3dn5ij3jh4rrpzq7g1sqpi";
   };
 
   buildInputs = [ pkgconfig ];
 
   propagatedBuildInputs = [ glib gtk3 cairo clutter_gtk sqlite libsoup ];
 
-  configureFlags = [ "--disable-introspection" ]; # not needed anywhere AFAIK
-
-  meta = {
+  meta = with stdenv.lib; {
+    inherit version;
     homepage = http://projects.gnome.org/libchamplain/;
-    license = stdenv.lib.licenses.lgpl2Plus;
+    license = licenses.lgpl2Plus;
 
-    description = "libchamplain, a C library providing a ClutterActor to display maps";
+    description = "C library providing a ClutterActor to display maps";
 
     longDescription =
       '' libchamplain is a C library providing a ClutterActor to display
@@ -30,6 +31,6 @@ stdenv.mkDerivation rec {
       '';
 
      maintainers = [ ];
-     platforms = stdenv.lib.platforms.gnu;  # arbitrary choice
+     platforms = platforms.gnu;  # arbitrary choice
   };
 }

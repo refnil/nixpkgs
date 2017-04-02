@@ -1,25 +1,37 @@
-{ stdenv, fetchurl, qt4, gnuradio, boost, gnuradio-osmosdr
+{ stdenv, fetchFromGitHub, qt4, qmake4Hook, gnuradio, boost, gnuradio-osmosdr
 # drivers (optional):
-, rtl-sdr
-, pulseaudioSupport ? true, pulseaudio
+, rtl-sdr, hackrf
+, pulseaudioSupport ? true, libpulseaudio
 }:
 
-assert pulseaudioSupport -> pulseaudio != null;
+assert pulseaudioSupport -> libpulseaudio != null;
 
 stdenv.mkDerivation rec {
   name = "gqrx-${version}";
-  version = "2.2.0";
+  version = "2.5.3";
 
-  src = fetchurl {
-    url = "mirror://sourceforge/project/gqrx/${version}/${name}-src.tar.gz";
-    sha256 = "15ncx2shh43skph7sj3jvmkls9cbbbysld49c8xd23fhdsxanj9x";
+  src = fetchFromGitHub {
+    owner = "csete";
+    repo = "gqrx";
+    rev = "v${version}";
+    sha256 = "02pavd1kc0gsnrl18bfa01r2f3j4j05zly4a8zwss9yrsgf8432x";
   };
 
-  buildInputs = [
-    qt4 gnuradio boost gnuradio-osmosdr rtl-sdr
-  ] ++ stdenv.lib.optionals pulseaudioSupport [ pulseaudio ];
+  nativeBuildInputs = [ qmake4Hook ];
 
-  configurePhase = ''qmake PREFIX="$out"'';
+  buildInputs = [
+    qt4 gnuradio boost gnuradio-osmosdr rtl-sdr hackrf
+  ] ++ stdenv.lib.optionals pulseaudioSupport [ libpulseaudio ];
+
+  enableParallelBuilding = true;
+
+  postInstall = ''
+    mkdir -p "$out/share/applications"
+    mkdir -p "$out/share/icons"
+
+    cp gqrx.desktop "$out/share/applications/"
+    cp resources/icons/gqrx.svg "$out/share/icons/"
+  '';
 
   meta = with stdenv.lib; {
     description = "Software defined radio (SDR) receiver";
@@ -34,6 +46,6 @@ stdenv.mkDerivation rec {
     # it's currently unknown which version of the BSD license that is.
     license = licenses.gpl3Plus;
     platforms = platforms.linux;  # should work on Darwin / OS X too
-    maintainers = [ maintainers.bjornfor ];
+    maintainers = with maintainers; [ bjornfor the-kenny fpletz ];
   };
 }

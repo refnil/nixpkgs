@@ -13,13 +13,15 @@ stdenv.mkDerivation rec {
 
   buildInputs = [ zlib mesa SDL SDL_ttf SDL_mixer SDL_image guile gettext ];
 
+  hardeningDisable = [ "format" ];
+
   CFLAGS = optionalString debug "-g -O0";
   CXXFLAGS = CFLAGS;
   dontStrip = debug;
   postUnpack = optionalString debug
     "mkdir -p $out/src; cp -R * $out/src ; cd $out/src";
 
-  NIX_CFLAGS_COMPILE = "-iquote ${SDL}/include/SDL";
+  NIX_CFLAGS_COMPILE = "-iquote ${SDL.dev}/include/SDL";
   configureFlags = optionalString debug "--enable-debug";
 
   patchPhase = ''
@@ -29,5 +31,6 @@ stdenv.mkDerivation rec {
   meta = {
     homepage = http://trackballs.sourceforge.net/;
     description = "3D Marble Madness clone";
+    platforms = stdenv.lib.platforms.linux;
   };
 }

@@ -33,16 +33,28 @@ in
   };
 
   config = mkIf cfg.enable {
+    environment.systemPackages = [ pkgs.radicale ];
 
-    environment.systemPackages = [ pkgs.pythonPackages.radicale ];
+    users.extraUsers = singleton
+      { name = "radicale";
+        uid = config.ids.uids.radicale;
+        description = "radicale user";
+        home = "/var/lib/radicale";
+        createHome = true;
+      };
 
-    jobs.radicale = {
+    users.extraGroups = singleton
+      { name = "radicale";
+        gid = config.ids.gids.radicale;
+      };
+
+    systemd.services.radicale = {
       description = "A Simple Calendar and Contact Server";
-      startOn = "started network-interfaces";
-      exec = "${pkgs.pythonPackages.radicale}/bin/radicale -C ${confFile} -d";
-      daemonType = "fork";
+      after = [ "network.target" ];
+      wantedBy = [ "multi-user.target" ];
+      script = "${pkgs.radicale}/bin/radicale -C ${confFile} -f";
+      serviceConfig.User = "radicale";
+      serviceConfig.Group = "radicale";
     };
-
   };
-
 }

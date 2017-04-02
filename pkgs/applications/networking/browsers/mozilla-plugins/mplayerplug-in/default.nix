@@ -8,9 +8,6 @@ stdenv.mkDerivation rec {
     sha256 = "0zkvqrzibrbljiccvz3rhbmgifxadlrfjylqpz48jnjx9kggynms";
   };
 
-  patches =
-    stdenv.lib.optional (browser ? isFirefox3Like) ./icecat3-idldir.patch;
-
   postConfigure =
     (if browser ? isFirefox3Like then ''
        # Cause a rebuild of these file from the IDL file, needed for GNU IceCat 3
@@ -31,9 +28,9 @@ stdenv.mkDerivation rec {
     mozillaPlugin = "/lib/mozilla/plugins";
   };
 
-  meta = {
+  meta = with stdenv.lib; {
     description = "A browser plugin that uses mplayer to play digital media from websites";
     homepage = http://mplayerplug-in.sourceforge.net/;
-    license = [ "GPLv2+" "LGPLv2+" "MPLv1+" ];
+    license = with licenses; [ gpl2Plus lgpl2Plus "MPLv1+" ];
   };
 }

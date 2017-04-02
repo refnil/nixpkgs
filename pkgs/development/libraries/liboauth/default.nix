@@ -1,15 +1,24 @@
-{ fetchurl, stdenv, nss, openssl, pkgconfig }:
+{ fetchurl, stdenv, nss, nspr, pkgconfig }:
 
 
 stdenv.mkDerivation rec {
-  name = "liboauth-1.0.2";
+  name = "liboauth-1.0.3";
 
   src = fetchurl {
     url = "mirror://sourceforge/liboauth/${name}.tar.gz";
-    sha256 = "1qs58yzydw20dmzvx22i541w641kwd6ja80s9na1az32n1krh6zv";
+    sha256 = "07w1aq8y8wld43wmbk2q8134p3bfkp2vma78mmsfgw2jn1bh3xhd";
   };
 
-  buildInputs = [ nss openssl ];
+  nativeBuildInputs = [ pkgconfig ];
+
+  propagatedBuildInputs = [ nss nspr ];
+
+  configureFlags = [ "--enable-nss" ];
+
+  postInstall = ''
+    substituteInPlace $out/lib/liboauth.la \
+      --replace "-lnss3" "-L${nss.out}/lib -lnss3"
+  '';
 
   meta = with stdenv.lib; {
     platforms = platforms.linux;

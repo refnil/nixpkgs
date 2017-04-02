@@ -1,18 +1,18 @@
-{ stdenv, stdenvAdapters, gccApple, fetchFromGitHub, ncurses, gettext,
-  pkgconfig, cscope, python, ruby, tcl, perl, luajit
+{ stdenv, fetchFromGitHub, ncurses, gettext
+, pkgconfig, cscope, python, ruby, tcl, perl, luajit
+, darwin
 }:
 
-let inherit (stdenvAdapters.overrideGCC stdenv gccApple) mkDerivation;
-in mkDerivation rec {
+stdenv.mkDerivation rec {
   name = "macvim-${version}";
 
-  version = "7.4.355";
+  version = "7.4.909";
 
   src = fetchFromGitHub {
-    owner = "genoma";
+    owner = "macvim-dev";
     repo = "macvim";
-    rev = "c18a61f9723565664ffc2eda9179e96c95860e25";
-    sha256 = "190bngg8m4bwqcia7w24gn7mmqkhk0mavxy81ziwysam1f652ymf";
+    rev = "75aa7774645adb586ab9010803773bd80e659254";
+    sha256 = "0k04jimbms6zffh8i8fjm2y51q01m5kga2n4djipd3pxij1qy89y";
   };
 
   enableParallelBuilding = true;
@@ -46,6 +46,7 @@ in mkDerivation rec {
       "--enable-perlinterp=dynamic"
       "--enable-rubyinterp=dynamic"
       "--enable-tclinterp=yes"
+      "--without-local-dir"
       "--with-luajit"
       "--with-lua-prefix=${luajit}"
       "--with-ruby-command=${ruby}/bin/ruby"
@@ -54,16 +55,32 @@ in mkDerivation rec {
       "--with-compiledby=Nix"
   ];
 
+  makeFlags = ''PREFIX=$(out) CPPFLAGS="-Wno-error"'';
+
+  # This is unfortunate, but we need to use the same compiler as XCode,
+  # but XCode doesn't provide a way to configure the compiler.
+  #
+  # If you're willing to modify the system files, you can do this:
+  #   http://hamelot.co.uk/programming/add-gcc-compiler-to-xcode-6/
+  #
+  # But we don't have that option.
   preConfigure = ''
+    CC=/usr/bin/clang
+
     DEV_DIR=$(/usr/bin/xcode-select -print-path)/Platforms/MacOSX.platform/Developer
     configureFlagsArray+=(
       "--with-developer-dir=$DEV_DIR"
     )
   '';
 
+  postConfigure = ''
+    substituteInPlace src/auto/config.mk --replace "PERL_CFLAGS	=" "PERL_CFLAGS	= -I${darwin.libutil}/include"
+  '';
+
   postInstall = ''
-    ensureDir $out/Applications
+    mkdir -p $out/Applications
     cp -r src/MacVim/build/Release/MacVim.app $out/Applications
+    rm -rf $out/MacVim.app
 
     rm $out/bin/{Vimdiff,Vimtutor,Vim,ex,rVim,rview,view}
 
@@ -87,6 +104,7 @@ in mkDerivation rec {
   meta = with stdenv.lib; {
     description = "Vim - the text editor - for Mac OS X";
     homepage    = https://github.com/b4winckler/macvim;
+    license = licenses.vim;
     maintainers = with maintainers; [ cstrahan ];
     platforms   = platforms.darwin;
   };

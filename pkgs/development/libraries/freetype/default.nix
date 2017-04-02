@@ -1,72 +1,73 @@
-{ stdenv, fetchurl, gnumake
-  # FreeType supports sub-pixel rendering.  This is patented by
-  # Microsoft, so it is disabled by default.  This option allows it to
-  # be enabled.  See http://www.freetype.org/patents.html.
-, useEncumberedCode ? false
-, useInfinality ? true
+{
+  stdenv, lib, fetchurl, copyPathsToStore,
+  pkgconfig, which,
+  zlib, bzip2, libpng, gnumake, glib,
+
+  # FreeType supports LCD filtering (colloquially referred to as sub-pixel rendering).
+  # LCD filtering is also known as ClearType and covered by several Microsoft patents.
+  # This option allows it to be disabled. See http://www.freetype.org/patents.html.
+  useEncumberedCode ? true,
 }:
 
-assert !(useEncumberedCode && useInfinality); # probably wouldn't make sense
-
 let
+  inherit (stdenv.lib) optional optionals optionalString;
+  version = "2.7.1"; name = "freetype-" + version;
 
-  version = "2.4.12";
+in stdenv.mkDerivation {
+  inherit name;
 
-in
-
-stdenv.mkDerivation rec {
-  name = "freetype-${version}";
-
-  src = fetchurl {
-    url = "mirror://sourceforge/freetype/${name}.tar.bz2";
-    sha256 = "10akr2c37iv9y7fkgwp2szgwjyl2g6qmk9z1m596iaw9cr41g2m7";
+  meta = with stdenv.lib; {
+    description = "A font rendering engine";
+    longDescription = ''
+      FreeType is a portable and efficient library for rendering fonts. It
+      supports TrueType, Type 1, CFF fonts, and WOFF, PCF, FNT, BDF and PFR
+      fonts. It has a bytecode interpreter and has an automatic hinter called
+      autofit which can be used instead of hinting instructions included in
+      fonts.
+    '';
+    homepage = https://www.freetype.org/;
+    license = licenses.gpl2Plus; # or the FreeType License (BSD + advertising clause)
+    platforms = platforms.all;
+    maintainers = with maintainers; [ ttuegel ];
   };
 
-  infinality_patch =
-    if useInfinality then fetchurl {
-      url = http://www.infinality.net/fedora/linux/zips/freetype-infinality-2.4.12-20130514_01-x86_64.tar.bz2;
-      sha256 = "1lg2nzvxmwzwdfhxranw8iyflhr72cw9p11rkpgq1scxbp37668m";
-    } else null;
+  src = fetchurl {
+    url = "mirror://savannah/freetype/${name}.tar.bz2";
+    sha256 = "121gm15ayfg3rglby8ifh8384mcjb9dhmx9j40zl7yszw72b4frs";
+  };
 
-  configureFlags = "--disable-static";
+  propagatedBuildInputs = [ zlib bzip2 libpng ]; # needed when linking against freetype
+  # dependence on harfbuzz is looser than the reverse dependence
+  nativeBuildInputs = [ pkgconfig which ]
+    # FreeType requires GNU Make, which is not part of stdenv on FreeBSD.
+    ++ optional (!stdenv.isLinux) gnumake;
 
-  NIX_CFLAGS_COMPILE = with stdenv.lib;
-    " -fno-strict-aliasing" # from Gentoo, see https://bugzilla.redhat.com/show_bug.cgi?id=506840
-    + optionalString useEncumberedCode " -DFT_CONFIG_OPTION_SUBPIXEL_RENDERING=1"
-    + optionalString useInfinality " -DTT_CONFIG_OPTION_SUBPIXEL_HINTING=1";
+  patches =
+    [
+      ./pcf-introduce-driver.patch
+      ./pcf-config-long-family-names.patch
+      ./disable-pcf-long-family-names.patch
+      ./enable-table-validation.patch
+    ] ++
+    optional useEncumberedCode ./enable-subpixel-rendering.patch;
 
-  patches = [ ./enable-validation.patch ] # from Gentoo
-    ++ stdenv.lib.optional useInfinality [ infinality_patch ];
+  outputs = [ "out" "dev" ];
+
+  configureFlags = [ "--disable-static" "--bindir=$(dev)/bin" ];
 
   # The asm for armel is written with the 'asm' keyword.
-  CFLAGS = stdenv.lib.optionalString stdenv.isArm "-std=gnu99";
-
-  # FreeType requires GNU Make, which is not part of stdenv on FreeBSD.
-  buildInputs = stdenv.lib.optional (!stdenv.isLinux) gnumake;
+  CFLAGS = optionalString stdenv.isArm "-std=gnu99";
 
   enableParallelBuilding = true;
 
   doCheck = true;
 
-  postInstall =
-    ''
-      ln -s freetype2/freetype $out/include/freetype
-    '';
+  postInstall = glib.flattenInclude;
 
-  crossAttrs = {
+  crossAttrs = stdenv.lib.optionalAttrs (stdenv.cross.libc or null != "msvcrt") {
     # Somehow it calls the unwrapped gcc, "i686-pc-linux-gnu-gcc", instead
     # of gcc. I think it's due to the unwrapped gcc being in the PATH. I don't
     # know why it's on the PATH.
     configureFlags = "--disable-static CC_BUILD=gcc";
-  };
-
-  passthru.infinality.useInfinality = useInfinality; # for fontconfig
-
-  meta = {
-    description = "A font rendering engine";
-    homepage = http://www.freetype.org/;
-    license = if useEncumberedCode then "unfree"
-      else "GPLv2+"; # or the FreeType License (BSD + advertising clause)
-    platforms = stdenv.lib.platforms.all;
   };
 }

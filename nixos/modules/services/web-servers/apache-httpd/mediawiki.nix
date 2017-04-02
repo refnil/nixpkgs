@@ -4,6 +4,17 @@ with lib;
 
 let
 
+  httpd = serverInfo.serverConfig.package;
+
+  version24 = !versionOlder httpd.version "2.4";
+
+  allGranted = if version24 then ''
+    Require all granted
+  '' else ''
+    Order allow,deny
+    Allow from all
+  '';
+
   mediawikiConfig = pkgs.writeText "LocalSettings.php"
     ''
       <?php
@@ -32,7 +43,7 @@ let
         # Paths to external programs.
         $wgDiff3 = "${pkgs.diffutils}/bin/diff3";
         $wgDiff = "${pkgs.diffutils}/bin/diff";
-        $wgImageMagickConvertCommand = "${pkgs.imagemagick}/bin/convert";
+        $wgImageMagickConvertCommand = "${pkgs.imagemagick.out}/bin/convert";
 
         #$wgDebugLogFile = "/tmp/mediawiki_debug_log.txt";
 
@@ -72,14 +83,12 @@ let
 
   # Unpack Mediawiki and put the config file in its root directory.
   mediawikiRoot = pkgs.stdenv.mkDerivation rec {
-    name= "mediawiki-1.23.1";
+    name= "mediawiki-1.27.1";
 
     src = pkgs.fetchurl {
-      url = "http://download.wikimedia.org/mediawiki/1.23/${name}.tar.gz";
-      sha256 = "07z5j8d988cdg4ml4n0vs9fwmj0p594ibbqdid16faxwqm52dkhl";
+      url = "http://download.wikimedia.org/mediawiki/1.27/${name}.tar.gz";
+      sha256 = "0sm3ymz93qragbwhzzbwq7f127mbj29inv0afg2z6p32jb1pd9h8";
     };
-
-    patches = [ ./mediawiki-postgresql-fixes.patch ];
 
     skins = config.skins;
 
@@ -92,7 +101,7 @@ let
 
     installPhase =
       ''
-        ensureDir $out
+        mkdir -p $out
         cp -r * $out
         cp ${mediawikiConfig} $out/LocalSettings.php
         sed -i \
@@ -106,7 +115,7 @@ let
   mediawikiScripts = pkgs.runCommand "mediawiki-${config.id}-scripts"
     { buildInputs = [ pkgs.makeWrapper ]; }
     ''
-      ensureDir $out/bin
+      mkdir -p $out/bin
       for i in changePassword.php createAndPromote.php userOptions.php edit.php nukePage.php update.php; do
         makeWrapper ${php}/bin/php $out/bin/mediawiki-${config.id}-$(basename $i .php) \
           --add-flags ${mediawikiRoot}/maintenance/$i
@@ -123,8 +132,7 @@ in
         Alias ${config.urlPrefix}/images ${config.uploadDir}
 
         <Directory ${config.uploadDir}>
-            Order allow,deny
-            Allow from all
+            ${allGranted}
             Options -Indexes
         </Directory>
       ''}
@@ -133,6 +141,8 @@ in
         RewriteEngine On
         RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} !-f
         RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} !-d
+        ${concatMapStringsSep "\n" (u: "RewriteCond %{REQUEST_URI} !^${u.urlPath}") serverInfo.vhostConfig.servedDirs}
+        ${concatMapStringsSep "\n" (u: "RewriteCond %{REQUEST_URI} !^${u.urlPath}") serverInfo.vhostConfig.servedFiles}
         RewriteRule ${if config.enableUploads
           then "!^/images"
           else "^.*\$"
@@ -143,8 +153,7 @@ in
       ''}
 
       <Directory ${mediawikiRoot}>
-          Order allow,deny
-          Allow from all
+          ${allGranted}
           DirectoryIndex index.php
       </Directory>
 
@@ -279,6 +288,7 @@ in
     };
 
     extraConfig = mkOption {
+      type = types.lines;
       default = "";
       example =
         ''

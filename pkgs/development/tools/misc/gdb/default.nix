@@ -1,6 +1,10 @@
-{ fetchurl, stdenv, ncurses, readline, gmp, mpfr, expat, texinfo
-, dejagnu, python, target ? null
-
+{ fetchurl, stdenv, ncurses, readline, gmp, mpfr, expat, texinfo, zlib
+, dejagnu, perl, pkgconfig
+, python ? null
+, guile ? null
+, target ? null
+# Support all known targets in one gdb binary.
+, multitarget ? false
 # Additional dependencies for GNU/Hurd.
 , mig ? null, hurd ? null
 
@@ -8,7 +12,7 @@
 
 let
 
-  basename = "gdb-7.7";
+  basename = "gdb-7.12.1";
 
   # Whether (cross-)building for GNU/Hurd.  This is an approximation since
   # having `stdenv ? cross' doesn't tell us if we're building `crossDrv' and
@@ -26,49 +30,51 @@ stdenv.mkDerivation rec {
       ("-" + target.config);
 
   src = fetchurl {
-    url = "mirror://gnu/gdb/${basename}.tar.bz2";
-    sha256 = "08vcb97j1b7vxwq6088wb6s3g3bm8iwikd922y0xsgbbxv3d2104";
+    url = "mirror://gnu/gdb/${basename}.tar.xz";
+    sha256 = "11ii260h1sd7v0bs3cz6d5l8gqxxgldry0md60ncjgixjw5nh1s6";
   };
 
-  patches = [ ./edit-signals.patch ];
-
-  # I think python is not a native input, but I leave it
-  # here while I will not need it cross building
-  nativeBuildInputs = [ texinfo python ]
+  nativeBuildInputs = [ pkgconfig texinfo perl ]
     ++ stdenv.lib.optional isGNU mig;
 
-  buildInputs = [ ncurses readline gmp mpfr expat ]
+  buildInputs = [ ncurses readline gmp mpfr expat zlib python guile ]
     ++ stdenv.lib.optional isGNU hurd
     ++ stdenv.lib.optional doCheck dejagnu;
 
   enableParallelBuilding = true;
 
+  # darwin build fails with format hardening since v7.12
+  hardeningDisable = stdenv.lib.optionals stdenv.isDarwin [ "format" ];
+
   configureFlags = with stdenv.lib;
-    '' --with-gmp=${gmp} --with-mpfr=${mpfr} --with-system-readline
-       --with-expat --with-libexpat-prefix=${expat}
-    ''
-    + optionalString (target != null) " --target=${target.config}"
-    + optionalString (elem stdenv.system platforms.cygwin) "  --without-python";
+    [ "--with-gmp=${gmp.dev}" "--with-mpfr=${mpfr.dev}" "--with-system-readline"
+      "--with-system-zlib" "--with-expat" "--with-libexpat-prefix=${expat.dev}"
+      "--with-separate-debug-dir=/run/current-system/sw/lib/debug"
+    ]
+    ++ optional (target != null) "--target=${target.config}"
+    ++ optional multitarget "--enable-targets=all"
+    ++ optional (elem stdenv.system platforms.cygwin) "--without-python";
 
   crossAttrs = {
     # Do not add --with-python here to avoid cross building it.
-    configureFlags =
-      '' --with-gmp=${gmp.crossDrv} --with-mpfr=${mpfr.crossDrv} --with-system-readline
-         --with-expat --with-libexpat-prefix=${expat.crossDrv} --without-python
-      '' + stdenv.lib.optionalString (target != null)
-         " --target=${target.config}";
+    configureFlags = with stdenv.lib;
+      [ "--with-gmp=${gmp.crossDrv}" "--with-mpfr=${mpfr.crossDrv}" "--with-system-readline"
+        "--with-system-zlib" "--with-expat" "--with-libexpat-prefix=${expat.crossDrv}" "--without-python"
+      ]
+      ++ optional (target != null) "--target=${target.config}"
+      ++ optional multitarget "--enable-targets=all";
   };
 
   postInstall =
     '' # Remove Info files already provided by Binutils and other packages.
-       rm -v $out/share/info/{standards,configure,bfd}.info
+       rm -v $out/share/info/bfd.info
     '';
 
   # TODO: Investigate & fix the test failures.
   doCheck = false;
 
   meta = with stdenv.lib; {
-    description = "GDB, the GNU Project debugger";
+    description = "The GNU Project debugger";
 
     longDescription = ''
       GDB, the GNU Project debugger, allows you to see what is going

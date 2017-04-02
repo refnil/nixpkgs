@@ -100,7 +100,7 @@ in
 
         # `openssl' is required to generate the CA.  `openssh' is
         # required to generate key pairs.
-        path = [ pkgs.openssl pkgs.openssh pkgs.bash ];
+        path = [ pkgs.openssl config.programs.ssh.package pkgs.bash ];
 
         respawn = false;
 
@@ -146,8 +146,8 @@ in
 
         path =
           [ pkgs.sudo pkgs.vlan pkgs.nettools pkgs.iptables pkgs.qemu_kvm
-            pkgs.e2fsprogs pkgs.utillinux pkgs.multipath_tools pkgs.iproute
-            pkgs.bridge_utils
+            pkgs.e2fsprogs pkgs.utillinux pkgs.multipath-tools pkgs.iproute
+            pkgs.bridge-utils
           ];
 
         exec = "${nova}/bin/nova-compute --flagfile=${novaConf}";
@@ -163,7 +163,7 @@ in
 
         path =
           [ pkgs.sudo pkgs.vlan pkgs.dnsmasq pkgs.nettools pkgs.iptables
-            pkgs.iproute pkgs.bridge_utils pkgs.radvd
+            pkgs.iproute pkgs.bridge-utils pkgs.radvd
           ];
 
         exec = "${nova}/bin/nova-network --flagfile=${novaConf}";

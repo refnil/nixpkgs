@@ -1,31 +1,41 @@
 { stdenv, fetchurl, zlib, bzip2, pkgconfig, curl, lzma, gettext
-, sdlClient ? true, SDL, SDL_mixer, SDL_image, SDL_ttf, SDL_gfx, freetype
-, gtkClient ? false, gtk
-, server ? true, readline }:
+, sdlClient ? true, SDL, SDL_mixer, SDL_image, SDL_ttf, SDL_gfx, freetype, fluidsynth
+, gtkClient ? false, gtk2
+, server ? true, readline
+, enableSqlite ? true, sqlite
+}:
 
 let
   inherit (stdenv.lib) optional optionals;
-  client = sdlClient || gtkClient;
 
   sdlName = if sdlClient then "-sdl" else "";
   gtkName = if gtkClient then "-gtk" else "";
 
-  baseName = "freeciv-2.4.0";
+  name = "freeciv";
+  version = "2.5.6";
 in
 stdenv.mkDerivation {
-  name = baseName + sdlName + gtkName;
+  name = "${name}${sdlName}${gtkName}-${version}";
+  inherit version;
 
   src = fetchurl {
-    url = "mirror://sourceforge/freeciv/${baseName}.tar.bz2";
-    sha256 = "1bc01pyihsrby6w95n49gi90ggp40dyxsy4kmlmwcakxfxprwakv";
+    url = "mirror://sourceforge/freeciv/${name}-${version}.tar.bz2";
+    sha256 = "16wrnsx5rmbz6rjs03bhy0vn20i6n6g73lx7fjpai98ixhzc5bfg";
   };
 
   nativeBuildInputs = [ pkgconfig ];
 
   buildInputs = [ zlib bzip2 curl lzma gettext ]
-    ++ optionals sdlClient [ SDL SDL_mixer SDL_image SDL_ttf SDL_gfx freetype ]
-    ++ optional gtkClient gtk
-    ++ optional server readline;
+    ++ optionals sdlClient [ SDL SDL_mixer SDL_image SDL_ttf SDL_gfx freetype fluidsynth ]
+    ++ optionals gtkClient [ gtk2 ]
+    ++ optional server readline
+    ++ optional enableSqlite sqlite;
+
+  configureFlags = [ "--enable-shared" ]
+    ++ optional sdlClient "--enable-client=sdl"
+    ++ optional enableSqlite "--enable-fcdb=sqlite3"
+    ++ optional (!gtkClient) "--enable-fcmp=cli"
+    ++ optional (!server) "--disable-server";
 
   meta = with stdenv.lib; {
     description = "Multiplayer (or single player), turn-based strategy game";
@@ -41,6 +51,6 @@ stdenv.mkDerivation {
     license = licenses.gpl2;
 
     maintainers = with maintainers; [ pierron ];
-    platforms = with platforms; linux;
+    platforms = platforms.linux;
   };
 }

@@ -1,14 +1,12 @@
-{stdenv, fetchurl, ocaml, findlib }:
+{ stdenv, fetchurl, ocaml, findlib, ocamlbuild, camlp4 }:
 
 let
-  ocaml_version = (builtins.parseDrvName ocaml.name).version;
-  version = "1.1";
   pname = "ulex";
-
 in
 
-stdenv.mkDerivation {
+stdenv.mkDerivation rec {
   name = "${pname}-${version}";
+  version = "1.1";
 
   src = fetchurl {
     url = "http://www.cduce.org/download/${pname}-${version}.tar.gz";
@@ -17,14 +15,16 @@ stdenv.mkDerivation {
 
   createFindlibDestdir = true;
 
-  buildInputs = [ocaml findlib];
+  buildInputs = [ ocaml findlib ocamlbuild ];
+  propagatedBuildInputs = [ camlp4 ];
 
   buildFlags = "all all.opt";
 
   meta = {
     homepage = http://www.cduce.org/download.html;
-    description = "ulex is a lexer generator for Unicode and OCaml";
+    description = "A lexer generator for Unicode and OCaml";
     license = stdenv.lib.licenses.mit;
+    platforms = ocaml.meta.platforms or [];
     maintainers = [ stdenv.lib.maintainers.roconnor ];
   };
 }

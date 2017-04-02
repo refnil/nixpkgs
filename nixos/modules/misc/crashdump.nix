@@ -24,11 +24,12 @@ in
           '';
         };
         kernelPackages = mkOption {
+          type = types.package;
           default = pkgs.linuxPackages;
           # We don't want to evaluate all of linuxPackages for the manual
           # - some of it might not even evaluate correctly.
           defaultText = "pkgs.linuxPackages";
-          example = "pkgs.linuxPackages_2_6_25";
+          example = literalExample "pkgs.linuxPackages_2_6_25";
           description = ''
             This will override the boot.kernelPackages, and will add some
             kernel configuration parameters for the crash dump to work.

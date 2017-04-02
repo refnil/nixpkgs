@@ -10,12 +10,10 @@ in
 
     system.fsPackages = [ pkgs.f2fs-tools ];
 
-    boot.initrd.availableKernelModules = mkIf inInitrd [ "f2fs" ];
+    boot.initrd.availableKernelModules = mkIf inInitrd [ "f2fs" "crc32" ];
 
     boot.initrd.extraUtilsCommands = mkIf inInitrd ''
-      mkdir -p $out/bin $out/lib
-      cp -v   ${pkgs.f2fs-tools}/sbin/fsck.f2fs $out/bin
-      cp -pdv ${pkgs.f2fs-tools}/lib/lib*.so.* $out/lib
+      copy_bin_and_libs ${pkgs.f2fs-tools}/sbin/fsck.f2fs
     '';
   };
 }

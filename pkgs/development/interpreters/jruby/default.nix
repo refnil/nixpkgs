@@ -3,17 +3,17 @@
 stdenv.mkDerivation rec {
   name = "jruby-${version}";
 
-  version = "1.7.12";
+  version = "9.0.5.0";
 
   src = fetchurl {
-    url = "http://jruby.org.s3.amazonaws.com/downloads/${version}/jruby-bin-${version}.tar.gz";
-    sha1 = "056cee1138e49da40a77f179b771372692479002";
+    url = "https://s3.amazonaws.com/jruby.org/downloads/${version}/jruby-bin-${version}.tar.gz";
+    sha256 = "1wysymqzc7591743f2ycgwpm232y6i050izn72lck44nhnyr5wwy";
   };
 
   buildInputs = [ makeWrapper ];
 
   installPhase = ''
-     mkdir -pv $out
+     mkdir -pv $out/docs
      mv * $out
      rm $out/bin/*.{bat,dll,exe,sh}
      mv $out/COPYING $out/LICENSE* $out/docs
@@ -27,6 +27,7 @@ stdenv.mkDerivation rec {
   meta = {
     description = "Ruby interpreter written in Java";
     homepage = http://jruby.org/;
-    license = "CPL-1.0 GPL-2 LGPL-2.1"; # one of those
+    license = with stdenv.lib.licenses; [ cpl10 gpl2 lgpl21 ];
+    platforms = stdenv.lib.platforms.unix;
   };
 }

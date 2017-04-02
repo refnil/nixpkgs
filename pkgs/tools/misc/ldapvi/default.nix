@@ -12,19 +12,20 @@ stdenv.mkDerivation rec {
 
   buildInputs = [ openldap openssl popt glib ncurses readline pkgconfig cyrus_sasl autoconf automake ];
 
-  setSourceRoot = ''
-    sourceRoot=git-export/ldapvi
-  '';
- 
   preConfigure = ''
+    cd ldapvi
     ./autogen.sh
   '';
 
   meta = with stdenv.lib; {
-    description = "ldapvi is an interactive LDAP client for Unix terminals. Using it, you can update LDAP entries with a text editor";
+    description = "Interactive LDAP client for Unix terminals";
+    longDescription = ''
+      ldapvi is an interactive LDAP client for Unix terminals. Using it, you
+      can update LDAP entries with a text editor.
+    '';
     homepage = http://www.lichteblau.com/ldapvi/;
     license = licenses.gpl2;
-    maintainers = with maintainers; [ iElectric ];
+    maintainers = with maintainers; [ domenkozar ];
     platforms = stdenv.lib.platforms.linux;
   };
 }

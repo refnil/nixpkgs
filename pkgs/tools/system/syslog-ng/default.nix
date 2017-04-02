@@ -1,24 +1,62 @@
-{ stdenv, fetchurl, eventlog, pkgconfig, glib, python, systemd, perl }:
+{ stdenv, fetchurl, openssl, libcap, curl, which
+, eventlog, pkgconfig, glib, python, systemd, perl
+, riemann_c_client, protobufc, pcre, libnet
+, json_c, libuuid, libivykis, mongoc, rabbitmq-c }:
 
-stdenv.mkDerivation {
-  name = "syslog-ng-3.5.4.1";
+let
+  pname = "syslog-ng";
+in
+
+stdenv.mkDerivation rec {
+  name = "${pname}-${version}";
+  version = "3.9.1";
 
   src = fetchurl {
-    url = "http://www.balabit.com/downloads/files?path=/syslog-ng/sources/3.5.4.1/source/syslog-ng_3.5.4.1.tar.gz";
-    sha256 = "0rkgrmnyx1x6m3jw5n49k7r1dcg79lxh900g74rgvd3j86g9dilj";
+    url = "https://github.com/balabit/${pname}/releases/download/${name}/${name}.tar.gz";
+    sha256 = "05qaqw115py5iz55vmc0j1xcwcpr8wa9vpmbixhr1rqaamm8ay2n";
   };
 
-  buildInputs = [ eventlog pkgconfig glib python systemd perl ];
+  nativeBuildInputs = [ pkgconfig which ];
+
+  buildInputs = [
+    libcap
+    curl
+    openssl
+    eventlog
+    glib
+    perl
+    python
+    systemd
+    riemann_c_client
+    protobufc
+    pcre
+    libnet
+    json_c
+    libuuid
+    libivykis
+    mongoc
+    rabbitmq-c
+  ];
 
   configureFlags = [
+    "--enable-manpages"
     "--enable-dynamic-linking"
     "--enable-systemd"
+    "--with-ivykis=system"
+    "--with-librabbitmq-client=system"
+    "--with-mongoc=system"
+    "--with-jsonc=system"
+    "--with-systemd-journal=system"
     "--with-systemdsystemunitdir=$(out)/etc/systemd/system"
   ];
 
-  meta = {
+  outputs = [ "out" "man" ];
+
+  meta = with stdenv.lib; {
     homepage = "http://www.balabit.com/network-security/syslog-ng/";
     description = "Next-generation syslogd with advanced networking and filtering capabilities";
-    license = stdenv.lib.licenses.gpl2;
+    license = licenses.gpl2;
+    maintainers = with maintainers; [ rickynils  fpletz ];
+    platforms = platforms.linux;
   };
 }

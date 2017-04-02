@@ -1,25 +1,25 @@
-{ stdenv, fetchurl, devicemapper, libgcrypt, libuuid, pkgconfig, popt
-, enablePython ? false, python ? null
+{ stdenv, fetchurl, devicemapper, openssl, libuuid, pkgconfig, popt
+, enablePython ? false, python2 ? null
 }:
 
-assert enablePython -> python != null;
+assert enablePython -> python2 != null;
 
 stdenv.mkDerivation rec {
-  name = "cryptsetup-1.6.3";
+  name = "cryptsetup-1.7.3";
 
   src = fetchurl {
-    url = "http://cryptsetup.googlecode.com/files/${name}.tar.bz2";
-    sha256 = "1n1qk5chyjspbiianrdb55fhb4wl0vfyqz2br05vfb24v4qlgbx2";
+    url = "mirror://kernel/linux/utils/cryptsetup/v1.7/${name}.tar.xz";
+    sha256 = "00nwd96m9yq4k3cayc04i5y7iakkzana35zxky6hpx2w8zl08axg";
   };
 
-  configureFlags = [ "--enable-cryptsetup-reencrypt" ]
+  configureFlags = [ "--enable-cryptsetup-reencrypt" "--with-crypto_backend=openssl" ]
                 ++ stdenv.lib.optional enablePython "--enable-python";
 
-  buildInputs = [ devicemapper libgcrypt libuuid pkgconfig popt ]
-             ++ stdenv.lib.optional enablePython python;
+  buildInputs = [ devicemapper openssl libuuid pkgconfig popt ]
+             ++ stdenv.lib.optional enablePython python2;
 
   meta = {
-    homepage = http://code.google.com/p/cryptsetup/;
+    homepage = https://gitlab.com/cryptsetup/cryptsetup/;
     description = "LUKS for dm-crypt";
     license = stdenv.lib.licenses.gpl2;
     maintainers = with stdenv.lib.maintainers; [ viric chaoflow ];

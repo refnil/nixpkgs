@@ -1,6 +1,6 @@
 { stdenv, fetchsvn, boost, cmake, ffmpeg, freeglut, glib,
-  gtk, libjpeg, libpng, libpthreadstubs, libvorbis, libXau, libXdmcp,
-  libXmu, mesa, openal, pixman, pkgconfig, python27Full, SDL }:
+  gtk2, libjpeg, libpng, libpthreadstubs, libvorbis, libXau, libXdmcp,
+  libXmu, mesa, openal, pixman, pkgconfig, python27, SDL }:
 
 stdenv.mkDerivation {
   name = "privateer-1.03";
@@ -13,9 +13,9 @@ stdenv.mkDerivation {
   };
 
   buildInputs =
-    [ boost cmake ffmpeg freeglut glib gtk libjpeg libpng
+    [ boost cmake ffmpeg freeglut glib gtk2 libjpeg libpng
       libpthreadstubs libvorbis libXau libXdmcp libXmu mesa openal
-      pixman pkgconfig python27Full SDL ];
+      pixman pkgconfig python27 SDL ];
 
   patches = [ ./0001-fix-VSFile-constructor.patch ];
 
@@ -28,10 +28,16 @@ stdenv.mkDerivation {
     cp vegastrike $out/bin
     cp vegaserver $out/bin
   '';
-  
-  meta = {
+
+  meta = with stdenv.lib; {
     homepage = http://privateer.sourceforge.net/;
-    longDescription = "";
-    maintainers = with stdenv.lib.maintainers; [ chaoflow ];
+    description = "Adventure space flight simulation computer game";
+    license = licenses.gpl2Plus; # and a special license for art data
+    # https://sourceforge.net/p/privateer/code/HEAD/tree/privgold/trunk/data/art-license.txt
+
+    maintainers = with maintainers; [ chaoflow ];
+    platforms = with platforms; linux ++ darwin;
+    hydraPlatforms = [];
+    broken = true; # it won't build
   };
 }

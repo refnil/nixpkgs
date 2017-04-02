@@ -32,7 +32,7 @@ in
 
       kdc = mkOption {
         default = "kerberos.mit.edu";
-        description = "Kerberos Domain Controller.";
+        description = "Key Distribution Center";
       };
 
       kerberosAdminServer = mkOption {
@@ -48,7 +48,7 @@ in
 
   config = mkIf config.krb5.enable {
 
-    environment.systemPackages = [ pkgs.krb5 ];
+    environment.systemPackages = [ pkgs.krb5Full ];
 
     environment.etc."krb5.conf".text =
       ''
@@ -173,6 +173,8 @@ in
             ${cfg.domainRealm} = ${cfg.defaultRealm}
             .mit.edu = ATHENA.MIT.EDU
             mit.edu = ATHENA.MIT.EDU
+            .exchange.mit.edu = EXCHANGE.MIT.EDU
+            exchange.mit.edu = EXCHANGE.MIT.EDU
             .media.mit.edu = MEDIA-LAB.MIT.EDU
             media.mit.edu = MEDIA-LAB.MIT.EDU
             .csail.mit.edu = CSAIL.MIT.EDU

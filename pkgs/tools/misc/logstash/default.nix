@@ -1,38 +1,42 @@
-{ stdenv, fetchurl }:
+{ stdenv, fetchurl, makeWrapper, jre  }:
 
 stdenv.mkDerivation rec {
-  version = "1.4.2";
+  version = "2.4.0";
   name = "logstash-${version}";
 
   src = fetchurl {
     url = "https://download.elasticsearch.org/logstash/logstash/logstash-${version}.tar.gz";
-    sha256 = "0sc0bwyf96fzs5h3d7ii65v9vvpfbm7w67vk1im9djnlz0d1ggnm";
+    sha256 = "1k27hb6q1r26rp3y9pb2ry92kicw83mi352dzl2y4h0gbif46b32";
   };
 
-  dontBuild    = true;
-  dontPatchELF = true;
-  dontStrip    = true;
+  dontBuild         = true;
+  dontPatchELF      = true;
+  dontStrip         = true;
   dontPatchShebangs = true;
 
+  buildInputs = [
+    makeWrapper jre
+  ];
+
   installPhase = ''
-    ensureDir $out/bin
-    ensureDir $out/vendor
-    ensureDir $out/lib
-    ensureDir $out/locales
-    ensureDir $out/patterns
-    cp -a bin $out
-    cp -a vendor $out
-    cp -a lib $out
-    cp -a locales $out
-    cp -a patterns $out
-    patchShebangs $out/bin
+    mkdir -p $out
+    cp -r {Gemfile*,vendor,lib,bin} $out
+
+    wrapProgram $out/bin/logstash \
+       --set JAVA_HOME "${jre}"
+
+    wrapProgram $out/bin/rspec \
+       --set JAVA_HOME "${jre}"
+
+    wrapProgram $out/bin/logstash-plugin \
+       --set JAVA_HOME "${jre}"
   '';
 
-  meta = {
-    description = "Open Source, Distributed, RESTful Search Engine";
-    homepage    = http://www.elasticsearch.org;
-    license     = stdenv.lib.licenses.asl20;
-    platforms   = stdenv.lib.platforms.unix;
-    maintainers = [ stdenv.lib.maintainers.wjlroe ];
+  meta = with stdenv.lib; {
+    description = "Logstash is a data pipeline that helps you process logs and other event data from a variety of systems";
+    homepage    = https://www.elastic.co/products/logstash;
+    license     = licenses.asl20;
+    platforms   = platforms.unix;
+    maintainers = [ maintainers.wjlroe maintainers.offline ];
   };
 }

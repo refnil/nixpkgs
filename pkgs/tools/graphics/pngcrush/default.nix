@@ -1,12 +1,14 @@
 { stdenv, fetchurl, libpng }:
 
 stdenv.mkDerivation rec {
-  name = "pngcrush-1.7.73";
+  name = "pngcrush-1.8.1";
 
   src = fetchurl {
     url = "mirror://sourceforge/pmt/${name}-nolib.tar.xz";
-    sha256 = "073y19af0sw36nw7draqw9zfd6n7q7b84kscy26s76fhj5x2gb0l";
+    sha256 = "1h3sibmmiq4ynvf8hrpksfrbcmszxh4bqpkqy5c0m8828c7drpr9";
   };
+
+  makeFlags = [ "CC=cc" "LD=cc" ];      # gcc and/or clang compat
 
   configurePhase = ''
     sed -i s,/usr,$out, Makefile
@@ -17,8 +19,8 @@ stdenv.mkDerivation rec {
   meta = {
     homepage = http://pmt.sourceforge.net/pngcrush;
     description = "A PNG optimizer";
-    license = "free";
-    platforms = with stdenv.lib.platforms; linux;
+    license = stdenv.lib.licenses.free;
+    platforms = with stdenv.lib.platforms; linux ++ darwin;
     maintainers = with stdenv.lib.maintainers; [ the-kenny ];
   };
 }

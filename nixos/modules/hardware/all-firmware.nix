@@ -12,7 +12,7 @@ with lib;
       default = false;
       type = types.bool;
       description = ''
-        Turn on this option if you want to enable all the firmware shipped with Debian/Ubuntu.
+        Turn on this option if you want to enable all the firmware shipped in linux-firmware.
       '';
     };
 
@@ -22,7 +22,11 @@ with lib;
   ###### implementation
 
   config = mkIf config.hardware.enableAllFirmware {
-    hardware.firmware = [ "${pkgs.firmwareLinuxNonfree}/lib/firmware" ];
+    hardware.firmware = with pkgs; [
+      firmwareLinuxNonfree
+      intel2200BGFirmware
+      rtl8723bs-firmware
+    ];
   };
 
 }

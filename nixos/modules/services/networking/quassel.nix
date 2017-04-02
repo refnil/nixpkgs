@@ -3,8 +3,8 @@
 with lib;
 
 let
-  quassel = pkgs.kde4.quasselDaemon;
   cfg = config.services.quassel;
+  quassel = cfg.package;
   user = if cfg.user != null then cfg.user else "quassel";
 in
 
@@ -23,11 +23,21 @@ in
         '';
       };
 
-      interface = mkOption {
-        default = "127.0.0.1";
+      package = mkOption {
+        type = types.package;
+        default = pkgs.quasselDaemon;
+        defaultText = "pkgs.quasselDaemon";
         description = ''
-          The interface the Quassel daemon will be listening to.  If `127.0.0.1',
-          only clients on the local host can connect to it; if `0.0.0.0', clients
+          The package of the quassel daemon.
+        '';
+        example = literalExample "pkgs.quasselDaemon";
+      };
+
+      interfaces = mkOption {
+        default = [ "127.0.0.1" ];
+        description = ''
+          The interfaces the Quassel daemon will be listening to.  If `[ 127.0.0.1 ]',
+          only clients on the local host can connect to it; if `[ 0.0.0.0 ]', clients
           can access it from any network interface.
         '';
       };
@@ -74,21 +84,24 @@ in
         gid = config.ids.gids.quassel;
       }];
 
-    jobs.quassel =
+    systemd.services.quassel =
       { description = "Quassel IRC client daemon";
 
-        startOn = "ip-up";
+        wantedBy = [ "multi-user.target" ];
+        after = [ "network.target" ] ++ optional config.services.postgresql.enable "postgresql.service"
+                                     ++ optional config.services.mysql.enable "mysql.service";
 
         preStart = ''
-            mkdir -p ${cfg.dataDir}
-            chown ${user} ${cfg.dataDir}
+          mkdir -p ${cfg.dataDir}
+          chown ${user} ${cfg.dataDir}
         '';
 
-        exec = ''
-            ${pkgs.su}/bin/su -s ${pkgs.stdenv.shell} ${user} \
-                -c '${quassel}/bin/quasselcore --listen=${cfg.interface}\
-                    --port=${toString cfg.portNumber} --configdir=${cfg.dataDir}'
-        '';
+        serviceConfig =
+        {
+          ExecStart = "${quassel}/bin/quasselcore --listen=${concatStringsSep '','' cfg.interfaces} --port=${toString cfg.portNumber} --configdir=${cfg.dataDir}";
+          User = user;
+          PermissionsStartOnly = true;
+        };
       };
 
   };

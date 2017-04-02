@@ -1,5 +1,5 @@
-{ stdenv, fetchFromGitHub, autoconf, automake, libtool, pkgconfig, gnome3, pygobject3, pygtk
-, gtk_doc, gtk3, python, pygobject, lua, libX11, libXext, libXrender, gobjectIntrospection
+{ stdenv, fetchFromGitHub, autoconf, automake, libtool, pkgconfig, gnome3
+, gtk_doc, gtk3, python, lua, libX11, libXext, libXrender, gobjectIntrospection
 }:
 
 stdenv.mkDerivation rec {
@@ -26,7 +26,7 @@ stdenv.mkDerivation rec {
     description = "Library for registering global key bindings";
     homepage = https://github.com/engla/keybinder/;
     license = licenses.mit;
-    platform = platforms.linux;
+    platforms = platforms.linux;
     maintainers = [ maintainers.cstrahan ];
   };
 }

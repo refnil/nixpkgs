@@ -1,24 +1,24 @@
-{ fetchurl, stdenv, pkgconfig, gtk, gettext, bzip2, zlib
-, libjpeg, libtiff, cfitsio, exiv2, lcms, gtkimageview, lensfun }:
+{ fetchurl, stdenv, pkgconfig, gtk2, gettext, bzip2, zlib
+, libjpeg, libtiff, cfitsio, exiv2, lcms2, gtkimageview, lensfun }:
 
 stdenv.mkDerivation rec {
-  name = "ufraw-0.19.2";
+  name = "ufraw-0.22";
 
   src = fetchurl {
     # XXX: These guys appear to mutate uploaded tarballs!
     url = "mirror://sourceforge/ufraw/${name}.tar.gz";
-    sha256 = "1lxba7pb3vcsq94dwapg9bk9mb3ww6r3pvvcyb0ah5gh2sgzxgkk";
+    sha256 = "0pm216pg0vr44gwz9vcvq3fsf8r5iayljhf5nis2mnw7wn6d5azp";
   };
 
   buildInputs =
-    [ pkgconfig gtk gtkimageview gettext bzip2 zlib
-      libjpeg libtiff cfitsio exiv2 lcms lensfun
+    [ pkgconfig gtk2 gtkimageview gettext bzip2 zlib
+      libjpeg libtiff cfitsio exiv2 lcms2 lensfun
     ];
 
   meta = {
     homepage = http://ufraw.sourceforge.net/;
 
-    description = "UFRaw, a utility to read and manipulate raw images from digital cameras";
+    description = "Utility to read and manipulate raw images from digital cameras";
 
     longDescription =
       '' The Unidentified Flying Raw (UFRaw) is a utility to read and

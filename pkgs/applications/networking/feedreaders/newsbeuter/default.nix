@@ -1,20 +1,19 @@
 { stdenv, fetchurl, sqlite, curl, pkgconfig, libxml2, stfl, json-c-0-11, ncurses
-, gettext, libiconvOrEmpty, makeWrapper, perl }:
+, gettext, libiconv, makeWrapper, perl, fetchpatch }:
 
 stdenv.mkDerivation rec {
-  name = "newsbeuter-2.8";
+  name = "newsbeuter-2.9";
 
   src = fetchurl {
     url = "http://www.newsbeuter.org/downloads/${name}.tar.gz";
-    sha256 = "013qi8yghpms2qq1b3xbrlmfgpj0ybgk0qhj245ni4kpxila0wn8";
+    sha256 = "1j1x0hgwxz11dckk81ncalgylj5y5fgw5bcmp9qb5hq9kc0vza3l";
 
   };
 
   buildInputs
     # use gettext instead of libintlOrEmpty so we have access to the msgfmt
     # command
-    = [ pkgconfig sqlite curl libxml2 stfl json-c-0-11 ncurses gettext perl ]
-      ++ libiconvOrEmpty
+    = [ pkgconfig sqlite curl libxml2 stfl json-c-0-11 ncurses gettext perl libiconv ]
       ++ stdenv.lib.optional stdenv.isDarwin makeWrapper;
 
   preBuild = ''
@@ -23,14 +22,24 @@ stdenv.mkDerivation rec {
     export LDFLAGS=-lncursesw
   '';
 
-  installPhase = ''
-    DESTDIR=$out prefix=\"\" make install
-  ''
-    + stdenv.lib.optionalString stdenv.isDarwin ''
-      for prog in $out/bin/*; do
-        wrapProgram "$prog" --prefix DYLD_LIBRARY_PATH : "${stfl}/lib"
-      done
-    '';
+  patches = [
+    (fetchpatch {
+      url = "https://github.com/akrennmair/newsbeuter/commit/cdacfbde9fe3ae2489fc96d35dfb7d263ab03f50.patch";
+      sha256 = "1lhvn63cqjpikwsr6zzndb1p5y140vvphlg85fazwx4xpzd856d9";
+    })
+    (fetchpatch {
+      url = "https://github.com/akrennmair/newsbeuter/commit/33577f842d9b74c119f3cebda95ef8652304db81.patch";
+      sha256 = "1kwhp6k14gk1hclgsr9w47qg7hs60p23zsl6f6vw13mczp2naqlb";
+    })
+  ];
+
+  installFlags = [ "DESTDIR=$(out)" "prefix=" ];
+
+  postInstall = stdenv.lib.optionalString stdenv.isDarwin ''
+    for prog in $out/bin/*; do
+      wrapProgram "$prog" --prefix DYLD_LIBRARY_PATH : "${stfl}/lib"
+    done
+  '';
 
   meta = {
     homepage    = http://www.newsbeuter.org;
@@ -40,4 +49,3 @@ stdenv.mkDerivation rec {
     platforms   = stdenv.lib.platforms.unix;
   };
 }
-

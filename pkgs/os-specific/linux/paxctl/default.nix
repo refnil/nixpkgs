@@ -2,11 +2,11 @@
 
 stdenv.mkDerivation rec {
   name = "paxctl-${version}";
-  version = "0.8";
+  version = "0.9";
 
   src = fetchurl {
     url = "http://pax.grsecurity.net/${name}.tar.gz";
-    sha256 = "107gmriq5icsk9yni5q949rnjapjkcs0823pw6zra6h1xml2f0mm";
+    sha256 = "0biw882fp1lmgs6kpxznp1v6758r7dg9x8iv5a06k0b82bcdsc53";
   };
 
   preBuild = ''
@@ -18,11 +18,16 @@ stdenv.mkDerivation rec {
     "MANDIR=share/man/man1"
   ];
 
+  # FIXME needs gcc 4.9 in bootstrap tools
+  hardeningDisable = [ "stackprotector" ];
+
+  setupHook = ./setup-hook.sh;
+
   meta = with stdenv.lib; {
     description = "A tool for controlling PaX flags on a per binary basis";
     homepage    = "https://pax.grsecurity.net";
     license     = licenses.gpl2;
     platforms   = platforms.linux;
-    maintainers = with maintainers; [ thoughtpolice wizeman ];
+    maintainers = with maintainers; [ thoughtpolice ];
   };
 }

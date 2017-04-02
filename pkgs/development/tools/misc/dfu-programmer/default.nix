@@ -1,26 +1,24 @@
-{ stdenv, fetchurl, libusb1 }:
+{ stdenv, fetchurl, libusb }:
 let
-  version = "0.6.2";
+  version = "0.7.2";
 in
 stdenv.mkDerivation rec {
   name="dfu-programmer-${version}";
 
-  buildInputs = [ libusb1 ];
+  buildInputs = [ libusb ];
 
   src = fetchurl {
     url = "mirror://sourceforge/dfu-programmer/${name}.tar.gz";
-    sha256 = "0rdg4h5alpa3py3v3xgvn2vcgmnbj077am90jqj83nad89m9c801";
+    sha256 = "15gr99y1z9vbvhrkd25zqhnzhg6zjmaam3vfjzf2mazd39mx7d0x";
   };
 
-  preConfigure = ''
-    substituteInPlace configure \
-     --replace "/usr/include/libusb-1.0" "${libusb1}/include/libusb-1.0"
-  '';
+  configureFlags = [ "--disable-libusb_1_0" ];
 
   meta = with stdenv.lib; {
     license = licenses.gpl2;
-    description = "A Device Firmware Update based USB programmer for Atmel chips with a USB bootloader.";
+    description = "A Device Firmware Update based USB programmer for Atmel chips with a USB bootloader";
     homepage = http://dfu-programmer.sourceforge.net/;
     maintainers = [ maintainers.the-kenny ];
+    platforms = platforms.linux;
   };
 }

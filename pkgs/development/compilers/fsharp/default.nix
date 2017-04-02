@@ -1,17 +1,20 @@
-{ stdenv, fetchgit, mono, pkgconfig, autoconf, automake, which }:
+# Temporaririly avoid dependency on dotnetbuildhelpers to avoid rebuilding many times while working on it
+
+{ stdenv, fetchurl, mono, pkgconfig, dotnetbuildhelpers, autoconf, automake, which }:
 
 stdenv.mkDerivation rec {
   name = "fsharp-${version}";
-  version = "3.1.0";
+  version = "4.0.1.1";
 
-  src = fetchgit {
-    url = "https://github.com/fsharp/fsharp";
-    rev = "refs/heads/fsharp_31";
-    sha256 = "0d41ae31c57ec9ac8a4ea149b615ae085f3774b8877d8e53ddbf68856c32eda0";
+  src = fetchurl {
+    url = "https://github.com/fsharp/fsharp/archive/${version}.tar.gz";
+    sha256 = "0mvmvwwpl4zq0yvgzdizww8l9azvlrc82xm32nz1fi1nw8x5qfqk";
   };
 
-  buildInputs = [ mono pkgconfig autoconf automake which ];
+  buildInputs = [ mono pkgconfig dotnetbuildhelpers autoconf automake which ];
+
   configurePhase = ''
+    sed -i '988d' src/FSharpSource.targets
     substituteInPlace ./autogen.sh --replace "/usr/bin/env sh" "/bin/sh"
     ./autogen.sh --prefix $out
   '';
@@ -24,6 +27,10 @@ stdenv.mkDerivation rec {
     substituteInPlace $out/bin/fsharpiAnyCpu --replace " mono " " ${mono}/bin/mono "
     ln -s $out/bin/fsharpc $out/bin/fsc
     ln -s $out/bin/fsharpi $out/bin/fsi
+    for dll in "$out/lib/mono/4.5"/FSharp*.dll
+    do
+      create-pkg-config-for-dll.sh "$out/lib/pkgconfig" "$dll"
+    done
   '';
 
   # To fix this error when running:
@@ -35,6 +42,6 @@ stdenv.mkDerivation rec {
     homepage = "http://fsharp.org/";
     license = stdenv.lib.licenses.asl20;
     maintainers = with stdenv.lib.maintainers; [ thoughtpolice raskin ];
-    platforms = with stdenv.lib.platforms; linux;
+    platforms = with stdenv.lib.platforms; unix;
   };
 }

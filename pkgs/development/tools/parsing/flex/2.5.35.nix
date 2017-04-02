@@ -20,7 +20,9 @@ stdenv.mkDerivation {
   };
 
   meta = {
+    branch = "2.5.35";
     homepage = http://flex.sourceforge.net/;
     description = "A fast lexical analyser generator";
+    platforms = stdenv.lib.platforms.unix;
   };
 }

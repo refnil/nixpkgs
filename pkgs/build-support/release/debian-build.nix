@@ -32,7 +32,7 @@ vmTools.runInLinuxImage (stdenv.mkDerivation (
     postHook = ''
       . ${./functions.sh}
       propagateImageName
-      src=$(findTarballs $src | head -1) # Find a tarball.
+      src=$(findTarball $src)
     '';
 
     installExtraDebsPhase = ''
@@ -54,14 +54,20 @@ vmTools.runInLinuxImage (stdenv.mkDerivation (
       eval "$preInstall"
       export LOGNAME=root
 
+      # otherwise build hangs when it wants to display
+      # the log file
+      export PAGER=cat
       ${checkinstall}/sbin/checkinstall --nodoc -y -D \
         --fstrans=${if fsTranslation then "yes" else "no"} \
         --requires="${concatStringsSep "," debRequires}" \
         --provides="${concatStringsSep "," debProvides}" \
-        ${optionalString (src ? version) "--pkgversion=$(echo ${src.version} | tr _ -)"} \
+        ${if (src ? version) then "--pkgversion=$(echo ${src.version} | tr _ -)"
+                             else "--pkgversion=0.0.0"} \
         ''${debMaintainer:+--maintainer="'$debMaintainer'"} \
+        ''${debName:+--pkgname="'$debName'"} \
         $checkInstallFlags \
-        make install
+        -- \
+        $SHELL -c "''${installCommand:-make install}"
 
       mkdir -p $out/debs
       find . -name "*.deb" -exec cp {} $out/debs \;

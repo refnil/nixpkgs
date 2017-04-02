@@ -1,20 +1,19 @@
-{ stdenv, fetchurl, pkgconfig, dbus_glib, libxml2, libxslt, getopt, nixUnstable, dysnomia, libintlOrEmpty, libiconvOrEmpty }:
+{ stdenv, fetchurl, pkgconfig, glib, libxml2, libxslt, getopt, nixUnstable, dysnomia, libintlOrEmpty, libiconv }:
 
 stdenv.mkDerivation {
-  name = "disnix-0.3pre174e883b7b09da822494876d2f297736f33707a7";
+  name = "disnix-0.7";
   
   src = fetchurl {
-    url = http://hydra.nixos.org/build/11773951/download/4/disnix-0.3pre174e883b7b09da822494876d2f297736f33707a7.tar.gz;
-    sha256 = "19hdh2mrlyiq1g3z6lnnqqvripmfcdnm18jpm4anp5iarhnwh3y4";
+    url = https://github.com/svanderburg/disnix/files/842828/disnix-0.7.tar.gz;
+    sha256 = "120iaqpj7zcy94dpizzdxjwf8qb2rfrx5394jghmhc6jy88vdp71";
   };
   
-  buildInputs = [ pkgconfig dbus_glib libxml2 libxslt getopt nixUnstable libintlOrEmpty libiconvOrEmpty dysnomia ];
+  buildInputs = [ pkgconfig glib libxml2 libxslt getopt nixUnstable libintlOrEmpty libiconv dysnomia ];
 
-  dontStrip = true;
-  
   meta = {
-    description = "A distributed deployment extension for Nix";
+    description = "A Nix-based distributed service deployment tool";
     license = stdenv.lib.licenses.lgpl21Plus;
     maintainers = [ stdenv.lib.maintainers.sander ];
+    platforms = stdenv.lib.platforms.unix;
   };
 }

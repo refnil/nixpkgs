@@ -1,35 +1,60 @@
-{stdenv, fetchurl, perl, ncurses, yacc}:
+{ stdenv, fetchurl, pkgconfig, perl, yacc, bootstrap_cmds
+, openssl, openldap, libedit
+
+# Extra Arguments
+, type ? ""
+}:
 
 let
-  pname = "krb5";
-  version = "1.11.3";
-  name = "${pname}-${version}";
-  webpage = http://web.mit.edu/kerberos/;
+  libOnly = type == "lib";
 in
-
-stdenv.mkDerivation (rec {
-  inherit name;
+with stdenv.lib;
+stdenv.mkDerivation rec {
+  name = "${type}krb5-${version}";
+  majorVersion = "1.15";
+  version = "${majorVersion}";
 
   src = fetchurl {
-    url = "${webpage}/dist/krb5/1.11/${name}-signed.tar";
-    sha256 = "1daiaxgkxcryqs37w28v4x1vajqmay4l144d1zd9c2d7jjxr9gcs";
+    url = "${meta.homepage}dist/krb5/${majorVersion}/krb5-${version}.tar.gz";
+    sha256 = "0z0jxm6ppbxi9anv2h12nrb5lpwl95f96kw6dx7sn268fhkpad7x";
   };
 
-  buildInputs = [ perl ncurses yacc ];
+  configureFlags = [ "--with-tcl=no" ] ++ optional stdenv.isFreeBSD ''WARN_CFLAGS=""'';
 
-  unpackPhase = ''
-    tar -xf $src
-    tar -xzf ${name}.tar.gz
-    cd ${name}/src
+  nativeBuildInputs = [ pkgconfig perl yacc ]
+    # Provides the mig command used by the build scripts
+    ++ optional stdenv.isDarwin bootstrap_cmds;
+  buildInputs = [ openssl ]
+    ++ optionals (!libOnly) [ openldap libedit ];
+
+  preConfigure = "cd ./src";
+
+  buildPhase = optionalString libOnly ''
+    (cd util; make -j $NIX_BUILD_CORES)
+    (cd include; make -j $NIX_BUILD_CORES)
+    (cd lib; make -j $NIX_BUILD_CORES)
+    (cd build-tools; make -j $NIX_BUILD_CORES)
   '';
 
-  #doCheck = true; # report: No suitable file for testing purposes
+  installPhase = optionalString libOnly ''
+    mkdir -p $out/{bin,include/{gssapi,gssrpc,kadm5,krb5},lib/pkgconfig,sbin,share/{et,man/man1}}
+    (cd util; make -j $NIX_BUILD_CORES install)
+    (cd include; make -j $NIX_BUILD_CORES install)
+    (cd lib; make -j $NIX_BUILD_CORES install)
+    (cd build-tools; make -j $NIX_BUILD_CORES install)
+    rm -rf $out/{sbin,share}
+    find $out/bin -type f | grep -v 'krb5-config' | xargs rm
+  '';
 
   enableParallelBuilding = true;
 
   meta = {
     description = "MIT Kerberos 5";
-    homepage = webpage;
-    license = "MPL";
+    homepage = http://web.mit.edu/kerberos/;
+    license = licenses.mit;
+    platforms = platforms.unix;
+    maintainers = with maintainers; [ wkennington ];
   };
-})
+
+  passthru.implementation = "krb5";
+}

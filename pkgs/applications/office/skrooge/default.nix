@@ -1,20 +1,35 @@
-{ stdenv, fetchurl, kdelibs, grantlee, qca2, libofx, gettext }:
+{ stdenv, fetchurl, cmake, extra-cmake-modules, makeQtWrapper, qtwebkit, qtscript, grantlee,
+  kxmlgui, kwallet, kparts, kdoctools, kjobwidgets, kdesignerplugin,
+  kiconthemes, knewstuff, sqlcipher, qca-qt5, kdelibs4support, kactivities,
+  knotifyconfig, krunner, libofx }:
 
 stdenv.mkDerivation rec {
-  name = "skrooge-1.3.2";
+  name = "skrooge-${version}";
+  version = "2.7.0";
 
   src = fetchurl {
-    url = "http://skrooge.org/files/${name}.tar.bz2";
-    sha256 = "18j36yamxzfwpnnnjiach22q9088c2nlcilzh2p24gjhgnnd0v6r";
+    url = "http://download.kde.org/stable/skrooge/${name}.tar.xz";
+    sha256 = "1xrh9nal122rzlv4m0x8qah6zpqb6891al3351piarpk2xgjgj4x";
   };
 
-  buildInputs = [ kdelibs grantlee qca2 libofx ];
+  nativeBuildInputs = [ cmake extra-cmake-modules makeQtWrapper ];
 
-  nativeBuildInputs = [ gettext ];
+  buildInputs = [ qtwebkit qtscript grantlee kxmlgui kwallet kparts kdoctools
+    kjobwidgets kdesignerplugin kiconthemes knewstuff sqlcipher qca-qt5
+    kdelibs4support kactivities knotifyconfig krunner libofx
+  ];
 
-  meta = {
-    inherit (kdelibs.meta) platforms;
-    description = "A personal finance manager for KDE";
-    maintainers = [ stdenv.lib.maintainers.urkud ];
+  enableParallelBuilding = true;
+
+  postInstall = ''
+    wrapQtProgram "$out/bin/skrooge"
+    wrapQtProgram "$out/bin/skroogeconvert"
+  '';
+
+  meta = with stdenv.lib; {
+    description = "A personal finances manager, powered by KDE";
+    license = with licenses; [ gpl3 ];
+    maintainers = with maintainers; [ joko ];
+    homepage = https://skrooge.org/;
   };
 }

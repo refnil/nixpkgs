@@ -17,6 +17,7 @@ stdenv.mkDerivation rec {
   meta = {
     homepage = "http://icculus.org/physfs/";
     description = "Library to provide abstract access to various archives";
-    license = "free";
+    license = stdenv.lib.licenses.free;
+    platforms = stdenv.lib.platforms.linux;
   };
 }

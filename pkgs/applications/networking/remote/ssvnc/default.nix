@@ -1,5 +1,5 @@
-{ stdenv, fetchurl, imake, zlib, openjdk, libX11, libXt, libXmu
-, libXaw, libXext, libXpm, openjpeg, openssl, tcl, tk }:
+{ stdenv, fetchurl, imake, zlib, jdk, libX11, libXt, libXmu
+, libXaw, libXext, libXpm, openjpeg, openssl, tcl, tk, perl }:
 
 stdenv.mkDerivation rec {
   name = "ssvnc-${version}";
@@ -10,12 +10,15 @@ stdenv.mkDerivation rec {
     sha256 = "74df32eb8eaa68b07c9693a232ebe42154617c7f3cbe1d4e68d3fe7c557d618d";
   };
 
-  buildInputs = [ imake zlib openjdk libX11 libXt libXmu libXaw libXext libXpm openjpeg openssl ];
+  buildInputs = [ imake zlib jdk libX11 libXt libXmu libXaw libXext libXpm openjpeg openssl ];
 
   configurePhase = "makeFlags=PREFIX=$out";
 
+  hardeningDisable = [ "format" ];
+
   postInstall = ''
     sed -i -e 's|exec wish|exec ${tk}/bin/wish|' $out/lib/ssvnc/util/ssvnc.tcl
+    sed -i -e 's|/usr/bin/perl|${perl}/bin/perl|' $out/lib/ssvnc/util/ss_vncviewer
   '';
 
   meta = {

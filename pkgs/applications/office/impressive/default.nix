@@ -1,10 +1,10 @@
-{ fetchurl, stdenv, python, makeWrapper, lib
-, xpdf, pil, pyopengl, pygame
-, setuptools, mesa, freeglut }:
+{ fetchurl, stdenv, python2Packages, makeWrapper, lib
+, xpdf, mesa, SDL, freeglut }:
 
-let version = "0.10.3";
-in
- stdenv.mkDerivation {
+let
+  inherit (python2Packages) python pyopengl pygame setuptools pillow;
+  version = "0.11.1";
+in stdenv.mkDerivation {
     # This project was formerly known as KeyJNote.
     # See http://keyj.s2000.ws/?p=77 for details.
 
@@ -12,12 +12,12 @@ in
 
     src = fetchurl {
       url = "mirror://sourceforge/impressive/Impressive-${version}.tar.gz";
-      sha256 = "0ppr9bckswpi3gav56dhrk91ibxvqbfhpxmm0zikzpxhdlvnaj5v";
+      sha256 = "0b3rmy6acp2vmf5nill3aknxvr9a5aawk1vnphkah61anxp62gsr";
     };
 
     # Note: We need to have `setuptools' in the path to be able to use
     # PyOpenGL.
-    buildInputs = [ makeWrapper xpdf pil pyopengl pygame ];
+    buildInputs = [ makeWrapper xpdf pillow pyopengl pygame ];
 
     configurePhase = ''
       sed -i "impressive.py" \
@@ -39,13 +39,13 @@ in
       # honors $LIBRARY_PATH.  See
       # http://python.net/crew/theller/ctypes/reference.html#id1 .
       wrapProgram "$out/bin/impressive" \
-         --prefix PATH ":" "${xpdf}" \
+         --prefix PATH ":" "${xpdf}/bin" \
          --prefix PYTHONPATH ":" \
                   ${lib.concatStringsSep ":"
                      (map (path:
                             path + "/lib/${python.libPrefix}/site-packages")
-                          [ pil pyopengl pygame setuptools ])} \
-         --prefix LIBRARY_PATH ":" "${mesa}/lib:${freeglut}/lib"
+                          [ pillow pyopengl pygame setuptools ])} \
+         --prefix LIBRARY_PATH ":" "${lib.makeLibraryPath [ mesa freeglut SDL ]}"
     '';
 
     meta = {
@@ -73,7 +73,7 @@ in
 
       license = stdenv.lib.licenses.gpl2;
 
-      maintainers = [ stdenv.lib.maintainers.ludo ];
+      maintainers = [ ];
       platforms = stdenv.lib.platforms.mesaPlatforms;
     };
   }

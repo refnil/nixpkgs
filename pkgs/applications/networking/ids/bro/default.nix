@@ -1,22 +1,23 @@
-{stdenv, fetchurl, cmake, flex, bison, openssl, libpcap, perl, zlib, file, curl, geoip, gperftools }:
+{stdenv, fetchurl, cmake, flex, bison, openssl, libpcap, perl, zlib, file, curl
+, geoip, gperftools, python }:
 
 stdenv.mkDerivation rec {
-  name = "bro-2.1";
-  
-  src = fetchurl {
-    url = "http://www.bro.org/downloads/release/${name}.tar.gz";
-    sha256 = "1q2mm7rbgjcn01na2wm5fdfdm9pggzgljxj0n127s93fip3vg0qd";
-  };
-  
-  buildInputs = [ cmake flex bison openssl libpcap perl zlib file curl geoip gperftools ];
+  name = "bro-2.5";
 
-  USER="something";
+  src = fetchurl {
+    url = "http://www.bro.org/downloads/${name}.tar.gz";
+    sha256 = "10603lwhwsmh08m5rgknbspbhd4lis71qv7z8ixacgv6sf8a40hm";
+  };
+
+  buildInputs = [ cmake flex bison openssl libpcap perl zlib file curl geoip gperftools python ];
 
   enableParallelBuilding = true;
-  
-  meta = {
+
+  meta = with stdenv.lib; {
     description = "Powerful network analysis framework that is much different from the typical IDS you may know";
     homepage = http://www.bro.org/;
-    license = "BSD";
+    license = licenses.bsd3;
+    maintainers = with maintainers; [ pSub ];
+    platforms = with platforms; linux;
   };
 }

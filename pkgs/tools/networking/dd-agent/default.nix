@@ -1,35 +1,85 @@
-{ stdenv, fetchFromGitHub, python, pythonPackages, sysstat, unzip, tornado
-, makeWrapper }:
+{ stdenv, fetchFromGitHub, pythonPackages
+, sysstat, unzip, makeWrapper }:
+let
+  inherit (pythonPackages) python;
+  docker_1_10 = pythonPackages.buildPythonPackage rec {
+    name = "docker-${version}";
+    version = "1.10.6";
 
-stdenv.mkDerivation rec {
-  version = "4.3.1";
+    src = fetchFromGitHub {
+      owner = "docker";
+      repo = "docker-py";
+      rev = version;
+      sha256 = "1awzpbrkh4fympqzddz5i3ml81b7f0i0nwkvbpmyxjjfqx6l0m4m";
+    };
+
+    propagatedBuildInputs = with pythonPackages; [
+      six
+      requests2
+      websocket_client
+      ipaddress
+      backports_ssl_match_hostname
+      docker_pycreds
+      uptime
+    ];
+
+    # due to flake8
+    doCheck = false;
+  };
+
+in stdenv.mkDerivation rec {
+  version = "5.11.2";
   name = "dd-agent-${version}";
 
   src = fetchFromGitHub {
-    owner = "DataDog";
-    repo = "dd-agent";
-    rev = version;
-    sha256 = "0z6b1s30fyd9ldahizrjwcxx7c7dd74xsqy19j3qykrb25j9cvmn";
+    owner  = "datadog";
+    repo   = "dd-agent";
+    rev    = version;
+    sha256 = "1iqxvgpsqibqw3vk79158l2pnb6y4pjhjp2d6724lm5rpz4825lx";
   };
 
-  buildInputs = [ python unzip makeWrapper pythonPackages.psycopg2 ];
-  propagatedBuildInputs = [ python tornado ];
+  buildInputs = [
+    python
+    unzip
+    makeWrapper
+    pythonPackages.requests2
+    pythonPackages.psycopg2
+    pythonPackages.psutil
+    pythonPackages.ntplib
+    pythonPackages.simplejson
+    pythonPackages.pyyaml
+    pythonPackages.pymongo_2_9_1
+    pythonPackages.python-etcd
+    pythonPackages.consul
+    docker_1_10
+  ];
+  propagatedBuildInputs = with pythonPackages; [ python tornado ];
 
-  postUnpack = "export sourceRoot=$sourceRoot/packaging";
+  buildCommand = ''
+    mkdir -p $out/bin
+    cp -R $src $out/agent
+    chmod u+w -R $out
+    PYTHONPATH=$out/agent:$PYTHONPATH
+    ln -s $out/agent/agent.py $out/bin/dd-agent
+    ln -s $out/agent/dogstatsd.py $out/bin/dogstatsd
+    ln -s $out/agent/ddagent.py $out/bin/dd-forwarder
 
-  makeFlags = [ "BUILD=$(out)" ];
+    cat > $out/bin/dd-jmxfetch <<EOF
+    #!/usr/bin/env bash
+    exec ${python}/bin/python $out/agent/jmxfetch.py $@
+    EOF
+    chmod a+x $out/bin/dd-jmxfetch
 
-  installTargets = [ "install_base" "install_full" ];
-
-  postInstall = ''
-    mv $out/usr/* $out
-    rmdir $out/usr
     wrapProgram $out/bin/dd-forwarder \
       --prefix PYTHONPATH : $PYTHONPATH
     wrapProgram $out/bin/dd-agent \
       --prefix PYTHONPATH : $PYTHONPATH
     wrapProgram $out/bin/dogstatsd \
       --prefix PYTHONPATH : $PYTHONPATH
+    wrapProgram $out/bin/dd-jmxfetch \
+      --prefix PYTHONPATH : $PYTHONPATH
+
+    patchShebangs $out
   '';
 
   meta = {
@@ -37,6 +87,6 @@ stdenv.mkDerivation rec {
     homepage    = http://www.datadoghq.com;
     license     = stdenv.lib.licenses.bsd3;
     platforms   = stdenv.lib.platforms.all;
-    maintainers = with stdenv.lib.maintainers; [ thoughtpolice iElectric ];
+    maintainers = with stdenv.lib.maintainers; [ thoughtpolice domenkozar ];
   };
 }

@@ -8,11 +8,11 @@
 }:
 
 stdenv.mkDerivation rec {
-  name = "xonotic-0.7.0";
+  name = "xonotic-0.8.1";
 
   src = fetchurl {
     url = "http://dl.xonotic.org/${name}.zip";
-    sha256 = "21a5fb5493c269cd3843789cb8598f952d4196e8bc71804b9bd5808b646542c6";
+    sha256 = "0vy4hkrbpz9g91gb84cbv4xl845qxaknak6hshk2yflrw90wr2xy";
   };
 
   buildInputs = [
@@ -22,20 +22,10 @@ stdenv.mkDerivation rec {
     libX11 mesa libXpm libXext libXxf86vm alsaLib
     # sdl
     SDL
+    zlib libvorbis curl
   ];
 
   sourceRoot = "Xonotic/source/darkplaces";
-
-  #patchPhase = ''
-  #  substituteInPlace glquake.h \
-  #    --replace 'typedef char GLchar;' '/*typedef char GLchar;*/'
-  #'';
-
-  NIX_LDFLAGS = ''
-    -rpath ${zlib}/lib
-    -rpath ${libvorbis}/lib
-    -rpath ${curl}/lib
-  '';
 
   buildPhase = ''
     DP_FS_BASEDIR="$out/share/xonotic"
@@ -43,6 +33,7 @@ stdenv.mkDerivation rec {
     make DP_FS_BASEDIR=$DP_FS_BASEDIR sdl-release
     make DP_FS_BASEDIR=$DP_FS_BASEDIR sv-release
   '';
+  enableParallelBuilding = true;
 
   installPhase = ''
     mkdir -p "$out/bin"
@@ -70,7 +61,7 @@ stdenv.mkDerivation rec {
       aims to become the best possible open-source FPS of its kind.
     '';
     homepage = http://www.xonotic.org;
-    license = with stdenv.lib.licenses; gpl2Plus;
+    license = stdenv.lib.licenses.gpl2Plus;
     maintainers = with stdenv.lib.maintainers; [ astsmtl ];
     platforms = stdenv.lib.platforms.linux;
     hydraPlatforms = [];

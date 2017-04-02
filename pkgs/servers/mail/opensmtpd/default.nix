@@ -1,34 +1,66 @@
-{ stdenv, fetchurl, libevent, zlib, openssl, db, bison, pam }:
+{ stdenv, lib, fetchurl, autoconf, automake, libtool, bison
+, libasr, libevent, zlib, openssl, db, pam
+
+# opensmtpd requires root for no reason to encrypt passwords, this patch fixes it
+# see also https://github.com/OpenSMTPD/OpenSMTPD/issues/678
+, unpriviledged_smtpctl_encrypt ? true
+
+# This enables you to override the '+' character which typically separates the user from the tag in user+tag@domain.tld
+, tag_char ? null
+}:
 
 stdenv.mkDerivation rec {
   name = "opensmtpd-${version}";
-  version = "5.4.2p1";
+  version = "6.0.2p1";
 
-  buildInputs = [ libevent zlib openssl db bison pam ];
+  nativeBuildInputs = [ autoconf automake libtool bison ];
+  buildInputs = [ libasr libevent zlib openssl db pam ];
 
   src = fetchurl {
-    url = "http://www.opensmtpd.org/archives/${name}.tar.gz";
-    sha256 = "18nrzfjhv9znb5dbhc5k3fi31a3vr1r8j36q3fzghkh47n6z9yjg";
-  };  
+    url = "https://www.opensmtpd.org/archives/${name}.tar.gz";
+    sha256 = "1b4h64w45hpmfq5721smhg4s0shs64gbcjqjpx3fbiw4hz8bdy9a";
+  };
 
-  configureFlags = [ 
+  patches = [ ./proc_path.diff ];
+
+  postPatch = with builtins; with lib;
+    optionalString (isString tag_char) ''
+      sed -i -e "s,TAG_CHAR.*'+',TAG_CHAR '${tag_char}'," smtpd/smtpd-defines.h
+    '' +
+    optionalString unpriviledged_smtpctl_encrypt ''
+      substituteInPlace smtpd/smtpctl.c --replace \
+        'if (geteuid())' \
+        'if (geteuid() != 0 && !(argc > 1 && !strcmp(argv[1], "encrypt")))'
+    '';
+
+  configureFlags = [
+    "--sysconfdir=/etc"
+    "--localstatedir=/var"
     "--with-mantype=doc"
-    "--with-pam"
-    "--without-bsd-auth"
-    "--with-sock-dir=/run"
-    "--with-privsep-user=smtpd"
-    "--with-queue-user=smtpq"
-    "--with-ca-file=/etc/ssl/certs/ca-bundle.crt"
-  ];  
+    "--with-auth-pam"
+    "--without-auth-bsdauth"
+    "--with-path-socket=/run"
+    "--with-user-smtpd=smtpd"
+    "--with-user-queue=smtpq"
+    "--with-group-queue=smtpq"
+    "--with-path-CAfile=/etc/ssl/certs/ca-certificates.crt"
+    "--with-libevent=${libevent.dev}"
+    "--with-table-db"
+  ];
 
-  meta = {
-    homepage = "http://www.postfix.org/";
+  installFlags = [
+    "sysconfdir=\${out}/etc"
+    "localstatedir=\${TMPDIR}"
+  ];
+
+  meta = with stdenv.lib; {
+    homepage = https://www.opensmtpd.org/;
     description = ''
       A free implementation of the server-side SMTP protocol as defined by
-      RFC 5321, with some additional standard extensions.
+      RFC 5321, with some additional standard extensions
     '';
-    license = stdenv.lib.licenses.isc;
-    platforms = stdenv.lib.platforms.linux;
-    maintainers = [ stdenv.lib.maintainers.rickynils ];
+    license = licenses.isc;
+    platforms = platforms.linux;
+    maintainers = with maintainers; [ rickynils obadz ];
   };
 }

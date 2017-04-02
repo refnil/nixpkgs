@@ -1,22 +1,21 @@
-{ stdenv, fetchurl, qt4, popplerQt4, zlib, pkgconfig, poppler}:
+{ stdenv, fetchurl, qt4, qmake4Hook, poppler_qt4, zlib, pkgconfig, poppler }:
 
 stdenv.mkDerivation rec {
   pname = "texmaker";
-  version = "4.1.1";
+  version = "4.5";
   name = "${pname}-${version}";
 
   src = fetchurl {
     url = "http://www.xm1math.net/texmaker/${name}.tar.bz2";
-    sha256 = "1h5rxdq6f05wk3lnlw96fxwrb14k77cx1mwy648127h2c8nsgw4z";
+    sha256 = "056njk6j8wma23mlp7xa3rgfaxx0q8ynwx8wkmj7iy0b85p9ds9c";
   };
 
-  buildInputs = [ qt4 popplerQt4 zlib ];
-
-  nativeBuildInputs = [ pkgconfig poppler ];
+  buildInputs = [ qt4 poppler_qt4 zlib ];
+  nativeBuildInputs = [ pkgconfig poppler qmake4Hook ];
+  NIX_CFLAGS_COMPILE="-I${poppler.dev}/include/poppler";
 
   preConfigure = ''
-    export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE -I$(echo ${poppler}/include/poppler/) " # for poppler-config.h
-    qmake PREFIX=$out DESKTOPDIR=$out/share/applications ICONDIR=$out/share/pixmaps texmaker.pro
+    qmakeFlags="$qmakeFlags DESKTOPDIR=$out/share/applications ICONDIR=$out/share/pixmaps"
   '';
 
   meta = with stdenv.lib; {

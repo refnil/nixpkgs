@@ -6,7 +6,7 @@ let
 
   # Code with BSD license
   srcNatPMP = fetchgit {
-    url = "https://code.google.com/p/go-nat-pmp/";
+    url = https://github.com/jackpal/go-nat-pmp;
     rev = "e04deda90d56";
     sha256 = "1swwfyzaj3l40yh9np3x4fcracgs79nwryc85sxbdakx8wwxs2xb";
   };
@@ -35,7 +35,7 @@ stdenv.mkDerivation rec {
   '';
 
   installPhase = ''
-    ensureDir $out/bin
+    mkdir -p $out/bin
     cp filegive $out/bin
   '';
 

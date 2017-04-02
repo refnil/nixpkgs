@@ -1,48 +1,107 @@
-{ stdenv, fetchurl, pkgconfig, gnum4, gdbm, libtool, glib, dbus, avahi
-, gconf, gtk, intltool, gettext, alsaLib, libsamplerate, libsndfile, speex
-, bluez, sbc, udev, libcap, json_c
-, jackaudioSupport ? false, jack2 ? null
-, x11Support ? false, xlibs
-, useSystemd ? false, systemd ? null }:
+{ lib, stdenv, fetchurl, fetchpatch, pkgconfig, intltool, autoreconfHook
+, libsndfile, libtool
+, xorg, libcap, alsaLib, glib
+, avahi, libjack2, libasyncns, lirc, dbus
+, sbc, bluez5, udev, openssl, fftwFloat
+, speexdsp, systemd, webrtc-audio-processing, gconf ? null
 
-assert jackaudioSupport -> jack2 != null;
+# Database selection
+, tdb ? null, gdbm ? null
+
+, x11Support ? false
+
+, useSystemd ? true
+
+, # Whether to support the JACK sound system as a backend.
+  jackaudioSupport ? false
+
+, # Whether to build the OSS wrapper ("padsp").
+  ossWrapper ? true
+
+, airtunesSupport ? false
+
+, gconfSupport ? false
+
+, bluetoothSupport ? false
+
+, remoteControlSupport ? false
+
+, zeroconfSupport ? false
+
+, # Whether to build only the library.
+  libOnly ? false
+
+, CoreServices, AudioUnit, Cocoa
+}:
 
 stdenv.mkDerivation rec {
-  name = "pulseaudio-5.0";
+  name = "${if libOnly then "lib" else ""}pulseaudio-${version}";
+  version = "10.0";
 
   src = fetchurl {
-    url = "http://freedesktop.org/software/pulseaudio/releases/${name}.tar.xz";
-    sha256 = "0fgrr8v7yfh0byhzdv4c87v9lkj8g7gpjm8r9xrbvpa92a5kmhcr";
+    url = "http://freedesktop.org/software/pulseaudio/releases/pulseaudio-${version}.tar.xz";
+    sha256 = "0mrg8qvpwm4ifarzphl3749p7p050kdx1l6mvsaj03czvqj6h653";
   };
 
-  # Since `libpulse*.la' contain `-lgdbm' and `-lcap', it must be propagated.
-  propagatedBuildInputs
-    = [ gdbm ] ++ stdenv.lib.optionals stdenv.isLinux [ libcap ];
+  patches = [ ./caps-fix.patch ]
+            ++ stdenv.lib.optional stdenv.isDarwin (fetchpatch {
+              url = "https://bugs.freedesktop.org/attachment.cgi?id=127889";
+              sha256 = "063h5vmh4ykgxjbxyxjlj6qhyyxhazbh3p18p1ik69kq24nkny9m";
+            });
+
+  outputs = [ "out" "dev" ];
+
+  nativeBuildInputs = [ pkgconfig intltool autoreconfHook ];
+
+  propagatedBuildInputs =
+    lib.optionals stdenv.isLinux [ libcap ];
 
   buildInputs =
-    [ pkgconfig gnum4 libtool intltool glib dbus avahi libsamplerate libsndfile
-      speex json_c ]
-    ++ stdenv.lib.optional jackaudioSupport jack2
-    ++ stdenv.lib.optionals x11Support [ xlibs.xlibs xlibs.libXtst xlibs.libXi ]
-    ++ stdenv.lib.optional useSystemd systemd
-    ++ stdenv.lib.optionals stdenv.isLinux [ alsaLib bluez sbc udev ];
+    [ libsndfile speexdsp fftwFloat ]
+    ++ lib.optionals stdenv.isLinux [ glib dbus ]
+    ++ lib.optionals stdenv.isDarwin [ CoreServices AudioUnit Cocoa ]
+    ++ lib.optionals (!libOnly) (
+      [ libasyncns webrtc-audio-processing ]
+      ++ lib.optional jackaudioSupport libjack2
+      ++ lib.optionals x11Support [ xorg.xlibsWrapper xorg.libXtst xorg.libXi ]
+      ++ lib.optional useSystemd systemd
+      ++ lib.optionals stdenv.isLinux [ alsaLib udev ]
+      ++ lib.optional airtunesSupport openssl
+      ++ lib.optional gconfSupport gconf
+      ++ lib.optionals bluetoothSupport [ bluez5 sbc ]
+      ++ lib.optional remoteControlSupport lirc
+      ++ lib.optional zeroconfSupport  avahi
+    );
 
   preConfigure = ''
+    # Performs and autoreconf
+    export NOCONFIGURE="yes"
+    patchShebangs bootstrap.sh
+    ./bootstrap.sh
+
     # Move the udev rules under $(prefix).
     sed -i "src/Makefile.in" \
         -e "s|udevrulesdir[[:blank:]]*=.*$|udevrulesdir = $out/lib/udev/rules.d|g"
 
-   # don't install proximity-helper as root and setuid
-   sed -i "src/Makefile.in" \
-       -e "s|chown root|true |" \
-       -e "s|chmod r+s |true |"
+    # don't install proximity-helper as root and setuid
+    sed -i "src/Makefile.in" \
+        -e "s|chown root|true |" \
+        -e "s|chmod r+s |true |"
   '';
 
   configureFlags =
-    [ "--disable-solaris" "--disable-jack" "--disable-oss-output"
-      "--disable-oss-wrapper" "--localstatedir=/var" "--sysconfdir=/etc" ]
-    ++ stdenv.lib.optional jackaudioSupport "--enable-jack"
-    ++ stdenv.lib.optional stdenv.isDarwin "--with-mac-sysroot=/";
+    [ "--disable-solaris"
+      "--disable-jack"
+      "--disable-oss-output"
+    ] ++ lib.optional (!ossWrapper) "--disable-oss-wrapper" ++
+    [ "--localstatedir=/var"
+      "--sysconfdir=/etc"
+      "--with-access-group=audio"
+      "--with-bash-completion-dir=\${out}/share/bash-completions/completions"
+    ]
+    ++ lib.optional (jackaudioSupport && !libOnly) "--enable-jack"
+    ++ lib.optional stdenv.isDarwin "--with-mac-sysroot=/"
+    ++ lib.optional (stdenv.isLinux && useSystemd) "--with-systemduserunitdir=\${out}/lib/systemd/user";
 
   enableParallelBuilding = true;
 
@@ -51,19 +110,25 @@ stdenv.mkDerivation rec {
   # the alternative is to copy the files from /usr/include to src, but there are
   # probably a large number of files that would need to be copied (I stopped
   # after the seventh)
-  NIX_CFLAGS_COMPILE = stdenv.lib.optionalString stdenv.isDarwin
-    "-I/usr/include";
+  NIX_CFLAGS_COMPILE = lib.optionalString stdenv.isDarwin "-I/usr/include";
 
-  installFlags = "sysconfdir=$(out)/etc pulseconfdir=$(out)/etc/pulse";
+  installFlags =
+    [ "sysconfdir=$(out)/etc"
+      "pulseconfdir=$(out)/etc/pulse"
+    ];
 
-  meta = with stdenv.lib; {
-    description = "PulseAudio, a sound server for POSIX and Win32 systems";
+  postInstall = lib.optionalString libOnly ''
+    rm -rf $out/{bin,share,etc,lib/{pulse-*,systemd}}
+    sed 's|-lltdl|-L${libtool.lib}/lib -lltdl|' -i $out/lib/pulseaudio/libpulsecore-${version}.la
+  ''
+    + ''moveToOutput lib/cmake "$dev" '';
+
+  meta = {
+    description = "Sound server for POSIX and Win32 systems";
     homepage    = http://www.pulseaudio.org/;
-    # Note: Practically, the server is under the GPL due to the
-    # dependency on `libsamplerate'.  See `LICENSE' for details.
-    licenses    = licenses.lgpl2Plus;
-    maintainers = with maintainers; [ lovek323 ];
-    platforms   = platforms.unix;
+    licenses    = lib.licenses.lgpl2Plus;
+    maintainers = with lib.maintainers; [ lovek323 wkennington ];
+    platforms   = lib.platforms.unix;
 
     longDescription = ''
       PulseAudio is a sound server for POSIX and Win32 systems.  A

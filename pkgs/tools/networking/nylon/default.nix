@@ -1,5 +1,11 @@
-{stdenv, fetchurl, libevent} :
-
+{ stdenv, fetchurl, libevent, buildEnv }:
+let
+  # failed to find a better way to make it work
+  libevent-comb = buildEnv {
+    inherit (libevent.out) name;
+    paths = [ libevent.dev libevent.out ];
+  };
+in
 stdenv.mkDerivation {
   name = "nylon-1.21";
   src = fetchurl {
@@ -7,13 +13,17 @@ stdenv.mkDerivation {
     sha256 = "34c132b005c025c1a5079aae9210855c80f50dc51dde719298e1113ad73408a4";
   };
 
-  configureFlags = [ "--with-libevent=${libevent}" ];
+  patches = [ ./configure-use-solib.patch ];
+
+  configureFlags = [ "--with-libevent=${libevent-comb}" ];
 
   buildInputs = [ libevent ];
 
-  meta = {
+  meta = with stdenv.lib; {
     homepage = http://monkey.org/~marius/nylon;
     description = "Proxy server, supporting SOCKS 4 and 5, as well as a mirror mode";
-    license = "free";
+    license = licenses.bsdOriginal;
+    maintainers = with maintainers; [ edwtjo viric ];
+    platforms = platforms.linux;
   };
 }

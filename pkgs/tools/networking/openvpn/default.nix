@@ -1,30 +1,32 @@
-{ stdenv, fetchurl, iproute, lzo, openssl, pam, systemd }:
+{ stdenv, fetchurl, iproute, lzo, openssl, pam, systemd, pkgconfig
+, pkcs11Support ? false, pkcs11helper ? null,
+}:
+
+assert pkcs11Support -> (pkcs11helper != null);
 
 with stdenv.lib;
 
 stdenv.mkDerivation rec {
-  name = "openvpn-2.3.4";
+  name = "openvpn-${version}";
+  version = "2.4.0";
 
   src = fetchurl {
-    url = "http://swupdate.openvpn.net/community/releases/${name}.tar.gz";
-    sha256 = "0nn8rrh6jadsydnym69r4s7rm6jzsgxb6p23yb9ai3sn91gnsl5g";
+    url = "http://swupdate.openvpn.net/community/releases/${name}.tar.xz";
+    sha256 = "0zpqnbhjaifdalyxwmvk5kcyd7cpxbcigbn7967nbsyvl54vl8vg";
   };
 
   patches = optional stdenv.isLinux ./systemd-notify.patch;
 
-  buildInputs = [ iproute lzo openssl pam ] ++ optional stdenv.isLinux systemd;
+  buildInputs = [ lzo openssl pkgconfig ]
+                  ++ optionals stdenv.isLinux [ pam systemd iproute ]
+                  ++ optional pkcs11Support pkcs11helper;
 
-  configureFlags = ''
-    --enable-password-save
-    --enable-iproute2
-    --enable-systemd
-    IPROUTE=${iproute}/sbin/ip
-  '';
-
-  preConfigure = ''
-    substituteInPlace ./src/openvpn/console.c \
-      --replace /bin/systemd-ask-password /run/current-system/sw/bin/systemd-ask-password
-  '';
+  configureFlags = optionals stdenv.isLinux [
+    "--enable-systemd"
+    "--enable-iproute2"
+    "IPROUTE=${iproute}/sbin/ip" ]
+    ++ optional pkcs11Support "--enable-pkcs11"
+    ++ optional stdenv.isDarwin "--disable-plugin-auth-pam";
 
   postInstall = ''
     mkdir -p $out/share/doc/openvpn/examples
@@ -35,13 +37,13 @@ stdenv.mkDerivation rec {
 
   enableParallelBuilding = true;
 
-  NIX_LDFLAGS = optionalString stdenv.isLinux "-lsystemd-daemon"; # hacky
-
   meta = {
     description = "A robust and highly flexible tunneling application";
     homepage = http://openvpn.net/;
+    downloadPage = "https://openvpn.net/index.php/open-source/downloads.html";
     license = stdenv.lib.licenses.gpl2;
     maintainers = [ stdenv.lib.maintainers.viric ];
-    platforms = stdenv.lib.platforms.linux;
+    platforms = stdenv.lib.platforms.unix;
+    updateWalker = true;
   };
 }

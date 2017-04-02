@@ -1,21 +1,35 @@
 { stdenv, fetchurl, nasm }:
 
 stdenv.mkDerivation rec {
-  name = "libjpeg-turbo-1.3.1";
+  name = "libjpeg-turbo-${version}";
+  version = "1.5.1";
 
   src = fetchurl {
     url = "mirror://sourceforge/libjpeg-turbo/${name}.tar.gz";
-    sha256 = "1fbgcvlnn3d5gvf0v9jnlcabpv2z3nwxclzyabahxi6x2xs90cn1";
-  };
+    sha256 = "0v365hm6z6lddcqagjj15wflk66rqyw75m73cqzl65rh4lyrshj1";
+  }; # github releases still need autotools, surprisingly
 
-  buildInputs = [ nasm ];
+  patches =
+    stdenv.lib.optional (stdenv.cross.libc or null == "msvcrt")
+      ./mingw-boolean.patch;
+
+  outputs = [ "bin" "dev" "out" "doc" ];
+
+  nativeBuildInputs = [ nasm ];
+
+  enableParallelBuilding = true;
 
   doCheck = true;
   checkTarget = "test";
 
-  meta = {
+  meta = with stdenv.lib; {
     homepage = http://libjpeg-turbo.virtualgl.org/;
     description = "A faster (using SIMD) libjpeg implementation";
-    license = "free";
+    license = licenses.ijg; # and some parts under other BSD-style licenses
+    maintainers = [ maintainers.vcunat ];
+    # upstream supports darwin (and others), but it doesn't build currently
+    platforms = platforms.all;
+    hydraPlatforms = platforms.linux;
   };
 }
+

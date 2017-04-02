@@ -13,7 +13,7 @@ stdenv.mkDerivation rec {
     ++ stdenv.lib.optional (!stdenv.isDarwin) acl;
 
   configureFlags = [ 
-    "--with-sqlite3=${sqlite}" 
+    "--with-sqlite3=${sqlite.dev}"
     "--with-postgresql=${postgresql}"
   ];
 
@@ -25,8 +25,8 @@ stdenv.mkDerivation rec {
   meta = with stdenv.lib; {
     description = "Enterprise ready, Network Backup Tool";
     homepage    = http://bacula.org/;
-    license     = "GPLv2";
-    maintainers = with maintainers; [ iElectric lovek323 ];
-    platforms   = stdenv.lib.platforms.all;
+    license     = licenses.gpl2;
+    maintainers = with maintainers; [ domenkozar lovek323 ];
+    platforms   = platforms.all;
   };
 }

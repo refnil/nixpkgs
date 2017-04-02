@@ -35,15 +35,17 @@ in
       description = "tcpcrypt daemon user";
     };
 
-    jobs.tcpcrypt = {
+    systemd.services.tcpcrypt = {
       description = "tcpcrypt";
 
-      wantedBy = ["multi-user.target"];
-      after = ["network-interfaces.target"];
+      wantedBy = [ "multi-user.target" ];
+      after = [ "network.target" ];
 
       path = [ pkgs.iptables pkgs.tcpcrypt pkgs.procps ];
 
       preStart = ''
+        mkdir -p /var/run/tcpcryptd
+        chown tcpcryptd /var/run/tcpcryptd
         sysctl -n net.ipv4.tcp_ecn >/run/pre-tcpcrypt-ecn-state
         sysctl -w net.ipv4.tcp_ecn=0
 
@@ -56,7 +58,7 @@ in
         iptables -t mangle -I POSTROUTING -j nixos-tcpcrypt
       '';
 
-      exec = "tcpcryptd -x 0x10";
+      script = "tcpcryptd -x 0x10";
 
       postStop = ''
         if [ -f /run/pre-tcpcrypt-ecn-state ]; then

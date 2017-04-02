@@ -1,27 +1,42 @@
-{ stdenv, fetchgit, nodejs, which, python27 }:
+{ stdenv, fetchurl, fetchpatch, nodejs, which, python27, utillinux }:
 
-let
-  date = "20140303";
-  rev = "f11ce1fd4795b0173ac0ef18c8a6f752aa824adb";
-in
+let version = "18"; in
 stdenv.mkDerivation {
-  name = "cjdns-${date}-${stdenv.lib.strings.substring 0 7 rev}";
+  name = "cjdns-"+version;
 
-  src = fetchgit {
-    url = "git://github.com/cjdelisle/cjdns.git";
-    inherit rev;
-    sha256 = "1bxhf9f1v0slf9mz3ll6jf45mkwvwxlf3yqxx9k23kjyr1nsc8s8";
+  src = fetchurl {
+    url = "https://github.com/cjdelisle/cjdns/archive/cjdns-v${version}.tar.gz";
+    sha256 = "1as7n730ppn93cpal7s6r6iq1qx46m0c45iwy8baypbpp42zxrap";
   };
 
-  buildInputs = [ which python27 nodejs];
+  patches = [(fetchpatch {
+    name = "glibc-2.25.diff";
+    url = https://github.com/cjdelisle/cjdns/pull/1017.diff;
+    sha256 = "1k05d1w04lngcki56b6brkwg9xakzsbr5ibkcba8112v6jdzw51f";
+  })];
 
-  builder = ./builder.sh;
+  buildInputs = [ which python27 nodejs ] ++
+    # for flock
+    stdenv.lib.optional stdenv.isLinux utillinux;
 
-  meta = {
+  buildPhase =
+    stdenv.lib.optionalString stdenv.isArm "Seccomp_NO=1 "
+    + "bash do";
+  installPhase = ''
+    install -Dt "$out/bin/" cjdroute makekeys privatetopublic publictoip6
+    sed -i 's,/usr/bin/env node,'$(type -P node), \
+      $(find contrib -name "*.js")
+    sed -i 's,/usr/bin/env python,'$(type -P python), \
+      $(find contrib -type f)
+    mkdir -p $out/share/cjdns
+    cp -R contrib tools node_build node_modules $out/share/cjdns/
+  '';
+
+  meta = with stdenv.lib; {
     homepage = https://github.com/cjdelisle/cjdns;
     description = "Encrypted networking for regular people";
-    license = stdenv.lib.licenses.gpl3;
-    maintainers = with stdenv.lib.maintainers; [ viric emery ];
-    platforms = stdenv.lib.platforms.linux;
+    license = licenses.gpl3;
+    maintainers = with maintainers; [ ehmry ];
+    platforms = platforms.unix;
   };
 }

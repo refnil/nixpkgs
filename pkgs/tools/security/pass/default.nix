@@ -1,29 +1,74 @@
-{ stdenv, fetchurl
-, coreutils, gnused, getopt, pwgen, git, tree, gnupg
+{ stdenv, lib, fetchurl
+, coreutils, gnused, getopt, git, tree, gnupg, which, procps, qrencode
 , makeWrapper
-, withX ? false, xclip ? null
+
+, xclip ? null, xdotool ? null, dmenu ? null
+, x11Support ? !stdenv.isDarwin
 }:
 
-assert withX -> xclip != null;
+with lib;
+
+assert x11Support -> xclip != null
+                  && xdotool != null
+                  && dmenu != null;
 
 stdenv.mkDerivation rec {
-  version = "1.6.2";
+  version = "1.7";
   name    = "password-store-${version}";
 
   src = fetchurl {
     url    = "http://git.zx2c4.com/password-store/snapshot/${name}.tar.xz";
-    sha256 = "1d32y6k625pv704icmhg46zg02kw5zcyxscgljxgy8bb5wv4lv2j";
+    sha256 = "002mw7j0m33bw483rllzhcf41wp3ixka8yma6kqrfaj57jyw66hn";
   };
 
-  patches = [ ./darwin-getopt.patch ];
+  patches = stdenv.lib.optional stdenv.isDarwin ./no-darwin-getopt.patch;
 
-  buildInputs = [ makeWrapper ];
+  nativeBuildInputs = [ makeWrapper ];
+
+  installFlags = [ "PREFIX=$(out)" "WITH_ALLCOMP=yes" ];
+
+  postInstall = ''
+    # Install Emacs Mode. NOTE: We can't install the necessary
+    # dependencies (s.el and f.el) here. The user has to do this
+    # himself.
+    mkdir -p "$out/share/emacs/site-lisp"
+    cp "contrib/emacs/password-store.el" "$out/share/emacs/site-lisp/"
+  '' + optionalString x11Support ''
+    cp "contrib/dmenu/passmenu" "$out/bin/"
+  '';
+
+  wrapperPath = with stdenv.lib; makeBinPath ([
+    coreutils
+    getopt
+    git
+    gnupg
+    gnused
+    tree
+    which
+    qrencode
+  ] ++ stdenv.lib.optional stdenv.isLinux procps
+    ++ ifEnable x11Support [ dmenu xclip xdotool ]);
+
+  postFixup = ''
+    # Fix program name in --help
+    substituteInPlace $out/bin/pass \
+      --replace 'PROGRAM="''${0##*/}"' "PROGRAM=pass"
+
+    # Ensure all dependencies are in PATH
+    wrapProgram $out/bin/pass \
+      --prefix PATH : "${wrapperPath}"
+  '' + stdenv.lib.optionalString x11Support ''
+    # We just wrap passmenu with the same PATH as pass. It doesn't
+    # need all the tools in there but it doesn't hurt either.
+    wrapProgram $out/bin/passmenu \
+      --prefix PATH : "$out/bin:${wrapperPath}"
+  '';
 
   meta = with stdenv.lib; {
     description = "Stores, retrieves, generates, and synchronizes passwords securely";
-    homepage    = http://zx2c4.com/projects/password-store/;
+    homepage    = http://www.passwordstore.org/;
     license     = licenses.gpl2Plus;
-    maintainers = with maintainers; [ lovek323 the-kenny ];
+    maintainers = with maintainers; [ lovek323 the-kenny fpletz ];
     platforms   = platforms.unix;
 
     longDescription = ''
@@ -34,28 +79,4 @@ stdenv.mkDerivation rec {
       synchronize, generate, and manipulate passwords.
     '';
   };
-
-  installPhase = ''
-    mkdir -p "$out/share/bash-completion/completions"
-    mkdir -p "$out/share/zsh/site-functions"
-    mkdir -p "$out/share/fish/completions"
-
-    # Install Emacs Mode. NOTE: We can't install the necessary
-    # dependencies (s.el and f.el) here. The user has to do this
-    # himself.
-    mkdir -p "$out/share/emacs/site-lisp"
-    cp "contrib/emacs/password-store.el" "$out/share/emacs/site-lisp/"
-
-    PREFIX="$out" make install
-  '';
-
-  postFixup = ''
-    # Fix program name in --help
-    substituteInPlace $out/bin/pass \
-      --replace "\$program" "pass"
-
-    # Ensure all dependencies are in PATH
-    wrapProgram $out/bin/pass \
-      --prefix PATH : "${coreutils}/bin:${gnused}/bin:${getopt}/bin:${gnupg}/bin:${git}/bin:${tree}/bin:${pwgen}/bin${if withX then ":${xclip}/bin" else ""}"
-  '';
 }

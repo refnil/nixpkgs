@@ -1,17 +1,15 @@
 {stdenv, fetchurl, ocaml, findlib, gdome2, ocaml_expat, gmetadom, ocaml_http, lablgtk, ocaml_mysql, ocamlnet, ulex08, camlzip, ocaml_pcre, automake, autoconf }:
 
 let
-  ocaml_version = (builtins.parseDrvName ocaml.name).version;
   version = "0.99.1pre130312";
   pname = "matita";
-
 in
 
 stdenv.mkDerivation {
   name = "${pname}-${version}";
 
   src = fetchurl {
-    url = "http://matita.cs.unibo.it/sources/${pname}_130312.tar.gz"; 
+    url = "http://matita.cs.unibo.it/sources/${pname}_130312.tar.gz";
     sha256 = "13mjvvldv53dcdid6wmc6g8yn98xca26xq2rgq2jg700lqsni59s";
   };
 
@@ -24,7 +22,7 @@ stdenv.mkDerivation {
   '';
 
   prePatch = ''
-   autoreconf -fvi 
+   autoreconf -fvi
   '';
 
   buildInputs = [ocaml findlib gdome2 ocaml_expat gmetadom ocaml_http lablgtk ocaml_mysql ocamlnet ulex08 camlzip ocaml_pcre automake autoconf];
@@ -62,5 +60,6 @@ stdenv.mkDerivation {
     description = "Matita is an experimental, interactive theorem prover";
     license = stdenv.lib.licenses.gpl2Plus;
     maintainers = [ stdenv.lib.maintainers.roconnor ];
+    broken = true;
   };
 }

@@ -1,42 +1,53 @@
-{ stdenv, fetchurl, gettext, perl, LWP, gnutls ? null }:
+{ stdenv, fetchurl, gettext, pkgconfig, perl
+, libidn2, zlib, pcre, libuuid, libiconv
+, IOSocketSSL, LWP, python3
+, libpsl ? null
+, openssl ? null }:
 
 stdenv.mkDerivation rec {
-  name = "wget-1.15";
+  name = "wget-1.19.1";
 
   src = fetchurl {
     url = "mirror://gnu/wget/${name}.tar.xz";
-    sha256 = "1yw0sk4mrs7bvga3c79rkbhxivmw8cs3b5wq3cglp1f9ai1mz2ni";
+    sha256 = "1ljcfhbkdsd0zjfm520rbl1ai62fc34i7c45sfj244l8f6b0p58c";
   };
 
-  patches = stdenv.lib.optional stdenv.isDarwin ./iri-test.patch;
+  patches = [
+    ./remove-runtime-dep-on-openssl-headers.patch
+    (fetchurl {
+      name = "CVE-2017-6508";
+      url = "http://git.savannah.gnu.org/cgit/wget.git/patch/?id=4d729e322fae359a1aefaafec1144764a54e8ad4";
+      sha256 = "14r0c5y3w3gavxp2d9yq8xji82izi5sx0sjv6jpmk6zp6cnr7cjf";
+    })
+  ];
 
-  preConfigure = stdenv.lib.optionalString doCheck
-    '' for i in "doc/texi2pod.pl" "tests/run-px" "util/rmold.pl"
-       do
-         sed -i "$i" -e 's|/usr/bin.*perl|${perl}/bin/perl|g'
-       done
+  preConfigure = ''
+    patchShebangs doc
 
-       # Work around lack of DNS resolution in chroots.
-       for i in "tests/"*.pm "tests/"*.px
-       do
-         sed -i "$i" -e's/localhost/127.0.0.1/g'
-       done
-    '';
+  '' + stdenv.lib.optionalString doCheck ''
+    # Work around lack of DNS resolution in chroots.
+    for i in "tests/"*.pm "tests/"*.px
+    do
+      sed -i "$i" -e's/localhost/127.0.0.1/g'
+    done
+  '' + stdenv.lib.optionalString stdenv.isDarwin ''
+    export LIBS="-liconv -lintl"
+  '';
 
-  nativeBuildInputs = [ gettext ];
-  buildInputs =
-    stdenv.lib.optionals doCheck [ perl LWP ]
-    ++ stdenv.lib.optional (gnutls != null) gnutls;
+  nativeBuildInputs = [ gettext pkgconfig perl ];
+  buildInputs = [ libidn2 libiconv zlib pcre libuuid ]
+    ++ stdenv.lib.optionals doCheck [ IOSocketSSL LWP python3 ]
+    ++ stdenv.lib.optional (openssl != null) openssl
+    ++ stdenv.lib.optional (libpsl != null) libpsl
+    ++ stdenv.lib.optional stdenv.isDarwin perl;
 
   configureFlags =
-    if gnutls != null
-    then "--with-ssl=gnutls"
-    else "--without-ssl";
+    if openssl != null then "--with-ssl=openssl" else "--without-ssl";
 
-  doCheck = (perl != null);
+  doCheck = false;
 
-  meta = {
-    description = "GNU Wget, a tool for retrieving files using HTTP, HTTPS, and FTP";
+  meta = with stdenv.lib; {
+    description = "Tool for retrieving files using HTTP, HTTPS, and FTP";
 
     longDescription =
       '' GNU Wget is a free software package for retrieving files using HTTP,
@@ -45,11 +56,11 @@ stdenv.mkDerivation rec {
          scripts, cron jobs, terminals without X-Windows support, etc.
       '';
 
-    license = stdenv.lib.licenses.gpl3Plus;
+    license = licenses.gpl3Plus;
 
     homepage = http://www.gnu.org/software/wget/;
 
-    maintainers = [ ];
-    platforms = stdenv.lib.platforms.all;
+    maintainers = with maintainers; [ fpletz ];
+    platforms = platforms.all;
   };
 }

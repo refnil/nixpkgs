@@ -1,29 +1,36 @@
-{ stdenv, fetchurl, ncurses, ocamlPackages, graphviz
-, ltl2ba, coq, alt-ergo, gmp, why3 }:
+{ stdenv, fetchurl, makeWrapper, ncurses, ocamlPackages, graphviz
+, ltl2ba, coq, alt-ergo, why3 }:
+
+let
+  mkocamlpath = p: "${p}/lib/ocaml/${ocamlPackages.ocaml.version}/site-lib";
+  ocamlpath = "${mkocamlpath ocamlPackages.apron}:${mkocamlpath ocamlPackages.mlgmpidl}";
+in
 
 stdenv.mkDerivation rec {
   name    = "frama-c-${version}";
-  version = "20140301";
-  slang   = "Neon";
+  version = "20161101";
+  slang   = "Silicon";
 
   src = fetchurl {
     url    = "http://frama-c.com/download/frama-c-${slang}-${version}.tar.gz";
-    sha256 = "0ca7ky7vs34did1j64v6d8gcp2irzw3rr5qgv47jhmidbipn1865";
+    sha256 = "1qq045ymz1mx4m9dsypigrcagqyb2k78wk13nqlbykcs5xbihfdh";
   };
 
   why2 = fetchurl {
-    url    = "http://why.lri.fr/download/why-2.34.tar.gz";
-    sha256 = "1335bhq9v3h46m8aba2c5myi9ghm87q41in0m15xvdrwq5big1jg";
+    url    = "http://why.lri.fr/download/why-2.37.tar.gz";
+    sha256 = "00xr8aq6zwln0ccfs1ng610j70r6ia6wqdyaqs9iqibqfa1scr3m";
   };
 
+  nativeBuildInputs = [ makeWrapper ];
+
   buildInputs = with ocamlPackages; [
-    ncurses ocaml findlib alt-ergo ltl2ba ocamlgraph gmp
-    lablgtk coq graphviz zarith why3 zarith
+    ncurses ocaml findlib alt-ergo ltl2ba ocamlgraph
+    lablgtk coq graphviz zarith why3 apron camlp4
   ];
 
 
-  enableParallelBuilding = true;
-  configureFlags = [ "--disable-local-ocamlgraph" ];
+  # Experimentally, the build segfaults with high core counts
+  enableParallelBuilding = false;
 
   unpackPhase = ''
     tar xf $src
@@ -33,45 +40,33 @@ stdenv.mkDerivation rec {
   buildPhase = ''
     cd frama*
     ./configure --prefix=$out
-    make -j$NIX_BUILD_CORES
+    # It is not parallel safe
+    make
     make install
     cd ../why*
     FRAMAC=$out/bin/frama-c ./configure --prefix=$out
     make
     make install
+    for p in $out/bin/frama-c{,-gui};
+    do
+      wrapProgram $p --prefix OCAMLPATH ':' ${ocamlpath}
+    done
   '';
-
-
-  # Taken from Debian Sid
-  # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=746091
-  patches = ./0004-Port-to-OCamlgraph-1.8.5.patch;
 
   # Enter frama-c directory before patching
   prePatch = ''cd frama*'';
+  patches = [ ./dynamic.diff ];
   postPatch = ''
     # strip absolute paths to /usr/bin
-    for file in ./configure ./share/Makefile.common ./src/*/configure; do
+    for file in ./configure ./share/Makefile.common ./src/*/configure; do #*/
       substituteInPlace $file  --replace '/usr/bin/' ""
     done
 
-    # find library paths
-    OCAMLGRAPH_HOME=`ocamlfind query ocamlgraph`
-    LABLGTK_HOME=`ocamlfind query lablgtk2`
-
-    # patch search paths
-    # ensure that the tests against the ocamlgraph version succeeds
-    # filter out the additional search paths from ocamldep
-    substituteInPlace ./configure \
-      --replace '$OCAMLLIB/ocamlgraph' "$OCAMLGRAPH_HOME" \
-      --replace '$OCAMLLIB/lablgtk2' "$LABLGTK_HOME" \
-      --replace '+ocamlgraph' "$OCAMLGRAPH_HOME" \
-    substituteInPlace ./Makefile --replace '+lablgtk2' "$LABLGTK_HOME" \
-      --replace '$(patsubst +%,.,$(INCLUDES) $(GUI_INCLUDES))' \
-                '$(patsubst /%,.,$(patsubst +%,.,$(INCLUDES) $(GUI_INCLUDES)))'
-
-    substituteInPlace ./src/aorai/aorai_register.ml --replace '"ltl2ba' '"${ltl2ba}/bin/ltl2ba'
+    substituteInPlace ./src/plugins/aorai/aorai_register.ml --replace '"ltl2ba' '"${ltl2ba}/bin/ltl2ba'
 
     cd ../why*
+
+    substituteInPlace ./Makefile.in --replace '-warn-error A' '-warn-error A-3'    
     substituteInPlace ./frama-c-plugin/Makefile --replace 'shell frama-c' "shell $out/bin/frama-c"
     substituteInPlace ./jc/jc_make.ml --replace ' why-dp '       " $out/bin/why-dp "
     substituteInPlace ./jc/jc_make.ml --replace "?= why@\n"      "?= $out/bin/why@\n"
@@ -87,10 +82,10 @@ stdenv.mkDerivation rec {
   '';
 
   meta = {
-    description = "Frama-C is an extensible tool for source-code analysis of C software";
+    description = "An extensible and collaborative platform dedicated to source-code analysis of C software";
     homepage    = http://frama-c.com/;
     license     = stdenv.lib.licenses.lgpl21;
     maintainers = with stdenv.lib.maintainers; [ thoughtpolice amiddelk ];
-    platforms   = stdenv.lib.platforms.linux;
+    platforms   = stdenv.lib.platforms.unix;
   };
 }

@@ -7,6 +7,9 @@ in
 {
   imports = [ ../profiles/headless.nix ../profiles/qemu-guest.nix ];
 
+  # https://cloud.google.com/compute/docs/tutorials/building-images
+  networking.firewall.enable = mkDefault false;
+
   system.build.googleComputeImage =
     pkgs.vmTools.runInLinuxVM (
       pkgs.runCommand "google-compute-image"
@@ -20,14 +23,14 @@ in
 
           postVM =
             ''
-              PATH=$PATH:${pkgs.gnutar}/bin:${pkgs.gzip}/bin
+              PATH=$PATH:${pkgs.stdenv.lib.makeBinPath [ pkgs.gnutar pkgs.gzip ]}
               pushd $out
               mv $diskImageBase disk.raw
               tar -Szcf $diskImageBase.tar.gz disk.raw
               rm $out/disk.raw
               popd
             '';
-          diskImageBase = "nixos-${config.system.nixosVersion}-${pkgs.stdenv.system}.raw";
+          diskImageBase = "nixos-image-${config.system.nixosLabel}-${pkgs.stdenv.system}.raw";
           buildInputs = [ pkgs.utillinux pkgs.perl ];
           exportReferencesGraph =
             [ "closure" config.system.build.toplevel ];
@@ -59,15 +62,16 @@ in
 
           mkdir -p /mnt/nix/store
           echo "copying everything (will take a while)..."
-          cp -prd $storePaths /mnt/nix/store/
+          ${pkgs.rsync}/bin/rsync -a $storePaths /mnt/nix/store/
 
           # Register the paths in the Nix database.
           printRegistration=1 perl ${pkgs.pathsFromGraph} /tmp/xchg/closure | \
-              chroot /mnt ${config.nix.package}/bin/nix-store --load-db
+              chroot /mnt ${config.nix.package.out}/bin/nix-store --load-db --option build-users-group ""
 
           # Create the system profile to allow nixos-rebuild to work.
-          chroot /mnt ${config.nix.package}/bin/nix-env \
-              -p /nix/var/nix/profiles/system --set ${config.system.build.toplevel}
+          chroot /mnt ${config.nix.package.out}/bin/nix-env \
+              -p /nix/var/nix/profiles/system --set ${config.system.build.toplevel} \
+              --option build-users-group ""
 
           # `nixos-rebuild' requires an /etc/NIXOS.
           mkdir -p /mnt/etc
@@ -94,10 +98,11 @@ in
 
   boot.kernelParams = [ "console=ttyS0" "panic=1" "boot.panic_on_fail" ];
   boot.initrd.kernelModules = [ "virtio_scsi" ];
+  boot.kernelModules = [ "virtio_pci" "virtio_net" ];
 
   # Generate a GRUB menu.  Amazon's pv-grub uses this to boot our kernel/initrd.
   boot.loader.grub.device = "/dev/sda";
-  boot.loader.grub.timeout = 0;
+  boot.loader.timeout = 0;
 
   # Don't put old configurations in the GRUB menu.  The user has no
   # way to select them anyway.
@@ -106,7 +111,8 @@ in
   # Allow root logins only using the SSH key that the user specified
   # at instance creation time.
   services.openssh.enable = true;
-  services.openssh.permitRootLogin = "without-password";
+  services.openssh.permitRootLogin = "prohibit-password";
+  services.openssh.passwordAuthentication = mkDefault false;
 
   # Force getting the hostname from Google Compute.
   networking.hostName = mkDefault "";
@@ -119,20 +125,9 @@ in
     169.254.169.254 metadata.google.internal metadata
   '';
 
-  networking.usePredictableInterfaceNames = false;
+  networking.timeServers = [ "metadata.google.internal" ];
 
-  systemd.services.wait-metadata-online = {
-    description = "Wait for GCE metadata server to become reachable";
-    wantedBy = [ "network-online.target" ];
-    before = [ "network-online.target" ];
-    path = [ pkgs.netcat ];
-    script = ''
-      # wait for the metadata server to become available for up to 60 seconds
-      for counter in {1..30}; do sleep 2 && nc -vzw 2 metadata 80 && break; done
-    '';
-    serviceConfig.Type = "oneshot";
-    serviceConfig.RemainAfterExit = true;
-  };
+  networking.usePredictableInterfaceNames = false;
 
   systemd.services.fetch-ssh-keys =
     { description = "Fetch host keys and authorized_keys for root user";
@@ -142,44 +137,135 @@ in
       after = [ "network-online.target" ];
       wants = [ "network-online.target" ];
 
-      path  = [ pkgs.curl ];
-      script =
+      script = let wget = "${pkgs.wget}/bin/wget --retry-connrefused -t 15 --waitretry=10 --header='Metadata-Flavor: Google'";
+                   mktemp = "mktemp --tmpdir=/run"; in
         ''
+          # When dealing with cryptographic keys, we want to keep things private.
+          umask 077
           # Don't download the SSH key if it has already been downloaded
-          if ! [ -e /root/.ssh/authorized_keys ]; then
-                echo "obtaining SSH key..."
-                mkdir -p /root/.ssh
-                curl -o /root/authorized-keys-metadata http://metadata/0.1/meta-data/authorized-keys
-                if [ $? -eq 0 -a -e /root/authorized-keys-metadata ]; then
-                    cat /root/authorized-keys-metadata | cut -d: -f2- > /root/key.pub
-                    if ! grep -q -f /root/key.pub /root/.ssh/authorized_keys; then
-                        cat /root/key.pub >> /root/.ssh/authorized_keys
-                        echo "new key added to authorized_keys"
-                    fi
-                    chmod 600 /root/.ssh/authorized_keys
-                    rm -f /root/key.pub /root/authorized-keys-metadata
-                fi
+          if ! [ -s /root/.ssh/authorized_keys ]; then
+              echo "obtaining SSH key..."
+              mkdir -m 0700 -p /root/.ssh
+              AUTH_KEYS=$(${mktemp})
+              ${wget} -O $AUTH_KEYS http://metadata.google.internal/0.1/meta-data/authorized-keys
+              if [ -s $AUTH_KEYS ]; then
+                  KEY_PUB=$(${mktemp})
+                  cat $AUTH_KEYS | cut -d: -f2- > $KEY_PUB
+                  if ! grep -q -f $KEY_PUB /root/.ssh/authorized_keys; then
+                      cat $KEY_PUB >> /root/.ssh/authorized_keys
+                      echo "New key added to authorized_keys."
+                  fi
+                  chmod 600 /root/.ssh/authorized_keys
+                  rm -f $KEY_PUB
+              else
+                  echo "Downloading http://metadata.google.internal/0.1/meta-data/authorized-keys failed."
+                  false
+              fi
+              rm -f $AUTH_KEYS
           fi
 
-          echo "obtaining SSH private host key..."
-          curl -o /root/ssh_host_ecdsa_key  --retry-max-time 60 http://metadata/0.1/meta-data/attributes/ssh_host_ecdsa_key
-          if [ $? -eq 0 -a -e /root/ssh_host_ecdsa_key ]; then
-              mv -f /root/ssh_host_ecdsa_key /etc/ssh/ssh_host_ecdsa_key
-              echo "downloaded ssh_host_ecdsa_key"
-              chmod 600 /etc/ssh/ssh_host_ecdsa_key
-          fi
+          countKeys=0
+          ${flip concatMapStrings config.services.openssh.hostKeys (k :
+            let kName = baseNameOf k.path; in ''
+              PRIV_KEY=$(${mktemp})
+              echo "trying to obtain SSH private host key ${kName}"
+              ${wget} -O $PRIV_KEY http://metadata.google.internal/0.1/meta-data/attributes/${kName} && :
+              if [ $? -eq 0 -a -s $PRIV_KEY ]; then
+                  countKeys=$((countKeys+1))
+                  mv -f $PRIV_KEY ${k.path}
+                  echo "Downloaded ${k.path}"
+                  chmod 600 ${k.path}
+                  ${config.programs.ssh.package}/bin/ssh-keygen -y -f ${k.path} > ${k.path}.pub
+                  chmod 644 ${k.path}.pub
+              else
+                  echo "Downloading http://metadata.google.internal/0.1/meta-data/attributes/${kName} failed."
+              fi
+              rm -f $PRIV_KEY
+            ''
+          )}
 
-          echo "obtaining SSH public host key..."
-          curl -o /root/ssh_host_ecdsa_key.pub --retry-max-time 60 http://metadata/0.1/meta-data/attributes/ssh_host_ecdsa_key_pub
-          if [ $? -eq 0 -a -e /root/ssh_host_ecdsa_key.pub ]; then
-              mv -f /root/ssh_host_ecdsa_key.pub /etc/ssh/ssh_host_ecdsa_key.pub
-              echo "downloaded ssh_host_ecdsa_key.pub"
-              chmod 644 /etc/ssh/ssh_host_ecdsa_key.pub
+          if [[ $countKeys -le 0 ]]; then
+             echo "failed to obtain any SSH private host keys."
+             false
           fi
         '';
       serviceConfig.Type = "oneshot";
       serviceConfig.RemainAfterExit = true;
-     };
+      serviceConfig.StandardError = "journal+console";
+      serviceConfig.StandardOutput = "journal+console";
+    };
 
+  # Setings taken from https://cloud.google.com/compute/docs/tutorials/building-images#providedkernel
+  boot.kernel.sysctl = {
+    # enables syn flood protection
+    "net.ipv4.tcp_syncookies" = mkDefault "1";
+
+    # ignores source-routed packets
+    "net.ipv4.conf.all.accept_source_route" = mkDefault "0";
+
+    # ignores source-routed packets
+    "net.ipv4.conf.default.accept_source_route" = mkDefault "0";
+
+    # ignores ICMP redirects
+    "net.ipv4.conf.all.accept_redirects" = mkDefault "0";
+
+    # ignores ICMP redirects
+    "net.ipv4.conf.default.accept_redirects" = mkDefault "0";
+
+    # ignores ICMP redirects from non-GW hosts
+    "net.ipv4.conf.all.secure_redirects" = mkDefault "1";
+
+    # ignores ICMP redirects from non-GW hosts
+    "net.ipv4.conf.default.secure_redirects" = mkDefault "1";
+
+    # don't allow traffic between networks or act as a router
+    "net.ipv4.ip_forward" = mkDefault "0";
+
+    # don't allow traffic between networks or act as a router
+    "net.ipv4.conf.all.send_redirects" = mkDefault "0";
+
+    # don't allow traffic between networks or act as a router
+    "net.ipv4.conf.default.send_redirects" = mkDefault "0";
+
+    # reverse path filtering - IP spoofing protection
+    "net.ipv4.conf.all.rp_filter" = mkDefault "1";
+
+    # reverse path filtering - IP spoofing protection
+    "net.ipv4.conf.default.rp_filter" = mkDefault "1";
+
+    # ignores ICMP broadcasts to avoid participating in Smurf attacks
+    "net.ipv4.icmp_echo_ignore_broadcasts" = mkDefault "1";
+
+    # ignores bad ICMP errors
+    "net.ipv4.icmp_ignore_bogus_error_responses" = mkDefault "1";
+
+    # logs spoofed, source-routed, and redirect packets
+    "net.ipv4.conf.all.log_martians" = mkDefault "1";
+
+    # log spoofed, source-routed, and redirect packets
+    "net.ipv4.conf.default.log_martians" = mkDefault "1";
+
+    # implements RFC 1337 fix
+    "net.ipv4.tcp_rfc1337" = mkDefault "1";
+
+    # randomizes addresses of mmap base, heap, stack and VDSO page
+    "kernel.randomize_va_space" = mkDefault "2";
+
+    # provides protection from ToCToU races
+    "fs.protected_hardlinks" = mkDefault "1";
+
+    # provides protection from ToCToU races
+    "fs.protected_symlinks" = mkDefault "1";
+
+    # makes locating kernel addresses more difficult
+    "kernel.kptr_restrict" = mkDefault "1";
+
+    # set ptrace protections
+    "kernel.yama.ptrace_scope" = mkOverride 500 "1";
+
+    # set perf only available to root
+    "kernel.perf_event_paranoid" = mkDefault "2";
+
+  };
 
 }

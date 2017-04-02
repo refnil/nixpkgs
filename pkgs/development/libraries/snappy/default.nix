@@ -1,23 +1,30 @@
-{ stdenv, fetchurl }:
+{ stdenv, fetchurl, pkgconfig }:
 
 stdenv.mkDerivation rec {
-  name = "snappy-1.1.1";
+  name = "snappy-${version}";
+  version = "1.1.4";
   
   src = fetchurl {
-    url = "http://snappy.googlecode.com/files/${name}.tar.gz";
-    sha256 = "1czscb5i003jg1amw3g1fmasv8crr5g3d922800kll8b3fj097yp";
+    url = "http://github.com/google/snappy/releases/download/${version}/"
+        + "snappy-${version}.tar.gz";
+    sha256 = "0mq0nz8gbi1sp3y6xcg0a6wbvnd6gc717f3vh2xrjmfj5w9gwjqk";
   };
 
+  outputs = [ "out" "dev" "doc" ];
+
+  nativeBuildInputs = [ pkgconfig ];
+
   # -DNDEBUG for speed
-  preConfigure = ''
-    configureFlagsArray=("CXXFLAGS=-DNDEBUG -O2")
-  '';
+  configureFlags = [ "CXXFLAGS=-DNDEBUG" ];
 
-  doCheck = true;
+  # SIGILL on darwin
+  doCheck = !stdenv.isDarwin;
 
-  meta = {
+  meta = with stdenv.lib; {
     homepage = http://code.google.com/p/snappy/;
-    license = "BSD";
+    license = licenses.bsd3;
     description = "Compression/decompression library for very high speeds";
+    platforms = platforms.unix;
+    maintainers = with maintainers; [ wkennington ];
   };
 }

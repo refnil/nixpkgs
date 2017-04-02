@@ -11,12 +11,14 @@ let
     if cfg.extraPlugins == [] then pg
     else pkgs.buildEnv {
       name = "postgresql-and-plugins-${(builtins.parseDrvName pg.name).version}";
-      paths = [ pg ] ++ cfg.extraPlugins;
+      paths = [ pg pg.lib ] ++ cfg.extraPlugins;
+      buildInputs = [ pkgs.makeWrapper ];
       postBuild =
         ''
           mkdir -p $out/bin
           rm $out/bin/{pg_config,postgres,pg_ctl}
           cp --target-directory=$out/bin ${pg}/bin/{postgres,pg_config,pg_ctl}
+          wrapProgram $out/bin/postgres --set NIX_PGLIBDIR $out/lib
         '';
     };
 
@@ -119,11 +121,11 @@ in
       extraPlugins = mkOption {
         type = types.listOf types.path;
         default = [];
-        example = literalExample "pkgs.postgis";
+        example = literalExample "[ (pkgs.postgis.override { postgresql = pkgs.postgresql94; }).v_2_1_4 ]";
         description = ''
           When this list contains elements a new store path is created.
-          PostgreSQL and the elments are symlinked into it. Then pg_config,
-          postgres and pc_ctl are copied to make them use the new
+          PostgreSQL and the elements are symlinked into it. Then pg_config,
+          postgres and pg_ctl are copied to make them use the new
           $out/lib directory as pkglibdir. This makes it possible to use postgis
           without patching the .sql files which reference $libdir/postgis-1.5.
         '';
@@ -154,7 +156,13 @@ in
 
   config = mkIf config.services.postgresql.enable {
 
-    services.postgresql.authentication =
+    services.postgresql.package =
+      # Note: when changing the default, make it conditional on
+      # ‘system.stateVersion’ to maintain compatibility with existing
+      # systems!
+      mkDefault (if versionAtLeast config.system.stateVersion "16.03" then pkgs.postgresql95 else pkgs.postgresql94);
+
+    services.postgresql.authentication = mkAfter
       ''
         # Generated file; do not edit!
         local all all              ident ${optionalString pre84 "sameuser"}
@@ -171,7 +179,7 @@ in
 
     users.extraGroups.postgres.gid = config.ids.gids.postgres;
 
-    environment.systemPackages = [postgresql];
+    environment.systemPackages = [ postgresql ];
 
     systemd.services.postgresql =
       { description = "PostgreSQL Server";
@@ -181,33 +189,37 @@ in
 
         environment.PGDATA = cfg.dataDir;
 
-        path = [ pkgs.su postgresql ];
+        path = [ postgresql ];
 
         preStart =
           ''
-            # Initialise the database.
-            if ! test -e ${cfg.dataDir}; then
-                mkdir -m 0700 -p ${cfg.dataDir}
-                if [ "$(id -u)" = 0 ]; then
-                  chown -R postgres ${cfg.dataDir}
-                  su -s ${pkgs.stdenv.shell} postgres -c 'initdb -U root'
-                else
-                  # For non-root operation.
-                  initdb
-                fi
-                rm -f ${cfg.dataDir}/*.conf
-                touch "${cfg.dataDir}/.first_startup"
+            # Create data directory.
+            if ! test -e ${cfg.dataDir}/PG_VERSION; then
+              mkdir -m 0700 -p ${cfg.dataDir}
+              rm -f ${cfg.dataDir}/*.conf
+              chown -R postgres:postgres ${cfg.dataDir}
             fi
+          ''; # */
 
+        script =
+          ''
+            # Initialise the database.
+            if ! test -e ${cfg.dataDir}/PG_VERSION; then
+              initdb -U root
+              # See postStart!
+              touch "${cfg.dataDir}/.first_startup"
+            fi
             ln -sfn "${configFile}" "${cfg.dataDir}/postgresql.conf"
             ${optionalString (cfg.recoveryConfig != null) ''
               ln -sfn "${pkgs.writeText "recovery.conf" cfg.recoveryConfig}" \
                 "${cfg.dataDir}/recovery.conf"
             ''}
-          ''; # */
+
+             exec postgres ${toString flags}
+          '';
 
         serviceConfig =
-          { ExecStart = "@${postgresql}/bin/postgres postgres ${toString flags}";
+          { ExecReload = "${pkgs.coreutils}/bin/kill -HUP $MAINPID";
             User = "postgres";
             Group = "postgres";
             PermissionsStartOnly = true;
@@ -225,14 +237,14 @@ in
         # Wait for PostgreSQL to be ready to accept connections.
         postStart =
           ''
-            while ! psql postgres -c "" 2> /dev/null; do
+            while ! psql --port=${toString cfg.port} postgres -c "" 2> /dev/null; do
                 if ! kill -0 "$MAINPID"; then exit 1; fi
                 sleep 0.1
             done
 
             if test -e "${cfg.dataDir}/.first_startup"; then
               ${optionalString (cfg.initialScript != null) ''
-                cat "${cfg.initialScript}" | psql postgres
+                psql -f "${cfg.initialScript}" --port=${toString cfg.port} postgres
               ''}
               rm -f "${cfg.dataDir}/.first_startup"
             fi
@@ -242,5 +254,7 @@ in
       };
 
   };
+
+  meta.doc = ./postgresql.xml;
 
 }

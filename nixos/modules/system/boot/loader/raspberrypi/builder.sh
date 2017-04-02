@@ -60,22 +60,32 @@ addEntry() {
     fi
 
     local kernel=$(readlink -f $path/kernel)
-    # local initrd=$(readlink -f $path/initrd)
+    local initrd=$(readlink -f $path/initrd)
+    local dtb_path=$(readlink -f $path/kernel-modules/dtbs)
 
     if test -n "@copyKernels@"; then
         copyToKernelsDir $kernel; kernel=$result
-        # copyToKernelsDir $initrd; initrd=$result
+        copyToKernelsDir $initrd; initrd=$result
     fi
-    
+
     echo $(readlink -f $path) > $outdir/$generation-system
     echo $(readlink -f $path/init) > $outdir/$generation-init
     cp $path/kernel-params $outdir/$generation-cmdline.txt
-    # echo $initrd > $outdir/$generation-initrd
+    echo $initrd > $outdir/$generation-initrd
     echo $kernel > $outdir/$generation-kernel
 
     if test $(readlink -f "$path") = "$default"; then
-      copyForced $kernel /boot/kernel.img
-      # copyForced $initrd /boot/initrd
+      if [ @version@ -eq 1 ]; then
+        copyForced $kernel /boot/kernel.img
+      else
+        copyForced $kernel /boot/kernel7.img
+      fi
+      copyForced $initrd /boot/initrd
+      for dtb in $dtb_path/bcm*.dtb; do
+        dst="/boot/$(basename $dtb)"
+        copyForced $dtb "$dst"
+        filesCopied[$dst]=1
+      done
       cp "$(readlink -f "$path/init")" /boot/nixos-init
       echo "`cat $path/kernel-params` init=$path/init" >/boot/cmdline.txt
 
@@ -98,11 +108,14 @@ fwdir=@firmware@/share/raspberrypi/boot/
 copyForced $fwdir/bootcode.bin  /boot/bootcode.bin
 copyForced $fwdir/fixup.dat     /boot/fixup.dat
 copyForced $fwdir/fixup_cd.dat  /boot/fixup_cd.dat
+copyForced $fwdir/fixup_db.dat  /boot/fixup_db.dat
 copyForced $fwdir/start.elf     /boot/start.elf
 copyForced $fwdir/start_cd.elf  /boot/start_cd.elf
+copyForced $fwdir/start_db.elf  /boot/start_db.elf
+copyForced $fwdir/start_x.elf   /boot/start_x.elf
 
-# Remove obsolete files from /boot/old.
-for fn in /boot/old/*linux* /boot/old/*initrd*; do
+# Remove obsolete files from /boot and /boot/old.
+for fn in /boot/old/*linux* /boot/old/*initrd-initrd* /boot/bcm*.dtb; do
     if ! test "${filesCopied[$fn]}" = 1; then
         rm -vf -- "$fn"
     fi

@@ -1,11 +1,13 @@
 { stdenv, fetchurl, libpcap, enableStatic ? false }:
 
 stdenv.mkDerivation rec {
-  name = "tcpdump-4.5.1";
+  name = "tcpdump-${version}";
+  version = "4.9.0";
 
   src = fetchurl {
-    url = "http://www.tcpdump.org/release/${name}.tar.gz";
-    sha256 = "15hb7zkzd66nag102qbv100hcnf7frglbkylmr8adwr8f5jkkaql";
+    #url = "http://www.tcpdump.org/release/${name}.tar.gz";
+    url = "mirror://debian/pool/main/t/tcpdump/tcpdump_${version}.orig.tar.gz";
+    sha256 = "0pjsxsy8l71i813sa934cwf1ryp9xbr7nxwsvnzavjdirchq3sga";
   };
 
   buildInputs = [ libpcap ];
@@ -17,9 +19,10 @@ stdenv.mkDerivation rec {
   };
 
   meta = {
-    description = "tcpdump, a famous network sniffer";
+    description = "Network sniffer";
     homepage = http://www.tcpdump.org/;
     license = "BSD-style";
-    maintainers = stdenv.lib.maintainers.mornfall;
+    maintainers = with stdenv.lib.maintainers; [ mornfall jgeerds ];
+    platforms = stdenv.lib.platforms.linux;
   };
 }

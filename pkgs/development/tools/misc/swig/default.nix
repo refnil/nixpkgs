@@ -8,14 +8,14 @@ stdenv.mkDerivation rec {
     sha256 = "02dc8g8wy75nd2is1974rl24c6mdl0ai1vszs1xpg9nd7dlv6i8r";
   };
 
-  doCheck = true;
+  doCheck = !stdenv.isCygwin;
   # 'make check' uses boost and tcl
   buildInputs = stdenv.lib.optionals doCheck [ boost tcl ];
 
-  configureFlags = stdenv.lib.optionalString stdenv.isDarwin "--disable-ccache";
+  configureFlags = "--disable-ccache";
 
   meta = {
-    description = "SWIG, an interface compiler that connects C/C++ code to higher-level languages";
+    description = "Interface compiler that connects C/C++ code to higher-level languages";
 
     longDescription = ''
        SWIG is an interface compiler that connects programs written in C and

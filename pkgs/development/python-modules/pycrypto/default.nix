@@ -1,22 +1,30 @@
-{ stdenv, fetchurl, python, buildPythonPackage, gmp }:
+{ stdenv, fetchurl, buildPythonPackage, pycryptodome }:
 
-buildPythonPackage rec {
-  name = "pycrypto-2.6.1";
-  namePrefix = "";
+# This is a dummy package providing the drop-in replacement pycryptodome.
+# https://github.com/NixOS/nixpkgs/issues/21671
 
-  src = fetchurl {
-    url = "http://pypi.python.org/packages/source/p/pycrypto/${name}.tar.gz";
-    sha256 = "0g0ayql5b9mkjam8hym6zyg6bv77lbh66rv1fyvgqb17kfc1xkpj";
-  };
+let
+  version = pycryptodome.version;
+  pname = "pycrypto";
+in buildPythonPackage rec {
+  name = "${pname}-${version}";
 
-  buildInputs = [ gmp ];
+  # Cannot build wheel otherwise (zip 1980 issue)
+  SOURCE_DATE_EPOCH=315532800;
 
-  doCheck = !stdenv.isDarwin; # error: AF_UNIX path too long
+  # We need to have a dist-info folder, so let's create one with setuptools
+  unpackPhase = ''
+    echo "from setuptools import setup; setup(name='${pname}', version='${version}', install_requires=['pycryptodome'])" > setup.py
+  '';
 
+  propagatedBuildInputs = [ pycryptodome ];
+
+  # Our dummy has no tests
+  doCheck = false;
 
   meta = {
     homepage = "http://www.pycrypto.org/";
     description = "Python Cryptography Toolkit";
-    platforms = stdenv.lib.platforms.unix;
+    platforms = pycryptodome.meta.platforms;
   };
 }

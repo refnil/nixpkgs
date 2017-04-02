@@ -32,6 +32,9 @@ stdenv.mkDerivation {
 
     # Fix a `conflicting types for 'readlink'' error since Glibc 2.19
     ./readlink-types.patch
+
+    # Fix BuildRoot handling in RPM builds.
+    ./set-buildroot.patch
   ]
 
   ++ stdenv.lib.optional (stdenv.system == "x86_64-linux") 
@@ -41,6 +44,8 @@ stdenv.mkDerivation {
 
   buildInputs = [gettext];
 
+  hardeningDisable = [ "fortify" ];
+
   preBuild = ''
     makeFlagsArray=(PREFIX=$out)
 
@@ -48,7 +53,7 @@ stdenv.mkDerivation {
     substituteInPlace checkinstallrc-dist --replace /usr/local $out
 
     substituteInPlace installwatch/create-localdecls \
-      --replace /usr/include/unistd.h ${stdenv.glibc}/include/unistd.h
+      --replace /usr/include/unistd.h ${stdenv.glibc.dev}/include/unistd.h
   '';
 
   postInstall =

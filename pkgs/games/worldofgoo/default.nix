@@ -45,15 +45,15 @@ stdenv.mkDerivation rec {
   phases = "unpackPhase installPhase";
 
   # XXX: stdenv.lib.makeLibraryPath doesn't pick up /lib64
-  libPath = stdenv.lib.makeLibraryPath [ stdenv.gcc.gcc stdenv.gcc.libc ] 
+  libPath = stdenv.lib.makeLibraryPath [ stdenv.cc.cc stdenv.cc.libc ] 
     + ":" + stdenv.lib.makeLibraryPath [libX11 libXext libXau libxcb libXdmcp SDL SDL_mixer libvorbis mesa ]
-    + ":" + stdenv.gcc.gcc + "/lib64";
+    + ":" + stdenv.cc.cc + "/lib64";
 
   installPhase = ''
-    ensureDir $out/libexec/2dboy/WorldOfGoo/
-    ensureDir $out/bin
+    mkdir -p $out/libexec/2dboy/WorldOfGoo/
+    mkdir -p $out/bin
 
-    patchelf --interpreter "$(cat $NIX_GCC/nix-support/dynamic-linker)" --set-rpath $libPath ./WorldOfGoo.bin64
+    patchelf --interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" --set-rpath $libPath ./WorldOfGoo.bin64
 
     cp -r * $out/libexec/2dboy/WorldOfGoo/
 
@@ -67,7 +67,7 @@ stdenv.mkDerivation rec {
     chmod +x $out/bin/WorldofGoo
   '';
 
-  meta = {
+  meta = with stdenv.lib; {
     description = "A physics based puzzle game";
     longDescription = ''
       World of Goo is a physics based puzzle / construction game. The millions of Goo
@@ -75,8 +75,8 @@ stdenv.mkDerivation rec {
       game, or that they are extremely delicious.
     '';
     homepage = http://worldofgoo.com;
-    license = [ "unfree" ];
-    maintainers = with stdenv.lib.maintainers; [ jcumming ];
+    license = licenses.unfree;
+    maintainers = with maintainers; [ jcumming ];
   };
 
 }

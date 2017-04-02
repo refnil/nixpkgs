@@ -1,14 +1,16 @@
 {stdenv, fetchurl, python, boost, pkgconfig, imagemagick}:
 
-stdenv.mkDerivation {
-  name = "PythonMagick-0.7";
+stdenv.mkDerivation rec {
+  name = "pythonmagick-${version}";
+  version = "0.9.16";
 
   src = fetchurl {
-    url = http://www.imagemagick.org/download/python/PythonMagick-0.7.tar.gz;
-    sha256 = "1553kyzdcysii2qhbpbgs0icmfpm6s2lp3zchgs73cxfnfym8lz1";
+    url = "mirror://imagemagick/python/releases/PythonMagick-${version}.tar.xz";
+    sha256 = "0vkgpmrdz530nyvmjahpdrvcj7fd7hvsp15d485hq6103qycisv8";
   };
 
-  buildInputs = [python boost pkgconfig imagemagick];
+  nativeBuildInputs = [ pkgconfig ];
+  buildInputs = [python boost imagemagick];
 
   meta = {
     homepage = http://www.imagemagick.org/script/api.php;

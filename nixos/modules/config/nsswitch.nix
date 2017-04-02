@@ -8,10 +8,29 @@ let
 
   inherit (config.services.avahi) nssmdns;
   inherit (config.services.samba) nsswins;
+  ldap = (config.users.ldap.enable && config.users.ldap.nsswitch);
+  sssd = config.services.sssd.enable;
 
-in
+  hostArray = [ "files" "mymachines" ]
+    ++ optionals nssmdns [ "mdns_minimal [!UNAVAIL=return]" ]
+    ++ optionals nsswins [ "wins" ]
+    ++ [ "dns" ]
+    ++ optionals nssmdns [ "mdns" ]
+    ++ ["myhostname" ];
 
-{
+  passwdArray = [ "files" ]
+    ++ optional sssd "sss"
+    ++ optionals ldap [ "ldap" ]
+    ++ [ "mymachines" ];
+
+  shadowArray = [ "files" ]
+    ++ optional sssd "sss"
+    ++ optionals ldap [ "ldap" ];
+
+  servicesArray = [ "files" ]
+    ++ optional sssd "sss";
+
+in {
   options = {
 
     # NSS modules.  Hacky!
@@ -35,29 +54,29 @@ in
 
   config = {
 
-    environment.etc =
-      [ # Name Service Switch configuration file.  Required by the C library.
-        # !!! Factor out the mdns stuff.  The avahi module should define
-        # an option used by this module.
-        { source = pkgs.writeText "nsswitch.conf"
-            ''
-              passwd:    files ldap
-              group:     files ldap
-              shadow:    files ldap
-              hosts:     files ${optionalString nssmdns "mdns_minimal [NOTFOUND=return]"} dns ${optionalString nssmdns "mdns"} ${optionalString nsswins "wins"} myhostname
-              networks:  files dns
-              ethers:    files
-              services:  files
-              protocols: files
-            '';
-          target = "nsswitch.conf";
-        }
-      ];
+    # Name Service Switch configuration file.  Required by the C
+    # library.  !!! Factor out the mdns stuff.  The avahi module
+    # should define an option used by this module.
+    environment.etc."nsswitch.conf".text = ''
+      passwd:    ${concatStringsSep " " passwdArray}
+      group:     ${concatStringsSep " " passwdArray}
+      shadow:    ${concatStringsSep " " shadowArray}
 
-    # Use nss-myhostname to ensure that our hostname always resolves to
-    # a valid IP address.  It returns all locally configured IP
-    # addresses, or ::1 and 127.0.0.2 as fallbacks.
-    system.nssModules = [ pkgs.systemd ];
+      hosts:     ${concatStringsSep " " hostArray}
+      networks:  files
+
+      ethers:    files
+      services:  ${concatStringsSep " " servicesArray}
+      protocols: files
+      rpc:       files
+    '';
+
+    # Systemd provides nss-myhostname to ensure that our hostname
+    # always resolves to a valid IP address.  It returns all locally
+    # configured IP addresses, or ::1 and 127.0.0.2 as
+    # fallbacks. Systemd also provides nss-mymachines to return IP
+    # addresses of local containers.
+    system.nssModules = [ config.systemd.package.out ];
 
   };
 }

@@ -1,20 +1,27 @@
-{ stdenv, fetchurl, openssl, protobufc, libconfig }:
+{ stdenv, fetchFromGitHub, autoreconfHook, openssl, protobufc, libconfig }:
 
 stdenv.mkDerivation rec {
-  name = "umurmur-0.2.13";
-  
-  src = fetchurl {
-    url = "http://umurmur.googlecode.com/files/${name}.tar.gz";
-    sha1 = "c9345b67213f52688fef2113132c62d2edbf4bea";
+  name = "umurmur-${version}";
+  version = "0.2.16a";
+
+  src = fetchFromGitHub {
+    owner = "fatbob313";
+    repo = "umurmur";
+    rev = version;
+    sha256 = "1xv1knrivy2i0ggwrczw60y0ayww9df9k6sif7klgzq556xk47d1";
   };
-  
-  buildInputs = [ openssl protobufc libconfig ];
 
-  configureFlags = "--with-ssl=openssl";
+  buildInputs = [ autoreconfHook openssl protobufc libconfig ];
 
-  meta = {
+  configureFlags = [
+    "--with-ssl=openssl"
+    "--enable-shmapi"
+  ];
+
+  meta = with stdenv.lib; {
     description = "Minimalistic Murmur (Mumble server)";
-    license = "BSD";
+    license = licenses.bsd3;
     homepage = http://code.google.com/p/umurmur/;
+    platforms = platforms.all;
   };
 }

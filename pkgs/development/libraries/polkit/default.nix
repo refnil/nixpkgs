@@ -1,11 +1,11 @@
-{ stdenv, fetchurl, pkgconfig, glib, expat, pam, intltool, spidermonkey
-, gobjectIntrospection, libxslt, docbook_xsl
+{ stdenv, fetchurl, pkgconfig, glib, expat, pam, intltool, spidermonkey_17
+, gobjectIntrospection, libxslt, docbook_xsl, docbook_xml_dtd_412
 , useSystemd ? stdenv.isLinux, systemd }:
 
 let
 
   system = "/var/run/current-system/sw";
-  setuid = "/var/setuid-wrappers"; #TODO: from <nixos> config.security.wrapperDir;
+  setuid = "/run/wrappers/bin"; #TODO: from <nixos> config.security.wrapperDir;
 
   foolVars = {
     SYSCONF = "/etc";
@@ -15,16 +15,18 @@ let
 in
 
 stdenv.mkDerivation rec {
-  name = "polkit-0.112";
+  name = "polkit-0.113";
 
   src = fetchurl {
     url = "http://www.freedesktop.org/software/polkit/releases/${name}.tar.gz";
-    sha256 = "1xkary7yirdcjdva950nqyhmsz48qhrdsr78zciahj27p8yg95fn";
+    sha256 = "109w86kfqrgz83g9ivggplmgc77rz8kx8646izvm2jb57h4rbh71";
   };
 
+  outputs = [ "bin" "dev" "out" ]; # small man pages in $bin
+
   buildInputs =
-    [ pkgconfig glib expat pam intltool spidermonkey gobjectIntrospection ]
-    ++ [ libxslt docbook_xsl ] # man pages
+    [ pkgconfig glib expat pam intltool spidermonkey_17 gobjectIntrospection ]
+    ++ [ libxslt docbook_xsl docbook_xml_dtd_412 ] # man pages
     ++ stdenv.lib.optional useSystemd systemd;
 
   # Ugly hack to overwrite hardcoded directories
@@ -38,7 +40,7 @@ stdenv.mkDerivation rec {
   preConfigure = ''
     patchShebangs .
   '' + stdenv.lib.optionalString useSystemd /* bogus chroot detection */ ''
-    sed '/libsystemd-login autoconfigured, but system does not appear to use systemd/s/.*/:/' -i configure
+    sed '/libsystemd autoconfigured/s/.*/:/' -i configure
   ''
     # ‘libpolkit-agent-1.so’ should call the setuid wrapper on
     # NixOS.  Hard-coding the path is kinda ugly.  Maybe we can just
@@ -70,6 +72,6 @@ stdenv.mkDerivation rec {
     homepage = http://www.freedesktop.org/wiki/Software/polkit;
     description = "A toolkit for defining and handling the policy that allows unprivileged processes to speak to privileged processes";
     platforms = platforms.linux;
-    maintainers = [ maintainers.urkud ];
+    maintainers = [ ];
   };
 }

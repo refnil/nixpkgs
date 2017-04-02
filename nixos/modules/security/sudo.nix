@@ -46,6 +46,14 @@ in
           <filename>sudoers</filename> file.
         '';
     };
+
+    security.sudo.extraConfig = mkOption {
+      type = types.lines;
+      default = "";
+      description = ''
+        Extra configuration text appended to <filename>sudoers</filename>.
+      '';
+    };
   };
 
 
@@ -55,7 +63,8 @@ in
 
     security.sudo.configFile =
       ''
-        # Don't edit this file. Set the NixOS option ‘security.sudo.configFile’ instead.
+        # Don't edit this file. Set the NixOS options ‘security.sudo.configFile’
+        # or ‘security.sudo.extraConfig’ instead.
 
         # Environment variables to keep for root and %wheel.
         Defaults:root,%wheel env_keep+=TERMINFO_DIRS
@@ -65,13 +74,17 @@ in
         Defaults env_keep+=SSH_AUTH_SOCK
 
         # "root" is allowed to do anything.
-        root        ALL=(ALL) SETENV: ALL
+        root        ALL=(ALL:ALL) SETENV: ALL
 
         # Users in the "wheel" group can do anything.
-        %wheel      ALL=(ALL) ${if cfg.wheelNeedsPassword then "" else "NOPASSWD: ALL, "}SETENV: ALL
+        %wheel      ALL=(ALL:ALL) ${if cfg.wheelNeedsPassword then "" else "NOPASSWD: ALL, "}SETENV: ALL
+        ${cfg.extraConfig}
       '';
 
-    security.setuidPrograms = [ "sudo" "sudoedit" ];
+    security.wrappers = {
+      sudo.source = "${pkgs.sudo.out}/bin/sudo";
+      sudoedit.source = "${pkgs.sudo.out}/bin/sudoedit";
+    };
 
     environment.systemPackages = [ sudo ];
 
@@ -80,11 +93,10 @@ in
     environment.etc = singleton
       { source =
           pkgs.runCommand "sudoers"
-	  {src = pkgs.writeText "sudoers-in" cfg.configFile; }
+          { src = pkgs.writeText "sudoers-in" cfg.configFile; }
           # Make sure that the sudoers file is syntactically valid.
           # (currently disabled - NIXOS-66)
-          "${pkgs.sudo}/sbin/visudo -f $src -c &&
-	      cp $src $out";
+          "${pkgs.sudo}/sbin/visudo -f $src -c && cp $src $out";
         target = "sudoers";
         mode = "0440";
       };

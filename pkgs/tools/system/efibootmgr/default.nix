@@ -1,29 +1,27 @@
-{ stdenv, fetchgit, perl, efivar, pciutils, zlib }:
+{ stdenv, fetchFromGitHub, perl, efivar, pciutils, zlib, popt }:
 
 stdenv.mkDerivation rec {
   name = "efibootmgr-${version}";
-  version = "0.7.0";
+  version = "13";
 
-  buildInputs = [ perl efivar pciutils zlib ];
+  buildInputs = [ perl efivar pciutils zlib popt ];
 
-  src = fetchgit {
-    url = "git://github.com/vathpela/efibootmgr.git";
-    rev = "refs/tags/${name}";
-    sha256 = "1nazmqxppx2xa8clv4bjdb1b6gyyimgjdj85n2hmf1smqr8krrmz";
+  src = fetchFromGitHub {
+    owner = "rhinstaller";
+    repo = "efibootmgr";
+    rev = version;
+    sha256 = "1kwmvx111c3a5783kx3az76mkhpr1nsdx0yv09gp4k0hgzqlqj96";
   };
 
-  postPatch = ''
-    substituteInPlace "./tools/install.pl" \
-      --replace "/usr/bin/perl" "${perl}/bin/perl"
-  '';
+  NIX_CFLAGS_COMPILE = "-I${efivar}/include/efivar";
+  NIX_LDFLAGS = "-lefiboot -lefivar -lpopt";
 
-  installFlags = [ "BINDIR=$(out)/sbin" ];
+  installFlags = [ "prefix=$(out)" ];
 
   meta = with stdenv.lib; {
     description = "A Linux user-space application to modify the Intel Extensible Firmware Interface (EFI) Boot Manager";
     homepage = http://linux.dell.com/efibootmgr/;
     license = licenses.gpl2;
-    maintainers = with maintainers; [ shlevy ];
     platforms = platforms.linux;
   };
 }

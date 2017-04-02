@@ -1,21 +1,25 @@
 { stdenv, fetchurl, buildPerlPackage, DBI, sqlite }:
 
 buildPerlPackage rec {
-  name = "DBD-SQLite-1.42";
+  name = "DBD-SQLite-1.50";
 
   src = fetchurl {
     url = "mirror://cpan/authors/id/I/IS/ISHIGAKI/${name}.tar.gz";
-    sha256 = "14x9cjsc8dz8ad1nad0bqiq9cbk1rjfb8h5y0rpk3pdl38y6afxb";
+    sha256 = "1qcw2nzla03ywrl6mx1qklvbc8n5bn4gxqbjnvadfkwlffmi7i9s";
   };
 
   propagatedBuildInputs = [ DBI ];
 
-  makeMakerFlags = "SQLITE_LOCATION=${sqlite}";
+  makeMakerFlags = "SQLITE_LOCATION=${sqlite.dev}";
 
   patches = [
     # Support building against our own sqlite.
     ./external-sqlite.patch
   ];
+
+  sqlite_dev = sqlite.dev;
+  sqlite_out = sqlite.out;
+  postPatch = "substituteAllInPlace Makefile.PL; cat Makefile.PL";
 
   preBuild =
     ''
@@ -33,7 +37,7 @@ buildPerlPackage rec {
 
   # Disabled because the tests can randomly fail due to timeouts
   # (e.g. "database is locked(5) at dbdimp.c line 402 at t/07busy.t").
-  doCheck = false;
+  #doCheck = false;
 
   meta.platforms = stdenv.lib.platforms.unix;
 }

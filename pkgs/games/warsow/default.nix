@@ -37,7 +37,7 @@ stdenv.mkDerivation rec {
     cp -rv basewsw libs $dest
     # Since 1.03 some modules are _always_ downloaded from server, thus
     makeWrapper $dest/warsow $out/bin/warsow \
-      --suffix-each LD_LIBRARY_PATH ':' "${freetype}/lib"
+      --suffix-each LD_LIBRARY_PATH ':' "${freetype.out}/lib"
     makeWrapper $dest/wsw_server $out/bin/wsw_server
     makeWrapper $dest/wswtv_server $out/bin/wswtv_server
   '';
@@ -46,7 +46,7 @@ stdenv.mkDerivation rec {
     cur_rpath=$(patchelf --print-rpath $p)
     patchelf --set-rpath $cur_rpath:${mesa}/lib $p
   '';
-  meta = {
+  meta = with stdenv.lib; {
     description = "Multiplayer FPS game designed for competitive gaming";
     longDescription = ''
       Set in a futuristic cartoon-like world where rocketlauncher-wielding
@@ -56,8 +56,9 @@ stdenv.mkDerivation rec {
     '';
     homepage = http://www.warsow.net;
     # Engine is under GPLv2, everything else is under
-    license = [ "unfree-redistributable" ];
-    maintainers = with stdenv.lib.maintainers; [ astsmtl ];
-    platforms = with stdenv.lib.platforms; linux;
+    license = licenses.unfreeRedistributable;
+    maintainers = with maintainers; [ astsmtl ];
+    platforms = platforms.linux;
+    broken = true; # Depends on a specific old libjpeg version
   };
 }

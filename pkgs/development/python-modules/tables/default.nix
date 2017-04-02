@@ -1,26 +1,25 @@
 { stdenv, fetchurl, python, buildPythonPackage
-, cython, bzip2, lzo, numpy, numexpr, hdf5 }:
+, cython, bzip2, lzo, numpy, numexpr, hdf5, six }:
 
 buildPythonPackage rec {
-  version = "3.1.1";
+  version = "3.3.0";
   name = "tables-${version}";
 
   src = fetchurl {
-    url = "mirror://sourceforge/pytables/${name}.tar.gz";
-    sha256 = "18rdzv9xwiapb5c8y47rk2fi3fdm2dpjf68wfycma67ifrih7f9r";
+    url = "mirror://pypi/t/tables/${name}.tar.gz";
+    sha256 = "0b4211s0zzdmh74k49ss0m9lc2ql2iazq2aa95ams6h45vqcr0w3";
   };
 
   buildInputs = [ hdf5 cython bzip2 lzo ];
-  propagatedBuildInputs = [ numpy numexpr ];
+  propagatedBuildInputs = [ numpy numexpr six ];
 
   # The setup script complains about missing run-paths, but they are
   # actually set.
   setupPyBuildFlags =
     [ "--hdf5=${hdf5}"
       "--lzo=${lzo}"
-      "--bzip2=${bzip2}"
+      "--bzip2=${bzip2.dev}"
     ];
-  setupPyInstallFlags = setupPyBuildFlags;
 
   # Run the test suite.
   # It requires the build path to be in the python search path.

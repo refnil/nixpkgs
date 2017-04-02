@@ -3,6 +3,7 @@
 with lib;
 
 let
+  cfg = config.boot.loader.raspberryPi;
 
   builder = pkgs.substituteAll {
     src = ./builder.sh;
@@ -10,6 +11,7 @@ let
     inherit (pkgs) bash;
     path = [pkgs.coreutils pkgs.gnused pkgs.gnugrep];
     firmware = pkgs.raspberrypifw;
+    version = cfg.version;
   };
 
   platform = pkgs.stdenv.platform;
@@ -21,10 +23,18 @@ in
 
     boot.loader.raspberryPi.enable = mkOption {
       default = false;
+      type = types.bool;
       description = ''
         Whether to create files with the system generations in
         <literal>/boot</literal>.
         <literal>/boot/old</literal> will hold files from old generations.
+      '';
+    };
+
+    boot.loader.raspberryPi.version = mkOption {
+      default = 2;
+      type = types.enum [ 1 2 3 ];
+      description = ''
       '';
     };
 

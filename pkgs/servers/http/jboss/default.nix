@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, unzip, jdk, lib }:
+{ stdenv, fetchurl, unzip, jdk }:
 
 stdenv.mkDerivation {
   name = "jboss-as-7.1.1.Final";
@@ -16,10 +16,14 @@ stdenv.mkDerivation {
     find $out/bin -name \*.sh -print0 | xargs -0 sed -i -e '/#!\/bin\/sh/aJAVA_HOME=${jdk}'
   '';
   
-  meta = {
-    homepage = "http://www.jboss.org/";
-    description = "JBoss, Open Source J2EE application server";
-    license = "GPL/LGPL";
-    maintainers = [ lib.maintainers.sander ];
+  meta = with stdenv.lib; {
+    homepage = http://www.jboss.org/;
+    description = "Open Source J2EE application server";
+    license = licenses.lgpl21;
+    maintainers = [ maintainers.sander ];
+    platforms = platforms.unix;
+    knownVulnerabilities = [
+      "CVE-2015-7501: remote code execution in apache-commons-collections: InvokerTransformer during deserialisation"
+    ];
   };
 }

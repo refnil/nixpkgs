@@ -1,36 +1,44 @@
-{ stdenv, fetchurl
+{ lib, stdenv, fetchurl
 , enableAlsa ? true, alsaLib ? null
 , enableLibao ? true, libao ? null
 , enableLame ? false, lame ? null
 , enableLibmad ? true, libmad ? null
 , enableLibogg ? true, libogg ? null, libvorbis ? null
+, enableFLAC ? true, flac ? null
+, enablePNG ? true, libpng ? null
+, enableLibsndfile ? true, libsndfile ? null
+# amrnb and amrwb are unfree, disabled by default
+, enableAMR ? false, amrnb ? null, amrwb ? null
+, enableLibpulseaudio ? true, libpulseaudio ? null
 }:
-let
-  inherit (stdenv.lib) optional optionals;
-in stdenv.mkDerivation rec {
-  name = "sox-14.4.1";
+
+with stdenv.lib;
+
+stdenv.mkDerivation rec {
+  name = "sox-14.4.2";
 
   src = fetchurl {
     url = "mirror://sourceforge/sox/${name}.tar.gz";
-    sha256 = "16x8gykfjdhxg0kdxwzcwgwpm5caa08y2mx18siqsq0ywmpjr34s";
+    sha256 = "0v2znlxkxxcd3f48hf3dx9pq7i6fdhb62kgj7wv8xggz8f35jpxl";
   };
 
   buildInputs =
-    (optional enableAlsa alsaLib) ++
-    (optional enableLibao libao) ++
-    (optional enableLame lame) ++
-    (optional enableLibmad libmad) ++
-    (optionals enableLibogg [ libogg libvorbis ]);
+    optional (enableAlsa && stdenv.isLinux) alsaLib ++
+    optional enableLibao libao ++
+    optional enableLame lame ++
+    optional enableLibmad libmad ++
+    optionals enableLibogg [ libogg libvorbis ] ++
+    optional enableFLAC flac ++
+    optional enablePNG libpng ++
+    optional enableLibsndfile libsndfile ++
+    optionals enableAMR [ amrnb amrwb ] ++
+    optional enableLibpulseaudio libpulseaudio;
 
   meta = {
     description = "Sample Rate Converter for audio";
-    homepage = http://www.mega-nerd.com/SRC/index.html;
-    maintainers = [stdenv.lib.maintainers.marcweber stdenv.lib.maintainers.shlevy];
-    # you can choose one of the following licenses:
-    license = [
-      "GPL"
-      # http://www.mega-nerd.com/SRC/libsamplerate-cul.pdf
-      "libsamplerate Commercial Use License"
-    ];
+    homepage = http://sox.sourceforge.net/;
+    maintainers = [ lib.maintainers.marcweber ];
+    license = if enableAMR then lib.licenses.unfree else lib.licenses.gpl2Plus;
+    platforms = lib.platforms.linux ++ lib.platforms.darwin;
   };
 }

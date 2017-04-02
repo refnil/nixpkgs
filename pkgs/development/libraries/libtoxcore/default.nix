@@ -1,36 +1,41 @@
-{ stdenv, fetchurl, autoconf, libtool, automake, libsodium, ncurses
-, libconfig, pkgconfig }:
+{ stdenv, fetchFromGitHub, cmake, libsodium, ncurses, libopus, libmsgpack
+, libvpx, check, libconfig, pkgconfig }:
 
-let
-  version = "388b1229b";
-  date = "20140220";
-in
 stdenv.mkDerivation rec {
-  name = "tox-core-${date}-${version}";
+  name = "libtoxcore-${version}";
+  version = "0.1.7";
 
-  src = fetchurl {
-    url = "https://github.com/irungentoo/ProjectTox-Core/tarball/${version}";
-    name = "${name}.tar.gz";
-    sha256 = "12vggiv0gyv8a2rd5qrv04b7yhfhxb7r0yh75gg5n4jdpcbhvgsd";
+  src = fetchFromGitHub {
+    owner  = "TokTok";
+    repo   = "c-toxcore";
+    rev    = "v${version}";
+    sha256 = "11lqq825id174xdjxm0cy5dbyvmdy841hjy9q3l51yiya9f82d5b";
   };
 
-  preConfigure = ''
-    autoreconf -i
-  '';
+  cmakeFlags = [
+    "-DBUILD_NTOX=ON"
+    "-DDHT_BOOTSTRAP=ON"
+    "-DBOOTSTRAP_DAEMON=ON"
+  ];
 
-  configureFlags = [ "--with-libsodium-headers=${libsodium}/include"
-    "--with-libsodium-libs=${libsodium}/lib" 
-    "--enable-ntox" ];
+  buildInputs = [
+    libsodium libmsgpack ncurses
+  ] ++ stdenv.lib.optionals (!stdenv.isArm) [
+    libopus
+    libvpx
+  ];
+  nativeBuildInputs = [ cmake pkgconfig ];
+  checkInputs = [ check ];
 
-  buildInputs = [ autoconf libtool automake libsodium ncurses libconfig
-    pkgconfig ];
+  checkPhase = "ctest";
 
+  # for some reason the tests are not running - it says "No tests found!!"
   doCheck = true;
 
-  meta = {
+  meta = with stdenv.lib; {
     description = "P2P FOSS instant messaging application aimed to replace Skype with crypto";
-    license = stdenv.lib.licenses.gpl3Plus;
-    maintainers = with stdenv.lib.maintainers; [ viric ];
-    platforms = stdenv.lib.platforms.all;
+    license = licenses.gpl3Plus;
+    maintainers = with maintainers; [ peterhoeg ];
+    platforms = platforms.all;
   };
 }

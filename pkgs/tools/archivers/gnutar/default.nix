@@ -1,17 +1,42 @@
-{ stdenv, fetchurl }:
+{ stdenv, fetchurl, autoreconfHook, acl }:
 
 stdenv.mkDerivation rec {
   name = "gnutar-${version}";
-  version = "1.27.1";
+  version = "1.29";
 
   src = fetchurl {
-    url = "mirror://gnu/tar/tar-${version}.tar.bz2";
-    sha256 = "1iip0fk0wqhxb0jcwphz43r4fxkx1y7mznnhmlvr618jhp7b63wv";
+    url = "mirror://gnu/tar/tar-${version}.tar.xz";
+    sha256 = "097hx7sbzp8qirl4m930lw84kn0wmxhmq7v1qpra3mrg0b8cyba0";
   };
+
+  patches = [ ./CVE-2016-6321.patch ];
+
+  # avoid retaining reference to CF during stdenv bootstrap
+  configureFlags = stdenv.lib.optionals stdenv.isDarwin [
+    "gt_cv_func_CFPreferencesCopyAppValue=no"
+    "gt_cv_func_CFLocaleCopyCurrent=no"
+  ];
+
+  # gnutar tries to call into gettext between `fork` and `exec`,
+  # which is not safe on darwin.
+  # see http://article.gmane.org/gmane.os.macosx.fink.devel/21882
+  postPatch = stdenv.lib.optionalString stdenv.isDarwin ''
+    substituteInPlace src/system.c --replace '_(' 'N_('
+  '';
+
+  outputs = [ "out" "info" ];
+
+  buildInputs = [ ]
+    ++ stdenv.lib.optional stdenv.isLinux acl
+    ++ stdenv.lib.optional stdenv.isDarwin autoreconfHook;
 
   # May have some issues with root compilation because the bootstrap tool
   # cannot be used as a login shell for now.
   FORCE_UNSAFE_CONFIGURE = stdenv.lib.optionalString (stdenv.system == "armv7l-linux" || stdenv.isSunOS) "1";
+
+  preConfigure = if stdenv.isCygwin then ''
+    sed -i gnu/fpending.h -e 's,include <stdio_ext.h>,,'
+  '' else null;
 
   meta = {
     homepage = http://www.gnu.org/software/tar/;

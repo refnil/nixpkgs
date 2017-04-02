@@ -1,31 +1,42 @@
-{ stdenv, fetchurl, m4, perl, gfortran, texLive, ffmpeg, tk
-, imagemagick, liblapack
+{ stdenv, fetchurl, m4, perl, gfortran, texlive, ffmpeg, tk, gnused_422
+, imagemagick, liblapack, python, openssl, libpng 
+, which
 }:
 
 stdenv.mkDerivation rec {
-  name = "sage-6.1.1";
+  name = "sage-6.8";
 
   src = fetchurl {
-    url = "http://mirrors.xmission.com/sage/src/sage-6.1.1.tar.gz";
-    sha256 = "0kbzs0l9q7y34jv3f8rd1c2mrjsjkdgaw6mfdwjlpg9g4gghmq5y";
+    url = "http://old.files.sagemath.org/src-old/${name}.tar.gz";
+    sha256 = "102mrzzi215g1xn5zgcv501x9sghwg758jagx2jixvg1rj2jijj9";
+
   };
 
-  buildInputs = [ m4 perl gfortran texLive ffmpeg tk imagemagick liblapack ];
+  buildInputs = [ m4 perl gfortran texlive.combined.scheme-basic ffmpeg gnused_422 tk imagemagick liblapack
+                  python openssl libpng which ];
+
+  patches = [ ./spkg-singular.patch ./spkg-python.patch ./spkg-git.patch ];
 
   enableParallelBuilding = true;
 
+  hardeningDisable = [ "format" ];
+
   preConfigure = ''
     export SAGE_NUM_THREADS=$NIX_BUILD_CORES
-    sed -i 's/if ! [ -d "$HOME" ]/if [ -d "$HOME" ]/' src/bin/sage-env
-  '' + stdenv.lib.optionalString stdenv.isDarwin ''
-    sed -i "s/ld_version = try_run('ld  -v')/ld_version = 'Apple'/" \
-      build/pkgs/atlas/configuration.py
+    export SAGE_ATLAS_ARCH=fast
+    mkdir -p $out/sageHome
+    export HOME=$out/sageHome
+    export CPPFLAGS="-P"
   '';
 
+  preBuild = "patchShebangs build";
+
+  installPhase = ''DESTDIR=$out make install'';
+
   meta = {
-    homepage = http://www.scilab.org/;
-    description = "Scientific software package for numerical computations (Matlab lookalike)";
-    # see http://www.scilab.org/legal
-    license = "SciLab";
+    homepage = "http://www.sagemath.org";
+    description = "A free open source mathematics software system";
+    license = stdenv.lib.licenses.gpl2Plus;
+    broken = true;
   };
 }

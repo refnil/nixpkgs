@@ -1,14 +1,22 @@
 { stdenv, fetchurl }:
 
 stdenv.mkDerivation rec {
-  name = "apr-1.5.1";
+  name = "apr-1.5.2";
 
   src = fetchurl {
     url = "mirror://apache/apr/${name}.tar.bz2";
-    sha256 = "1b4qw686bwjn19iyb0lg918q23xxd6s2gnyczhjq992d3m1vwjp9";
+    sha256 = "0ypn51xblix5ys9xy7da3ngdydip0qqh9rdq8nz54w9aq8lys0vx";
   };
 
-  patches = stdenv.lib.optionals stdenv.isDarwin [ ./darwin_fix_configure.patch ];
+  patches = stdenv.lib.optionals stdenv.isDarwin [ ./is-this-a-compiler-bug.patch ];
+
+  outputs = [ "out" "dev" ];
+  outputBin = "dev";
+
+  preConfigure =
+    ''
+      configureFlagsArray+=("--with-installbuilddir=$dev/share/build")
+    '';
 
   configureFlags =
     # Including the Windows headers breaks unistd.h.
@@ -17,10 +25,10 @@ stdenv.mkDerivation rec {
 
   enableParallelBuilding = true;
 
-  meta = {
+  meta = with stdenv.lib; {
     homepage = http://apr.apache.org/;
     description = "The Apache Portable Runtime library";
-    platforms = stdenv.lib.platforms.all;
-    maintainers = [ stdenv.lib.maintainers.eelco ];
+    platforms = platforms.all;
+    maintainers = [ maintainers.eelco ];
   };
 }

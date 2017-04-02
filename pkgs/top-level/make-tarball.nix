@@ -2,26 +2,23 @@
    also builds the documentation and tests whether the Nix expressions
    evaluate correctly. */
 
-{ nixpkgs, officialRelease }:
+{ nixpkgs
+, officialRelease
+, pkgs ? import nixpkgs.outPath {}
+, nix ? pkgs.nix
+}:
 
-with import nixpkgs.outPath {};
+with pkgs;
 
 releaseTools.sourceTarball rec {
   name = "nixpkgs-tarball";
   src = nixpkgs;
 
   inherit officialRelease;
-  version = builtins.readFile ../../.version;
+  version = pkgs.lib.fileContents ../../.version;
   versionSuffix = "pre${toString nixpkgs.revCount}.${nixpkgs.shortRev}";
 
-  buildInputs = [
-    lzma
-    libxml2 # Needed for the release notes.
-    libxslt
-    w3m
-    nix # Needed to check whether the expressions are valid.
-    tetex dblatex
-  ];
+  buildInputs = [ nix.out jq ];
 
   configurePhase = ''
     eval "$preConfigure"
@@ -32,25 +29,28 @@ releaseTools.sourceTarball rec {
 
   dontBuild = false;
 
-  buildPhase = ''
-    echo "building docs..."
-    export VARTEXFONTS=$TMPDIR/texfonts
-    make -C doc docbookxsl=${docbook5_xsl}/xml/xsl/docbook
-    ln -s doc/NEWS.txt NEWS
-  '';
-
   doCheck = true;
 
   checkPhase = ''
     export NIX_DB_DIR=$TMPDIR
     export NIX_STATE_DIR=$TMPDIR
+    export NIX_PATH=nixpkgs=$TMPDIR/barf.nix
+    opts=(--option build-users-group "")
     nix-store --init
+
+    echo 'abort "Illegal use of <nixpkgs> in Nixpkgs."' > $TMPDIR/barf.nix
+
+    # Make sure that Nixpkgs does not use <nixpkgs>
+    if (find pkgs -type f -name '*.nix' -print | xargs grep '<nixpkgs\/'); then
+        echo "Nixpkgs is not allowed to use <nixpkgs> to refer to itself."
+        exit 1
+    fi
 
     # Make sure that derivation paths do not depend on the Nixpkgs path.
     mkdir $TMPDIR/foo
     ln -s $(readlink -f .) $TMPDIR/foo/bar
-    p1=$(nix-instantiate pkgs/top-level/all-packages.nix --dry-run -A firefox)
-    p2=$(nix-instantiate $TMPDIR/foo/bar/pkgs/top-level/all-packages.nix --dry-run -A firefox)
+    p1=$(nix-instantiate ./. --dry-run -A firefox --show-trace)
+    p2=$(nix-instantiate $TMPDIR/foo/bar --dry-run -A firefox)
     if [ "$p1" != "$p2" ]; then
         echo "Nixpkgs evaluation depends on Nixpkgs path ($p1 vs $p2)!"
         exit 1
@@ -63,12 +63,25 @@ releaseTools.sourceTarball rec {
         exit 1
     fi
 
-    # Check that all-packages.nix evaluates on a number of platforms.
-    for platform in i686-linux x86_64-linux x86_64-darwin i686-freebsd x86_64-freebsd; do
-        header "checking pkgs/top-level/all-packages.nix on $platform"
-        nix-env -f pkgs/top-level/all-packages.nix \
+    # Check that all-packages.nix evaluates on a number of platforms without any warnings.
+    for platform in i686-linux x86_64-linux x86_64-darwin; do
+        header "checking Nixpkgs on $platform"
+
+        nix-env -f . \
             --show-trace --argstr system "$platform" \
-            -qa \* --drv-path --system-filter \* --system --meta --xml > /dev/null
+            -qa --drv-path --system-filter \* --system \
+            "''${opts[@]}" 2>&1 >/dev/null | tee eval-warnings.log
+
+        if [ -s eval-warnings.log ]; then
+            echo "Nixpkgs on $platform evaluated with warnings, aborting"
+            exit 1
+        fi
+        rm eval-warnings.log
+
+        nix-env -f . \
+            --show-trace --argstr system "$platform" \
+            -qa --drv-path --system-filter \* --system --meta --xml \
+            "''${opts[@]}" > /dev/null
         stopNest
     done
 
@@ -77,7 +90,15 @@ releaseTools.sourceTarball rec {
     stopNest
 
     header "checking find-tarballs.nix"
-    nix-instantiate --eval --strict --show-trace ./maintainers/scripts/find-tarballs.nix > /dev/null
+    nix-instantiate --eval --strict --show-trace --json \
+       ./maintainers/scripts/find-tarballs.nix \
+      --arg expr 'import ./maintainers/scripts/all-tarballs.nix' > $TMPDIR/tarballs.json
+    nrUrls=$(jq -r '.[].url' < $TMPDIR/tarballs.json | wc -l)
+    echo "found $nrUrls URLs"
+    if [ "$nrUrls" -lt 10000 ]; then
+      echo "suspiciously low number of URLs"
+      exit 1
+    fi
     stopNest
   '';
 
@@ -85,21 +106,7 @@ releaseTools.sourceTarball rec {
     mkdir -p $out/tarballs
     mkdir ../$releaseName
     cp -prd . ../$releaseName
-    echo nixpkgs > ../$releaseName/channel-name
     (cd .. && tar cfa $out/tarballs/$releaseName.tar.xz $releaseName) || false
-
-    mkdir -p $out/release-notes
-    cp doc/NEWS.html $out/release-notes/index.html
-    cp doc/style.css $out/release-notes/
-    echo "doc release-notes $out/release-notes" >> $out/nix-support/hydra-build-products
-
-    mkdir -p $out/manual
-    cp doc/manual.html $out/manual/index.html
-    cp doc/style.css $out/manual/
-    echo "doc manual $out/manual" >> $out/nix-support/hydra-build-products
-
-    cp doc/manual.pdf $out/manual.pdf
-    echo "doc-pdf manual $out/manual.pdf" >> $out/nix-support/hydra-build-products
   '';
 
   meta = {

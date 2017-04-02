@@ -1,11 +1,11 @@
 { stdenv, fetchurl, perl, bdftopcf, mkfontdir, mkfontscale }:
 
 stdenv.mkDerivation rec {
-  name = "terminus-font-4.38";
+  name = "terminus-font-4.40";
 
   src = fetchurl {
     url = "mirror://sourceforge/project/terminus-font/${name}/${name}.tar.gz";
-    sha256 = "1dwpxmg0wiyhp7hh18mvw18gnf0y2jgbn80c4xya7rmb9mm8gx7n";
+    sha256 = "0487cyx5h1f0crbny5sg73a22gmym5vk1i7646gy7hgiscj2rxb4";
   };
 
   buildInputs = [ perl bdftopcf mkfontdir mkfontscale ];
@@ -22,7 +22,7 @@ stdenv.mkDerivation rec {
     make install fontdir
   '';
 
-  meta = {
+  meta = with stdenv.lib; {
     description = "A clean fixed width font";
     longDescription = ''
       Terminus Font is designed for long (8 and more hours per day) work
@@ -37,8 +37,8 @@ stdenv.mkDerivation rec {
       EGA/VGA-bold for 8x14 and 8x16.
     '';
     homepage = http://www.is-vn.bg/hamster/;
-    license = [ "GPLv2+" ];
-    maintainers = with stdenv.lib.maintainers; [ astsmtl ];
-    platforms = with stdenv.lib.platforms; linux;
+    license = licenses.gpl2Plus;
+    maintainers = with maintainers; [ astsmtl ];
+    platforms = platforms.linux;
   };
 }

@@ -29,7 +29,7 @@ stdenv.mkDerivation {
   '';
 
   meta = {
-    description = "Japanese font, a free replacement for MS Gothic and MS Mincho.";
+    description = "Japanese font, a free replacement for MS Gothic and MS Mincho";
     longDescription = ''
       Kochi Gothic and Kochi Mincho were developed as free replacements for the
       MS Gothic and MS Mincho fonts from Microsoft. These are the Debian
@@ -39,5 +39,6 @@ stdenv.mkDerivation {
     homepage = http://sourceforge.jp/projects/efont/;
     license = stdenv.lib.licenses.wadalab;
     maintainers = [ stdenv.lib.maintainers.auntie ];
+    platforms = stdenv.lib.platforms.linux;
   };
 }

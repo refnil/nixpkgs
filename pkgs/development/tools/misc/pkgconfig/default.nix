@@ -1,22 +1,33 @@
-{stdenv, fetchurl, automake, vanilla ? false}:
+{stdenv, fetchurl, automake, libiconv, vanilla ? false }:
 
-stdenv.mkDerivation (rec {
-  name = "pkg-config-0.28";
-  
+let
+  inherit (stdenv.lib) optional;
+in
+stdenv.mkDerivation rec {
+  name = "pkg-config-0.29";
+
   setupHook = ./setup-hook.sh;
-  
+
   src = fetchurl {
-    url = "http://pkgconfig.freedesktop.org/releases/${name}.tar.gz";
-    sha256 = "0igqq5m204w71m11y0nipbdf5apx87hwfll6axs12hn4dqfb6vkb";
+    urls = [
+      "https://pkgconfig.freedesktop.org/releases/${name}.tar.gz"
+      "http://fossies.org/linux/misc/${name}.tar.gz"
+    ];
+    sha256 = "0sq09a39wj4cxf8l2jvkq067g08ywfma4v6nhprnf351s82pfl68";
   };
-
-  configureFlags = [ "--with-internal-glib" ];
-
-  patches = if vanilla then [] else [
     # Process Requires.private properly, see
     # http://bugs.freedesktop.org/show_bug.cgi?id=4738.
-    ./requires-private.patch
-  ];
+  patches = optional (!vanilla) ./requires-private.patch
+    ++ optional stdenv.isCygwin ./2.36.3-not-win32.patch;
+
+  preConfigure = stdenv.lib.optionalString (stdenv.system == "mips64el-linux")
+    ''cp -v ${automake}/share/automake*/config.{sub,guess} .'';
+  buildInputs = stdenv.lib.optional (stdenv.isCygwin || stdenv.isDarwin || stdenv.isSunOS) libiconv;
+
+  configureFlags = [ "--with-internal-glib" ]
+    ++ stdenv.lib.optional (stdenv.isSunOS) [ "--with-libiconv=gnu" "--with-system-library-path" "--with-system-include-path" "CFLAGS=-DENABLE_NLS" ];
+
+  postInstall = ''rm "$out"/bin/*-pkg-config''; # clean the duplicate file
 
   meta = {
     description = "A tool that allows packages to find out information about other packages";
@@ -24,9 +35,5 @@ stdenv.mkDerivation (rec {
     platforms = stdenv.lib.platforms.all;
   };
 
-} // (if stdenv.system == "mips64el-linux" then
-  {
-    preConfigure = ''
-      cp -v ${automake}/share/automake*/config.{sub,guess} .
-    '';
-  } else {}))
+}
+

@@ -8,9 +8,7 @@ let
 
   mysql = cfg.package;
 
-  is55 = mysql.mysqlVersion == "5.5";
-
-  mysqldDir = if is55 then "${mysql}/bin" else "${mysql}/libexec";
+  atLeast55 = versionAtLeast mysql.mysqlVersion "5.5";
 
   pidFile = "${cfg.pidDir}/mysqld.pid";
 
@@ -24,7 +22,7 @@ let
     port = ${toString cfg.port}
     ${optionalString (cfg.replication.role == "master" || cfg.replication.role == "slave") "log-bin=mysql-bin"}
     ${optionalString (cfg.replication.role == "master" || cfg.replication.role == "slave") "server-id = ${toString cfg.replication.serverId}"}
-    ${optionalString (cfg.replication.role == "slave" && !is55)
+    ${optionalString (cfg.replication.role == "slave" && !atLeast55)
     ''
       master-host = ${cfg.replication.masterHost}
       master-user = ${cfg.replication.masterUser}
@@ -45,6 +43,7 @@ in
     services.mysql = {
 
       enable = mkOption {
+        type = types.bool;
         default = false;
         description = "
           Whether to enable the MySQL server.
@@ -60,26 +59,30 @@ in
       };
 
       port = mkOption {
-        default = "3306";
+        type = types.int;
+        default = 3306;
         description = "Port of MySQL";
       };
 
       user = mkOption {
+        type = types.str;
         default = "mysql";
         description = "User account under which MySQL runs";
       };
 
       dataDir = mkOption {
+        type = types.path;
         default = "/var/mysql"; # !!! should be /var/db/mysql
         description = "Location where MySQL stores its table files";
       };
 
       pidDir = mkOption {
-        default = "/var/run/mysql";
+        default = "/run/mysqld";
         description = "Location of the file which stores the PID of the MySQL server";
       };
 
       extraOptions = mkOption {
+        type = types.lines;
         default = "";
         example = ''
           key_buffer_size = 6G
@@ -117,28 +120,39 @@ in
 
       replication = {
         role = mkOption {
+          type = types.enum [ "master" "slave" "none" ];
           default = "none";
-          description = "Role of the MySQL server instance. Can be either: master, slave or none";
+          description = "Role of the MySQL server instance.";
         };
 
         serverId = mkOption {
+          type = types.int;
           default = 1;
           description = "Id of the MySQL server instance. This number must be unique for each instance";
         };
 
         masterHost = mkOption {
+          type = types.str;
           description = "Hostname of the MySQL master server";
         };
 
+        slaveHost = mkOption {
+          type = types.str;
+          description = "Hostname of the MySQL slave server";
+        };
+
         masterUser = mkOption {
+          type = types.str;
           description = "Username of the MySQL replication user";
         };
 
         masterPassword = mkOption {
+          type = types.str;
           description = "Password of the MySQL replication user";
         };
 
         masterPort = mkOption {
+          type = types.int;
           default = 3306;
           description = "Port number on which the MySQL master server runs";
         };
@@ -165,9 +179,16 @@ in
     systemd.services.mysql =
       { description = "MySQL Server";
 
+        after = [ "network.target" ];
         wantedBy = [ "multi-user.target" ];
 
         unitConfig.RequiresMountsFor = "${cfg.dataDir}";
+
+        path = [
+          # Needed for the mysql_install_db command in the preStart script
+          # which calls the hostname command.
+          pkgs.nettools
+        ];
 
         preStart =
           ''
@@ -178,17 +199,22 @@ in
                 touch /tmp/mysql_init
             fi
 
-            mkdir -m 0700 -p ${cfg.pidDir}
+            mkdir -m 0755 -p ${cfg.pidDir}
             chown -R ${cfg.user} ${cfg.pidDir}
+
+            # Make the socket directory
+            mkdir -p /run/mysqld
+            chmod 0755 /run/mysqld
+            chown -R ${cfg.user} /run/mysqld
           '';
 
-        serviceConfig.ExecStart = "${mysqldDir}/mysqld --defaults-extra-file=${myCnf} ${mysqldOptions}";
+        serviceConfig.ExecStart = "${mysql}/bin/mysqld --defaults-extra-file=${myCnf} ${mysqldOptions}";
 
         postStart =
           ''
             # Wait until the MySQL server is available for use
             count=0
-            while [ ! -e /tmp/mysql.sock ]
+            while [ ! -e /run/mysqld/mysqld.sock ]
             do
                 if [ $count -eq 30 ]
                 then
@@ -222,9 +248,20 @@ in
                     fi
                   '') cfg.initialDatabases}
 
-                ${optionalString (cfg.replication.role == "slave" && is55)
+                ${optionalString (cfg.replication.role == "master" && atLeast55)
                   ''
                     # Set up the replication master
+
+                    ( echo "use mysql;"
+                      echo "CREATE USER '${cfg.replication.masterUser}'@'${cfg.replication.slaveHost}' IDENTIFIED WITH mysql_native_password;"
+                      echo "SET PASSWORD FOR '${cfg.replication.masterUser}'@'${cfg.replication.slaveHost}' = PASSWORD('${cfg.replication.masterPassword}');"
+                      echo "GRANT REPLICATION SLAVE ON *.* TO '${cfg.replication.masterUser}'@'${cfg.replication.slaveHost}';"
+                    ) | ${mysql}/bin/mysql -u root -N
+                  ''}
+
+                ${optionalString (cfg.replication.role == "slave" && atLeast55)
+                  ''
+                    # Set up the replication slave
 
                     ( echo "stop slave;"
                       echo "change master to master_host='${cfg.replication.masterHost}', master_user='${cfg.replication.masterUser}', master_password='${cfg.replication.masterPassword}';"

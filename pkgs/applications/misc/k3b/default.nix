@@ -1,30 +1,47 @@
-{ stdenv, fetchurl, cmake, qt4, perl, shared_mime_info, libvorbis, taglib
-, flac, libsamplerate, libdvdread, lame, libsndfile, libmad, gettext
-, kdelibs, kdemultimedia, automoc4, phonon, libkcddb ? null
+{ stdenv, lib, fetchurl, makeWrapper, automoc4, cmake, perl, pkgconfig
+, shared_mime_info, libvorbis, taglib, flac, libsamplerate
+, libdvdread, lame, libsndfile, libmad, gettext , transcode, cdrdao
+, dvdplusrwtools, vcdimager, cdparanoia, kdelibs4, libdvdcss, ffmpeg
+, libkcddb, phonon
 }:
 
-stdenv.mkDerivation rec {
-  name = "k3b-2.0.2";
-  
+let
+  # at runtime, k3b needs the executables cdrdao, cdrecord, dvd+rw-format,
+  # eMovix, growisofs, mkisofs, normalize, readcd, transcode, vcdxbuild,
+  # vcdxminfo, and vcdxrip
+  binPath = lib.makeBinPath [ cdrdao dvdplusrwtools transcode vcdimager ];
+
+in stdenv.mkDerivation rec {
+  name = "k3b-${version}";
+  version = "2.0.3a";
+
   src = fetchurl {
-    url = "mirror://sourceforge/k3b/${name}.tar.bz2";
-    sha256 = "1kdpylz3w9bg02jg4mjhqz8bq1yb4xi4fqfl9139qcyjq4lny5xg";
+    url = "http://download.kde.org/stable/k3b/${name}.tar.xz";
+    sha256 = "10f07465g9860chfnvrp9w3m686g6j9f446xgnnx7h82d1sb42rd";
   };
 
-  buildInputs =
-    [ cmake qt4 perl shared_mime_info libvorbis taglib
-      flac libsamplerate libdvdread lame libsndfile
-      libmad gettext stdenv.gcc.libc
-      kdelibs kdemultimedia automoc4 phonon
-      libkcddb
-    ];
+  nativeBuildInputs = [ automoc4 cmake gettext perl pkgconfig ];
+
+  buildInputs = [
+    shared_mime_info libvorbis taglib flac libsamplerate libdvdread
+    lame libsndfile libmad stdenv.cc.libc kdelibs4
+    phonon libkcddb makeWrapper cdparanoia
+    libdvdcss ffmpeg
+  ];
 
   enableParallelBuilding = true;
-                  
+
+  NIX_CFLAGS_LINK = [ "-lcdda_interface" "-lcdda_paranoia" "-ldvdcss" ];
+
+  postInstall = ''
+    wrapProgram $out/bin/k3b \
+      --prefix PATH ":" "${binPath}"
+  '';
+
   meta = with stdenv.lib; {
     description = "CD/DVD Burning Application for KDE";
     license = licenses.gpl2Plus;
-    maintainers = [ maintainers.sander maintainers.urkud maintainers.phreedom ];
+    maintainers = [ maintainers.sander maintainers.phreedom ];
     platforms = with stdenv.lib.platforms; linux;
   };
 }

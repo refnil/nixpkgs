@@ -1,45 +1,72 @@
-{ stdenv, fetchurl, kernel, perl, autoconf, automake, libtool, coreutils, gawk }:
+{ fetchFromGitHub, stdenv, autoreconfHook, coreutils, gawk
+, configFile ? "all"
 
-stdenv.mkDerivation {
-  name = "spl-0.6.3-${kernel.version}";
-  src = fetchurl {
-    url = http://archive.zfsonlinux.org/downloads/zfsonlinux/spl/spl-0.6.3.tar.gz;
-    sha256 = "1qqzyj2if5wai4jiwml4i8s6v8k7hbi7jmiph800lhkk5j8s72l9";
-  };
+# Kernel dependencies
+, kernel ? null
+}:
 
-  patches = [ ./install_prefix.patch ./const.patch ];
+with stdenv.lib;
+let
+  buildKernel = any (n: n == configFile) [ "kernel" "all" ];
+  buildUser = any (n: n == configFile) [ "user" "all" ];
 
-  buildInputs = [ perl autoconf automake libtool ];
+  common = { version, sha256 } @ args : stdenv.mkDerivation rec {
+    name = "spl-${configFile}-${version}${optionalString buildKernel "-${kernel.version}"}";
 
-  preConfigure = ''
-    ./autogen.sh
+    src = fetchFromGitHub {
+      owner = "zfsonlinux";
+      repo = "spl";
+      rev = "spl-${version}";
+      inherit sha256;
+    };
 
-    substituteInPlace ./module/spl/spl-generic.c --replace /usr/bin/hostid hostid
-    substituteInPlace ./module/spl/spl-module.c  --replace /bin/mknod mknod
+    patches = [ ./const.patch ./install_prefix.patch ];
 
-    substituteInPlace ./module/spl/spl-generic.c --replace "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PATH=${coreutils}:${gawk}:/bin"
-    substituteInPlace ./module/splat/splat-vnode.c --replace "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PATH=${coreutils}:/bin"
-    substituteInPlace ./module/splat/splat-linux.c --replace "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PATH=${coreutils}:/bin"
-  '';
+    nativeBuildInputs = [ autoreconfHook ];
 
-  configureFlags = ''
-     --with-linux=${kernel.dev}/lib/modules/${kernel.modDirVersion}/source
-     --with-linux-obj=${kernel.dev}/lib/modules/${kernel.modDirVersion}/build
-  '';
+    hardeningDisable = [ "pic" ];
 
-  enableParallelBuilding = true;
-
-  meta = {
-    description = "Kernel module driver for solaris porting layer (needed by in-kernel zfs)";
-
-    longDescription = ''
-      This kernel module is a porting layer for ZFS to work inside the linux
-      kernel.
+    preConfigure = ''
+      substituteInPlace ./module/spl/spl-generic.c --replace /usr/bin/hostid hostid
+      substituteInPlace ./module/spl/spl-generic.c --replace "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PATH=${coreutils}:${gawk}:/bin"
+      substituteInPlace ./module/splat/splat-vnode.c --replace "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PATH=${coreutils}:/bin"
+      substituteInPlace ./module/splat/splat-linux.c --replace "PATH=/sbin:/usr/sbin:/bin:/usr/bin" "PATH=${coreutils}:/bin"
     '';
 
-    homepage = http://zfsonlinux.org/;
-    platforms = stdenv.lib.platforms.linux;
-    license = stdenv.lib.licenses.gpl2Plus;
-    maintainers = with stdenv.lib.maintainers; [ jcumming wizeman ];
+    configureFlags = [
+      "--with-config=${configFile}"
+    ] ++ optionals buildKernel [
+      "--with-linux=${kernel.dev}/lib/modules/${kernel.modDirVersion}/source"
+      "--with-linux-obj=${kernel.dev}/lib/modules/${kernel.modDirVersion}/build"
+    ];
+
+    enableParallelBuilding = true;
+
+    meta = {
+      description = "Kernel module driver for solaris porting layer (needed by in-kernel zfs)";
+
+      longDescription = ''
+          This kernel module is a porting layer for ZFS to work inside the linux
+          kernel.
+      '';
+
+      homepage = http://zfsonlinux.org/;
+      platforms = platforms.linux;
+      license = licenses.gpl2Plus;
+      maintainers = with maintainers; [ jcumming wizeman wkennington fpletz ];
+    };
   };
-}
+
+in
+  assert any (n: n == configFile) [ "kernel" "user" "all" ];
+  assert buildKernel -> kernel != null;
+  {
+    splStable = common {
+      version = "0.6.5.9";
+      sha256 = "15qpx2nhprmk14jgb7yqp9dvfb6i3hhhspi77kvian171b0a6112";
+    };
+    splUnstable = common {
+      version = "0.7.0-rc3";
+      sha256 = "09v5gh7mqdl3bfq5an9iiw9fw3l1skprclxdz7r19bw3ids3lfja";
+    };
+  }

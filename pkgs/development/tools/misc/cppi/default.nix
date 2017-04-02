@@ -13,7 +13,7 @@ stdenv.mkDerivation rec {
   meta = {
     homepage = http://savannah.gnu.org/projects/cppi/;
 
-    description = "GNU cppi, a cpp directive indenter";
+    description = "A C preprocessor directive indenter";
 
     longDescription =
       '' GNU cppi indents C preprocessor directives to reflect their nesting
@@ -25,7 +25,7 @@ stdenv.mkDerivation rec {
 
     license = stdenv.lib.licenses.gpl3Plus;
 
-    maintainers = [ stdenv.lib.maintainers.ludo ];
+    maintainers = [ ];
     platforms = stdenv.lib.platforms.all;
   };
 }

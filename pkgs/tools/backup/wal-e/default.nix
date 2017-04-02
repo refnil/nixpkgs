@@ -1,14 +1,14 @@
 { stdenv, fetchurl, pythonPackages, lzop, postgresql, pv }:
 
-pythonPackages.buildPythonPackage rec {
+pythonPackages.buildPythonApplication rec {
   name = "wal-e-${version}";
-  version = "0.6.9";
+  version = "0.6.10";
 
   namePrefix = "";
 
   src = fetchurl {
     url = "https://github.com/wal-e/wal-e/archive/v${version}.tar.gz";
-    sha256 = "1yzz9hic8amq7mp0kh04hsmwisk5r374ddja5g8345bl8y3bzbgk";
+    sha256 = "1hms24xz7wx3b91vv56fhcc3j0cszwqwnmwhka4yl90202hvdir2";
   };
 
   # needs tox

@@ -1,5 +1,8 @@
 import ./make-test.nix ({ pkgs, ... }: {
   name = "trac";
+  meta = with pkgs.stdenv.lib.maintainers; {
+    maintainers = [ eelco chaoflow ];
+  };
 
   nodes = {
     storage =
@@ -42,7 +45,7 @@ import ./make-test.nix ({ pkgs, ... }: {
     client =
       { config, pkgs, ... }:
       { imports = [ ./common/x11.nix ];
-        services.xserver.desktopManager.kde4.enable = true;
+        services.xserver.desktopManager.plasma5.enable = true;
       };
   };
 

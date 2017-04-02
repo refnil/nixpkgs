@@ -1,23 +1,34 @@
-{stdenv, fetchurl
-, pkgconfig, libuuid
-, e2fsprogs
+{ stdenv, fetchFromGitHub, autoreconfHook
+, pkgconfig, libuuid, e2fsprogs
 }:
-stdenv.mkDerivation {
-  name = "partclone-stable";
-  enableParallelBuilding = true;
 
-  src = fetchurl {
-    url = https://codeload.github.com/Thomas-Tsai/partclone/legacy.tar.gz/stable;
-    sha256 = "0vvk6c26gf2wv5y0mxnz90bivgp84pi82qk5q5xkcz6nz3swals7";
-    name = "Thomas-Tsai-partclone-stable-0-gab3bd53.tar.gz";
+stdenv.mkDerivation rec {
+  name = "partclone-${version}";
+  version = "0.2.89";
+
+  src = fetchFromGitHub {
+    owner = "Thomas-Tsai";
+    repo = "partclone";
+    rev = version;
+    sha256 = "0gw47pchqshhm00yf34qgxh6bh2jfryv0sm7ghwn77bv5gzwr481";
   };
 
-  buildInputs = [e2fsprogs pkgconfig libuuid];
+  nativeBuildInputs = [ autoreconfHook pkgconfig ];
+  buildInputs = [
+    e2fsprogs libuuid stdenv.cc.libc
+    (stdenv.lib.getOutput "static" stdenv.cc.libc)
+  ];
 
-  installPhase = ''make INSTPREFIX=$out install'';
+  enableParallelBuilding = true;
 
   meta = {
-    description = "Partclone provides utilities to save and restore used blocks on a partition and is designed for higher compatibility of the file system by using existing libraries, e.g. e2fslibs is used to read and write the ext2 partition";
+    description = "Utilities to save and restore used blocks on a partition";
+    longDescription = ''
+      Partclone provides utilities to save and restore used blocks on a
+      partition and is designed for higher compatibility of the file system by
+      using existing libraries, e.g. e2fslibs is used to read and write the
+      ext2 partition.
+    '';
     homepage = http://partclone.org;
     license = stdenv.lib.licenses.gpl2;
     maintainers = [stdenv.lib.maintainers.marcweber];

@@ -1,16 +1,14 @@
-{ stdenv, fetchgit, autoconf, automake, pkgconfig, libxml2 }:
+{ stdenv, fetchgit, autoreconfHook, automake, pkgconfig, libxml2 }:
 
 stdenv.mkDerivation rec {
-  name = "evtest-1.31";
+  name = "evtest-1.33";
 
-  preConfigure = "autoreconf -iv";
-
-  buildInputs = [ autoconf automake pkgconfig libxml2 ];
+  buildInputs = [ autoreconfHook pkgconfig libxml2 ];
 
   src = fetchgit {
     url = "git://anongit.freedesktop.org/evtest";
-    rev = "871371806017301373b8b0e5b7e8f168ce1ea13f";
-    sha256 = "1hxldlldlrb9lnnybn839a97fpqd1cixbmci2wzgr0rzhjbwhcgp";
+    rev = "refs/tags/evtest-1.33";
+    sha256 = "168gdhzj11f4nk94a6z696sm8v1njzwww69bn6wr97l17897913g";
   };
 
   meta = with stdenv.lib; {

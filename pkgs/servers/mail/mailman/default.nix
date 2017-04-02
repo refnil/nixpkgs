@@ -1,14 +1,14 @@
-{ stdenv, fetchurl, python }:
+{ stdenv, fetchurl, python, pythonPackages }:
 
 stdenv.mkDerivation rec {
-  name = "mailman-2.1.17";
+  name = "mailman-2.1.23";
 
   src = fetchurl {
     url = "mirror://gnu/mailman/${name}.tgz";
-    sha256 = "1rws4ghpq78ldp1si3z4pmiv1k4l8g6i6hjb2y4cwsjlxssahc64";
+    sha256 = "0s9ywix4m3n7qa0baws744ildg48hsa87jahpsfiqqilhmpwl8mh";
   };
 
-  buildInputs = [ python ];
+  buildInputs = [ python pythonPackages.dns ];
 
   patches = [ ./fix-var-prefix.patch ];
 
@@ -21,6 +21,6 @@ stdenv.mkDerivation rec {
     description = "Free software for managing electronic mail discussion and e-newsletter lists";
     license = stdenv.lib.licenses.gpl2Plus;
     platforms = stdenv.lib.platforms.linux;
-    maintainers = [ stdenv.lib.maintainers.simons ];
+    maintainers = [ stdenv.lib.maintainers.peti ];
   };
 }

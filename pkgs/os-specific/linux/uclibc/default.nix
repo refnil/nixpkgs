@@ -1,4 +1,4 @@
-{stdenv, fetchurl, linuxHeaders, libiconv, cross ? null, gccCross ? null,
+{stdenv, fetchzip, linuxHeaders, libiconvReal, cross ? null, gccCross ? null,
 extraConfig ? ""}:
 
 assert stdenv.isLinux;
@@ -16,18 +16,13 @@ let
                 continue
             fi
 
-            if test "$NAME" == "CLEAR"; then
-                echo "parseconfig: CLEAR"
-                echo > .config
-            fi
-
             echo "parseconfig: removing $NAME"
             sed -i /^$NAME=/d .config
 
-            if test "$OPTION" != n; then
+            #if test "$OPTION" != n; then
                 echo "parseconfig: setting $NAME=$OPTION"
                 echo "$NAME=$OPTION" >> .config
-            fi
+            #fi
         done
         set +x
     }
@@ -48,16 +43,27 @@ let
     UCLIBC_SUSV4_LEGACY y
     UCLIBC_HAS_THREADS_NATIVE y
     KERNEL_HEADERS "${linuxHeaders}/include"
+  '' + stdenv.lib.optionalString (stdenv.isArm && cross == null) ''
+    CONFIG_ARM_EABI y
+    ARCH_WANTS_BIG_ENDIAN n
+    ARCH_BIG_ENDIAN n
+    ARCH_WANTS_LITTLE_ENDIAN y
+    ARCH_LITTLE_ENDIAN y
+    UCLIBC_HAS_FPU n
   '';
 
-in
-stdenv.mkDerivation {
-  name = "uclibc-0.9.33.2" + stdenv.lib.optionalString (cross != null)
-    ("-" + cross.config);
+  name = "uclibc-0.9.34-pre-20150131";
+  rev = "343f6b8f1f754e397632b0552e4afe586c8b392b";
 
-  src = fetchurl {
-    url = http://www.uclibc.org/downloads/uClibc-0.9.33.2.tar.bz2;
-    sha256 = "0qhngsbzj2s6nz92b1s2p0dmvwk8xiqpy58j7ljzw186grvjr3cq";
+in
+
+stdenv.mkDerivation {
+  name = name + stdenv.lib.optionalString (cross != null) ("-" + cross.config);
+
+  src = fetchzip {
+    name = name + "-source";
+    url = "http://git.uclibc.org/uClibc/snapshot/uClibc-${rev}.tar.bz2";
+    sha256 = "1kgylzpid7da5i7wz7slh5q9rnq1m8bv5h9ilm76g0xwc2iwlhbw";
   };
 
   # 'ftw' needed to build acl, a coreutils dependency
@@ -73,12 +79,16 @@ stdenv.mkDerivation {
     make oldconfig
   '';
 
+  hardeningDisable = [ "stackprotector" ];
+
   # Cross stripping hurts.
   dontStrip = cross != null;
 
   makeFlags = [ crossMakeFlag "VERBOSE=1" ];
 
   buildInputs = stdenv.lib.optional (gccCross != null) gccCross;
+
+  enableParallelBuilding = true;
 
   installPhase = ''
     mkdir -p $out
@@ -90,12 +100,14 @@ stdenv.mkDerivation {
 
   passthru = {
     # Derivations may check for the existance of this attribute, to know what to link to.
-    inherit libiconv;
+    libiconv = libiconvReal;
   };
-  
+
   meta = {
     homepage = http://www.uclibc.org/;
     description = "A small implementation of the C library";
+    maintainers = with stdenv.lib.maintainers; [ rasendubi ];
     license = stdenv.lib.licenses.lgpl2;
+    platforms = stdenv.lib.platforms.linux;
   };
 }

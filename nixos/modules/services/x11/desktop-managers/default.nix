@@ -16,8 +16,11 @@ in
 {
   # Note: the order in which desktop manager modules are imported here
   # determines the default: later modules (if enabled) are preferred.
-  # E.g., if KDE is enabled, it supersedes xterm.
-  imports = [ ./none.nix ./xterm.nix ./xfce.nix ./kde4.nix ./e17.nix ./e18.nix ./gnome3.nix ./xbmc.nix ];
+  # E.g., if Plasma 5 is enabled, it supersedes xterm.
+  imports = [
+    ./none.nix ./xterm.nix ./xfce.nix ./plasma5.nix ./lumina.nix
+    ./lxqt.nix ./enlightenment.nix ./gnome3.nix ./kodi.nix
+  ];
 
   options = {
 
@@ -61,7 +64,13 @@ in
           else if any (w: w.name == defaultDM) cfg.session.list then
             defaultDM
           else
-            throw "Default desktop manager ($(defaultDM)) not found.";
+            throw ''
+              Default desktop manager (${defaultDM}) not found.
+              Probably you want to change
+                services.xserver.desktopManager.default = "${defaultDM}";
+              to one of
+                ${concatMapStringsSep "\n  " (w: "services.xserver.desktopManager.default = \"${w.name}\";") cfg.session.list}
+            '';
       };
 
     };

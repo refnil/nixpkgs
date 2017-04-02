@@ -1,30 +1,38 @@
-{ stdenv, fetchurl }:
+{ stdenv, fetchurl, libxslt, docbook_xsl, docbook_xml_dtd_45 }:
 
-# TODO: add support for "make man"
-
-let
-  name = "cppcheck";
-  version = "1.65";
-in
-stdenv.mkDerivation {
-  name = "${name}-${version}";
+stdenv.mkDerivation rec {
+  pname = "cppcheck";
+  version = "1.76.1";
+  name = "${pname}-${version}";
 
   src = fetchurl {
-    url = "mirror://sourceforge/${name}/${name}-${version}.tar.bz2";
-    sha256 = "0rsxnqvjyiviqsq4y5x4p1jpvcmhf8hh7d710rsvnv5d4cj7lmqn";
+    url = "mirror://sourceforge/${pname}/${name}.tar.bz2";
+    sha256 = "1l46bmzm5syfr9m5l0bqkj8lcyrynhw8gjf95s4fwhp2b7f0zisv";
   };
 
-  configurePhase = ''
-    makeFlags="PREFIX=$out CFGDIR=$out/cfg"
+  nativeBuildInputs = [ libxslt docbook_xsl docbook_xml_dtd_45 ];
+
+  makeFlags = ''PREFIX=$(out) CFGDIR=$(out)/cfg'';
+
+  outputs = [ "out" "man" ];
+
+  enableParallelBuilding = true;
+
+  postInstall = ''
+    make DB2MAN=${docbook_xsl}/xml/xsl/docbook/manpages/docbook.xsl man
+    mkdir -p $man/share/man/man1
+    cp cppcheck.1 $man/share/man/man1/cppcheck.1
   '';
 
-  postInstall = "cp -r cfg $out/cfg";
-
-  meta = {
-    description = "Check C/C++ code for memory leaks, mismatching allocation-deallocation, buffer overrun and more";
-    homepage = "http://sourceforge.net/apps/mediawiki/cppcheck/";
-    license = "GPL";
-    platforms = stdenv.lib.platforms.unix;
-    maintainers = [ stdenv.lib.maintainers.simons ];
+  meta = with stdenv.lib; {
+    description = "A static analysis tool for C/C++ code";
+    longDescription = ''
+      Check C/C++ code for memory leaks, mismatching allocation-deallocation,
+      buffer overruns and more.
+    '';
+    homepage = http://cppcheck.sourceforge.net/;
+    license = licenses.gpl3Plus;
+    platforms = platforms.unix;
+    maintainers = with maintainers; [ joachifm ];
   };
 }

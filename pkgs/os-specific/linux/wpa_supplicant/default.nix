@@ -1,44 +1,85 @@
-{ stdenv, fetchurl, lib, openssl, dbus_libs, pkgconfig, libnl
-, readlineSupport ? true, readline
+{ stdenv, fetchpatch, fetchurl, lib, openssl, pkgconfig, libnl
+, dbus_libs ? null, readline ? null, pcsclite ? null
 }:
 
-assert readlineSupport -> readline != null;
-
+with stdenv.lib;
 stdenv.mkDerivation rec {
-  version = "2.2";
+  version = "2.6";
 
   name = "wpa_supplicant-${version}";
 
   src = fetchurl {
     url = "http://hostap.epitest.fi/releases/${name}.tar.gz";
-    sha256 = "1vf8jc4yyksbxf86narvsli3vxfbm8nbnim2mdp66nd6d3yvin70";
+    sha256 = "0l0l5gz3d5j9bqjsbjlfcv4w4jwndllp9fmyai4x9kg6qhs6v4xl";
   };
 
-  extraConfig =
-    ''
-      CONFIG_DEBUG_SYSLOG=y
-      CONFIG_CTRL_IFACE_DBUS=y
-      CONFIG_CTRL_IFACE_DBUS_NEW=y
-      CONFIG_CTRL_IFACE_DBUS_INTRO=y
-      CONFIG_DRIVER_NL80211=y
-      CONFIG_LIBNL32=y
-      ${stdenv.lib.optionalString readlineSupport "CONFIG_READLINE=y"}
-    '';
+  # TODO: Patch epoll so that the dbus actually responds
+  # TODO: Figure out how to get privsep working, currently getting SIGBUS
+  extraConfig = ''
+    CONFIG_AP=y
+    CONFIG_LIBNL32=y
+    CONFIG_EAP_FAST=y
+    CONFIG_EAP_PWD=y
+    CONFIG_EAP_PAX=y
+    CONFIG_EAP_SAKE=y
+    CONFIG_EAP_GPSK=y
+    CONFIG_EAP_GPSK_SHA256=y
+    CONFIG_WPS=y
+    CONFIG_WPS_ER=y
+    CONFIG_WPS_NFS=y
+    CONFIG_EAP_IKEV2=y
+    CONFIG_EAP_EKE=y
+    CONFIG_HT_OVERRIDES=y
+    CONFIG_VHT_OVERRIDES=y
+    CONFIG_ELOOP=eloop
+    #CONFIG_ELOOP_EPOLL=y
+    CONFIG_L2_PACKET=linux
+    CONFIG_IEEE80211W=y
+    CONFIG_TLS=openssl
+    CONFIG_TLSV11=y
+    #CONFIG_TLSV12=y see #8332
+    CONFIG_IEEE80211R=y
+    CONFIG_DEBUG_SYSLOG=y
+    #CONFIG_PRIVSEP=y
+    CONFIG_IEEE80211N=y
+    CONFIG_IEEE80211AC=y
+    CONFIG_INTERNETWORKING=y
+    CONFIG_HS20=y
+    CONFIG_P2P=y
+    CONFIG_TDLS=y
+  '' + optionalString (pcsclite != null) ''
+    CONFIG_EAP_SIM=y
+    CONFIG_EAP_AKA=y
+    CONFIG_EAP_AKA_PRIME=y
+    CONFIG_PCSC=y
+  '' + optionalString (dbus_libs != null) ''
+    CONFIG_CTRL_IFACE_DBUS=y
+    CONFIG_CTRL_IFACE_DBUS_NEW=y
+    CONFIG_CTRL_IFACE_DBUS_INTRO=y
+  '' + (if readline != null then ''
+    CONFIG_READLINE=y
+  '' else ''
+    CONFIG_WPA_CLI_EDIT=y
+  '');
 
   preBuild = ''
     cd wpa_supplicant
     cp -v defconfig .config
     echo "$extraConfig" >> .config
-    cat .config
+    cat -n .config
     substituteInPlace Makefile --replace /usr/local $out
+    export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE \
+      -I$(echo "${libnl.dev}"/include/libnl*/) \
+      -I${pcsclite}/include/PCSC/"
   '';
 
-  buildInputs = [ openssl dbus_libs libnl ]
-    ++ lib.optional readlineSupport readline;
+  buildInputs = [ openssl libnl dbus_libs readline pcsclite ];
 
   nativeBuildInputs = [ pkgconfig ];
 
-  patches = [ ./libnl.patch ];
+  patches = [
+    ./build-fix.patch
+  ];
 
   postInstall = ''
     mkdir -p $out/share/man/man5 $out/share/man/man8
@@ -49,12 +90,14 @@ stdenv.mkDerivation rec {
     sed -e "s@/sbin/wpa_supplicant@$out&@" -i "$out/share/dbus-1/system-services/"*
     cp -v dbus/dbus-wpa_supplicant.conf $out/etc/dbus-1/system.d
     cp -v "systemd/"*.service $out/etc/systemd/system
+    rm $out/share/man/man8/wpa_priv.8
   '';
 
-  meta = {
+  meta = with stdenv.lib; {
     homepage = http://hostap.epitest.fi/wpa_supplicant/;
     description = "A tool for connecting to WPA and WPA2-protected wireless networks";
-    maintainers = with stdenv.lib.maintainers; [marcweber urkud];
-    platforms = stdenv.lib.platforms.linux;
+    license = licenses.bsd3;
+    maintainers = with maintainers; [ marcweber wkennington ];
+    platforms = platforms.linux;
   };
 }

@@ -13,13 +13,14 @@ stdenv.mkDerivation rec {
   configureFlags = [ "--disable-paragui" "--disable-paraguitest" ];
 
   NIX_CFLAGS_COMPILE = "-fpermissive"; # I'm too lazy to catch all gcc47-related problems
+  hardeningDisable = [ "format" ];
 
   buildInputs = [
-    SDL SDL_image SDL_mixer SDL_sound libsigcxx physfs boost expat freetype
-    libjpeg wxGTK lua perl pkgconfig zlib zip bzip2 libpng
+    SDL SDL_image SDL_mixer SDL_sound libsigcxx physfs boost expat
+    freetype libjpeg wxGTK lua perl pkgconfig zlib zip bzip2 libpng
   ];
 
-  meta = {
+  meta = with stdenv.lib; {
     description = "Turn based strategy game";
 
     longDescription = ''
@@ -30,9 +31,9 @@ stdenv.mkDerivation rec {
 
     homepage = http://www.asc-hq.org/;
 
-    license = stdenv.lib.licenses.gpl2Plus;
+    license = licenses.gpl2Plus;
 
-    maintainers = with stdenv.lib.maintainers; [viric];
-    platforms = with stdenv.lib.platforms; linux;
+    maintainers = with maintainers; [ viric ];
+    platforms = platforms.linux;
   };
 }

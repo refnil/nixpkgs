@@ -1,26 +1,39 @@
-{ stdenv, fetchurl, libsigsegv, readline, readlineSupport ? false }:
+{ stdenv, fetchurl, xz, libsigsegv, readline, interactive ? false
+, locale ? null }:
 
+let
+  inherit (stdenv.lib) optional;
+in
 stdenv.mkDerivation rec {
-  name = "gawk-4.1.0";
+  name = "gawk-4.1.3";
 
   src = fetchurl {
     url = "mirror://gnu/gawk/${name}.tar.xz";
-    sha256 = "0hin2hswbbd6kd6i4zzvgciwpl5fba8d2s524z8y5qagyz3x010q";
+    sha256 = "09d6pmx6h3i2glafm0jd1v1iyrs03vcyv2rkz12jisii3vlmbkz3";
   };
 
-  patches = [];
+  # When we do build separate interactive version, it makes sense to always include man.
+  outputs = [ "out" "info" ] ++ stdenv.lib.optional (!interactive) "man";
 
-  doCheck = !stdenv.isCygwin; # XXX: `test-dup2' segfaults on Cygwin 6.1
+  doCheck = !(
+       stdenv.isCygwin # XXX: `test-dup2' segfaults on Cygwin 6.1
+    || stdenv.isDarwin # XXX: `locale' segfaults
+    || stdenv.isSunOS  # XXX: `_backsmalls1' fails, locale stuff?
+    || stdenv.isFreeBSD
+  );
 
-  buildInputs = [ libsigsegv ]
-    ++ stdenv.lib.optional readlineSupport readline;
+  nativeBuildInputs = [ xz.bin ];
+  buildInputs =
+       stdenv.lib.optional (stdenv.system != "x86_64-cygwin") libsigsegv
+    ++ stdenv.lib.optional interactive readline
+    ++ stdenv.lib.optional stdenv.isDarwin locale;
 
-  configureFlags = [ "--with-libsigsegv-prefix=${libsigsegv}" ]
-    ++ stdenv.lib.optional readlineSupport "--with-readline=${readline}"
-      # only darwin where reported, seems OK on non-chrooted Fedora (don't rebuild stdenv)
-    ++ stdenv.lib.optional (!readlineSupport && stdenv.isDarwin) "--without-readline";
+  configureFlags = stdenv.lib.optional (stdenv.system != "x86_64-cygwin") "--with-libsigsegv-prefix=${libsigsegv}"
+    ++ [(if interactive then "--with-readline=${readline.dev}" else "--without-readline")];
 
-  meta = {
+  postInstall = "rm $out/bin/gawk-*";
+
+  meta = with stdenv.lib; {
     homepage = http://www.gnu.org/software/gawk/;
     description = "GNU implementation of the Awk programming language";
 
@@ -38,8 +51,11 @@ stdenv.mkDerivation rec {
       lines of code.
     '';
 
-    license = stdenv.lib.licenses.gpl3Plus;
+    license = licenses.gpl3Plus;
 
-    maintainers = [ stdenv.lib.maintainers.ludo ];
+    platforms = platforms.unix;
+
+    maintainers = [ ];
   };
 }
+

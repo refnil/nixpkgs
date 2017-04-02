@@ -1,66 +1,103 @@
-{ stdenv, fetchurl, dpkg, curl, libarchive, openssl, ruby, rubyLibs, libiconv
-, libxml2, libxslt }:
+{ stdenv, fetchurl, fetchpatch, dpkg, curl, libarchive, openssl, ruby, buildRubyGem, libiconv
+, libxml2, libxslt, makeWrapper, p7zip, xar, gzip, cpio }:
 
-assert stdenv.system == "x86_64-linux" || stdenv.system == "i686-linux";
+let
+  version = "1.9.1";
+  rake = buildRubyGem {
+    inherit ruby;
+    gemName = "rake";
+    version = "10.4.2";
+    sha256 = "1rn03rqlf1iv6n87a78hkda2yqparhhaivfjpizblmxvlw2hk5r8";
+  };
 
-stdenv.mkDerivation rec {
-  name = "vagrant-1.6.3";
+  url = if stdenv.isLinux
+    then "https://releases.hashicorp.com/vagrant/${version}/vagrant_${version}_${arch}.deb"
+    else if stdenv.isDarwin
+      then "https://releases.hashicorp.com/vagrant/${version}/vagrant_${version}.dmg"
+      else "system ${stdenv.system} not supported";
 
-  src =
-    if stdenv.system == "x86_64-linux" then
-      fetchurl {
-        url    = https://dl.bintray.com/mitchellh/vagrant/vagrant_1.6.3_x86_64.deb;
-        sha256 = "1gmdg92dw7afnvpji0wg4nzr7vhk8mrmcqk3hcrkwscby2f2bhqg";
-      }
-    else
-      fetchurl {
-        url    = https://dl.bintray.com/mitchellh/vagrant/vagrant_1.6.3_i686.deb;
-        sha256 = "1z26b6yghqgx8jbi2igf4kk4h6rzy869gli2vj7ayl7vbqdfvb60";
-      };
+  sha256 = {
+    "x86_64-linux"  = "0l1if9c4s4wkbi8k00pl7x00lil21izrd8wb9nv2b5q4gqidc1nh";
+    "i686-linux"    = "1789wjwcpgw3mljl49c8v5kycisay684gyalkkvd06928423y9zb";
+    "x86_64-darwin" = "1xrfq1a0xyifkhhjnpm6wsnms9w8c9q5rd2qqn4sm5npl7viy68p";
+  }."${stdenv.system}" or (throw "system ${stdenv.system} not supported");
+
+  arch = builtins.replaceStrings ["-linux"] [""] stdenv.system;
+
+in stdenv.mkDerivation rec {
+  name = "vagrant-${version}";
+  inherit version;
+
+  src = fetchurl {
+    inherit url sha256;
+  };
 
   meta = with stdenv.lib; {
     description = "A tool for building complete development environments";
     homepage    = http://vagrantup.com;
     license     = licenses.mit;
-    maintainers = with maintainers; [ lovek323 ];
-    platforms   = platforms.linux;
+    maintainers = with maintainers; [ lovek323 globin jgeerds kamilchm ];
+    platforms   = with platforms; linux ++ darwin;
   };
 
-  unpackPhase = ''
-    ${dpkg}/bin/dpkg-deb -x ${src} .
-  '';
+  buildInputs = [ makeWrapper ]
+    ++ stdenv.lib.optional stdenv.isDarwin [ p7zip xar gzip cpio ];
 
-  buildPhase = false;
+  unpackPhase = if stdenv.isLinux
+    then ''
+      ${dpkg}/bin/dpkg-deb -x "$src" .
+    ''
+    else ''
+      7z x $src
+      cd Vagrant/
+      xar -xf Vagrant.pkg
+      cd core.pkg/
+      cat Payload | gzip -d - | cpio -id
+
+      # move unpacked directories to match unpacked .deb from linux,
+      # so installPhase can be shared
+      mkdir -p opt/vagrant/ usr/
+      mv embedded opt/vagrant/embedded
+      mv bin usr/bin
+    '';
+
+  buildPhase = "";
 
   installPhase = ''
     sed -i "s|/opt|$out/opt|" usr/bin/vagrant
 
     # overwrite embedded binaries
 
-    # curl: curl
-    rm opt/vagrant/embedded/bin/curl
-    ln -s ${curl}/bin/curl opt/vagrant/embedded/bin
+    # curl: curl, curl-config
+    rm opt/vagrant/embedded/bin/{curl,curl-config}
+    ln -s ${curl.bin}/bin/curl opt/vagrant/embedded/bin
+    ln -s ${curl.dev}/bin/curl-config opt/vagrant/embedded/bin
 
     # libarchive: bsdtar, bsdcpio
+    rm opt/vagrant/embedded/lib/libarchive*
+    ln -s ${libarchive}/lib/libarchive.so opt/vagrant/embedded/lib/libarchive.so
     rm opt/vagrant/embedded/bin/{bsdtar,bsdcpio}
     ln -s ${libarchive}/bin/bsdtar opt/vagrant/embedded/bin
     ln -s ${libarchive}/bin/bsdcpio opt/vagrant/embedded/bin
 
     # openssl: c_rehash, openssl
     rm opt/vagrant/embedded/bin/{c_rehash,openssl}
-    ln -s ${openssl}/bin/c_rehash opt/vagrant/embedded/bin
-    ln -s ${openssl}/bin/openssl opt/vagrant/embedded/bin
+    ln -s ${openssl.bin}/bin/c_rehash opt/vagrant/embedded/bin
+    ln -s ${openssl.bin}/bin/openssl opt/vagrant/embedded/bin
 
-    # ruby: erb, gem, irb, rake, rdoc, ri, ruby, testrb
-    rm opt/vagrant/embedded/bin/{erb,gem,irb,rake,rdoc,ri,ruby,testrb}
+    # ruby: erb, gem, irb, rake, rdoc, ri, ruby
+    rm opt/vagrant/embedded/bin/{erb,gem,irb,rake,rdoc,ri,ruby}
     ln -s ${ruby}/bin/erb opt/vagrant/embedded/bin
     ln -s ${ruby}/bin/gem opt/vagrant/embedded/bin
     ln -s ${ruby}/bin/irb opt/vagrant/embedded/bin
-    ln -s ${rubyLibs.rake}/bin/rake opt/vagrant/embedded/bin
+    ln -s ${rake}/bin/rake opt/vagrant/embedded/bin
     ln -s ${ruby}/bin/rdoc opt/vagrant/embedded/bin
     ln -s ${ruby}/bin/ri opt/vagrant/embedded/bin
     ln -s ${ruby}/bin/ruby opt/vagrant/embedded/bin
-    ln -s ${ruby}/bin/testrb opt/vagrant/embedded/bin
+
+    # ruby libs
+    rm -rf opt/vagrant/embedded/lib
+    ln -s ${ruby}/lib opt/vagrant/embedded/lib
 
     # libiconv: iconv
     rm opt/vagrant/embedded/bin/iconv
@@ -68,26 +105,33 @@ stdenv.mkDerivation rec {
 
     # libxml: xml2-config, xmlcatalog, xmllint
     rm opt/vagrant/embedded/bin/{xml2-config,xmlcatalog,xmllint}
-    ln -s ${libxml2}/bin/xml2-config opt/vagrant/embedded/bin
-    ln -s ${libxml2}/bin/xmlcatalog opt/vagrant/embedded/bin
-    ln -s ${libxml2}/bin/xmllint opt/vagrant/embedded/bin
+    ln -s ${libxml2.dev}/bin/xml2-config opt/vagrant/embedded/bin
+    ln -s ${libxml2.bin}/bin/xmlcatalog opt/vagrant/embedded/bin
+    ln -s ${libxml2.bin}/bin/xmllint opt/vagrant/embedded/bin
 
     # libxslt: xslt-config, xsltproc
     rm opt/vagrant/embedded/bin/{xslt-config,xsltproc}
-    ln -s ${libxslt}/bin/xslt-config opt/vagrant/embedded/bin
-    ln -s ${libxslt}/bin/xsltproc opt/vagrant/embedded/bin
+    ln -s ${libxslt.dev}/bin/xslt-config opt/vagrant/embedded/bin
+    ln -s ${libxslt.bin}/bin/xsltproc opt/vagrant/embedded/bin
 
     mkdir -p "$out"
     cp -r opt "$out"
     cp -r usr/bin "$out"
+    wrapProgram "$out/bin/vagrant" --prefix LD_LIBRARY_PATH : "${stdenv.lib.makeLibraryPath [ libxml2 libxslt ]}" \
+                                   --prefix LD_LIBRARY_PATH : "$out/opt/vagrant/embedded/lib"
   '';
 
   preFixup = ''
     # 'hide' the template file from shebang-patching
-    chmod -x $out/opt/vagrant/embedded/gems/gems/bundler-1.6.2/lib/bundler/templates/Executable
+    chmod -x "$out/opt/vagrant/embedded/gems/gems/vagrant-$version/plugins/provisioners/salt/bootstrap-salt.sh"
   '';
 
   postFixup = ''
-    chmod +x $out/opt/vagrant/embedded/gems/gems/bundler-1.6.2/lib/bundler/templates/Executable
-  '';
+    chmod +x "$out/opt/vagrant/embedded/gems/gems/vagrant-$version/plugins/provisioners/salt/bootstrap-salt.sh"
+  '' +
+  (stdenv.lib.optionalString stdenv.isDarwin ''
+    # undo the directory movement done in unpackPhase
+    mv $out/opt/vagrant/embedded $out/
+    rm -r $out/opt
+  '');
 }

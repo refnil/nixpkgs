@@ -1,8 +1,6 @@
 {stdenv, fetchurl, ocaml, findlib, ounit, expat}:
 
 let
-  ocaml_version = (builtins.parseDrvName ocaml.name).version;
-  version = "0.9.1";
   pname = "ocaml-expat";
   testcase = fetchurl {
     url = "http://www.w3.org/TR/1998/REC-xml-19980210.xml";
@@ -11,8 +9,9 @@ let
 
 in
 
-stdenv.mkDerivation {
+stdenv.mkDerivation rec {
   name = "${pname}-${version}";
+  version = "0.9.1";
 
   src = fetchurl {
     url = "http://www.xs4all.nl/~mmzeeman/ocaml/${pname}-${version}.tar.gz";
@@ -28,8 +27,9 @@ stdenv.mkDerivation {
   postPatch = ''
     substituteInPlace "unittest.ml" \
       --replace "/home/maas/xml-samples/REC-xml-19980210.xml.txt" "${testcase}"
-    substituteInPlace Makefile --replace "EXPAT_LIBDIR=/usr/local/lib" "EXPAT_LIBDIR=${expat}/lib" \
-    substituteInPlace Makefile --replace "EXPAT_INCDIR=/usr/local/include" "EXPAT_INCDIR=${expat}/include" \
+    substituteInPlace Makefile --replace "EXPAT_LIBDIR=/usr/local/lib" "EXPAT_LIBDIR=${expat.out}/lib" \
+      --replace "EXPAT_INCDIR=/usr/local/include" "EXPAT_INCDIR=${expat.dev}/include" \
+      --replace "gcc" "\$(CC)"
   '';
 
   configurePhase = "true";  	# Skip configure

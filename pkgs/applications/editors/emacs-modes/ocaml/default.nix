@@ -11,14 +11,15 @@ in stdenv.mkDerivation {
   # a quick configure to get the Makefile generated. Since
   # we do not build the ocaml itself, we don't really
   # need it to support any features.
-  configureFlags = [ "-no-tk" "-no-curses" "-no-pthread" ];
+  configureFlags = (with stdenv.lib; optional (!(versionAtLeast version "4.02")) "-no-tk") ++
+    [ "-no-curses" "-no-pthread" ];
 
   buildInputs = [ emacs ];
   dontBuild = true;
 
   installPhase = ''
     cd emacs;
-    ensureDir "$out/share/emacs/site-lisp" "$out/bin"
+    mkdir -p "$out/share/emacs/site-lisp" "$out/bin"
     EMACSDIR=$out/share/emacs/site-lisp make simple-install install-ocamltags
   '';
 

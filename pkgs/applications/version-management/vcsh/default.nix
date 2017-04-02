@@ -1,14 +1,12 @@
-{stdenv, fetchgit}:
+{stdenv, fetchurl}:
 
 stdenv.mkDerivation rec {
-  rev = "75c4c554eefbefb714fabd356933858edbce3b1e";
-  version = "1.20131229";
-  name = "vcsh-${version}_${rev}";
+  version = "1.20151229-1";
+  name = "vcsh-${version}";
 
-  src = fetchgit {
-    inherit rev;
-    url = "https://github.com/RichiH/vcsh";
-    sha256 = "0rc82a8vnnk9q6q88z9s10873gqgdpppbpwy2yw8a7hydqrpn0hs";
+  src = fetchurl {
+    url = "https://github.com/RichiH/vcsh/archive/v${version}.tar.gz";
+    sha256 = "0wgg5zz11ql2v37vby5gbqvnbs80g1q83b9qbvm8d2pqx8bsb0kn";
   };
 
   phases = [ "unpackPhase" "installPhase" "fixupPhase" ];
@@ -18,11 +16,11 @@ stdenv.mkDerivation rec {
     cp vcsh $out/bin
   '';
 
-  meta = {
+  meta = with stdenv.lib; {
     description = "Version Control System for $HOME";
     homepage = https://github.com/RichiH/vcsh;
-    license = stdenv.lib.licenses.gpl2Plus;
-    maintainers = [ stdenv.lib.maintainers.garbas ];
-    platforms = stdenv.lib.platforms.unix;
+    license = licenses.gpl2Plus;
+    maintainers = with maintainers; [ garbas ttuegel ];
+    platforms = platforms.unix;
   };
 }

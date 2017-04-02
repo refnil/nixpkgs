@@ -3,12 +3,12 @@
 stdenv.mkDerivation rec {
   name = "bud-${version}";
 
-  version = "0.25.0";
+  version = "0.34.1";
 
   src = fetchgit {
     url = "https://github.com/indutny/bud.git";
-    rev = "f65b9c3531dac1a5b3c962e01f3bed1d41ab5621";
-    sha256 = "000wwc88hsf6ccz8wxjn2af6l0nxm6a2fcad71xw35ymmdp9n5xg";
+    rev = "b112852c9667632f692d2ce3dcd9a8312b61155a";
+    sha256 = "08yr6l4lc2m6rng06253fcaznf6sq0v053wfr8bbym42c32z0xdh";
   };
 
   buildInputs = [
@@ -28,7 +28,7 @@ stdenv.mkDerivation rec {
   meta = with lib; {
     description = "A TLS terminating proxy";
     license     = licenses.mit;
-    platforms   = with platforms; linux;
+    platforms   = platforms.linux;
     maintainers = with maintainers; [ cstrahan ];
   };
 }

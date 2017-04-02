@@ -1,12 +1,13 @@
-{ stdenv, kernel, elfutils, python, perl, newt, slang, asciidoc, xmlto
-, docbook_xsl, docbook_xml_dtd_45, libxslt, flex, bison, pkgconfig
-, withGtk ? false, gtk ? null }:
+{ lib, stdenv, kernel, elfutils, python, perl, newt, slang, asciidoc, xmlto
+, docbook_xsl, docbook_xml_dtd_45, libxslt, flex, bison, pkgconfig, libunwind, binutils
+, libiberty, libaudit
+, zlib, withGtk ? false, gtk2 ? null }:
 
-assert withGtk -> gtk != null;
+with lib;
 
-let optionalString = stdenv.lib.optionalString;
-    versionOlder = stdenv.lib.versionOlder;
-in
+assert withGtk -> gtk2 != null;
+assert versionAtLeast kernel.version "3.12";
+
 stdenv.mkDerivation {
   name = "perf-linux-${kernel.version}";
 
@@ -21,13 +22,23 @@ stdenv.mkDerivation {
   '';
 
   # perf refers both to newt and slang
-  nativeBuildInputs = [ asciidoc xmlto docbook_xsl docbook_xml_dtd_45 libxslt flex bison ];
-  buildInputs = [ elfutils python perl newt slang pkgconfig] ++
-    stdenv.lib.optional withGtk gtk;
+  # binutils is required for libbfd.
+  nativeBuildInputs = [ asciidoc xmlto docbook_xsl docbook_xml_dtd_45 libxslt
+      flex bison libiberty libaudit ];
+  buildInputs = [ elfutils python perl newt slang pkgconfig libunwind binutils zlib ] ++
+    stdenv.lib.optional withGtk gtk2;
+
+  # Note: we don't add elfutils to buildInputs, since it provides a
+  # bad `ld' and other stuff.
+  NIX_CFLAGS_COMPILE = [
+    "-Wno-error=cpp" "-Wno-error=bool-compare" "-Wno-error=deprecated-declarations"
+  ]
+    # gcc before 6 doesn't know these options
+    ++ stdenv.lib.optionals (hasPrefix "gcc-6" stdenv.cc.cc.name) [
+      "-Wno-error=unused-const-variable" "-Wno-error=misleading-indentation"
+    ];
 
   installFlags = "install install-man ASCIIDOC8=1";
-
-  inherit elfutils;
 
   crossAttrs = {
     /* I don't want cross-python or cross-perl -

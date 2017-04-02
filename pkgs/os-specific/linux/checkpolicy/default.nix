@@ -1,22 +1,32 @@
-{ stdenv, fetchurl, libsepol, libselinux, bison, flex }:
-stdenv.mkDerivation rec {
+{ stdenv, fetchurl, bison, flex, libsepol }:
 
+stdenv.mkDerivation rec {
   name = "checkpolicy-${version}";
-  version = "2.2";
+  version = "2.4";
   inherit (libsepol) se_release se_url;
 
   src = fetchurl {
     url = "${se_url}/${se_release}/checkpolicy-${version}.tar.gz";
-    sha256 = "1y5dx4s5k404fgpm7hlhgw8a9b9ksn3q2d3fj6f9rdac9n7nkxlz";
+    sha256 = "1m5wjm43lzp6bld8higsvdm2dkddydihhwv9qw2w9r4dm0largcv";
   };
 
-  buildInputs = [ libsepol libselinux bison flex ];
+  nativeBuildInputs = [ bison flex ];
+  buildInputs = [ libsepol ];
 
-  preBuild = '' makeFlags="$makeFlags LEX=flex LIBDIR=${libsepol}/lib PREFIX=$out" '';
+  NIX_CFLAGS_COMPILE = "-fstack-protector-all";
 
-  meta = with stdenv.lib; {
+  # Don't build tests
+  postPatch = ''
+    sed -i '/-C test/d' Makefile
+  '';
+
+  preBuild = ''
+    makeFlagsArray+=("LEX=flex")
+    makeFlagsArray+=("LIBDIR=${libsepol}/lib")
+    makeFlagsArray+=("PREFIX=$out")
+  '';
+
+  meta = libsepol.meta // {
     description = "SELinux policy compiler";
-    license = licenses.gpl2;
-    inherit (libsepol.meta) homepage platforms maintainers;
   };
 }

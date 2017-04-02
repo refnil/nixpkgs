@@ -1,32 +1,47 @@
-{ stdenv, fetchurl, pkgconfig, cmake, pango, cairo, glib, imlib2, libXinerama
-, libXrender, libXcomposite, libXdamage, libX11, libXrandr, gtk, libpthreadstubs
-, libXdmcp
+{ stdenv, fetchFromGitLab, pkgconfig, cmake, gettext, cairo, pango, pcre
+, glib , imlib2, gtk2, libXinerama , libXrender, libXcomposite, libXdamage
+, libX11 , libXrandr, librsvg, libpthreadstubs , libXdmcp
+, libstartup_notification , hicolor_icon_theme, wrapGAppsHook
 }:
 
 stdenv.mkDerivation rec {
   name = "tint2-${version}";
-  version = "0.11";
+  version = "0.12.12";
 
-  src = fetchurl {
-    url = "http://tint2.googlecode.com/files/${name}.tar.bz2";
-    sha256 = "07a74ag7lhc6706z34zvqj2ikyyl7wnzisfxpld67ljpc1m6w47y";
+  src = fetchFromGitLab {
+    owner = "o9000";
+    repo = "tint2";
+    rev = version;
+    sha256 = "0zgcdancsna95sjxslack9lh8f6qnj8d5wm02891mshn2jhgins3";
   };
-        
-  buildInputs = [ pkgconfig cmake pango cairo glib imlib2 libXinerama
-    libXrender libXcomposite libXdamage libX11 libXrandr gtk libpthreadstubs
-    libXdmcp
-  ];
 
-  preConfigure = "substituteInPlace CMakeLists.txt --replace /etc $out/etc";
+  enableParallelBuilding = true;
 
-  cmakeFlags = [
-    "-DENABLE_TINT2CONF=0"
-  ];
+  nativeBuildInputs = [ pkgconfig cmake gettext wrapGAppsHook ];
+
+  buildInputs = [ cairo pango pcre glib imlib2 gtk2 libXinerama libXrender
+    libXcomposite libXdamage libX11 libXrandr librsvg libpthreadstubs
+    libXdmcp libstartup_notification hicolor_icon_theme ];
+
+  preConfigure = ''
+    substituteInPlace CMakeLists.txt --replace /etc $out/etc
+  '';
+
+  prePatch = ''
+    for f in ./src/tint2conf/properties.c \
+             ./src/launcher/apps-common.c \
+             ./src/launcher/icon-theme-common.c \
+             ./themes/*tint2rc
+    do
+      substituteInPlace $f --replace /usr/share/ /run/current-system/sw/share/
+    done
+  '';
 
   meta = {
-    homepage = http://code.google.com/p/tint2;
+    homepage = https://gitlab.com/o9000/tint2;
+    description = "Simple panel/taskbar unintrusive and light (memory, cpu, aestetic)";
     license = stdenv.lib.licenses.gpl2;
-    description = "A simple panel/taskbar unintrusive and light (memory / cpu / aestetic)";
-    platforms = stdenv.lib.platforms.linux;
+    platforms = stdenv.lib.platforms.unix;
+    maintainers = [ stdenv.lib.maintainers.romildo ];
   };
 }

@@ -1,11 +1,14 @@
-{ stdenv, fetchurl, cmake, fuse }:
+{ stdenv, fetchFromGitHub, cmake, fuse }:
 
 stdenv.mkDerivation rec {
-  name = "unionfs-fuse-0.26";
+  name = "unionfs-fuse-${version}";
+  version = "1.0";
 
-  src = fetchurl {
-    url = "http://podgorny.cz/unionfs-fuse/releases/${name}.tar.xz";
-    sha256 = "0qpnr4czgc62vsfnmv933w62nq3xwcbnvqch72qakfgca75rsp4d";
+  src = fetchFromGitHub {
+    owner = "rpodgorny";
+    repo = "unionfs-fuse";
+    rev = "v${version}";
+    sha256 = "0g2hd6yi6v8iqzmgncg1zi9a7ixy9hsh51rzf6jnmzi79543dihf";
   };
 
   patches =
@@ -25,7 +28,7 @@ stdenv.mkDerivation rec {
   # This must be done in preConfigure because the build process removes
   # helper from the source directory during the build.
   preConfigure = ''
-    ensureDir $out/sbin
+    mkdir -p $out/sbin
     cp -a mount.unionfs $out/sbin/mount.unionfs-fuse
     substituteInPlace $out/sbin/mount.unionfs-fuse --replace mount.fuse ${fuse}/sbin/mount.fuse
     substituteInPlace $out/sbin/mount.unionfs-fuse --replace unionfs $out/bin/unionfs
@@ -35,7 +38,6 @@ stdenv.mkDerivation rec {
     description = "FUSE UnionFS implementation";
     homepage = http://podgorny.cz/moin/UnionFsFuse;
     license = stdenv.lib.licenses.bsd3;
-    maintainers = [ stdenv.lib.maintainers.shlevy ];
     platforms = stdenv.lib.platforms.linux;
   };
 }

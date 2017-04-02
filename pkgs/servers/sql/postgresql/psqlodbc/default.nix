@@ -12,9 +12,10 @@ stdenv.mkDerivation rec {
 
   configureFlags = "--with-iodbc=${libiodbc}";
 
-  meta = {
+  meta = with stdenv.lib; {
     homepage = http://psqlodbc.projects.postgresql.org/;
     description = "ODBC driver for PostgreSQL";
-    license = "LGPL";
+    license = licenses.lgpl2;
+    platforms = platforms.linux;
   };
 }

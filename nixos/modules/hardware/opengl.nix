@@ -10,14 +10,23 @@ let
 
   videoDrivers = config.services.xserver.videoDrivers;
 
-  makePackage = p: p.buildEnv {
+  makePackage = p: pkgs.buildEnv {
     name = "mesa-drivers+txc-${p.mesa_drivers.version}";
     paths =
       [ p.mesa_drivers
-        p.mesa_noglu # mainly for libGL
+        p.mesa_drivers.out # mainly for libGL
         (if cfg.s3tcSupport then p.libtxc_dxtn else p.libtxc_dxtn_s2tc)
-        p.udev
       ];
+  };
+
+  package = pkgs.buildEnv {
+    name = "opengl-drivers";
+    paths = [ cfg.package ] ++ cfg.extraPackages;
+  };
+
+  package32 = pkgs.buildEnv {
+    name = "opengl-drivers-32bit";
+    paths = [ cfg.package32 ] ++ cfg.extraPackages32;
   };
 
 in
@@ -46,7 +55,8 @@ in
       description = ''
         On 64-bit systems, whether to support Direct Rendering for
         32-bit applications (such as Wine).  This is currently only
-        supported for the <literal>nvidia</literal> driver and for
+        supported for the <literal>nvidia</literal> and 
+        <literal>ati_unfree</literal> drivers, as well as
         <literal>Mesa</literal>.
       '';
     };
@@ -75,8 +85,29 @@ in
       internal = true;
       description = ''
         The package that provides the 32-bit OpenGL implementation on
-        64-bit systems.  Used when <option>driSupport32Bit</option> is
+        64-bit systems. Used when <option>driSupport32Bit</option> is
         set.
+      '';
+    };
+
+    hardware.opengl.extraPackages = mkOption {
+      type = types.listOf types.package;
+      default = [];
+      example = literalExample "with pkgs; [ vaapiIntel libvdpau-va-gl vaapiVdpau ]";
+      description = ''
+        Additional packages to add to OpenGL drivers. This can be used
+        to add OpenCL drivers, VA-API/VDPAU drivers etc.
+      '';
+    };
+
+    hardware.opengl.extraPackages32 = mkOption {
+      type = types.listOf types.package;
+      default = [];
+      example = literalExample "with pkgs.pkgsi686Linux; [ vaapiIntel libvdpau-va-gl vaapiVdpau ]";
+      description = ''
+        Additional packages to add to 32-bit OpenGL drivers on
+        64-bit systems. Used when <option>driSupport32Bit</option> is
+        set. This can be used to add OpenCL drivers, VA-API/VDPAU drivers etc.
       '';
     };
 
@@ -91,35 +122,25 @@ in
 
     system.activationScripts.setup-opengl =
       ''
-        ln -sfn ${cfg.package} /run/opengl-driver
+        ln -sfn ${package} /run/opengl-driver
         ${if pkgs.stdenv.isi686 then ''
           ln -sfn opengl-driver /run/opengl-driver-32
         '' else if cfg.driSupport32Bit then ''
-          ln -sfn ${cfg.package32} /run/opengl-driver-32
+          ln -sfn ${package32} /run/opengl-driver-32
         '' else ''
           rm -f /run/opengl-driver-32
         ''}
       '';
 
     environment.sessionVariables.LD_LIBRARY_PATH =
-      [ "/run/opengl-driver/lib" "/run/opengl-driver-32/lib" ];
+      [ "/run/opengl-driver/lib" ] ++ optional cfg.driSupport32Bit "/run/opengl-driver-32/lib";
 
-    # FIXME: move this into card-specific modules.
-    hardware.opengl.package = mkDefault
-      (if elem "ati_unfree" videoDrivers then
-        kernelPackages.ati_drivers_x11
-      else
-        makePackage pkgs);
+    environment.variables.XDG_DATA_DIRS =
+      [ "/run/opengl-driver/share" ] ++ optional cfg.driSupport32Bit "/run/opengl-driver-32/share";
 
+    hardware.opengl.package = mkDefault (makePackage pkgs);
     hardware.opengl.package32 = mkDefault (makePackage pkgs_i686);
 
-    boot.extraModulePackages =
-      optional (elem "virtualbox" videoDrivers) kernelPackages.virtualboxGuestAdditions ++
-      optional (elem "ati_unfree" videoDrivers) kernelPackages.ati_drivers_x11;
-
-    environment.etc =
-      optionalAttrs (elem "ati_unfree" videoDrivers) {
-        "ati".source = "${kernelPackages.ati_drivers_x11}/etc/ati";
-      };
+    boot.extraModulePackages = optional (elem "virtualbox" videoDrivers) kernelPackages.virtualboxGuestAdditions;
   };
 }

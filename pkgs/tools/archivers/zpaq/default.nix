@@ -1,50 +1,42 @@
-{stdenv, fetchurl, unzip}:
-let
-  s = # Generated upstream information
-  rec {
-    baseName="zpaq";
-    version="652";
-    name="${baseName}-${version}";
-    hash="16qdf0y8jwjp8ymbikz7jm2ldjmbcixvkyrvsx0zy3y7nyylcgky";
-    url="http://mattmahoney.net/dc/zpaq652.zip";
-    sha256="16qdf0y8jwjp8ymbikz7jm2ldjmbcixvkyrvsx0zy3y7nyylcgky";
+{ stdenv, fetchurl, perl, unzip }:
+stdenv.mkDerivation rec {
+  name = "zpaq-${version}";
+  version = "715";
+
+  src = let
+    mungedVersion = with stdenv.lib; concatStrings (splitString "." version);
+  in fetchurl {
+    sha256 = "066l94yyladlfzri877nh2dhkvspagjn3m5bmv725fmhkr9c4pp8";
+    url = "http://mattmahoney.net/dc/zpaq${mungedVersion}.zip";
   };
-  buildInputs = [
-    unzip
-  ];
-  isUnix = stdenv.isLinux || stdenv.isGNU || stdenv.isDarwin || stdenv.isBSD;
-  isx86 = stdenv.isi686 || stdenv.isx86_64;
-  compileFlags = ""
-    + (stdenv.lib.optionalString isUnix " -Dunix -pthread ")
-    + (stdenv.lib.optionalString (!isx86) " -DNOJIT ")
-    + " -DNDEBUG "
-    + " -fPIC "
-    ;
-in
-stdenv.mkDerivation {
-  inherit (s) name version;
-  inherit buildInputs;
-  src = fetchurl {
-    inherit (s) url sha256;
-  };
+
   sourceRoot = ".";
-  buildPhase = ''
-    g++ -shared -O3 libzpaq.cpp ${compileFlags} -o libzpaq.so
-    g++ -O3 -L. -L"$out/lib" -lzpaq divsufsort.c zpaq.cpp -o zpaq
+
+  nativeBuildInputs = [ perl /* for pod2man */ ];
+  buildInputs = [ unzip ];
+
+  preBuild = let
+    CPPFLAGS = with stdenv; ""
+      + (lib.optionalString (!isi686 && !isx86_64) "-DNOJIT ")
+      + "-Dunix";
+    CXXFLAGS = with stdenv; ""
+      + (lib.optionalString isi686   "-march=i686   -mtune=generic ")
+      + (lib.optionalString isx86_64 "-march=nocona -mtune=generic ")
+      + "-O3 -DNDEBUG";
+  in ''
+    buildFlagsArray=( "CPPFLAGS=${CPPFLAGS}" "CXXFLAGS=${CXXFLAGS}" )
   '';
-  installPhase = ''
-    mkdir -p "$out"/{bin,include,lib,share/doc/zpaq}
-    cp libzpaq.so "$out/lib"
-    cp zpaq "$out/bin"
-    cp libzpaq.h divsufsort.h "$out/include"
-    cp readme.txt "$out/share/doc/zpaq"
-  '';
-  meta = {
-    inherit (s) version;
-    description = ''An archiver with backward compatibility of versions for decompression'';
-    license = stdenv.lib.licenses.gpl3Plus ;
-    maintainers = [stdenv.lib.maintainers.raskin];
-    platforms = stdenv.lib.platforms.linux;
-    homepage = "http://mattmahoney.net/dc/zpaq.html";
+
+  enableParallelBuilding = true;
+
+  installFlags = [ "PREFIX=$(out)" ];
+
+  meta = with stdenv.lib; {
+    description = "Incremental journaling backup utility and archiver";
+    homepage = http://mattmahoney.net/dc/zpaq.html;
+    license = licenses.gpl3Plus ;
+    maintainers = with maintainers; [ raskin nckx ];
+    platforms = platforms.linux;
+    inherit version;
   };
 }

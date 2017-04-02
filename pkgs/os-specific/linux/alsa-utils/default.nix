@@ -1,16 +1,23 @@
-{stdenv, fetchurl, alsaLib, gettext, ncurses, libsamplerate}:
+{stdenv, fetchurl, alsaLib, gettext, ncurses, libsamplerate, pciutils, fftw}:
 
 stdenv.mkDerivation rec {
-  name = "alsa-utils-1.0.27.2";
+  name = "alsa-utils-${version}";
+  version = "1.1.2";
 
   src = fetchurl {
-    # url = "ftp://ftp.alsa-project.org/pub/utils/${name}.tar.bz2";
-    url = "http://alsa.cybermirror.org/utils/${name}.tar.bz2";
-    sha256 = "1sjjngnq50jv5ilwsb4zys6smifni3bd6fn28gbnhfrg14wsrgq2";
+    urls = [
+      "ftp://ftp.alsa-project.org/pub/utils/${name}.tar.bz2"
+      "http://alsa.cybermirror.org/utils/${name}.tar.bz2"
+    ];
+    sha256 = "0wcha78c2sm8qqk5r3w83cvm8fp6fb1zpd35kmcm24kxhz007xks";
   };
 
-  buildInputs = [ alsaLib ncurses libsamplerate ];
-  nativeBuildInputs = [ gettext ];
+  patchPhase = ''
+    substituteInPlace alsa-info/alsa-info.sh \
+      --replace "which" "type -p" \
+      --replace "lspci" "${pciutils}/bin/lspci"
+  '';
+  buildInputs = [ gettext alsaLib ncurses libsamplerate fftw ];
 
   configureFlags = "--disable-xmlto --with-udev-rules-dir=$(out)/lib/udev/rules.d";
 
@@ -26,5 +33,6 @@ stdenv.mkDerivation rec {
     '';
 
     platforms = stdenv.lib.platforms.linux;
+    maintainers = [ stdenv.lib.maintainers.AndersonTorres ];
   };
 }

@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, x11, libpng, libjpeg, libtiff, zlib, bzip2, libXcursor
+{ stdenv, fetchurl, xlibsWrapper, libpng, libjpeg, libtiff, zlib, bzip2, libXcursor
 , libXrandr, mesa, libXft, libXfixes, xinput }:
 
 let
@@ -13,15 +13,18 @@ stdenv.mkDerivation rec {
     sha256 = "03m9wm8hpzh1i0fxx5mpvjr67384pfm9hn7gzdcq55b4639fqy9n";
   };
 
-  buildInputs = [ x11 libpng libjpeg libtiff zlib bzip2 libXcursor libXrandr
+  buildInputs = [ xlibsWrapper libpng libjpeg libtiff zlib bzip2 libXcursor libXrandr
       libXft mesa libXfixes xinput ];
 
   doCheck = true;
 
   enableParallelBuilding = true;
 
+  hardeningDisable = [ "format" ];
+
   meta = {
-    description = "FOX is a C++ based class library for building Graphical User Interfaces";
+    branch = "1.6";
+    description = "A C++ based class library for building Graphical User Interfaces";
     longDescription = ''
         FOX stands for Free Objects for X.
         It is a C++ based class library for building Graphical User Interfaces.
@@ -30,7 +33,7 @@ stdenv.mkDerivation rec {
       '';
     homepage = "http://fox-toolkit.org";
     license = stdenv.lib.licenses.lgpl3;
-    maintainers = [ stdenv.lib.maintainers.bbenoist ];
+    maintainers = [];
     platforms = stdenv.lib.platforms.mesaPlatforms;
   };
 }

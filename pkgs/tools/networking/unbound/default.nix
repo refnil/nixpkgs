@@ -1,23 +1,52 @@
-{ stdenv, fetchurl, openssl, expat, libevent }:
+{ stdenv, fetchurl, openssl, nettle, expat, libevent }:
 
 stdenv.mkDerivation rec {
-  name = "unbound-1.4.22";
+  name = "unbound-${version}";
+  version = "1.6.1";
 
   src = fetchurl {
     url = "http://unbound.net/downloads/${name}.tar.gz";
-    sha256 = "17yjly9c00zfgbzvllqzjh668a4yk6vrinf47yrcs3hrna0m1bqw";
+    sha256 = "000lylg5qgriaxh6k78l2inb905qshx01kxgmqj89zn08gvn7ps2";
   };
- 
-  buildInputs = [openssl expat libevent];
 
-  configureFlags = [ "--with-ssl=${openssl}" "--with-libexpat=${expat}"
-    "--localstatedir=/var" ];
+  outputs = [ "out" "lib" "man" ]; # "dev" would only split ~20 kB
 
-  meta = {
+  buildInputs = [ openssl nettle expat libevent ];
+
+  configureFlags = [
+    "--with-ssl=${openssl.dev}"
+    "--with-libexpat=${expat.dev}"
+    "--with-libevent=${libevent.dev}"
+    "--localstatedir=/var"
+    "--sysconfdir=/etc"
+    "--sbindir=\${out}/bin"
+    "--enable-pie"
+    "--enable-relro-now"
+  ];
+
+  installFlags = [ "configfile=\${out}/etc/unbound/unbound.conf" ];
+
+  preFixup = stdenv.lib.optionalString stdenv.isLinux
+    # Build libunbound again, but only against nettle instead of openssl.
+    # This avoids gnutls.out -> unbound.lib -> openssl.out.
+    # There was some problem with this on Darwin; let's not complicate non-Linux.
+    ''
+      configureFlags="$configureFlags --with-nettle=${nettle.dev} --with-libunbound-only"
+      configurePhase
+      buildPhase
+      installPhase
+    ''
+    # get rid of runtime dependencies on $dev outputs
+  + ''substituteInPlace "$lib/lib/libunbound.la" ''
+    + stdenv.lib.concatMapStrings
+      (pkg: " --replace '-L${pkg.dev}/lib' '-L${pkg.out}/lib' ")
+      buildInputs;
+
+  meta = with stdenv.lib; {
     description = "Validating, recursive, and caching DNS resolver";
-    license = stdenv.lib.licenses.bsd3;
-    homepage = http://www.unbound.net;
-    maintainers = [ stdenv.lib.maintainers.emery ];
+    license = licenses.bsd3;
+    homepage = https://www.unbound.net;
+    maintainers = with maintainers; [ ehmry fpletz ];
     platforms = stdenv.lib.platforms.unix;
   };
 }

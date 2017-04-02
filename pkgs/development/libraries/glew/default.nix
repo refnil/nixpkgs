@@ -1,16 +1,18 @@
-{ stdenv, fetchurl, mesa_glu, x11, libXmu, libXi }:
+{ stdenv, fetchurl, mesa_glu, xlibsWrapper, libXmu, libXi }:
 
 with stdenv.lib;
 
 stdenv.mkDerivation rec {
-  name = "glew-1.10.0";
+  name = "glew-2.0.0";
 
   src = fetchurl {
     url = "mirror://sourceforge/glew/${name}.tgz";
-    sha256 = "01zki46dr5khzlyywr3cg615bcal32dazfazkf360s1znqh17i4r";
+    sha256 = "0r37fg2s1f0jrvwh6c8cz5x6v4wqmhq42qm15cs9qs349q5c6wn5";
   };
 
-  nativeBuildInputs = [ x11 libXmu libXi ];
+  outputs = [ "bin" "out" "dev" "doc" ];
+
+  nativeBuildInputs = [ xlibsWrapper libXmu libXi ];
   propagatedNativeBuildInputs = [ mesa_glu ]; # GL/glew.h includes GL/glu.h
 
   patchPhase = ''
@@ -24,14 +26,15 @@ stdenv.mkDerivation rec {
   installFlags = [ "install.all" ];
 
   preInstall = ''
-    export GLEW_DEST="$out"
+    makeFlagsArray+=(GLEW_DEST=$out BINDIR=$bin/bin INCDIR=$dev/include/GL)
   '';
 
   postInstall = ''
     mkdir -pv $out/share/doc/glew
     mkdir -p $out/lib/pkgconfig
     cp glew*.pc $out/lib/pkgconfig
-    cp -r README.txt LICENSE.txt doc $out/share/doc/glew
+    cp -r README.md LICENSE.txt doc $out/share/doc/glew
+    rm $out/lib/*.a
   '';
 
   crossAttrs.makeFlags = [
@@ -42,9 +45,11 @@ stdenv.mkDerivation rec {
   ] ++ optional (stdenv.cross.libc == "msvcrt") "SYSTEM=mingw"
     ++ optional (stdenv.cross.libc == "libSystem") "SYSTEM=darwin";
 
-  meta = {
+  meta = with stdenv.lib; {
     description = "An OpenGL extension loading library for C(++)";
     homepage = http://glew.sourceforge.net/;
-    license = ["BSD" "GLX" "SGI-B" "GPL2"]; # License description copied from gentoo-1.4.0 
+    license = licenses.free; # different files under different licenses
+      #["BSD" "GLX" "SGI-B" "GPL2"]
+    platforms = platforms.mesaPlatforms;
   };
 }

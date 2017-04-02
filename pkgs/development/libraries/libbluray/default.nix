@@ -1,37 +1,65 @@
-{stdenv, fetchgit, autoconf, automake, libtool, libaacs ? null, jdk ? null, ant ? null, withAACS ? false}:
+{ stdenv, fetchurl, pkgconfig, fontconfig, autoreconfHook
+, withJava ? false, jdk ? null, ant ? null
+, withAACS ? false, libaacs ? null
+, withBDplus ? false, libbdplus ? null
+, withMetadata ? true, libxml2 ? null
+, withFonts ? true, freetype ? null
+}:
 
-assert withAACS -> jdk != null && ant != null && libaacs != null;
+with stdenv.lib;
+
+assert withJava -> jdk != null && ant != null;
+assert withAACS -> libaacs != null;
+assert withBDplus -> libbdplus != null;
+assert withMetadata -> libxml2 != null;
+assert withFonts -> freetype != null;
 
 # Info on how to use:
 # https://wiki.archlinux.org/index.php/BluRay
 
-let baseName = "libbluray";
-    version  = "0.2.1";
+stdenv.mkDerivation rec {
+  name = "libbluray-${version}";
+  version  = "1.0.0";
 
-in
-
-stdenv.mkDerivation {
-  name = "${baseName}-${version}p1";
-
-  src = fetchgit {
-    url = git://git.videolan.org/libbluray.git;
-    rev = "3b9a9f044644a6abe9cb09377f714ded9fdd6c87";
-    sha256 = "551b623e76c2dba44b5490fb42ccdc491b28cd42841de28237b8edbed0f0711c";
+  src = fetchurl {
+    url = "http://get.videolan.org/libbluray/${version}/${name}.tar.bz2";
+    sha256 = "1k3lag4lxi2jjd3zh4wcb5l3hadzm54j5kagh92yzfy76p9svqzp";
   };
 
-  nativeBuildInputs = [autoconf automake libtool];
-  buildInputs = stdenv.lib.optionals withAACS [jdk ant libaacs];
-  NIX_LDFLAGS = stdenv.lib.optionalString withAACS "-laacs";
+  patches = optional withJava ./BDJ-JARFILE-path.patch;
 
-  preConfigure = "./bootstrap";
-  configureFlags = ["--disable-static"] ++ stdenv.lib.optionals withAACS ["--enable-bdjava" "--with-jdk=${jdk}"];
+  nativeBuildInputs = [ pkgconfig autoreconfHook ]
+                      ++ optionals withJava [ ant ]
+                      ;
 
-  # From Handbrake
-  patches = [ ./A01-filter-dup.patch ];
+  buildInputs = [ fontconfig ]
+                ++ optional withJava jdk
+                ++ optional withMetadata libxml2
+                ++ optional withFonts freetype
+                ;
 
-  meta = {
+  propagatedBuildInputs = optional withAACS libaacs;
+
+  NIX_LDFLAGS = [
+    (optionalString withAACS   "-L${libaacs}/lib -laacs")
+    (optionalString withBDplus "-L${libbdplus}/lib -lbdplus")
+  ];
+
+  preConfigure = ''
+    ${optionalString withJava ''export JDK_HOME="${jdk.home}"''}
+  '';
+
+  configureFlags =  with stdenv.lib;
+                    optional (! withJava) "--disable-bdjava"
+                 ++ optional (! withMetadata) "--without-libxml2"
+                 ++ optional (! withFonts) "--without-freetype"
+                 ;
+
+  meta = with stdenv.lib; {
     homepage = http://www.videolan.org/developers/libbluray.html;
     description = "Library to access Blu-Ray disks for video playback";
-    license = stdenv.lib.licenses.lgpl21;
+    license = licenses.lgpl21;
+    maintainers = with maintainers; [ abbradar ];
+    platforms = platforms.unix;
   };
 }

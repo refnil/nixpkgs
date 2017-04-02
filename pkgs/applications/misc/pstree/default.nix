@@ -1,21 +1,25 @@
 { stdenv, fetchurl }:
 
 stdenv.mkDerivation rec {
-  name = "pstree-2.36";
+  name = "pstree-2.39";
 
   src = fetchurl {
-    url = "http://www.sfr-fresh.com/unix/misc/${name}.tar.gz";
-    sha256 = "1vx4fndmkkx3bmcv71rpzjjbn24hlfs10pl99dsfhbx16a2d41cx";
+    urls = [
+      "http://www.sfr-fresh.com/unix/misc/${name}.tar.gz"
+      "http://distfiles.macports.org/pstree/${name}.tar.gz"
+    ];
+    sha256 = "17s7v15c4gryjpi11y1xq75022nkg4ggzvjlq2dkmyg67ssc76vw";
   };
 
   unpackPhase = "unpackFile \$src; sourceRoot=.";
 
-  buildPhase = "pwd; gcc -o pstree pstree.c";
+  buildPhase = "pwd; $CC -o pstree pstree.c";
   installPhase = "mkdir -p \$out/bin; cp pstree \$out/bin";
 
   meta = {
     description = "Show the set of running processes as a tree";
     license = "GPL";
-    maintainers = stdenv.lib.maintainers.mornfall;
+    maintainers = [ stdenv.lib.maintainers.mornfall ];
+    platforms = stdenv.lib.platforms.unix;
   };
 }

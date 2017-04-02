@@ -1,14 +1,16 @@
-{ stdenv, fetchurl, makeWrapper, which, coreutils, rrdtool, perl, perlPackages
-, python, ruby, openjdk, nettools
+{ stdenv, fetchFromGitHub, makeWrapper, which, coreutils, rrdtool, perl, perlPackages
+, python, ruby, jre, nettools, bc
 }:
 
 stdenv.mkDerivation rec {
-  version = "2.0.21";
+  version = "2.0.33";
   name = "munin-${version}";
 
-  src = fetchurl {
-    url = "https://github.com/munin-monitoring/munin/archive/${version}.tar.gz";
-    sha256 = "18ipk8n78iik07190h9r8mj5209ha6yhbiw7da0l4khw0y00cvf8";
+  src = fetchFromGitHub {
+    owner = "munin-monitoring";
+    repo = "munin";
+    rev = version;
+    sha256 = "0rs05b7926mjd58sdry33i91m1h3v3svl0wg2gmhljl8wqidac5w";
   };
 
   buildInputs = [ 
@@ -20,6 +22,7 @@ stdenv.mkDerivation rec {
     perl
     perlPackages.ModuleBuild
     perlPackages.HTMLTemplate
+    perlPackages.NetCIDR
     perlPackages.NetSSLeay
     perlPackages.NetServer
     perlPackages.Log4Perl
@@ -38,7 +41,7 @@ stdenv.mkDerivation rec {
     perlPackages.DBDPg
     python
     ruby
-    openjdk
+    jre
     # tests
     perlPackages.TestLongString
     perlPackages.TestDifferences
@@ -54,7 +57,7 @@ stdenv.mkDerivation rec {
   doCheck = false;
 
   checkPhase = ''
-   export PERL5LIB="$PERL5LIB:${rrdtool}/lib/perl"
+   export PERL5LIB="$PERL5LIB:${rrdtool}/lib/perl5/site_perl"
    LC_ALL=C make -j1 test 
   '';
 
@@ -90,11 +93,15 @@ stdenv.mkDerivation rec {
     PERL=${perl}/bin/perl
     PYTHON=${python}/bin/python
     RUBY=${ruby}/bin/ruby
-    JAVARUN=${openjdk}/bin/java
+    JAVARUN=${jre}/bin/java
     PLUGINUSER=munin
   '';
 
   postFixup = ''
+    echo "Removing references to /usr/{bin,sbin}/ from munin plugins..."
+    find "$out/lib/plugins" -type f -print0 | xargs -0 -L1 \
+        sed -i -e "s|/usr/bin/||g" -e "s|/usr/sbin/||g" -e "s|\<bc\>|${bc}/bin/bc|g"
+
     if test -e $out/nix-support/propagated-native-build-inputs; then
         ln -s $out/nix-support/propagated-native-build-inputs $out/nix-support/propagated-user-env-packages
     fi
@@ -107,8 +114,8 @@ stdenv.mkDerivation rec {
         wrapProgram "$file" \
           --set PERL5LIB "$out/lib/perl5/site_perl:${with perlPackages; stdenv.lib.makePerlPath [
                 Log4Perl IOSocketInet6 Socket6 URI DBFile DateManip
-                HTMLTemplate FileCopyRecursive FCGI NetSNMP NetServer
-                ListMoreUtils TimeHiRes DBDPg LWPUserAgent
+                HTMLTemplate FileCopyRecursive FCGI NetCIDR NetSNMP NetServer
+                ListMoreUtils TimeHiRes DBDPg LWPUserAgent rrdtool
                 ]}"
     done
   '';
@@ -123,7 +130,7 @@ stdenv.mkDerivation rec {
     '';
     homepage = http://munin-monitoring.org/;
     license = licenses.gpl2;
-    maintainers = [ maintainers.iElectric maintainers.bjornfor ];
+    maintainers = [ maintainers.domenkozar maintainers.bjornfor ];
     platforms = platforms.linux;
   };
 }

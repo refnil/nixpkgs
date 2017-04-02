@@ -1,32 +1,37 @@
-{ stdenv, fetchurl, pkgconfig, intltool, gtk, glib, libid3tag, id3lib, taglib
-, libvorbis, libogg, flac
+{ stdenv, fetchurl, pkgconfig, intltool, gtk3, glib, libid3tag, id3lib, taglib
+, libvorbis, libogg, flac, itstool, libxml2, gsettings_desktop_schemas
+, makeWrapper, gnome3
 }:
 
 stdenv.mkDerivation rec {
   name = "easytag-${version}";
-  version = "2.1.8";
+  majorVersion = "2.4";
+  version = "${majorVersion}.3";
 
   src = fetchurl {
-    url = "mirror://gnome/sources/easytag/2.1/${name}.tar.xz";
-    sha256 = "1ab5iv0a83cdf07qzi81ydfk5apay06nxags9m07msqalz4pabqs";
+    url = "mirror://gnome/sources/easytag/${majorVersion}/${name}.tar.xz";
+    sha256 = "1mbxnqrw1fwcgraa1bgik25vdzvf97vma5pzknbwbqq5ly9fwlgw";
   };
 
-  preConfigure = ''
-    # pkg-config v0.23 should be enough.
-    sed -i -e '/_pkg_min_version=0.24/s/24/23/' \
-           -e 's/have_mp3=no/have_mp3=yes/' \
-           -e 's/ID3TAG_DEPS="id3tag"/ID3TAG_DEPS=""/' configure
+  preFixup = ''
+    wrapProgram $out/bin/easytag \
+      --prefix XDG_DATA_DIRS : "$XDG_ICON_DIRS:$GSETTINGS_SCHEMAS_PATH:$out/share" \
+      --prefix GIO_EXTRA_MODULES : "${gnome3.dconf}/lib/gio/modules"
   '';
 
   NIX_LDFLAGS = "-lid3tag -lz";
 
+  nativeBuildInputs = [ makeWrapper pkgconfig intltool ];
   buildInputs = [
-    pkgconfig intltool gtk glib libid3tag id3lib taglib libvorbis libogg flac
+    gtk3 glib libid3tag id3lib taglib libvorbis libogg flac
+    itstool libxml2 gsettings_desktop_schemas gnome3.defaultIconTheme gnome3.dconf
   ];
 
-  meta = {
+  meta = with stdenv.lib; {
     description = "View and edit tags for various audio files";
     homepage = "http://projects.gnome.org/easytag/";
-    license = stdenv.lib.licenses.gpl2Plus;
+    license = licenses.gpl2Plus;
+    maintainers = with maintainers; [ fuuzetsu ];
+    platforms = platforms.linux;
   };
 }

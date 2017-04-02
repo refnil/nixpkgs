@@ -15,7 +15,7 @@ Usage:
   Attention:
 
   let
-    pkgs = (import /etc/nixos/nixpkgs/pkgs/top-level/all-packages.nix) {};
+    pkgs = (import <nixpkgs>) {};
   in let
     inherit (pkgs.stringsWithDeps) fullDepEntry packEntry noDepEntry textClosureMap;
     inherit (pkgs.lib) id;
@@ -62,8 +62,8 @@ rec {
             in { result = x.result ++ [entry.text] ++ y.result;
                  done = y.done;
                }
-          else if hasAttr entry done then f done (tail todo)
-          else f (done // listToAttrs [{name = entry; value = 1;}]) ([(builtins.getAttr entry predefined)] ++ tail todo);
+          else if done ? ${entry} then f done (tail todo)
+          else f (done // listToAttrs [{name = entry; value = 1;}]) ([predefined.${entry}] ++ tail todo);
     in (f {} arg).result;
 
   textClosureMap = f: predefined: names:

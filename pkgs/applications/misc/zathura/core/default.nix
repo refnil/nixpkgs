@@ -1,44 +1,55 @@
-{ stdenv, fetchurl, pkgconfig, gtk, girara, gettext, docutils, file, makeWrapper, zathura_icon }:
+{ stdenv, fetchurl, makeWrapper, pkgconfig
+, gtk, girara, ncurses, gettext, docutils
+, file, sqlite, glib, texlive
+, synctexSupport ? true
+}:
+
+assert synctexSupport -> texlive != null;
+
+with stdenv.lib;
 
 stdenv.mkDerivation rec {
-  version = "0.2.7";
-  name = "zathura-core-${version}";
+  name    = "zathura-core-${version}";
+  version = "0.3.7";
 
   src = fetchurl {
-    url = "http://pwmt.org/projects/zathura/download/zathura-${version}.tar.gz";
-    sha256 = "ef43be7705612937d095bfbe719a03503bf7e45493ea9409cb43a45cf96f0daf";
+    url    = "http://pwmt.org/projects/zathura/download/zathura-${version}.tar.gz";
+    sha256 = "1w0g74dq4z2vl3f99s2gkaqrb5pskgzig10qhbxj4gq9yj4zzbr2";
   };
 
-  buildInputs = [ pkgconfig file gtk girara gettext makeWrapper ];
+  icon = ./icon.xpm;
 
-  # Bug in zathura build system: we should remove empty manfiles in order them
-  # to be compiled properly
-  preBuild = ''
-    rm zathura.1
-    rm zathurarc.5
-  '';
+  buildInputs = [
+    pkgconfig file gtk girara
+    gettext makeWrapper sqlite glib
+  ] ++ optional synctexSupport texlive.bin.core;
 
-  makeFlags = [ "PREFIX=$(out)" "RSTTOMAN=${docutils}/bin/rst2man.py" "VERBOSE=1" ];
+  NIX_CFLAGS_COMPILE = "-I${glib.dev}/include/gio-unix-2.0";
+
+  makeFlags = [
+    "PREFIX=$(out)"
+    "RSTTOMAN=${docutils}/bin/rst2man.py"
+    "VERBOSE=1"
+    "TPUT=${ncurses.out}/bin/tput"
+    (optionalString synctexSupport "WITH_SYNCTEX=1")
+  ];
 
   postInstall = ''
     wrapProgram "$out/bin/zathura" \
-      --prefix PATH ":" "${file}/bin" \
+      --prefix PATH ":" "${makeBinPath [ file ]}" \
       --prefix XDG_CONFIG_DIRS ":" "$out/etc"
 
+    install -Dm644 $icon $out/share/pixmaps/pwmt.xpm
     mkdir -pv $out/etc
-    echo "set window-icon ${zathura_icon}" > $out/etc/zathurarc
+    echo "set window-icon $out/share/pixmaps/pwmt.xpm" > $out/etc/zathurarc
+    echo "Icon=pwmt" >> $out/share/applications/zathura.desktop
   '';
 
   meta = {
-    homepage = http://pwmt.org/projects/zathura/;
+    homepage    = http://pwmt.org/projects/zathura/;
     description = "A core component for zathura PDF viewer";
-    license = stdenv.lib.licenses.zlib;
-    platforms = stdenv.lib.platforms.linux;
-    maintainers = [ stdenv.lib.maintainers.garbas ];
-
-    # Set lower priority in order to provide user with a wrapper script called
-    # 'zathura' instead of real zathura executable. The wrapper will build
-    # plugin path argument before executing the original.
-    priority = 1;
+    license     = licenses.zlib;
+    platforms   = platforms.linux;
+    maintainers = with maintainers; [ garbas ];
   };
 }

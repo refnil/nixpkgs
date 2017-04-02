@@ -1,21 +1,37 @@
-{ stdenv, fetchurl, bash, gettext }:
+{ stdenv, fetchurl, gettext }:
 
-stdenv.mkDerivation (rec {
-  name = "libgpg-error-1.12";
+stdenv.mkDerivation rec {
+  name = "libgpg-error-${version}";
+  version = "1.27";
 
   src = fetchurl {
     url = "mirror://gnupg/libgpg-error/${name}.tar.bz2";
-    sha256 = "0pz58vr12qihq2f0bypjxsb6cf6ajq5258fmfm8s6lvwm3b9xz6a";
+    sha256 = "1li95ni122fzinzlmxbln63nmgij63irxfvi52ws4zfbzv3am4sg";
   };
 
-  # If architecture-dependant MO files aren't available, they're generated
+  postPatch = "sed '/BUILD_TIMESTAMP=/s/=.*/=1970-01-01T00:01+0000/' -i ./configure";
+
+  outputs = [ "out" "dev" "info" ];
+  outputBin = "dev"; # deps want just the lib, most likely
+
+  # If architecture-dependent MO files aren't available, they're generated
   # during build, so we need gettext for cross-builds.
   crossAttrs.buildInputs = [ gettext ];
 
+  postConfigure =
+    stdenv.lib.optionalString stdenv.isSunOS
+    # For some reason, /bin/sh on OpenIndiana leads to this at the end of the
+    # `config.status' run:
+    #   ./config.status[1401]: shift: (null): bad number
+    # (See <http://hydra.nixos.org/build/2931046/nixlog/1/raw>.)
+    # Thus, re-run it with Bash.
+      "${stdenv.shell} config.status";
+
   doCheck = true;
 
-  meta = {
-    description = "Libgpg-error, a small library that defines common error values for all GnuPG components";
+  meta = with stdenv.lib; {
+    homepage = "https://www.gnupg.org/related_software/libgpg-error/index.html";
+    description = "A small library that defines common error values for all GnuPG components";
 
     longDescription = ''
       Libgpg-error is a small library that defines common error values
@@ -24,22 +40,9 @@ stdenv.mkDerivation (rec {
       Daemon and possibly more in the future.
     '';
 
-    homepage = http://gnupg.org;
-
-    license = stdenv.lib.licenses.lgpl2Plus;
-    platforms = stdenv.lib.platforms.all;
+    license = licenses.lgpl2Plus;
+    platforms = platforms.all;
+    maintainers = [ maintainers.fuuzetsu maintainers.vrthra ];
   };
 }
 
-//
-
-(stdenv.lib.optionalAttrs stdenv.isSunOS {
-  # For some reason, /bin/sh on OpenIndiana leads to this at the end of the
-  # `config.status' run:
-  #   ./config.status[1401]: shift: (null): bad number
-  # (See <http://hydra.nixos.org/build/2931046/nixlog/1/raw>.)
-  # Thus, re-run it with Bash.
-  postConfigure =
-    '' ${bash}/bin/sh config.status
-    '';
-}))

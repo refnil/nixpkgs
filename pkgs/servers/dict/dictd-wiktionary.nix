@@ -1,11 +1,11 @@
 {stdenv, fetchurl, python, dict, glibcLocales, writeScript}:
 
 stdenv.mkDerivation rec {
-  version = "20140118";
+  version = "20161001";
   name = "dict-db-wiktionary-${version}";
   data = fetchurl {
     url = "http://dumps.wikimedia.org/enwiktionary/${version}/enwiktionary-${version}-pages-articles.xml.bz2";
-    sha256 = "892c9fc16b248a31e2d3e42590267161c1b899b31fe923eb1ede1deb6d24cfa8";
+    sha256 = "0g3k7kxp2nzg0v56i4cz253af3aqvhn1lwkys2fnam51cn3yqm7m";
   };
 
   convert = ./wiktionary2dict.py;
@@ -14,10 +14,9 @@ stdenv.mkDerivation rec {
   builder = writeScript "wiktionary-builder.sh" ''
     source $stdenv/setup
 
-    ensureDir $out/share/dictd/
+    mkdir -p $out/share/dictd/
     cd $out/share/dictd
 
-    export LOCALE_ARCHIVE=${glibcLocales}/lib/locale/locale-archive
     python -O ${convert} ${data}
     dictzip wiktionary-en.dict
     echo en_US.UTF-8 > locale

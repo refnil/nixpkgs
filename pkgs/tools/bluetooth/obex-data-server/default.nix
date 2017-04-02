@@ -14,10 +14,11 @@ stdenv.mkDerivation rec {
 
   preConfigure = ''
   addToSearchPath PKG_CONFIG_PATH ${openobex}/lib64/pkgconfig
-  export PKG_CONFIG_PATH="${dbus_libs}/lib/pkgconfig:$PKG_CONFIG_PATH"
+  export PKG_CONFIG_PATH="${dbus_libs.dev}/lib/pkgconfig:$PKG_CONFIG_PATH"
   '';
 
   meta = {
     homepage = http://wiki.muiline.com/obex-data-server;
+    platforms = stdenv.lib.platforms.linux;
   };
 }

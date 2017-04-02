@@ -1,4 +1,6 @@
-{ stdenv, fetchurl, pam ? null, glibcCross ? null }:
+{ stdenv, fetchurl, fetchFromGitHub, autoreconfHook, libxslt, libxml2
+, docbook_xml_dtd_412, docbook_xsl, gnome_doc_utils, flex, bison
+, pam ? null, glibcCross ? null }:
 
 let
 
@@ -15,35 +17,49 @@ let
 in
 
 stdenv.mkDerivation rec {
-  name = "shadow-4.1.5.1";
+  name = "shadow-${version}";
+  version = "4.4";
 
-  src = fetchurl {
-    url = "http://pkg-shadow.alioth.debian.org/releases/${name}.tar.bz2";
-    sha256 = "1yvqx57vzih0jdy3grir8vfbkxp0cl0myql37bnmi2yn90vk6cma";
+  src = fetchFromGitHub {
+    owner = "shadow-maint";
+    repo = "shadow";
+    rev = "${version}";
+    sha256 = "005qk3n86chc8mlg86qhrns2kpl52n5f3las3m5s6266xij3qwka";
   };
 
   buildInputs = stdenv.lib.optional (pam != null && stdenv.isLinux) pam;
+  nativeBuildInputs = [autoreconfHook libxslt libxml2 
+    docbook_xml_dtd_412 docbook_xsl gnome_doc_utils flex bison
+    ];
 
   patches = [ ./keep-path.patch dots_in_usernames ];
 
-  outputs = [ "out" "su" ];
+  outputs = [ "out" "su" "man" ];
 
   # Assume System V `setpgrp (void)', which is the default on GNU variants
   # (`AC_FUNC_SETPGRP' is not cross-compilation capable.)
   preConfigure = ''
     export ac_cv_func_setpgrp_void=yes
     export shadow_cv_logdir=/var/log
+    (
+    head -n -1 "${docbook_xml_dtd_412}/xml/dtd/docbook/catalog.xml" 
+    tail -n +3 "${docbook_xsl}/share/xml/docbook-xsl/catalog.xml"
+    ) > xmlcatalog
+    configureFlags="$configureFlags --with-xml-catalog=$PWD/xmlcatalog ";
   '';
+
+  configureFlags = " --enable-man ";
 
   preBuild = assert glibc != null;
     ''
-      substituteInPlace lib/nscd.c --replace /usr/sbin/nscd ${glibc}/sbin/nscd
+      substituteInPlace lib/nscd.c --replace /usr/sbin/nscd ${glibc.bin}/bin/nscd
     '';
 
   postInstall =
     ''
       # Don't install ‘groups’, since coreutils already provides it.
-      rm $out/bin/groups $out/share/man/man1/groups.*
+      rm $out/bin/groups
+      rm $man/share/man/man1/groups.*
 
       # Move the su binary into the su package
       mkdir -p $su/bin
@@ -53,5 +69,10 @@ stdenv.mkDerivation rec {
   meta = {
     homepage = http://pkg-shadow.alioth.debian.org/;
     description = "Suite containing authentication-related tools such as passwd and su";
+    platforms = stdenv.lib.platforms.linux;
+  };
+
+  passthru = {
+    shellPath = "/bin/nologin";
   };
 }

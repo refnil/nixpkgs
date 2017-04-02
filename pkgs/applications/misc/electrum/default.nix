@@ -1,32 +1,70 @@
-{ stdenv, fetchurl, pythonPackages, slowaes, ecdsa, pyqt4 }:
+{ stdenv, fetchurl, python2Packages }:
 
-pythonPackages.buildPythonPackage rec {
+python2Packages.buildPythonApplication rec {
   name = "electrum-${version}";
-  version = "1.9.8";
+  version = "2.8.2";
 
   src = fetchurl {
-    url = "https://download.electrum.org/Electrum-${version}.tar.gz";
-    sha256 = "8fc144a32013e4a747fea27fff981762a6b9e14cde9ffb405c4c721975d846ff";
+    url = "https://download.electrum.org/${version}/Electrum-${version}.tar.gz";
+    sha256 = "01xphbi7lx64s9380zjfakz5h8blqmxp0ryqlll7px66qpmjn5fq";
   };
 
-  buildInputs = [ slowaes ecdsa ];
-
-  propagatedBuildInputs = [ 
-    slowaes
+  propagatedBuildInputs = with python2Packages; [
+    dns
     ecdsa
+    jsonrpclib
+    pbkdf2
+    protobuf3_0
+    pyaes
+    pycrypto
     pyqt4
+    pysocks
+    qrcode
+    requests
+    tlslite
+
+    # plugins
+    keepkey
+    trezor
+
+    # TODO plugins
+    # amodem
+    # btchip
+    # matplotlib
   ];
 
-  postPatch = ''
-    mkdir -p $out/share
-    sed -i 's@usr_share = .*@usr_share = os.getenv("out")+"/share"@' setup.py
+  preBuild = ''
+    sed -i 's,usr_share = .*,usr_share = "'$out'/share",g' setup.py
+    pyrcc4 icons.qrc -o gui/qt/icons_rc.py
+    # Recording the creation timestamps introduces indeterminism to the build
+    sed -i '/Created: .*/d' gui/qt/icons_rc.py
   '';
 
-  meta = {
-    description = "Bitcoin thin-wallet";
-    long-description = "Electrum is an easy to use Bitcoin client. It protects you from losing coins in a backup mistake or computer failure, because your wallet can be recovered from a secret phrase that you can write on paper or learn by heart. There is no waiting time when you start the client, because it does not download the Bitcoin blockchain.";
-    homepage = "https://electrum.org";
-    license = stdenv.lib.licenses.gpl3;
-    maintainers = [ "emery@vfemail.net" ];
+  postInstall = ''
+    # Despite setting usr_share above, these files are installed under
+    # $out/nix ...
+    mv $out/lib/python2.7/site-packages/nix/store"/"*/share $out
+    rm -rf $out/lib/python2.7/site-packages/nix
+
+    substituteInPlace $out/share/applications/electrum.desktop \
+      --replace "Exec=electrum %u" "Exec=$out/bin/electrum %u"
+  '';
+
+  doInstallCheck = true;
+  installCheckPhase = ''
+    $out/bin/electrum help >/dev/null
+  '';
+
+  meta = with stdenv.lib; {
+    description = "A lightweight Bitcoin wallet";
+    longDescription = ''
+      An easy-to-use Bitcoin client featuring wallets generated from
+      mnemonic seeds (in addition to other, more advanced, wallet options)
+      and the ability to perform transactions without downloading a copy
+      of the blockchain.
+    '';
+    homepage = https://electrum.org/;
+    license = licenses.mit;
+    maintainers = with maintainers; [ ehmry joachifm np ];
   };
 }

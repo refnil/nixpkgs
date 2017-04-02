@@ -6,19 +6,26 @@ with lib;
 let
   cfg = config.networking.networkmanager;
 
-  stateDirs = "/var/lib/NetworkManager /var/lib/dhclient";
+  # /var/lib/misc is for dnsmasq.leases.
+  stateDirs = "/var/lib/NetworkManager /var/lib/dhclient /var/lib/misc";
 
   configFile = writeText "NetworkManager.conf" ''
     [main]
     plugins=keyfile
 
     [keyfile]
-    ${optionalString (config.networking.hostName != "") ''
-      hostname=${config.networking.hostName}
-    ''}
+    ${optionalString (config.networking.hostName != "")
+      ''hostname=${config.networking.hostName}''}
+    ${optionalString (cfg.unmanaged != [])
+      ''unmanaged-devices=${lib.concatStringsSep ";" cfg.unmanaged}''}
 
     [logging]
     level=WARN
+
+    [connection]
+    ipv6.ip6-privacy=2
+    ethernet.cloned-mac-address=${cfg.ethernet.macAddress}
+    wifi.cloned-mac-address=${cfg.wifi.macAddress}
   '';
 
   /*
@@ -40,19 +47,11 @@ let
     polkit.addRule(function(action, subject) {
       if (
         subject.isInGroup("networkmanager")
-        && subject.active
         && (action.id.indexOf("org.freedesktop.NetworkManager.") == 0
             || action.id.indexOf("org.freedesktop.ModemManager")  == 0
         ))
           { return polkit.Result.YES; }
     });
-  '';
-
-  ipUpScript = writeScript "01nixos-ip-up" ''
-    #!/bin/sh
-    if test "$2" = "up"; then
-      ${config.systemd.package}/bin/systemctl start ip-up.target
-    fi
   '';
 
   ns = xs: writeText "nameservers" (
@@ -69,6 +68,25 @@ let
     ${optionalString (cfg.insertNameservers != []) "${coreutils}/bin/cat $tmp ${ns cfg.insertNameservers} $tmp.ns > /etc/resolv.conf"}
     ${coreutils}/bin/rm -f $tmp $tmp.ns
   '';
+
+  dispatcherTypesSubdirMap = {
+    "basic" = "";
+    "pre-up" = "pre-up.d/";
+    "pre-down" = "pre-down.d/";
+  };
+
+  macAddressOpt = mkOption {
+    type = types.either types.str (types.enum ["permanent" "preserve" "random" "stable"]);
+    default = "preserve";
+    example = "00:11:22:33:44:55";
+    description = ''
+      "XX:XX:XX:XX:XX:XX": MAC address of the interface.
+      <literal>permanent</literal>: use the permanent MAC address of the device.
+      <literal>preserve</literal>: don’t change the MAC address of the device upon activation.
+      <literal>random</literal>: generate a randomized value upon each connect.
+      <literal>stable</literal>: generate a stable, hashed MAC address.
+    '';
+  };
 
 in {
 
@@ -90,17 +108,37 @@ in {
         '';
       };
 
+      unmanaged = mkOption {
+        type = types.listOf types.string;
+        default = [];
+        description = ''
+          List of interfaces that will not be managed by NetworkManager.
+          Interface name can be specified here, but if you need more fidelity
+          see "Device List Format" in NetworkManager.conf man page.
+        '';
+      };
+
+      # Ugly hack for using the correct gnome3 packageSet
+      basePackages = mkOption {
+        type = types.attrsOf types.package;
+        default = { inherit networkmanager modemmanager wpa_supplicant
+                            networkmanager_openvpn networkmanager_vpnc
+                            networkmanager_openconnect
+                            networkmanager_pptp networkmanager_l2tp; };
+        internal = true;
+      };
+
       packages = mkOption {
         type = types.listOf types.path;
         default = [ ];
         description = ''
           Extra packages that provide NetworkManager plugins.
         '';
-        apply = list: [ networkmanager modemmanager wpa_supplicant ] ++ list;
+        apply = list: (attrValues cfg.basePackages) ++ list;
       };
 
       appendNameservers = mkOption {
-        type = types.listOf types.string;
+        type = types.listOf types.str;
         default = [];
         description = ''
           A list of name servers that should be appended
@@ -109,7 +147,7 @@ in {
       };
 
       insertNameservers = mkOption {
-        type = types.listOf types.string;
+        type = types.listOf types.str;
         default = [];
         description = ''
           A list of name servers that should be inserted before
@@ -117,6 +155,33 @@ in {
         '';
       };
 
+      ethernet.macAddress = macAddressOpt;
+      wifi.macAddress = macAddressOpt;
+
+      dispatcherScripts = mkOption {
+        type = types.listOf (types.submodule {
+          options = {
+            source = mkOption {
+              type = types.str;
+              description = ''
+                A script source.
+              '';
+            };
+
+            type = mkOption {
+              type = types.enum (attrNames dispatcherTypesSubdirMap); 
+              default = "basic";
+              description = ''
+                Dispatcher hook type. Only basic hooks are currently available.
+              '';
+            };
+          };
+        });
+        default = [];
+        description = ''
+          A list of scripts which will be executed in response to  network  events.
+        '';
+      };
     };
   };
 
@@ -127,15 +192,12 @@ in {
 
     assertions = [{
       assertion = config.networking.wireless.enable == false;
-      message = "You can not use networking.networkmanager with services.networking.wireless";
+      message = "You can not use networking.networkmanager with networking.wireless";
     }];
 
     boot.kernelModules = [ "ppp_mppe" ]; # Needed for most (all?) PPTP VPN connections.
 
-    environment.etc = [
-      { source = ipUpScript;
-        target = "NetworkManager/dispatcher.d/01nixos-ip-up";
-      }
+    environment.etc = with cfg.basePackages; [
       { source = configFile;
         target = "NetworkManager/NetworkManager.conf";
       }
@@ -151,61 +213,62 @@ in {
       { source = "${networkmanager_pptp}/etc/NetworkManager/VPN/nm-pptp-service.name";
         target = "NetworkManager/VPN/nm-pptp-service.name";
       }
+      { source = "${networkmanager_l2tp}/etc/NetworkManager/VPN/nm-l2tp-service.name";
+        target = "NetworkManager/VPN/nm-l2tp-service.name";
+      }
+      { source = "${networkmanager_strongswan}/etc/NetworkManager/VPN/nm-strongswan-service.name";
+        target = "NetworkManager/VPN/nm-strongswan-service.name";
+      }
     ] ++ optional (cfg.appendNameservers == [] || cfg.insertNameservers == [])
            { source = overrideNameserversScript;
              target = "NetworkManager/dispatcher.d/02overridedns";
-           };
+           }
+      ++ lib.imap (i: s: {
+        text = s.source;
+        target = "NetworkManager/dispatcher.d/${dispatcherTypesSubdirMap.${s.type}}03userscript${lib.fixedWidthNumber 4 i}";
+      }) cfg.dispatcherScripts;
 
-    environment.systemPackages = cfg.packages ++ [
-        networkmanager_openvpn
-        networkmanager_vpnc
-        networkmanager_openconnect
-        networkmanager_pptp
-        modemmanager
-        ];
+    environment.systemPackages = cfg.packages;
 
-    users.extraGroups = singleton {
+    users.extraGroups = [{
       name = "networkmanager";
       gid = config.ids.gids.networkmanager;
-    };
+    }
+    {
+      name = "nm-openvpn";
+      gid = config.ids.gids.nm-openvpn;
+    }];
+    users.extraUsers = [{
+      name = "nm-openvpn";
+      uid = config.ids.uids.nm-openvpn;
+    }];
 
     systemd.packages = cfg.packages;
 
-    # Create an initialisation service that both starts
-    # NetworkManager when network.target is reached,
-    # and sets up necessary directories for NM.
-    systemd.services."networkmanager-init" = {
-      description = "NetworkManager initialisation";
+    systemd.services."network-manager" = {
       wantedBy = [ "network.target" ];
-      wants = [ "NetworkManager.service" ];
-      before = [ "NetworkManager.service" ];
-      script = ''
+      restartTriggers = [ configFile ];
+
+      preStart = ''
         mkdir -m 700 -p /etc/NetworkManager/system-connections
         mkdir -m 755 -p ${stateDirs}
       '';
-      serviceConfig.Type = "oneshot";
     };
 
     # Turn off NixOS' network management
     networking = {
       useDHCP = false;
-      wireless.enable = false;
+      # use mkDefault to trigger the assertion about the conflict above
+      wireless.enable = lib.mkDefault false;
     };
 
     powerManagement.resumeCommands = ''
-      systemctl restart NetworkManager
+      ${config.systemd.package}/bin/systemctl restart network-manager
     '';
 
     security.polkit.extraConfig = polkitConf;
 
-    # openvpn plugin has only dbus interface
-    services.dbus.packages = cfg.packages ++ [
-        networkmanager_openvpn
-        networkmanager_vpnc
-        networkmanager_openconnect
-        networkmanager_pptp
-        modemmanager
-        ];
+    services.dbus.packages = cfg.packages;
 
     services.udev.packages = cfg.packages;
   };

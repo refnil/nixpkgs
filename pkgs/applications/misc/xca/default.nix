@@ -1,32 +1,42 @@
-{ stdenv, fetchurl, pkgconfig, which, openssl, qt4, libtool, gcc, makeWrapper }:
+{ stdenv, fetchurl, pkgconfig, which, makeQtWrapper,
+  libtool, openssl, qtbase, qttools }:
+
+with stdenv.lib;
 
 stdenv.mkDerivation rec {
   name = "xca-${version}";
-  version = "0.9.3";
+  version = "1.3.2";
 
   src = fetchurl {
     url = "mirror://sourceforge/xca/${name}.tar.gz";
-    sha256 = "1fn6kh8mdy65rrgjif7j9wn3mxg1mrrcnhzpi86hfy24ic6bahk8";
+    sha256 = "1r2w9gpahjv221j963bd4vn0gj4cxmb9j42f3cd9qdn890hizw84";
   };
 
-  configurePhase = ''
-    export PATH=$PATH:${which}/bin
-    export QTDIR=${qt4}
-    prefix=$out ./configure ${openssl} ${libtool}
+  enableParallelBuilding = false;
+
+  buildInputs = [ libtool openssl qtbase qttools ];
+
+  nativeBuildInputs = [ makeQtWrapper pkgconfig which ];
+
+  configureFlags = [ "CXXFLAGS=-std=c++11" ];
+
+  preBuild = ''
+    substituteInPlace Local.mak \
+      --replace ${qtbase}/bin/moc ${qtbase.dev}/bin/moc \
+      --replace ${qtbase}/bin/uic ${qtbase.dev}/bin/uic
   '';
 
   postInstall = ''
-    wrapProgram "$out/bin/xca" \
-      --prefix LD_LIBRARY_PATH : "${qt4}/lib:${gcc.gcc}/lib:${gcc.gcc}/lib64:${openssl}/lib:${libtool}/lib"
+    wrapQtProgram "$out/bin/xca"
+    wrapQtProgram "$out/bin/xca_db_stat"
   '';
-
-  buildInputs = [ openssl qt4 libtool gcc makeWrapper ];
-  nativeBuildInputs = [ pkgconfig ];
 
   meta = with stdenv.lib; {
     description = "Interface for managing asymetric keys like RSA or DSA";
     homepage = http://xca.sourceforge.net/;
     platforms = platforms.all;
     license = licenses.bsd3;
+    maintainers = with maintainers; [ offline peterhoeg ];
+    broken = builtins.compareVersions qtbase.version "5.7.0" >= 0;
   };
 }

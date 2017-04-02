@@ -1,30 +1,29 @@
-{ stdenv, fetchurl, perl, AlgorithmDiff, RegexpCommon }:
+{ stdenv, fetchFromGitHub, makeWrapper, perl, AlgorithmDiff, RegexpCommon }:
 
 stdenv.mkDerivation rec {
-  
   name = "cloc-${version}";
+  version = "1.72";
 
-  version = "1.58";
-
-  src = fetchurl {
-    url = "mirror://sourceforge/cloc/cloc-${version}.tar.gz";
-    sha256 = "1k92jldy4m717lh1xd6yachx3l2hhpx76qhj1ipnx12hsxw1zc8w";
+  src = fetchFromGitHub {
+    owner = "AlDanial";
+    repo = "cloc";
+    rev = "v${version}";
+    sha256 = "192z3fzib71y3sjic03ll67xv51igdlpvfhx12yv9wnzkir7lx02";
   };
 
-  buildInputs = [ perl AlgorithmDiff RegexpCommon ];
+  sourceRoot = "cloc-v${version}-src/Unix";
 
-  unpackPhase = ''
-    mkdir ${name}
-    tar xf $src -C ${name}
-    cd ${name}
-  '';
+  buildInputs = [ makeWrapper perl AlgorithmDiff RegexpCommon ];
 
   makeFlags = [ "prefix=" "DESTDIR=$(out)" "INSTALL=install" ];
 
+  postFixup = "wrapProgram $out/bin/cloc --prefix PERL5LIB : $PERL5LIB";
+
   meta = {
     description = "A program that counts lines of source code";
-    homepage = http://cloc.sourceforge.net;
+    homepage = https://github.com/AlDanial/cloc;
     license = stdenv.lib.licenses.gpl2;
+    platforms = stdenv.lib.platforms.all;
+    maintainers = with stdenv.lib.maintainers; [ fuuzetsu ];
   };
-
 }

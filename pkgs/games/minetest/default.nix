@@ -1,16 +1,22 @@
-{ stdenv, fetchgit, cmake, irrlicht3843, libpng, bzip2,
-  libjpeg, libXxf86vm, mesa, openal, libvorbis, x11 }:
+{ stdenv, fetchFromGitHub, cmake, irrlicht, libpng, bzip2, curl, libogg, jsoncpp
+, libjpeg, libXxf86vm, mesa, openal, libvorbis, xlibsWrapper, sqlite, luajit
+, freetype, gettext, doxygen, ncurses, leveldb
+}:
 
 let
-  version = "0.4.4";
+  version = "0.4.15";
   sources = {
-    src = fetchgit {
-      url = "https://github.com/celeron55/minetest.git";
-      rev = "ab06fca4bed26f3dc97d5e5cff437d075d7acff8";
+    src = fetchFromGitHub {
+      owner = "minetest";
+      repo = "minetest";
+      rev = "${version}";
+      sha256 = "0bn4102d0hq774bn6hqhrs6qzl4sancrs4j15w4318bqdndk4676";
     };
-    data = fetchgit {
-      url = "https://github.com/celeron55/minetest_game.git";
-      rev = "3928eccf74af0288d12ffb14f8222fae479bc06b";
+    data = fetchFromGitHub {
+      owner = "minetest";
+      repo = "minetest_game";
+      rev = "${version}";
+      sha256 = "1mjj40slfiw0khg9nrq8yfmnay237z5jm1cg9hrsiq2fkjrr8w2m";
     };
   };
 in stdenv.mkDerivation {
@@ -19,12 +25,18 @@ in stdenv.mkDerivation {
   src = sources.src;
 
   cmakeFlags = [
-    "-DIRRLICHT_INCLUDE_DIR=${irrlicht3843}/include/irrlicht"
+    "-DENABLE_FREETYPE=1"
+    "-DENABLE_GETTEXT=1"
+    "-DENABLE_SYSTEM_JSONCPP=1"
+    "-DGETTEXT_INCLUDE_DIR=${gettext}/include/gettext"
+    "-DCURL_INCLUDE_DIR=${curl.dev}/include/curl"
+    "-DIRRLICHT_INCLUDE_DIR=${irrlicht}/include/irrlicht"
   ];
 
   buildInputs = [
-    cmake irrlicht3843 libpng bzip2 libjpeg
-    libXxf86vm mesa openal libvorbis x11
+    cmake irrlicht libpng bzip2 libjpeg curl libogg jsoncpp libXxf86vm mesa
+    openal libvorbis xlibsWrapper sqlite luajit freetype gettext doxygen ncurses
+    leveldb
   ];
 
   postInstall = ''
@@ -32,9 +44,11 @@ in stdenv.mkDerivation {
     cp -rv ${sources.data}/* $out/share/minetest/games/minetest_game/
   '';
 
-  meta = {
-    homepage = "http://minetest.net/";
+  meta = with stdenv.lib; {
+    homepage = http://minetest.net/;
     description = "Infinite-world block sandbox game";
-    license = stdenv.lib.licenses.lgpl21Plus;
+    license = licenses.lgpl21Plus;
+    platforms = platforms.linux;
+    maintainers = with maintainers; [ jgeerds c0dehero ];
   };
 }

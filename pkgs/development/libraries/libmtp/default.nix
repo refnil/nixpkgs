@@ -1,18 +1,20 @@
 { stdenv, fetchurl, pkgconfig, libusb1 }:
 
 stdenv.mkDerivation rec {
-  name = "libmtp-1.1.6";
+  name = "libmtp-1.1.11";
+
+  src = fetchurl {
+    url = "mirror://sourceforge/libmtp/${name}.tar.gz";
+    sha256 = "1sc768q2cixwanlwrz95mp389iaadl4s95486caavxx4g7znvn8m";
+  };
+
+  outputs = [ "bin" "dev" "out" ];
 
   propagatedBuildInputs = [ libusb1 ];
   buildInputs = [ pkgconfig ];
 
   # tried to install files to /lib/udev, hopefully OK
-  configureFlags = [ "--with-udev=$$out/lib/udev" ];
-
-  src = fetchurl {
-    url = "mirror://sourceforge/libmtp/${name}.tar.gz";
-    sha256 = "02nbf1cigxmv9sak201f4m5c1d21q6avgzjlxd941plimy1iq71s";
-  };
+  configureFlags = [ "--with-udev=$$bin/lib/udev" ];
 
   meta = {
     homepage = http://libmtp.sourceforge.net;
@@ -22,7 +24,7 @@ stdenv.mkDerivation rec {
       in the form of a library suitable primarily for POSIX compliant operating
       systems. We implement MTP Basic, the stuff proposed for standardization.
       '';
-    platforms = stdenv.lib.platforms.all;
-    maintainers = [ stdenv.lib.maintainers.urkud ];
+    platforms = stdenv.lib.platforms.linux;
+    maintainers = [ ];
   };
 }

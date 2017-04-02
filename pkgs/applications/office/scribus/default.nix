@@ -1,22 +1,24 @@
 { stdenv, fetchurl, pkgconfig, freetype, lcms, libtiff, libxml2
-, libart_lgpl, qt4, python, cups, fontconfig, libjpeg
-, zlib, libpng, xorg, cairo, podofo, aspell, boostHeaders, cmake }:
+, libart_lgpl, qt4, python2, cups, fontconfig, libjpeg
+, zlib, libpng, xorg, cairo, podofo, aspell, boost, cmake }:
 
-stdenv.mkDerivation rec {
-  name = "scribus-1.4.3";
+let
+  pythonEnv = python2.withPackages(ps: [ps.tkinter]);
+in stdenv.mkDerivation rec {
+  name = "scribus-1.4.6";
 
   src = fetchurl {
     url = "mirror://sourceforge/scribus/scribus/${name}.tar.xz";
-    sha256 = "1zxgl2g299rllfy5ihs5skicpv7zcmz149ahraami69gqcag6bn7";
+    sha256 = "16m1g38dig37ag0zxjx3wk1rxx9xxzjqfc7prj89rp4y1m83dqr1";
   };
 
   enableParallelBuilding = true;
 
   buildInputs = with xorg;
     [ pkgconfig cmake freetype lcms libtiff libxml2 libart_lgpl qt4
-      python cups fontconfig
+      pythonEnv cups fontconfig
       libjpeg zlib libpng podofo aspell cairo
-      boostHeaders # for internal 2geom library
+      boost # for internal 2geom library
       libXaw libXext libX11 libXtst libXi libXinerama
       libpthreadstubs libXau libXdmcp
     ];

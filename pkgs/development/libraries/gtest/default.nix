@@ -1,15 +1,16 @@
-{ stdenv, fetchurl, unzip, cmake}:
-
+{ stdenv, cmake, fetchFromGitHub }:
 stdenv.mkDerivation rec {
-  version = "1.7.0";
   name = "gtest-${version}";
+  version = "1.8.0";
 
-  src = fetchurl {
-    url = "https://googletest.googlecode.com/files/${name}.zip";
-    sha256="03fnw3bizw9bcx7l5qy1vz7185g33d5pxqcb6aqxwlrzv26s2z14";
+  src = fetchFromGitHub {
+    owner = "google";
+    repo = "googletest";
+    rev = "release-${version}";
+    sha256 = "0bjlljmbf8glnd9qjabx73w6pd7ibv43yiyngqvmvgxsabzr8399";
   };
 
-  buildInputs = [ unzip cmake ];
+  buildInputs = [ cmake ];
 
   configurePhase = ''
     mkdir build
@@ -19,16 +20,20 @@ stdenv.mkDerivation rec {
 
   installPhase = ''
     mkdir -p $out/lib
-    cp -v libgtest.a libgtest_main.a $out/lib
-    cp -v -r ../include $out
-    cp -v -r ../src $out
+    cp -v googlemock/gtest/libgtest.a googlemock/gtest/libgtest_main.a googlemock/libgmock.a googlemock/libgmock_main.a $out/lib
+    ln -s $out/lib/libgmock.a $out/lib/libgoogletest.a
+    mkdir -p $out/include
+    cp -v -r ../googlemock/include/gmock $out/include
+    cp -v -r ../googletest/include/gtest $out/include
+    mkdir -p $out/src
+    cp -v -r ../googlemock/src/* ../googletest/src/* $out/src
   '';
 
-  meta = {
-    description = "Google test: Google's framework for writing C++ tests.";
+  meta = with stdenv.lib; {
+    description = "Google's framework for writing C++ tests";
     homepage = https://code.google.com/p/googletest/;
-    license = stdenv.lib.licenses.bsd3;
-    maintainers = [ stdenv.lib.maintainers.zoomulator ];
+    license = licenses.bsd3;
+    platforms = platforms.all;
+    maintainers = with maintainers; [ zoomulator ivan-tkatchev ];
   };
 }
-

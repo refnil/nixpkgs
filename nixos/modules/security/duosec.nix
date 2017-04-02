@@ -73,7 +73,7 @@ in
       };
 
       failmode = mkOption {
-        type = types.str;
+        type = types.enum [ "safe" "enum" ];
         default = "safe";
         description = ''
           On service or configuration errors that prevent Duo
@@ -110,12 +110,12 @@ in
         default = false;
         description = ''
           Print the contents of <literal>/etc/motd</literal> to screen
-          after a succesful login.
+          after a successful login.
         '';
       };
 
       prompts = mkOption {
-        type = types.int;
+        type = types.enum [ 1 2 3 ];
         default = 3;
         description = ''
           If a user fails to authenticate with a second factor, Duo
@@ -145,7 +145,7 @@ in
 
           When $DUO_PASSCODE is non-empty, it will override
           autopush. The SSH client will need SendEnv DUO_PASSCODE in
-          its configuration, and the SSH server will similarily need
+          its configuration, and the SSH server will similarly need
           AcceptEnv DUO_PASSCODE.
         '';
       };
@@ -181,19 +181,14 @@ in
 
   config = mkIf (cfg.ssh.enable || cfg.pam.enable) {
     assertions =
-      [ { assertion = cfg.failmode == "safe" || cfg.failmode == "secure";
-          message   = "Invalid value for failmode (must be safe or secure).";
-        }
-        { assertion = cfg.prompts == 1 || cfg.prompts == 2 || cfg.prompts == 3;
-          message   = "Invalid value for prompts (must be 1, 2, or 3).";
-        }
-        { assertion = !cfg.pam.enable;
+      [ { assertion = !cfg.pam.enable;
           message   = "PAM support is currently not implemented.";
         }
       ];
 
      environment.systemPackages = [ pkgs.duo-unix ];
-     security.setuidPrograms    = [ "login_duo" ];
+
+     security.wrappers.login_duo.source = "${pkgs.duo-unix.out}/bin/login_duo";
      environment.etc = loginCfgFile ++ pamCfgFile;
 
      /* If PAM *and* SSH are enabled, then don't do anything special.

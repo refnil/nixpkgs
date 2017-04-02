@@ -1,15 +1,17 @@
-{ stdenv, fetchurl, pkgconfig, intltool
-, expat, acl, udev, glib, libatasmart, polkit
-, libxslt, docbook_xsl, utillinux, mdadm
+{ stdenv, fetchurl, pkgconfig, intltool, gnused
+, expat, acl, systemd, glib, libatasmart, polkit
+, libxslt, docbook_xsl, utillinux, mdadm, libgudev
 }:
 
 stdenv.mkDerivation rec {
-  name = "udisks-2.1.3";
+  name = "udisks-2.1.6";
 
   src = fetchurl {
     url = "http://udisks.freedesktop.org/releases/${name}.tar.bz2";
-    sha256 = "0bb3403pa23j317b7z9ikdigr6ll5cl93l4hiy4afjgfa7b2zjaw";
+    sha256 = "0spl155k0g2l2hvqf8xyjv08i68gfyhzpjva6cwlzxx0bz4gbify";
   };
+
+  outputs = [ "out" "doc" ];
 
   patches = [ ./force-path.patch ];
 
@@ -19,14 +21,16 @@ stdenv.mkDerivation rec {
     ''
       substituteInPlace src/main.c --replace \
         "@path@" \
-        "${utillinux}/bin:${mdadm}/sbin:/var/run/current-system/sw/bin:/var/run/current-system/sw/sbin"
+        "${utillinux}/bin:${mdadm}/bin:/run/current-system/sw/bin"
+      substituteInPlace data/80-udisks2.rules \
+        --replace "/bin/sh" "${stdenv.shell}" \
+        --replace "/sbin/mdadm" "${mdadm}/bin/mdadm" \
+        --replace " sed " " ${gnused}/bin/sed "
     '';
 
   nativeBuildInputs = [ pkgconfig intltool ];
 
-  propagatedBuildInputs = [ expat acl udev glib libatasmart polkit ]; # in closure anyway
-
-  buildInputs = [ libxslt docbook_xsl ];
+  buildInputs = [ libxslt docbook_xsl libgudev expat acl systemd glib libatasmart polkit ];
 
   configureFlags = [
     "--localstatedir=/var"

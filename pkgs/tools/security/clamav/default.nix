@@ -1,26 +1,48 @@
-{ stdenv, fetchurl, zlib, bzip2, libiconv }:
+{ stdenv, fetchurl, zlib, bzip2, libiconv, libxml2, openssl, ncurses, curl
+, libmilter, pcre }:
+
 stdenv.mkDerivation rec {
   name = "clamav-${version}";
-  version = "0.98.1";
+  version = "0.99.2";
 
   src = fetchurl {
-    url = "mirror://sourceforge/clamav/clamav-${version}.tar.gz";
-    sha256 = "1p13n8g3b88cxwxj07if9z1d2cav1ib94v6cq4r4bpacfd6yix9m";
+    url = "https://www.clamav.net/downloads/production/${name}.tar.gz";
+    sha256 = "0yh2q318bnmf2152g2h1yvzgqbswn0wvbzb8p4kf7v057shxcyqn";
   };
 
-  buildInputs = [ zlib bzip2 libiconv ];
+  # don't install sample config files into the absolute sysconfdir folder
+  postPatch = ''
+    substituteInPlace Makefile.in --replace ' etc ' ' '
+  '';
+
+  buildInputs = [
+    zlib bzip2 libxml2 openssl ncurses curl libiconv libmilter pcre
+  ];
 
   configureFlags = [
-    "--with-zlib=${zlib}"
-    "--with-libbz2-prefix=${bzip2}"
+    "--sysconfdir=/etc/clamav"
+    "--with-zlib=${zlib.dev}"
+    "--disable-zlib-vcheck" # it fails to recognize that 1.2.10 >= 1.2.2
+    "--with-libbz2-prefix=${bzip2.dev}"
     "--with-iconv-dir=${libiconv}"
-    "--disable-clamav" ];
+    "--with-xml=${libxml2.dev}"
+    "--with-openssl=${openssl.dev}"
+    "--with-libncurses-prefix=${ncurses.dev}"
+    "--with-libcurl=${curl.dev}"
+    "--with-pcre=${pcre.dev}"
+    "--enable-milter"
+  ];
+
+  postInstall = ''
+    mkdir $out/etc
+    cp etc/*.sample $out/etc
+  '';
 
   meta = with stdenv.lib; {
     homepage = http://www.clamav.net;
     description = "Antivirus engine designed for detecting Trojans, viruses, malware and other malicious threats";
     license = licenses.gpl2;
-    maintainers = [ maintainers.phreedom ];
+    maintainers = with maintainers; [ phreedom robberer qknight ];
     platforms = platforms.linux;
   };
 }

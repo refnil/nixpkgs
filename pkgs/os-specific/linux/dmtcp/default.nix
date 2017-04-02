@@ -1,31 +1,39 @@
-{stdenv, fetchurl, perl, python}:
-# Perl and Python required by the test suite.
+{ stdenv, fetchFromGitHub }:
 
 stdenv.mkDerivation rec {
   name = "dmtcp-${version}";
+  version = "2.5.0";
 
-  version = "1.2.0";
-
-  buildInputs = [ perl python ];
-
-  src = fetchurl {
-    url = "mirror://sourceforge/dmtcp/dmtcp_${version}.tar.gz";
-    sha256 = "1pw3m4l1xf887xagd0yrrnb35s372j0kvjziyy3gmx9fxpga1jzb";
+  src = fetchFromGitHub {
+    owner = "dmtcp";
+    repo = "dmtcp";
+    rev = version;
+    sha256 = "08l774i8yp41j6kmzhj7x13475m5kdfhn678ydpm5cbg4l3dda3c";
   };
 
+  dontDisableStatic = true;
+
+  postPatch = ''
+    substituteInPlace configure \
+      --replace '#define ELF_INTERPRETER "$interp"' \
+                "#define ELF_INTERPRETER \"$(cat $NIX_CC/nix-support/dynamic-linker)\""
+  '';
+
   preConfigure = ''
-    substituteInPlace dmtcp/src/dmtcp_coordinator.cpp \
-      --replace /bin/bash /bin/sh
-    substituteInPlace utils/gdb-add-symbol-file \
-      --replace /bin/bash /bin/sh
+    substituteInPlace src/dmtcp_coordinator.cpp \
+      --replace /bin/bash ${stdenv.shell}
+    substituteInPlace util/gdb-add-symbol-file \
+      --replace /bin/bash ${stdenv.shell}
     substituteInPlace test/autotest.py \
       --replace /usr/bin/env $(type -p env) \
       --replace /bin/bash $(type -p bash) \
       --replace /usr/bin/perl $(type -p perl) \
-      --replace /usr/bin/python $(type -p python)
+      --replace /usr/bin/python $(type -p python) \
+      --replace "os.environ['USER']" "\"nixbld1\"" \
+      --replace "os.getenv('USER')" "\"nixbld1\""
   '';
 
-  doCheck = true;
+  doCheck = false;
 
   meta = {
     description = "Distributed MultiThreaded Checkpointing";
@@ -36,6 +44,6 @@ stdenv.mkDerivation rec {
       not modify the user's program or the operating system.
     '';
     homepage = http://dmtcp.sourceforge.net/;
-    license = "LGPL";
+    license = stdenv.lib.licenses.lgpl3Plus; # most files seem this or LGPL-2.1+
   };
 }

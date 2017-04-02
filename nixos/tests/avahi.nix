@@ -1,20 +1,25 @@
 # Test whether `avahi-daemon' and `libnss-mdns' work as expected.
-
-import ./make-test.nix {
+import ./make-test.nix ({ pkgs, ... } : {
   name = "avahi";
+  meta = with pkgs.stdenv.lib.maintainers; {
+    maintainers = [ eelco chaoflow ];
+  };
 
-  nodes = {
-    one =
-      { config, pkgs, ... }: {
-        services.avahi.enable = true;
-        services.avahi.nssmdns = true;
+  nodes = let
+    cfg = { config, pkgs, ... }: {
+      services.avahi = {
+        enable = true;
+        nssmdns = true;
+        publish.addresses = true;
+        publish.domain = true;
+        publish.enable = true;
+        publish.userServices = true;
+        publish.workstation = true;
       };
-
-    two =
-      { config, pkgs, ... }: {
-        services.avahi.enable = true;
-        services.avahi.nssmdns = true;
-      };
+    };
+  in {
+    one = cfg;
+    two = cfg;
   };
 
   testScript =
@@ -52,4 +57,4 @@ import ./make-test.nix {
        $two->succeed("getent hosts one.local >&2");
        $two->succeed("getent hosts two.local >&2");
     '';
-}
+})

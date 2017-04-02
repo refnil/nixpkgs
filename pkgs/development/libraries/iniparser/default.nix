@@ -1,21 +1,23 @@
 { stdenv, fetchurl }:
 
+let
+  inherit (stdenv.lib) optional;
+in
 stdenv.mkDerivation rec{
-  name = "iniparser-3.0b";
+  name = "iniparser-3.1";
 
   src = fetchurl {
-    url = "${meta.homepage}/iniparser3.0b.tar.gz";
-    sha256 = "09klyddnqlpbgkv4cmh6ww9q5pv6nf1vfmzw4z256p51rnnlqqwa";
+    url = "${meta.homepage}/iniparser-3.1.tar.gz";
+    sha256 = "1igmxzcy0s25zcy9vmcw0kd13lh60r0b4qg8lnp1jic33f427pxf";
   };
 
   patches = ./no-usr.patch;
 
-  buildFlags = "libiniparser.so";
+  # TODO: Build dylib on Darwin
+  buildFlags = (if stdenv.isDarwin then [ "libiniparser.a" ] else [ "libiniparser.so" ]) ++ [ "CC=cc" ];
 
   installPhase = ''
     mkdir -p $out/lib
-    cp libiniparser.so.0 $out/lib
-    ln -s libiniparser.so.0 $out/lib/libiniparser.so
 
     mkdir -p $out/include
     cp src/*.h $out/include
@@ -25,11 +27,18 @@ stdenv.mkDerivation rec{
       bzip2 -c -9 $i > $out/share/doc/${name}/$i.bz2;
     done;
     cp -r html $out/share/doc/${name}
-  '';
+
+  '' + (if stdenv.isDarwin then ''
+    cp libiniparser.a $out/lib
+  '' else ''
+    cp libiniparser.so.0 $out/lib
+    ln -s libiniparser.so.0 $out/lib/libiniparser.so
+  '');
 
   meta = {
     homepage = http://ndevilla.free.fr/iniparser;
     description = "Free standalone ini file parsing library";
     license = stdenv.lib.licenses.mit;
+    platforms = stdenv.lib.platforms.unix;
   };
 }
