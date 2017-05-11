@@ -2694,6 +2694,8 @@ with pkgs;
 
   latex2html = callPackage ../tools/misc/latex2html { };
 
+  latexdiff  = callPackage ../tools/typesetting/latexdiff { };
+
   ldapvi = callPackage ../tools/misc/ldapvi { };
 
   ldns = callPackage ../development/libraries/ldns {
