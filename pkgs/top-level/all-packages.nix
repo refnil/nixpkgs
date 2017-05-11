@@ -2694,7 +2694,9 @@ with pkgs;
 
   latex2html = callPackage ../tools/misc/latex2html { };
 
-  latexdiff  = callPackage ../tools/typesetting/latexdiff { };
+  latexdiff  = callPackage ../tools/typesetting/latexdiff {
+      inherit (perlPackages) AlgorithmDiff;
+  };
 
   ldapvi = callPackage ../tools/misc/ldapvi { };
 

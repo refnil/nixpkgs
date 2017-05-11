@@ -1,4 +1,4 @@
-{ stdenv, perl, texlive, fetchFromGitHub}:
+{ stdenv, perl, texlive, fetchFromGitHub, AlgorithmDiff }:
 
 stdenv.mkDerivation rec {
     name = "latexdiff";
@@ -10,10 +10,6 @@ stdenv.mkDerivation rec {
         sha256 = "1gafnfc0iv63ypwgx8bshiz8az9pjr1niik9dx51gm13h93ccam5";
     };
 
-    patchPhase = ''
-        patchShebangs .
-    '';
-
     buildPhase = ''
         mkdir -p dist
         make dist/latexdiff dist/latexrevise dist/latexdiff-vc
@@ -24,6 +20,9 @@ stdenv.mkDerivation rec {
         cp -r dist/* $out/bin
     '';
 
-    buildInputs = [ perl ];
+    buildInputs = [ perl AlgorithmDiff ];
+    nativeBuidlInputs = [ AlgorithmDiff ];
+    propagatedNativeBuildInputs = [ AlgorithmDiff ];
+    #propagatedBuildInputs = [ AlgorithmDiff ];
 }
 
