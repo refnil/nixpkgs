@@ -20,6 +20,7 @@
 , ecm
 , pynac
 , pythonEnv
+, gdb
 }:
 
 # lots of segfaults with (64 bit) blas
@@ -47,6 +48,7 @@ let
     flintqs
     ntl
     ecm
+    python3
   ];
 
   # remove python prefix, replace "-" in the name by "_", apply patch_names
@@ -94,6 +96,7 @@ stdenv.mkDerivation rec {
   pname = "sage-with-env";
   src = sage-env.lib.src;
 
+  #buildInputs = buildInputs2 ++ [ gdb ];
   inherit buildInputs;
 
   configurePhase = "#do nothing";
@@ -131,6 +134,7 @@ stdenv.mkDerivation rec {
     cp -f '${sage-env}/sage-env' "$out/bin/sage-env"
     substituteInPlace "$out/bin/sage-env" \
       --subst-var-by sage-local "$out"
+
   '';
 
   passthru = {

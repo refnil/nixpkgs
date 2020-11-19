@@ -134,6 +134,10 @@ writeTextFile rec {
     orig_path="$PATH"
     export PATH='${runtimepath}'
 
+    export PYTHON_FOR_VENV="${python3}/bin/python3"
+
+    export SAGE_ENV_CONFIG_SOURCED=1
+
     # set dependent vars, like JUPYTER_CONFIG_DIR
     source "${sagelib.src}/src/bin/sage-env"
     export PATH="$RUNTIMEPATH_PREFIX:${runtimepath}:$orig_path" # sage-env messes with PATH

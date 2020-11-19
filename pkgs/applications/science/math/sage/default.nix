@@ -97,6 +97,7 @@ let
     sphinx
     typing
     pillow
+    cython
   ];
 
   pythonEnv = python.buildEnv.override {
