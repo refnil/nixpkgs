@@ -144,4 +144,5 @@ in
 callPackage ./sage.nix {
   inherit sage-tests sage-with-env sagedoc jupyter-kernel-definition;
   inherit withDoc;
+  sagelib = python.pkgs.sagelib;
 }

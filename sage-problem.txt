@@ -1,0 +1,1584 @@
+these derivations will be built:
+  /nix/store/xi5p3q7vis2yim857arj9mfwal1qmr81-sage-tests-9.2.drv
+  /nix/store/r5dmcigq7wb5pkpz416qvpss59bf5hqz-sage-9.2.drv
+building '/nix/store/xi5p3q7vis2yim857arj9mfwal1qmr81-sage-tests-9.2.drv'...
+patching sources
+configuring
+building
+installing
+post-installation fixup
+shrinking RPATHs of ELF executables and libraries in /nix/store/w482s67ah9bnri9ld0c4n213xzj3lb2w-sage-tests-9.2
+strip is /nix/store/79rshjqnibwcx468m4i31wnmasaj6nf4-binutils-2.31.1/bin/strip
+stripping (with command strip and flags -S) in /nix/store/w482s67ah9bnri9ld0c4n213xzj3lb2w-sage-tests-9.2/bin
+patching script interpreter paths in /nix/store/w482s67ah9bnri9ld0c4n213xzj3lb2w-sage-tests-9.2
+checking for references to /build/ in /nix/store/w482s67ah9bnri9ld0c4n213xzj3lb2w-sage-tests-9.2...
+running install tests
+Running sage tests with arguments  --long --all
++ export SHELLOPTS
++ /nix/store/w482s67ah9bnri9ld0c4n213xzj3lb2w-sage-tests-9.2/bin/sage -t --timeout=0 --nthreads 12 --optional=sage --long --all
++ exec /nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin/sage -t --timeout=0 --nthreads 12 --optional=sage --long --all
++ '[' -t = --nodotsage ']'
++ '[' -t = -patchbot -o -t = --patchbot ']'
++ '[' -t = -upgrade -o -t = --upgrade ']'
++ '[' -t = -f ']'
++ '[' -t = -i ']'
++ '[' -t = -dumpversion -o -t = --dumpversion ']'
++ '[' -t = -v -o -t = -version -o -t = --version ']'
++ '[' -t = -root -o -t = --root ']'
++ '[' -f /nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin/sage-env-config ']'
++ '[' -f /nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin/sage-env ']'
++ . /nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin/sage-env-config
++ . /nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin/sage-env
+++ export PKG_CONFIG_PATH=/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/lib/pkgconfig:/nix/store/bm0mjpbnaxixma2wvmj99zq2kfq1017h-blas-3-dev/lib/pkgconfig:/nix/store/s9rb0jhplgsfcnay1mp7kn1zhxyppq0n-lapack-3-dev/lib/pkgconfig:/nix/store/7ad6rfvp19sfvszii4vdzca7yrlwpm1s-fflas-ffpack-2.4.3/lib/pkgconfig:/nix/store/k9wgyjhad39xwm8bs65k9r1ggrmc26ir-givaro-4.1.1/lib/pkgconfig:/nix/store/qppdrpidm69vk2y161b7y5xsll2fcn9g-gd-2.3.0-dev/lib/pkgconfig:/nix/store/hjxqglhbc50psrdcqhprgqsx1cgyvpj2-libpng-apng-1.6.37-dev/lib/pkgconfig:/nix/store/pq1y5aidr042z0c39aaac18llz6vfdk0-zlib-1.2.11-dev/lib/pkgconfig:/nix/store/8vslsjczsgazngdvdgzfbc51h3vm7nhj-gsl-2.6/lib/pkgconfig:/nix/store/r04ajhwplvvs2rgid6s6zgzmhylc2lsd-linbox-1.6.3/lib/pkgconfig:/nix/store/ka4zgpyw8bl95arvy445ah6am0zlkxws-m4ri-20200125/lib/pkgconfig
+++ PKG_CONFIG_PATH=/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/lib/pkgconfig:/nix/store/bm0mjpbnaxixma2wvmj99zq2kfq1017h-blas-3-dev/lib/pkgconfig:/nix/store/s9rb0jhplgsfcnay1mp7kn1zhxyppq0n-lapack-3-dev/lib/pkgconfig:/nix/store/7ad6rfvp19sfvszii4vdzca7yrlwpm1s-fflas-ffpack-2.4.3/lib/pkgconfig:/nix/store/k9wgyjhad39xwm8bs65k9r1ggrmc26ir-givaro-4.1.1/lib/pkgconfig:/nix/store/qppdrpidm69vk2y161b7y5xsll2fcn9g-gd-2.3.0-dev/lib/pkgconfig:/nix/store/hjxqglhbc50psrdcqhprgqsx1cgyvpj2-libpng-apng-1.6.37-dev/lib/pkgconfig:/nix/store/pq1y5aidr042z0c39aaac18llz6vfdk0-zlib-1.2.11-dev/lib/pkgconfig:/nix/store/8vslsjczsgazngdvdgzfbc51h3vm7nhj-gsl-2.6/lib/pkgconfig:/nix/store/r04ajhwplvvs2rgid6s6zgzmhylc2lsd-linbox-1.6.3/lib/pkgconfig:/nix/store/ka4zgpyw8bl95arvy445ah6am0zlkxws-m4ri-20200125/lib/pkgconfig
+++ export SAGE_ROOT=/nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2
+++ SAGE_ROOT=/nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2
+++ export SAGE_LOCAL=/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2
+++ SAGE_LOCAL=/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2
+++ export SAGE_SHARE=/nix/store/6j4pjfirjlfd0109q546phsjm4kdi2pm-python3.8-sagelib-9.2/share
+++ SAGE_SHARE=/nix/store/6j4pjfirjlfd0109q546phsjm4kdi2pm-python3.8-sagelib-9.2/share
+++ orig_path=/nix/store/pgrvv3g7ijgfrn4hxla8v51j79ab8060-patchelf-0.12/bin:/nix/store/n3r351j7vfr2bv95fp6miz3l8741jdb4-gcc-wrapper-9.3.0/bin:/nix/store/58q0ygc01jba5cf5zghc0dlhx187mskk-gcc-9.3.0/bin:/nix/store/azv0jpirgc6kwcy3fs59jpp2mdl2k2g5-glibc-2.32-bin/bin:/nix/store/ffw9vziqw2p4rpm2zwgi5r3ymynd54d8-coreutils-8.32/bin:/nix/store/rqhvcy5zmlypr9qfa43npsyxsxjg7jxa-binutils-wrapper-2.31.1/bin:/nix/store/79rshjqnibwcx468m4i31wnmasaj6nf4-binutils-2.31.1/bin:/nix/store/azv0jpirgc6kwcy3fs59jpp2mdl2k2g5-glibc-2.32-bin/bin:/nix/store/ffw9vziqw2p4rpm2zwgi5r3ymynd54d8-coreutils-8.32/bin:/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin:/nix/store/j8j906nzsxxi80mwscy2qfngnd4qlkz8-gdb-10.1/bin:/nix/store/ns7pr4qr7l0kpj6amq8p4jssx4pf8qzl-which-2.21/bin:/nix/store/ffw9vziqw2p4rpm2zwgi5r3ymynd54d8-coreutils-8.32/bin:/nix/store/vxmv30pp7cl4mshviy4jl5bjm680mjd5-findutils-4.7.0/bin:/nix/store/lj53hvg0pdsl2r4n39lgg7pzmnnsxb0b-diffutils-3.7/bin:/nix/store/qqnjk28kc8dcl3rijmgkvb057dfzl4cn-gnused-4.8/bin:/nix/store/8i43g3cfkryp23ppgl7cllpqjdrdfcya-gnugrep-3.5/bin:/nix/store/dkkd92l7h98fn33miglvbda91365dx6q-gawk-5.1.0/bin:/nix/store/kg7i58vnbs4q877hnil4d4d2y72fa8g6-gnutar-1.32/bin:/nix/store/b0309s68b8jcx5axw2hnsmh3lwdh2kfd-gzip-1.10/bin:/nix/store/kw21b552xi7fsvgzppnd1ws6qy8q8wbl-bzip2-1.0.6.0.1-bin/bin:/nix/store/kzdxdj5lis8d9lwjhmgzdxqbnhjhg277-gnumake-4.3/bin:/nix/store/y0sw8sxkr7kwlsndwixyf4s4snlfhjh1-bash-4.4-p23/bin:/nix/store/53nwh281zm213kg505mrp3g5qwdsnjbs-patch-2.7.6/bin:/nix/store/xzyl3phpyiq43l7bc5aqg3bqzllj0zid-xz-5.2.5-bin/bin
+++ export PATH=/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin:/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/build/bin:/nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/bin:/nix/store/6gc212jiwlnn6y79ppqlq2qa0ks0kysq-python3-3.8.6-env/bin:/nix/store/gnhw6r1zjnw9drknq6lj2mxzidgv4fyw-gfortran-wrapper-9.3.0/bin:/nix/store/n3r351j7vfr2bv95fp6miz3l8741jdb4-gcc-wrapper-9.3.0/bin:/nix/store/y0sw8sxkr7kwlsndwixyf4s4snlfhjh1-bash-4.4-p23/bin:/nix/store/ffw9vziqw2p4rpm2zwgi5r3ymynd54d8-coreutils-8.32/bin:/nix/store/qqnjk28kc8dcl3rijmgkvb057dfzl4cn-gnused-4.8/bin:/nix/store/8i43g3cfkryp23ppgl7cllpqjdrdfcya-gnugrep-3.5/bin:/nix/store/79rshjqnibwcx468m4i31wnmasaj6nf4-binutils-2.31.1/bin:/nix/store/rkpqr0vvbc7zyr6m6sm8q2imkr40yzn4-pkg-config-wrapper-0.29.2/bin:/nix/store/jgp79nkjzckvg9j47c6ghschilnwd1dv-pari-2.11.4/bin:/nix/store/ib187709hanndgnz081lfrsqyr773nhc-gap-4.10.2/bin:/nix/store/dyzqwmq1rypcl1n68xj1r2m8z85p0vlb-ecl-20.4.24/bin:/nix/store/b4r6s7cwawr5gdci8h50snf98871c04x-maxima-5.44.0/bin:/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/bin:/nix/store/ycq1lzcbhc43h292y2d860x3ir8s3ssm-giac-1.5.0-21/bin:/nix/store/r0fv33rd5jhqidh6qxan55dswn1brbb8-palp-2.11/bin:/nix/store/igg73qaj25p3zhyr72qwdjsiq08qgfvg-R-4.0.3-wrapper/bin:/nix/store/1sc5hi28k1x1cibxgf7m9m8m9pikyc2l-gfan-0.6.2/bin:/nix/store/r1b9h29pixzsbbchpq6qipv5q3vn4yvv-cddlib-0.94l/bin:/nix/store/32hm5b43iaiv1dr9662lny7c4qw4slrx-jmol-14.31.17/bin:/nix/store/042nkhviicmbr0bz8xv1d2s1z5x7m80r-tachyon-0.99b2/bin:/nix/store/16jy91x91xdxwridiz2aji1h50z364wk-glpk-4.65/bin:/nix/store/86gmka4pysaw08aiiwipnaq03hpzhf0f-eclib-20190909/bin:/nix/store/s7s88qcagc932bisn72d0wkr0dkikvdl-sympow-2.023.6/bin:/nix/store/89dif8ikvnd4935i430cy213jasyh1jv-nauty-27r1/bin:/nix/store/79xm20f5fid4f0ajyfsp18d7v2y9m69m-sqlite-3.33.0-bin/bin:/nix/store/qrqyql39cx5zm6wxfx920f6wca2v0m89-ppl-1.2/bin:/nix/store/hr0j9ql0r9c8z1wigm75443dicv72ylk-ecm-7.0.4/bin:/nix/store/xnraylclpwkdnhcbf34l24h1d67r2h1w-lcalc-1.23/bin:/nix/store/idp8b4w9qm64i1zbk3v48vpssj29mvnr-rubiks-20070912/bin:/nix/store/qmc9rnd689asvw7838zqzb6gwas845xa-flintqs-1.0/bin:/nix/store/01qmw4qmn0gr8whh1kgjbnin7bc8n8p4-openjdk-8u272-b10/bin:/nix/store/128b5lsg0lk55g3hvjfpj9lvm7r0jd0r-less-551/bin
+++ PATH=/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin:/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/build/bin:/nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/bin:/nix/store/6gc212jiwlnn6y79ppqlq2qa0ks0kysq-python3-3.8.6-env/bin:/nix/store/gnhw6r1zjnw9drknq6lj2mxzidgv4fyw-gfortran-wrapper-9.3.0/bin:/nix/store/n3r351j7vfr2bv95fp6miz3l8741jdb4-gcc-wrapper-9.3.0/bin:/nix/store/y0sw8sxkr7kwlsndwixyf4s4snlfhjh1-bash-4.4-p23/bin:/nix/store/ffw9vziqw2p4rpm2zwgi5r3ymynd54d8-coreutils-8.32/bin:/nix/store/qqnjk28kc8dcl3rijmgkvb057dfzl4cn-gnused-4.8/bin:/nix/store/8i43g3cfkryp23ppgl7cllpqjdrdfcya-gnugrep-3.5/bin:/nix/store/79rshjqnibwcx468m4i31wnmasaj6nf4-binutils-2.31.1/bin:/nix/store/rkpqr0vvbc7zyr6m6sm8q2imkr40yzn4-pkg-config-wrapper-0.29.2/bin:/nix/store/jgp79nkjzckvg9j47c6ghschilnwd1dv-pari-2.11.4/bin:/nix/store/ib187709hanndgnz081lfrsqyr773nhc-gap-4.10.2/bin:/nix/store/dyzqwmq1rypcl1n68xj1r2m8z85p0vlb-ecl-20.4.24/bin:/nix/store/b4r6s7cwawr5gdci8h50snf98871c04x-maxima-5.44.0/bin:/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/bin:/nix/store/ycq1lzcbhc43h292y2d860x3ir8s3ssm-giac-1.5.0-21/bin:/nix/store/r0fv33rd5jhqidh6qxan55dswn1brbb8-palp-2.11/bin:/nix/store/igg73qaj25p3zhyr72qwdjsiq08qgfvg-R-4.0.3-wrapper/bin:/nix/store/1sc5hi28k1x1cibxgf7m9m8m9pikyc2l-gfan-0.6.2/bin:/nix/store/r1b9h29pixzsbbchpq6qipv5q3vn4yvv-cddlib-0.94l/bin:/nix/store/32hm5b43iaiv1dr9662lny7c4qw4slrx-jmol-14.31.17/bin:/nix/store/042nkhviicmbr0bz8xv1d2s1z5x7m80r-tachyon-0.99b2/bin:/nix/store/16jy91x91xdxwridiz2aji1h50z364wk-glpk-4.65/bin:/nix/store/86gmka4pysaw08aiiwipnaq03hpzhf0f-eclib-20190909/bin:/nix/store/s7s88qcagc932bisn72d0wkr0dkikvdl-sympow-2.023.6/bin:/nix/store/89dif8ikvnd4935i430cy213jasyh1jv-nauty-27r1/bin:/nix/store/79xm20f5fid4f0ajyfsp18d7v2y9m69m-sqlite-3.33.0-bin/bin:/nix/store/qrqyql39cx5zm6wxfx920f6wca2v0m89-ppl-1.2/bin:/nix/store/hr0j9ql0r9c8z1wigm75443dicv72ylk-ecm-7.0.4/bin:/nix/store/xnraylclpwkdnhcbf34l24h1d67r2h1w-lcalc-1.23/bin:/nix/store/idp8b4w9qm64i1zbk3v48vpssj29mvnr-rubiks-20070912/bin:/nix/store/qmc9rnd689asvw7838zqzb6gwas845xa-flintqs-1.0/bin:/nix/store/01qmw4qmn0gr8whh1kgjbnin7bc8n8p4-openjdk-8u272-b10/bin:/nix/store/128b5lsg0lk55g3hvjfpj9lvm7r0jd0r-less-551/bin
+++ export PYTHON_FOR_VENV=/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/bin/python3
+++ PYTHON_FOR_VENV=/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/bin/python3
+++ export SAGE_ENV_CONFIG_SOURCED=1
+++ SAGE_ENV_CONFIG_SOURCED=1
+++ source /nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2/src/bin/sage-env
++++ '[' 1 '!=' 1 ']'
++++ '[' -n /nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2 ']'
++++ NEW_SAGE_ROOT=/nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2
+++++ cd /nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2
+++++ pwd -P
++++ NEW_SAGE_ROOT=/nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2
++++ '[' /nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2 '!=' /nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2 -a -n /nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2 ']'
++++ SAGE_ENV_VERSION=4
++++ '[' '' = 4 ']'
++++ export SAGE_ENV_SOURCED=4
++++ SAGE_ENV_SOURCED=4
++++ export SAGE_ROOT=/nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2
++++ SAGE_ROOT=/nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2
++++ '[' -z '' ']'
++++ '[' -f /nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2/src/bin/sage-env-config ']'
++++ SAGE_SCRIPTS_DIR=/nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2/src/bin
++++ '[' -z gcc ']'
++++ '[' -z g++ ']'
++++ '[' -z '' ']'
++++ '[' -x /nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin/gfortran ']'
++++ FC=
++++ export FC
++++ '[' '' = Darwin ']'
++++ export F77=
++++ F77=
++++ export F90=
++++ F90=
++++ export F95=
++++ F95=
++++ contains_spaces X/nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2X
++++ '[' 1 -ne 1 ']'
++++ return 1
++++ '[' 1 = 2 ']'
++++ export SAGE_ETC=/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/etc
++++ SAGE_ETC=/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/etc
++++ export SAGE_SHARE=/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/share
++++ SAGE_SHARE=/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/share
++++ export SAGE_SPKG_INST=/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/var/lib/sage/installed
++++ SAGE_SPKG_INST=/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/var/lib/sage/installed
++++ export SAGE_LOGS=/nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2/logs/pkgs
++++ SAGE_LOGS=/nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2/logs/pkgs
++++ export SAGE_SRC=/nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2/src
++++ SAGE_SRC=/nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2/src
++++ export SAGE_DOC_SRC=/nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2/src/doc
++++ SAGE_DOC_SRC=/nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2/src/doc
++++ export SAGE_DOC=/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/share/doc/sage
++++ SAGE_DOC=/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/share/doc/sage
++++ '[' -n '' ']'
++++ '[' -z '' ']'
++++ SAGE_ORIG_PATH=/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin:/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/build/bin:/nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/bin:/nix/store/6gc212jiwlnn6y79ppqlq2qa0ks0kysq-python3-3.8.6-env/bin:/nix/store/gnhw6r1zjnw9drknq6lj2mxzidgv4fyw-gfortran-wrapper-9.3.0/bin:/nix/store/n3r351j7vfr2bv95fp6miz3l8741jdb4-gcc-wrapper-9.3.0/bin:/nix/store/y0sw8sxkr7kwlsndwixyf4s4snlfhjh1-bash-4.4-p23/bin:/nix/store/ffw9vziqw2p4rpm2zwgi5r3ymynd54d8-coreutils-8.32/bin:/nix/store/qqnjk28kc8dcl3rijmgkvb057dfzl4cn-gnused-4.8/bin:/nix/store/8i43g3cfkryp23ppgl7cllpqjdrdfcya-gnugrep-3.5/bin:/nix/store/79rshjqnibwcx468m4i31wnmasaj6nf4-binutils-2.31.1/bin:/nix/store/rkpqr0vvbc7zyr6m6sm8q2imkr40yzn4-pkg-config-wrapper-0.29.2/bin:/nix/store/jgp79nkjzckvg9j47c6ghschilnwd1dv-pari-2.11.4/bin:/nix/store/ib187709hanndgnz081lfrsqyr773nhc-gap-4.10.2/bin:/nix/store/dyzqwmq1rypcl1n68xj1r2m8z85p0vlb-ecl-20.4.24/bin:/nix/store/b4r6s7cwawr5gdci8h50snf98871c04x-maxima-5.44.0/bin:/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/bin:/nix/store/ycq1lzcbhc43h292y2d860x3ir8s3ssm-giac-1.5.0-21/bin:/nix/store/r0fv33rd5jhqidh6qxan55dswn1brbb8-palp-2.11/bin:/nix/store/igg73qaj25p3zhyr72qwdjsiq08qgfvg-R-4.0.3-wrapper/bin:/nix/store/1sc5hi28k1x1cibxgf7m9m8m9pikyc2l-gfan-0.6.2/bin:/nix/store/r1b9h29pixzsbbchpq6qipv5q3vn4yvv-cddlib-0.94l/bin:/nix/store/32hm5b43iaiv1dr9662lny7c4qw4slrx-jmol-14.31.17/bin:/nix/store/042nkhviicmbr0bz8xv1d2s1z5x7m80r-tachyon-0.99b2/bin:/nix/store/16jy91x91xdxwridiz2aji1h50z364wk-glpk-4.65/bin:/nix/store/86gmka4pysaw08aiiwipnaq03hpzhf0f-eclib-20190909/bin:/nix/store/s7s88qcagc932bisn72d0wkr0dkikvdl-sympow-2.023.6/bin:/nix/store/89dif8ikvnd4935i430cy213jasyh1jv-nauty-27r1/bin:/nix/store/79xm20f5fid4f0ajyfsp18d7v2y9m69m-sqlite-3.33.0-bin/bin:/nix/store/qrqyql39cx5zm6wxfx920f6wca2v0m89-ppl-1.2/bin:/nix/store/hr0j9ql0r9c8z1wigm75443dicv72ylk-ecm-7.0.4/bin:/nix/store/xnraylclpwkdnhcbf34l24h1d67r2h1w-lcalc-1.23/bin:/nix/store/idp8b4w9qm64i1zbk3v48vpssj29mvnr-rubiks-20070912/bin:/nix/store/qmc9rnd689asvw7838zqzb6gwas845xa-flintqs-1.0/bin:/nix/store/01qmw4qmn0gr8whh1kgjbnin7bc8n8p4-openjdk-8u272-b10/bin:/nix/store/128b5lsg0lk55g3hvjfpj9lvm7r0jd0r-less-551/bin
++++ export SAGE_ORIG_PATH
++++ SAGE_ORIG_PATH_SET=True
++++ export SAGE_ORIG_PATH_SET
++++ export PATH=/nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2/build/bin:/nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2/src/bin:/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin:/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin:/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/build/bin:/nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/bin:/nix/store/6gc212jiwlnn6y79ppqlq2qa0ks0kysq-python3-3.8.6-env/bin:/nix/store/gnhw6r1zjnw9drknq6lj2mxzidgv4fyw-gfortran-wrapper-9.3.0/bin:/nix/store/n3r351j7vfr2bv95fp6miz3l8741jdb4-gcc-wrapper-9.3.0/bin:/nix/store/y0sw8sxkr7kwlsndwixyf4s4snlfhjh1-bash-4.4-p23/bin:/nix/store/ffw9vziqw2p4rpm2zwgi5r3ymynd54d8-coreutils-8.32/bin:/nix/store/qqnjk28kc8dcl3rijmgkvb057dfzl4cn-gnused-4.8/bin:/nix/store/8i43g3cfkryp23ppgl7cllpqjdrdfcya-gnugrep-3.5/bin:/nix/store/79rshjqnibwcx468m4i31wnmasaj6nf4-binutils-2.31.1/bin:/nix/store/rkpqr0vvbc7zyr6m6sm8q2imkr40yzn4-pkg-config-wrapper-0.29.2/bin:/nix/store/jgp79nkjzckvg9j47c6ghschilnwd1dv-pari-2.11.4/bin:/nix/store/ib187709hanndgnz081lfrsqyr773nhc-gap-4.10.2/bin:/nix/store/dyzqwmq1rypcl1n68xj1r2m8z85p0vlb-ecl-20.4.24/bin:/nix/store/b4r6s7cwawr5gdci8h50snf98871c04x-maxima-5.44.0/bin:/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/bin:/nix/store/ycq1lzcbhc43h292y2d860x3ir8s3ssm-giac-1.5.0-21/bin:/nix/store/r0fv33rd5jhqidh6qxan55dswn1brbb8-palp-2.11/bin:/nix/store/igg73qaj25p3zhyr72qwdjsiq08qgfvg-R-4.0.3-wrapper/bin:/nix/store/1sc5hi28k1x1cibxgf7m9m8m9pikyc2l-gfan-0.6.2/bin:/nix/store/r1b9h29pixzsbbchpq6qipv5q3vn4yvv-cddlib-0.94l/bin:/nix/store/32hm5b43iaiv1dr9662lny7c4qw4slrx-jmol-14.31.17/bin:/nix/store/042nkhviicmbr0bz8xv1d2s1z5x7m80r-tachyon-0.99b2/bin:/nix/store/16jy91x91xdxwridiz2aji1h50z364wk-glpk-4.65/bin:/nix/store/86gmka4pysaw08aiiwipnaq03hpzhf0f-eclib-20190909/bin:/nix/store/s7s88qcagc932bisn72d0wkr0dkikvdl-sympow-2.023.6/bin:/nix/store/89dif8ikvnd4935i430cy213jasyh1jv-nauty-27r1/bin:/nix/store/79xm20f5fid4f0ajyfsp18d7v2y9m69m-sqlite-3.33.0-bin/bin:/nix/store/qrqyql39cx5zm6wxfx920f6wca2v0m89-ppl-1.2/bin:/nix/store/hr0j9ql0r9c8z1wigm75443dicv72ylk-ecm-7.0.4/bin:/nix/store/xnraylclpwkdnhcbf34l24h1d67r2h1w-lcalc-1.23/bin:/nix/store/idp8b4w9qm64i1zbk3v48vpssj29mvnr-rubiks-20070912/bin:/nix/store/qmc9rnd689asvw7838zqzb6gwas845xa-flintqs-1.0/bin:/nix/store/01qmw4qmn0gr8whh1kgjbnin7bc8n8p4-openjdk-8u272-b10/bin:/nix/store/128b5lsg0lk55g3hvjfpj9lvm7r0jd0r-less-551/bin
++++ PATH=/nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2/build/bin:/nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2/src/bin:/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin:/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin:/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/build/bin:/nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/bin:/nix/store/6gc212jiwlnn6y79ppqlq2qa0ks0kysq-python3-3.8.6-env/bin:/nix/store/gnhw6r1zjnw9drknq6lj2mxzidgv4fyw-gfortran-wrapper-9.3.0/bin:/nix/store/n3r351j7vfr2bv95fp6miz3l8741jdb4-gcc-wrapper-9.3.0/bin:/nix/store/y0sw8sxkr7kwlsndwixyf4s4snlfhjh1-bash-4.4-p23/bin:/nix/store/ffw9vziqw2p4rpm2zwgi5r3ymynd54d8-coreutils-8.32/bin:/nix/store/qqnjk28kc8dcl3rijmgkvb057dfzl4cn-gnused-4.8/bin:/nix/store/8i43g3cfkryp23ppgl7cllpqjdrdfcya-gnugrep-3.5/bin:/nix/store/79rshjqnibwcx468m4i31wnmasaj6nf4-binutils-2.31.1/bin:/nix/store/rkpqr0vvbc7zyr6m6sm8q2imkr40yzn4-pkg-config-wrapper-0.29.2/bin:/nix/store/jgp79nkjzckvg9j47c6ghschilnwd1dv-pari-2.11.4/bin:/nix/store/ib187709hanndgnz081lfrsqyr773nhc-gap-4.10.2/bin:/nix/store/dyzqwmq1rypcl1n68xj1r2m8z85p0vlb-ecl-20.4.24/bin:/nix/store/b4r6s7cwawr5gdci8h50snf98871c04x-maxima-5.44.0/bin:/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/bin:/nix/store/ycq1lzcbhc43h292y2d860x3ir8s3ssm-giac-1.5.0-21/bin:/nix/store/r0fv33rd5jhqidh6qxan55dswn1brbb8-palp-2.11/bin:/nix/store/igg73qaj25p3zhyr72qwdjsiq08qgfvg-R-4.0.3-wrapper/bin:/nix/store/1sc5hi28k1x1cibxgf7m9m8m9pikyc2l-gfan-0.6.2/bin:/nix/store/r1b9h29pixzsbbchpq6qipv5q3vn4yvv-cddlib-0.94l/bin:/nix/store/32hm5b43iaiv1dr9662lny7c4qw4slrx-jmol-14.31.17/bin:/nix/store/042nkhviicmbr0bz8xv1d2s1z5x7m80r-tachyon-0.99b2/bin:/nix/store/16jy91x91xdxwridiz2aji1h50z364wk-glpk-4.65/bin:/nix/store/86gmka4pysaw08aiiwipnaq03hpzhf0f-eclib-20190909/bin:/nix/store/s7s88qcagc932bisn72d0wkr0dkikvdl-sympow-2.023.6/bin:/nix/store/89dif8ikvnd4935i430cy213jasyh1jv-nauty-27r1/bin:/nix/store/79xm20f5fid4f0ajyfsp18d7v2y9m69m-sqlite-3.33.0-bin/bin:/nix/store/qrqyql39cx5zm6wxfx920f6wca2v0m89-ppl-1.2/bin:/nix/store/hr0j9ql0r9c8z1wigm75443dicv72ylk-ecm-7.0.4/bin:/nix/store/xnraylclpwkdnhcbf34l24h1d67r2h1w-lcalc-1.23/bin:/nix/store/idp8b4w9qm64i1zbk3v48vpssj29mvnr-rubiks-20070912/bin:/nix/store/qmc9rnd689asvw7838zqzb6gwas845xa-flintqs-1.0/bin:/nix/store/01qmw4qmn0gr8whh1kgjbnin7bc8n8p4-openjdk-8u272-b10/bin:/nix/store/128b5lsg0lk55g3hvjfpj9lvm7r0jd0r-less-551/bin
++++ '[' -f /nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/toolchain/toolchain-env ']'
+++++ uname
+++++ sed 's/CYGWIN.*/CYGWIN/'
++++ export UNAME=Linux
++++ UNAME=Linux
++++ '[' Linux = Darwin ']'
++++ '[' -z '' ']'
++++ export LIBRARY_PATH=/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/lib
++++ LIBRARY_PATH=/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/lib
++++ '[' -z '' ']'
++++ export CPATH=/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/include
++++ CPATH=/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/include
++++ SINGULARPATH=/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/share/singular
++++ export SINGULARPATH
++++ SINGULAR_EXECUTABLE=/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin/Singular
++++ export SINGULAR_EXECUTABLE
++++ '[' -z '' ']'
++++ SAGE_REPO_ANONYMOUS=git://trac.sagemath.org/sage.git
++++ export SAGE_REPO_ANONYMOUS
++++ '[' -z '' ']'
++++ SAGE_REPO_AUTHENTICATED=ssh://git@trac.sagemath.org:2222/sage.git
++++ export SAGE_REPO_AUTHENTICATED
++++ '[' -z '' ']'
++++ SAGE_DISTFILES=/nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2/upstream
++++ export SAGE_DISTFILES
++++ '[' /build/sage-home = '' ']'
++++ '[' -d /build/sage-home ']'
++++ '[' '' = '' ']'
+++++ resolvelinks /build/sage-home/.sage
+++++ in=/build/sage-home/.sage
+++++ out=./
+++++ '[' -n /build/sage-home/.sage ']'
++++++ echo /build/sage-home/.sage
++++++ sed 's://*:/:g'
+++++ in=/build/sage-home/.sage
+++++ in_without_slash=build/sage-home/.sage
+++++ '[' /build/sage-home/.sage '!=' build/sage-home/.sage ']'
+++++ in=build/sage-home/.sage
+++++ out=/
+++++ continue
+++++ '[' -n build/sage-home/.sage ']'
++++++ echo build/sage-home/.sage
++++++ sed 's://*:/:g'
+++++ in=build/sage-home/.sage
+++++ in_without_slash=build/sage-home/.sage
+++++ '[' build/sage-home/.sage '!=' build/sage-home/.sage ']'
+++++ cd /
+++++ f=build
+++++ '[' '!' -L /build ']'
+++++ in=/sage-home/.sage
+++++ out=/build
+++++ in_without_slash=sage-home/.sage
+++++ '[' /sage-home/.sage '!=' sage-home/.sage ']'
+++++ in=sage-home/.sage
+++++ out=/build/
+++++ continue
+++++ '[' -n sage-home/.sage ']'
++++++ echo sage-home/.sage
++++++ sed 's://*:/:g'
+++++ in=sage-home/.sage
+++++ in_without_slash=sage-home/.sage
+++++ '[' sage-home/.sage '!=' sage-home/.sage ']'
+++++ cd /build/
+++++ f=sage-home
+++++ '[' '!' -L /build/sage-home ']'
+++++ in=/.sage
+++++ out=/build/sage-home
+++++ in_without_slash=.sage
+++++ '[' /.sage '!=' .sage ']'
+++++ in=.sage
+++++ out=/build/sage-home/
+++++ continue
+++++ '[' -n .sage ']'
++++++ echo .sage
++++++ sed 's://*:/:g'
+++++ in=.sage
+++++ in_without_slash=.sage
+++++ '[' .sage '!=' .sage ']'
+++++ cd /build/sage-home/
+++++ f=.sage
+++++ '[' '!' -L /build/sage-home/.sage ']'
+++++ in=
+++++ out=/build/sage-home/.sage
+++++ in_without_slash=
+++++ '[' '' '!=' '' ']'
+++++ continue
+++++ '[' -n '' ']'
+++++ echo /build/sage-home/.sage
++++ DOT_SAGE=/build/sage-home/.sage
++++ DOT_SAGE=/build/sage-home/.sage/
++++ export DOT_SAGE
++++ '[' '' = '' ']'
++++ SAGE_STARTUP_FILE=/build/sage-home/.sage//init.sage
++++ export SAGE_STARTUP_FILE
++++ '[' '' = '' ']'
++++ PYTHON_EGG_CACHE=/build/sage-home/.sage//.python-eggs
++++ export PYTHON_EGG_CACHE
++++ '[' '' = '' ']'
++++ PYTHONUSERBASE=/build/sage-home/.sage//local
++++ export PYTHONUSERBASE
++++ '[' -n '' ']'
++++ LDFLAGS='-L/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/lib -Wl,-rpath,/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/lib '
++++ '[' Linux = Linux ']'
++++ LDFLAGS='-Wl,-rpath-link,/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/lib -L/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/lib -Wl,-rpath,/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/lib '
++++ export LDFLAGS
++++ '[' -z '' ']'
++++ export IPYTHONDIR=/build/sage-home/.sage//ipython-5.0.0
++++ IPYTHONDIR=/build/sage-home/.sage//ipython-5.0.0
++++ '[' -z '' ']'
++++ export JUPYTER_CONFIG_DIR=/build/sage-home/.sage//jupyter-4.1
++++ JUPYTER_CONFIG_DIR=/build/sage-home/.sage//jupyter-4.1
++++ '[' -z '' ']'
++++ export MPLCONFIGDIR=/build/sage-home/.sage//matplotlib-1.5.1
++++ MPLCONFIGDIR=/build/sage-home/.sage//matplotlib-1.5.1
++++ unset R_HOME
++++ unset R_PROFILE
++++ '[' -d /nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/lib/R/share ']'
++++ '[' -d /build/sage-home/.sage/ ']'
++++ export MAXIMA_PREFIX=/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2
++++ MAXIMA_PREFIX=/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2
++++ export MAXIMA_USERDIR=/build/sage-home/.sage//maxima
++++ MAXIMA_USERDIR=/build/sage-home/.sage//maxima
++++ PERL5LIB=/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/lib/perl5:
++++ export PERL5LIB
++++ '[' -n '' ']'
++++ export __sage__=
++++ __sage__=
++++ '[' -d /nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/libexec/ccache ']'
++++ '[' -z '' ']'
++++ export CCACHE_BASEDIR=/nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2
++++ CCACHE_BASEDIR=/nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2
++++ '[' as = '' ']'
++++ export AS
++++ '[' ld = '' ']'
++++ export LD
++++ '[' ar = '' ']'
++++ '[' '-Wl,-rpath-link,/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/lib -L/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/lib -Wl,-rpath,/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/lib ' = '' ']'
++++ '[' -z '' ']'
++++ unset CFLAGS
++++ '[' -z '' ']'
++++ unset CXXFLAGS
++++ '[' -n '' -a -z '' ']'
++++ '[' '' = '' ']'
++++ CP=cp
++++ export CP
++++ '[' '' = '' ']'
++++ MV=mv
++++ export MV
++++ '[' ranlib = '' ']'
++++ '[' '' = '' ']'
++++ LN=ln
++++ export LN
++++ '[' '' = '' ']'
++++ MKDIR=mkdir
++++ export MKDIR
++++ '[' '' = '' ']'
++++ CHMOD=chmod
++++ export CHMOD
++++ '[' '' = '' ']'
++++ TOUCH=touch
++++ export TOUCH
++++ '[' Linux = CYGWIN ']'
++++ ECLDIR=/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/lib/ecl/
++++ export ECLDIR
+++++ sage-num-threads.py
+++++ echo 1 2 1
++++ sage_num_threads_array='1 2 1'
++++ sage_num_threads_array='1 2'
++++ SAGE_NUM_THREADS=1
++++ SAGE_NUM_THREADS_PARALLEL=2
++++ export SAGE_NUM_THREADS
++++ export SAGE_NUM_THREADS_PARALLEL
++++ export OPENBLAS_NUM_THREADS=1
++++ OPENBLAS_NUM_THREADS=1
++++ '[' '' = '' ']'
++++ MAKE=make
++++ '[' __unset__ '!=' __unset__ ']'
++++ export MAKE
++++ export PIP_FORMAT=columns
++++ PIP_FORMAT=columns
++++ '[' -z '' ']'
++++ '[' -n '' ']'
++++ SAGE_DOC_MATHJAX=True
++++ export SAGE_DOC_MATHJAX
++++ '[' -z '' ']'
++++ export CYSIGNALS_CRASH_LOGS=/build/sage-home/.sage//crash_logs
++++ CYSIGNALS_CRASH_LOGS=/build/sage-home/.sage//crash_logs
++++ export CYSIGNALS_CRASH_DAYS=7
++++ CYSIGNALS_CRASH_DAYS=7
++++ '[' -z '' ']'
++++ SAGE_RC_FILE=/build/sage-home/.sage//sagerc
++++ '[' -r /build/sage-home/.sage//sagerc ']'
++++ export TERMINFO=/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/share/terminfo
++++ TERMINFO=/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/share/terminfo
++++ nodeenv_activate=/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/share/nodejs/activate
++++ '[' -f /nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/share/nodejs/activate ']'
++++ '[' -L /nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/share/nodejs/activate ']'
+++ export PATH=:/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin:/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/build/bin:/nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/bin:/nix/store/6gc212jiwlnn6y79ppqlq2qa0ks0kysq-python3-3.8.6-env/bin:/nix/store/gnhw6r1zjnw9drknq6lj2mxzidgv4fyw-gfortran-wrapper-9.3.0/bin:/nix/store/n3r351j7vfr2bv95fp6miz3l8741jdb4-gcc-wrapper-9.3.0/bin:/nix/store/y0sw8sxkr7kwlsndwixyf4s4snlfhjh1-bash-4.4-p23/bin:/nix/store/ffw9vziqw2p4rpm2zwgi5r3ymynd54d8-coreutils-8.32/bin:/nix/store/qqnjk28kc8dcl3rijmgkvb057dfzl4cn-gnused-4.8/bin:/nix/store/8i43g3cfkryp23ppgl7cllpqjdrdfcya-gnugrep-3.5/bin:/nix/store/79rshjqnibwcx468m4i31wnmasaj6nf4-binutils-2.31.1/bin:/nix/store/rkpqr0vvbc7zyr6m6sm8q2imkr40yzn4-pkg-config-wrapper-0.29.2/bin:/nix/store/jgp79nkjzckvg9j47c6ghschilnwd1dv-pari-2.11.4/bin:/nix/store/ib187709hanndgnz081lfrsqyr773nhc-gap-4.10.2/bin:/nix/store/dyzqwmq1rypcl1n68xj1r2m8z85p0vlb-ecl-20.4.24/bin:/nix/store/b4r6s7cwawr5gdci8h50snf98871c04x-maxima-5.44.0/bin:/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/bin:/nix/store/ycq1lzcbhc43h292y2d860x3ir8s3ssm-giac-1.5.0-21/bin:/nix/store/r0fv33rd5jhqidh6qxan55dswn1brbb8-palp-2.11/bin:/nix/store/igg73qaj25p3zhyr72qwdjsiq08qgfvg-R-4.0.3-wrapper/bin:/nix/store/1sc5hi28k1x1cibxgf7m9m8m9pikyc2l-gfan-0.6.2/bin:/nix/store/r1b9h29pixzsbbchpq6qipv5q3vn4yvv-cddlib-0.94l/bin:/nix/store/32hm5b43iaiv1dr9662lny7c4qw4slrx-jmol-14.31.17/bin:/nix/store/042nkhviicmbr0bz8xv1d2s1z5x7m80r-tachyon-0.99b2/bin:/nix/store/16jy91x91xdxwridiz2aji1h50z364wk-glpk-4.65/bin:/nix/store/86gmka4pysaw08aiiwipnaq03hpzhf0f-eclib-20190909/bin:/nix/store/s7s88qcagc932bisn72d0wkr0dkikvdl-sympow-2.023.6/bin:/nix/store/89dif8ikvnd4935i430cy213jasyh1jv-nauty-27r1/bin:/nix/store/79xm20f5fid4f0ajyfsp18d7v2y9m69m-sqlite-3.33.0-bin/bin:/nix/store/qrqyql39cx5zm6wxfx920f6wca2v0m89-ppl-1.2/bin:/nix/store/hr0j9ql0r9c8z1wigm75443dicv72ylk-ecm-7.0.4/bin:/nix/store/xnraylclpwkdnhcbf34l24h1d67r2h1w-lcalc-1.23/bin:/nix/store/idp8b4w9qm64i1zbk3v48vpssj29mvnr-rubiks-20070912/bin:/nix/store/qmc9rnd689asvw7838zqzb6gwas845xa-flintqs-1.0/bin:/nix/store/01qmw4qmn0gr8whh1kgjbnin7bc8n8p4-openjdk-8u272-b10/bin:/nix/store/128b5lsg0lk55g3hvjfpj9lvm7r0jd0r-less-551/bin:/nix/store/pgrvv3g7ijgfrn4hxla8v51j79ab8060-patchelf-0.12/bin:/nix/store/n3r351j7vfr2bv95fp6miz3l8741jdb4-gcc-wrapper-9.3.0/bin:/nix/store/58q0ygc01jba5cf5zghc0dlhx187mskk-gcc-9.3.0/bin:/nix/store/azv0jpirgc6kwcy3fs59jpp2mdl2k2g5-glibc-2.32-bin/bin:/nix/store/ffw9vziqw2p4rpm2zwgi5r3ymynd54d8-coreutils-8.32/bin:/nix/store/rqhvcy5zmlypr9qfa43npsyxsxjg7jxa-binutils-wrapper-2.31.1/bin:/nix/store/79rshjqnibwcx468m4i31wnmasaj6nf4-binutils-2.31.1/bin:/nix/store/azv0jpirgc6kwcy3fs59jpp2mdl2k2g5-glibc-2.32-bin/bin:/nix/store/ffw9vziqw2p4rpm2zwgi5r3ymynd54d8-coreutils-8.32/bin:/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin:/nix/store/j8j906nzsxxi80mwscy2qfngnd4qlkz8-gdb-10.1/bin:/nix/store/ns7pr4qr7l0kpj6amq8p4jssx4pf8qzl-which-2.21/bin:/nix/store/ffw9vziqw2p4rpm2zwgi5r3ymynd54d8-coreutils-8.32/bin:/nix/store/vxmv30pp7cl4mshviy4jl5bjm680mjd5-findutils-4.7.0/bin:/nix/store/lj53hvg0pdsl2r4n39lgg7pzmnnsxb0b-diffutils-3.7/bin:/nix/store/qqnjk28kc8dcl3rijmgkvb057dfzl4cn-gnused-4.8/bin:/nix/store/8i43g3cfkryp23ppgl7cllpqjdrdfcya-gnugrep-3.5/bin:/nix/store/dkkd92l7h98fn33miglvbda91365dx6q-gawk-5.1.0/bin:/nix/store/kg7i58vnbs4q877hnil4d4d2y72fa8g6-gnutar-1.32/bin:/nix/store/b0309s68b8jcx5axw2hnsmh3lwdh2kfd-gzip-1.10/bin:/nix/store/kw21b552xi7fsvgzppnd1ws6qy8q8wbl-bzip2-1.0.6.0.1-bin/bin:/nix/store/kzdxdj5lis8d9lwjhmgzdxqbnhjhg277-gnumake-4.3/bin:/nix/store/y0sw8sxkr7kwlsndwixyf4s4snlfhjh1-bash-4.4-p23/bin:/nix/store/53nwh281zm213kg505mrp3g5qwdsnjbs-patch-2.7.6/bin:/nix/store/xzyl3phpyiq43l7bc5aqg3bqzllj0zid-xz-5.2.5-bin/bin
+++ PATH=:/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin:/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/build/bin:/nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/bin:/nix/store/6gc212jiwlnn6y79ppqlq2qa0ks0kysq-python3-3.8.6-env/bin:/nix/store/gnhw6r1zjnw9drknq6lj2mxzidgv4fyw-gfortran-wrapper-9.3.0/bin:/nix/store/n3r351j7vfr2bv95fp6miz3l8741jdb4-gcc-wrapper-9.3.0/bin:/nix/store/y0sw8sxkr7kwlsndwixyf4s4snlfhjh1-bash-4.4-p23/bin:/nix/store/ffw9vziqw2p4rpm2zwgi5r3ymynd54d8-coreutils-8.32/bin:/nix/store/qqnjk28kc8dcl3rijmgkvb057dfzl4cn-gnused-4.8/bin:/nix/store/8i43g3cfkryp23ppgl7cllpqjdrdfcya-gnugrep-3.5/bin:/nix/store/79rshjqnibwcx468m4i31wnmasaj6nf4-binutils-2.31.1/bin:/nix/store/rkpqr0vvbc7zyr6m6sm8q2imkr40yzn4-pkg-config-wrapper-0.29.2/bin:/nix/store/jgp79nkjzckvg9j47c6ghschilnwd1dv-pari-2.11.4/bin:/nix/store/ib187709hanndgnz081lfrsqyr773nhc-gap-4.10.2/bin:/nix/store/dyzqwmq1rypcl1n68xj1r2m8z85p0vlb-ecl-20.4.24/bin:/nix/store/b4r6s7cwawr5gdci8h50snf98871c04x-maxima-5.44.0/bin:/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/bin:/nix/store/ycq1lzcbhc43h292y2d860x3ir8s3ssm-giac-1.5.0-21/bin:/nix/store/r0fv33rd5jhqidh6qxan55dswn1brbb8-palp-2.11/bin:/nix/store/igg73qaj25p3zhyr72qwdjsiq08qgfvg-R-4.0.3-wrapper/bin:/nix/store/1sc5hi28k1x1cibxgf7m9m8m9pikyc2l-gfan-0.6.2/bin:/nix/store/r1b9h29pixzsbbchpq6qipv5q3vn4yvv-cddlib-0.94l/bin:/nix/store/32hm5b43iaiv1dr9662lny7c4qw4slrx-jmol-14.31.17/bin:/nix/store/042nkhviicmbr0bz8xv1d2s1z5x7m80r-tachyon-0.99b2/bin:/nix/store/16jy91x91xdxwridiz2aji1h50z364wk-glpk-4.65/bin:/nix/store/86gmka4pysaw08aiiwipnaq03hpzhf0f-eclib-20190909/bin:/nix/store/s7s88qcagc932bisn72d0wkr0dkikvdl-sympow-2.023.6/bin:/nix/store/89dif8ikvnd4935i430cy213jasyh1jv-nauty-27r1/bin:/nix/store/79xm20f5fid4f0ajyfsp18d7v2y9m69m-sqlite-3.33.0-bin/bin:/nix/store/qrqyql39cx5zm6wxfx920f6wca2v0m89-ppl-1.2/bin:/nix/store/hr0j9ql0r9c8z1wigm75443dicv72ylk-ecm-7.0.4/bin:/nix/store/xnraylclpwkdnhcbf34l24h1d67r2h1w-lcalc-1.23/bin:/nix/store/idp8b4w9qm64i1zbk3v48vpssj29mvnr-rubiks-20070912/bin:/nix/store/qmc9rnd689asvw7838zqzb6gwas845xa-flintqs-1.0/bin:/nix/store/01qmw4qmn0gr8whh1kgjbnin7bc8n8p4-openjdk-8u272-b10/bin:/nix/store/128b5lsg0lk55g3hvjfpj9lvm7r0jd0r-less-551/bin:/nix/store/pgrvv3g7ijgfrn4hxla8v51j79ab8060-patchelf-0.12/bin:/nix/store/n3r351j7vfr2bv95fp6miz3l8741jdb4-gcc-wrapper-9.3.0/bin:/nix/store/58q0ygc01jba5cf5zghc0dlhx187mskk-gcc-9.3.0/bin:/nix/store/azv0jpirgc6kwcy3fs59jpp2mdl2k2g5-glibc-2.32-bin/bin:/nix/store/ffw9vziqw2p4rpm2zwgi5r3ymynd54d8-coreutils-8.32/bin:/nix/store/rqhvcy5zmlypr9qfa43npsyxsxjg7jxa-binutils-wrapper-2.31.1/bin:/nix/store/79rshjqnibwcx468m4i31wnmasaj6nf4-binutils-2.31.1/bin:/nix/store/azv0jpirgc6kwcy3fs59jpp2mdl2k2g5-glibc-2.32-bin/bin:/nix/store/ffw9vziqw2p4rpm2zwgi5r3ymynd54d8-coreutils-8.32/bin:/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin:/nix/store/j8j906nzsxxi80mwscy2qfngnd4qlkz8-gdb-10.1/bin:/nix/store/ns7pr4qr7l0kpj6amq8p4jssx4pf8qzl-which-2.21/bin:/nix/store/ffw9vziqw2p4rpm2zwgi5r3ymynd54d8-coreutils-8.32/bin:/nix/store/vxmv30pp7cl4mshviy4jl5bjm680mjd5-findutils-4.7.0/bin:/nix/store/lj53hvg0pdsl2r4n39lgg7pzmnnsxb0b-diffutils-3.7/bin:/nix/store/qqnjk28kc8dcl3rijmgkvb057dfzl4cn-gnused-4.8/bin:/nix/store/8i43g3cfkryp23ppgl7cllpqjdrdfcya-gnugrep-3.5/bin:/nix/store/dkkd92l7h98fn33miglvbda91365dx6q-gawk-5.1.0/bin:/nix/store/kg7i58vnbs4q877hnil4d4d2y72fa8g6-gnutar-1.32/bin:/nix/store/b0309s68b8jcx5axw2hnsmh3lwdh2kfd-gzip-1.10/bin:/nix/store/kw21b552xi7fsvgzppnd1ws6qy8q8wbl-bzip2-1.0.6.0.1-bin/bin:/nix/store/kzdxdj5lis8d9lwjhmgzdxqbnhjhg277-gnumake-4.3/bin:/nix/store/y0sw8sxkr7kwlsndwixyf4s4snlfhjh1-bash-4.4-p23/bin:/nix/store/53nwh281zm213kg505mrp3g5qwdsnjbs-patch-2.7.6/bin:/nix/store/xzyl3phpyiq43l7bc5aqg3bqzllj0zid-xz-5.2.5-bin/bin
+++ export SAGE_LOGS=/build/sage-logs
+++ SAGE_LOGS=/build/sage-logs
+++ export SAGE_DOC=doc-placeholder
+++ SAGE_DOC=doc-placeholder
+++ export SAGE_DOC_SRC=/nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2/src/doc
+++ SAGE_DOC_SRC=/nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2/src/doc
+++ . /nix/store/0vmhaqa823312miynvilvq44x376hl9i-sage-env-locations/sage-env-locations
++++ export GP_DATA_DIR=/nix/store/a428jh4fq3j2wxcqh6q9cfysd95ralvk-pari_data/share/pari
++++ GP_DATA_DIR=/nix/store/a428jh4fq3j2wxcqh6q9cfysd95ralvk-pari_data/share/pari
++++ export PARI_DATA_DIR=/nix/store/a428jh4fq3j2wxcqh6q9cfysd95ralvk-pari_data
++++ PARI_DATA_DIR=/nix/store/a428jh4fq3j2wxcqh6q9cfysd95ralvk-pari_data
++++ export GPHELP=/nix/store/jgp79nkjzckvg9j47c6ghschilnwd1dv-pari-2.11.4/bin/gphelp
++++ GPHELP=/nix/store/jgp79nkjzckvg9j47c6ghschilnwd1dv-pari-2.11.4/bin/gphelp
++++ export GPDOCDIR=/nix/store/jgp79nkjzckvg9j47c6ghschilnwd1dv-pari-2.11.4/share/pari/doc
++++ GPDOCDIR=/nix/store/jgp79nkjzckvg9j47c6ghschilnwd1dv-pari-2.11.4/share/pari/doc
++++ export SINGULARPATH=/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/share/singular
++++ SINGULARPATH=/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/share/singular
++++ export SINGULAR_SO=/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/lib/libSingular.so
++++ SINGULAR_SO=/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/lib/libSingular.so
++++ export GAP_SO=/nix/store/ib187709hanndgnz081lfrsqyr773nhc-gap-4.10.2/lib/libgap.so
++++ GAP_SO=/nix/store/ib187709hanndgnz081lfrsqyr773nhc-gap-4.10.2/lib/libgap.so
++++ export SINGULAR_EXECUTABLE=/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/bin/Singular
++++ SINGULAR_EXECUTABLE=/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/bin/Singular
++++ export MAXIMA_FAS=/nix/store/b4r6s7cwawr5gdci8h50snf98871c04x-maxima-5.44.0/lib/maxima/5.44.0/binary-ecl/maxima.fas
++++ MAXIMA_FAS=/nix/store/b4r6s7cwawr5gdci8h50snf98871c04x-maxima-5.44.0/lib/maxima/5.44.0/binary-ecl/maxima.fas
++++ export MAXIMA_PREFIX=/nix/store/b4r6s7cwawr5gdci8h50snf98871c04x-maxima-5.44.0
++++ MAXIMA_PREFIX=/nix/store/b4r6s7cwawr5gdci8h50snf98871c04x-maxima-5.44.0
++++ export CONWAY_POLYNOMIALS_DATA_DIR=/nix/store/s11mmqsfr85pp1db70pm7bkbx05q77js-conway_polynomials-0.5/share/conway_polynomials
++++ CONWAY_POLYNOMIALS_DATA_DIR=/nix/store/s11mmqsfr85pp1db70pm7bkbx05q77js-conway_polynomials-0.5/share/conway_polynomials
++++ export GRAPHS_DATA_DIR=/nix/store/k6rw0248wqpc0ykc1lcml2bdbz5wvb5b-graphs-20161026/share/graphs
++++ GRAPHS_DATA_DIR=/nix/store/k6rw0248wqpc0ykc1lcml2bdbz5wvb5b-graphs-20161026/share/graphs
++++ export ELLCURVE_DATA_DIR=/nix/store/wazzvpgn5a4qnbf27hlhinpwigkaf98v-elliptic_curves-0.8/share/ellcurves
++++ ELLCURVE_DATA_DIR=/nix/store/wazzvpgn5a4qnbf27hlhinpwigkaf98v-elliptic_curves-0.8/share/ellcurves
++++ export POLYTOPE_DATA_DIR=/nix/store/vyb9i4qwzp8i889qdpdmlflhkbszl8p5-polytopes_db-20170220/share/reflexive_polytopes
++++ POLYTOPE_DATA_DIR=/nix/store/vyb9i4qwzp8i889qdpdmlflhkbszl8p5-polytopes_db-20170220/share/reflexive_polytopes
++++ export GAP_ROOT_DIR=/nix/store/ib187709hanndgnz081lfrsqyr773nhc-gap-4.10.2/share/gap/build-dir
++++ GAP_ROOT_DIR=/nix/store/ib187709hanndgnz081lfrsqyr773nhc-gap-4.10.2/share/gap/build-dir
++++ export ECLDIR=/nix/store/dyzqwmq1rypcl1n68xj1r2m8z85p0vlb-ecl-20.4.24/lib/ecl-20.4.24/
++++ ECLDIR=/nix/store/dyzqwmq1rypcl1n68xj1r2m8z85p0vlb-ecl-20.4.24/lib/ecl-20.4.24/
++++ export COMBINATORIAL_DESIGN_DATA_DIR=/nix/store/jhhdb9q800h57pn7204jaizf8dgm1w27-combinatorial_designs-20140630/share/combinatorial_designs
++++ COMBINATORIAL_DESIGN_DATA_DIR=/nix/store/jhhdb9q800h57pn7204jaizf8dgm1w27-combinatorial_designs-20140630/share/combinatorial_designs
++++ export CREMONA_MINI_DATA_DIR=/nix/store/wazzvpgn5a4qnbf27hlhinpwigkaf98v-elliptic_curves-0.8/share/cremona
++++ CREMONA_MINI_DATA_DIR=/nix/store/wazzvpgn5a4qnbf27hlhinpwigkaf98v-elliptic_curves-0.8/share/cremona
++++ export JMOL_DIR=/nix/store/32hm5b43iaiv1dr9662lny7c4qw4slrx-jmol-14.31.17/share/jmol
++++ JMOL_DIR=/nix/store/32hm5b43iaiv1dr9662lny7c4qw4slrx-jmol-14.31.17/share/jmol
++++ export JSMOL_DIR=/nix/store/32hm5b43iaiv1dr9662lny7c4qw4slrx-jmol-14.31.17/share/jsmol
++++ JSMOL_DIR=/nix/store/32hm5b43iaiv1dr9662lny7c4qw4slrx-jmol-14.31.17/share/jsmol
++++ export MATHJAX_DIR=/nix/store/zya3gpi85zmdrp2bldi399jk45k2j445-node_mathjax-3.1.2/lib/node_modules/mathjax
++++ MATHJAX_DIR=/nix/store/zya3gpi85zmdrp2bldi399jk45k2j445-node_mathjax-3.1.2/lib/node_modules/mathjax
++++ export THREEJS_DIR=/nix/store/zhdhxp1gidplnj1r074yijbwb7jivzrb-node_three-0.122.0/lib/node_modules/three
++++ THREEJS_DIR=/nix/store/zhdhxp1gidplnj1r074yijbwb7jivzrb-node_three-0.122.0/lib/node_modules/three
++++ export SAGE_INCLUDE_DIRECTORIES=/nix/store/c2a3zh4yrnyc422g0g2kgkjg92nr338w-python3.8-cysignals-1.10.2/lib/python2.7/site-packages
++++ SAGE_INCLUDE_DIRECTORIES=/nix/store/c2a3zh4yrnyc422g0g2kgkjg92nr338w-python3.8-cysignals-1.10.2/lib/python2.7/site-packages
+++ export CC=/nix/store/n3r351j7vfr2bv95fp6miz3l8741jdb4-gcc-wrapper-9.3.0/bin/cc
+++ CC=/nix/store/n3r351j7vfr2bv95fp6miz3l8741jdb4-gcc-wrapper-9.3.0/bin/cc
+++ export 'LDFLAGS=-L/nix/store/qgq9s52wyvbyyx657cb1ypph6h4yia7n-flint-2.5.2/lib -L/nix/store/ib187709hanndgnz081lfrsqyr773nhc-gap-4.10.2/lib -L/nix/store/16jy91x91xdxwridiz2aji1h50z364wk-glpk-4.65/lib -L/nix/store/04g94rdjbkn21yd8hcz90whd4krlvy6p-gmp-6.2.0/lib -L/nix/store/ywxdpbq2ghwzi4hdk0rf8cr5ybzf4yiv-mpfr-4.1.0/lib -L/nix/store/jgp79nkjzckvg9j47c6ghschilnwd1dv-pari-2.11.4/lib -L/nix/store/jrdwhgc3dcrj8l9mxwh474ikkax89rh8-pynac-0.7.26/lib -L/nix/store/fafmisbmw9pghsq722yr41j8dqpz8wla-zlib-1.2.11/lib -L/nix/store/86gmka4pysaw08aiiwipnaq03hpzhf0f-eclib-20190909/lib -L/nix/store/8vslsjczsgazngdvdgzfbc51h3vm7nhj-gsl-2.6/lib -L/nix/store/xgwdr9ngwqxhgqdvlkmm03xdppq4niag-ntl-11.4.3/lib -L/nix/store/32hm5b43iaiv1dr9662lny7c4qw4slrx-jmol-14.31.17/lib -L/nix/store/s7s88qcagc932bisn72d0wkr0dkikvdl-sympow-2.023.6/lib'
+++ LDFLAGS='-L/nix/store/qgq9s52wyvbyyx657cb1ypph6h4yia7n-flint-2.5.2/lib -L/nix/store/ib187709hanndgnz081lfrsqyr773nhc-gap-4.10.2/lib -L/nix/store/16jy91x91xdxwridiz2aji1h50z364wk-glpk-4.65/lib -L/nix/store/04g94rdjbkn21yd8hcz90whd4krlvy6p-gmp-6.2.0/lib -L/nix/store/ywxdpbq2ghwzi4hdk0rf8cr5ybzf4yiv-mpfr-4.1.0/lib -L/nix/store/jgp79nkjzckvg9j47c6ghschilnwd1dv-pari-2.11.4/lib -L/nix/store/jrdwhgc3dcrj8l9mxwh474ikkax89rh8-pynac-0.7.26/lib -L/nix/store/fafmisbmw9pghsq722yr41j8dqpz8wla-zlib-1.2.11/lib -L/nix/store/86gmka4pysaw08aiiwipnaq03hpzhf0f-eclib-20190909/lib -L/nix/store/8vslsjczsgazngdvdgzfbc51h3vm7nhj-gsl-2.6/lib -L/nix/store/xgwdr9ngwqxhgqdvlkmm03xdppq4niag-ntl-11.4.3/lib -L/nix/store/32hm5b43iaiv1dr9662lny7c4qw4slrx-jmol-14.31.17/lib -L/nix/store/s7s88qcagc932bisn72d0wkr0dkikvdl-sympow-2.023.6/lib'
+++ export 'CFLAGS=-isystem /nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/include -isystem /nix/store/y4cx8h6kcmcswfcnb7dh4lys9xhdc0gh-gmp-6.2.0-dev/include -isystem /nix/store/16jy91x91xdxwridiz2aji1h50z364wk-glpk-4.65/include -isystem /nix/store/qgq9s52wyvbyyx657cb1ypph6h4yia7n-flint-2.5.2/include -isystem /nix/store/ib187709hanndgnz081lfrsqyr773nhc-gap-4.10.2/include -isystem /nix/store/jrdwhgc3dcrj8l9mxwh474ikkax89rh8-pynac-0.7.26/include -isystem /nix/store/aag7088drcp5p55zb1nfcvvn4klr3gi8-mpfr-4.1.0-dev/include'
+++ CFLAGS='-isystem /nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/include -isystem /nix/store/y4cx8h6kcmcswfcnb7dh4lys9xhdc0gh-gmp-6.2.0-dev/include -isystem /nix/store/16jy91x91xdxwridiz2aji1h50z364wk-glpk-4.65/include -isystem /nix/store/qgq9s52wyvbyyx657cb1ypph6h4yia7n-flint-2.5.2/include -isystem /nix/store/ib187709hanndgnz081lfrsqyr773nhc-gap-4.10.2/include -isystem /nix/store/jrdwhgc3dcrj8l9mxwh474ikkax89rh8-pynac-0.7.26/include -isystem /nix/store/aag7088drcp5p55zb1nfcvvn4klr3gi8-mpfr-4.1.0-dev/include'
+++ export SAGE_LIB=/nix/store/6j4pjfirjlfd0109q546phsjm4kdi2pm-python3.8-sagelib-9.2/lib/python3.8/site-packages
+++ SAGE_LIB=/nix/store/6j4pjfirjlfd0109q546phsjm4kdi2pm-python3.8-sagelib-9.2/lib/python3.8/site-packages
+++ export SAGE_EXTCODE=/nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2/src/ext
+++ SAGE_EXTCODE=/nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2/src/ext
+++ export DYLD_LIBRARY_PATH=/nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib:/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/lib
+++ DYLD_LIBRARY_PATH=/nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib:/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/lib
++ '[' 0 -ne 0 ']'
++ '[' -z /build/sage-home/.sage/ ']'
++ '[' 7 -gt 0 ']'
++ '[' -t = -h -o -t = '-?' -o -t = -help -o -t = --help ']'
++ '[' -t = -advanced -o -t = --advanced ']'
++ '[' -t = -min -o -t = --min ']'
++ '[' -t = -q ']'
++ '[' 7 -eq 0 ']'
++ '[' -t = -c ']'
++ '[' -t = -preparse -o -t = --preparse ']'
++ '[' -t = -cleaner -o -t = --cleaner ']'
++ '[' -t = -pip -o -t = --pip ']'
++ '[' -t = --pip3 ']'
++ '[' -t = -python -o -t = --python ']'
++ '[' -t = -python3 -o -t = --python3 ']'
++ '[' -t = -ipython -o -t = --ipython ']'
++ '[' -t = -ipython3 -o -t = --ipython3 ']'
++ '[' -t = -jupyter -o -t = --jupyter ']'
++ '[' -t = -cython -o -t = --cython -o -t = -pyrex -o -t = --pyrex ']'
++ '[' -t = -gap -o -t = --gap ']'
++ '[' -t = -gap3 -o -t = --gap3 ']'
++ '[' -t = -gp -o -t = --gp ']'
++ '[' -t = -polymake -o -t = --polymake ']'
++ '[' -t = -singular -o -t = --singular ']'
++ '[' -t = -sqlite3 -o -t = --sqlite3 ']'
++ '[' -t = -ecl -o -t = --ecl ']'
++ '[' -t = -lisp -o -t = --lisp ']'
++ '[' -t = -kash -o -t = --kash ']'
++ '[' -t = -maxima -o -t = --maxima ']'
++ '[' -t = -mwrank -o -t = --mwrank ']'
++ '[' -t = -M2 -o -t = --M2 ']'
++ '[' -t = -R -o -t = --R ']'
++ '[' -t = -git -o -t = --git ']'
++ '[' -t = -sh -o -t = --sh -o -t = -buildsh -o -t = --buildsh ']'
++ '[' -t = -rst2ipynb -o -t = --rst2ipynb ']'
++ '[' -t = -ipynb2rst -o -t = --ipynb2rst ']'
++ '[' -t = -rst2txt -o -t = --rst2txt ']'
++ '[' -t = -sws2rst -o -t = --sws2rst ']'
++ [[ -t =~ ^--notebook=.* ]]
++ [[ -t =~ ^-n=.* ]]
++ [[ -t =~ ^-notebook=.* ]]
++ '[' -t = -notebook -o -t = --notebook -o -t = -n ']'
++ '[' -t = -bn -o -t = --build-and-notebook ']'
++ '[' -n /nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2/src -a -d /nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2/src ']'
++ '[' -t = -grep -o -t = --grep -o -t = -search_src -o -t = --search_src ']'
++ '[' -t = -grepdoc -o -t = --grepdoc -o -t = -search_doc -o -t = --search_doc ']'
++ '[' -t = -b ']'
++ '[' -t = -br -o -t = --br ']'
++ '[' -t = -r ']'
++ '[' -t = -ba-force -o -t = --ba-force ']'
++ '[' -t = -ba ']'
++ '[' -t = -t -o -t = -bt -o -t = -tp -o -t = -btp ']'
++ '[' -t = -bt -o -t = -btp ']'
++ sage_setup
++ '[' '!' -z /nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2 ']'
++ '[' '!' -x /nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin/sage ']'
++ maybe_sage_location
++ '[' -w /nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2 ']'
++ '[' '!' -d /build/sage-home/.sage//ipython-5.0.0 ']'
++ mkdir -p -m 700 /build/sage-home/.sage/
++ export PYTHONIOENCODING=utf-8
++ sage-cleaner
++ PYTHONIOENCODING=utf-8
++ '[' -t = -tp -o -t = -btp ']'
++ shift
++ exec sage-runtests --timeout=0 --nthreads 12 --optional=sage --long --all
++ export NIX_PYTHONPREFIX=/nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env
++ NIX_PYTHONPREFIX=/nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env
++ export NIX_PYTHONEXECUTABLE=/nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/bin/python3.8
++ NIX_PYTHONEXECUTABLE=/nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/bin/python3.8
++ export NIX_PYTHONPATH=/nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages
++ NIX_PYTHONPATH=/nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages
++ export PYTHONNOUSERSITE=true
++ PYTHONNOUSERSITE=true
++ exec /nix/store/6j4pjfirjlfd0109q546phsjm4kdi2pm-python3.8-sagelib-9.2/bin/sage-python /nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin/sage-runtests --timeout=0 --nthreads 12 --optional=sage --long --all
++ sage -python /nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin/sage-runtests --timeout=0 --nthreads 12 --optional=sage --long --all
++ '[' -python = --nodotsage ']'
++ '[' -python = -patchbot -o -python = --patchbot ']'
++ '[' -python = -upgrade -o -python = --upgrade ']'
++ '[' -python = -f ']'
++ '[' -python = -i ']'
++ '[' -python = -dumpversion -o -python = --dumpversion ']'
++ '[' -python = -v -o -python = -version -o -python = --version ']'
++ '[' -python = -root -o -python = --root ']'
++ '[' -f /nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin/sage-env-config ']'
++ '[' -f /nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin/sage-env ']'
++ . /nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin/sage-env-config
++ . /nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin/sage-env
+++ export PKG_CONFIG_PATH=/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/lib/pkgconfig:/nix/store/bm0mjpbnaxixma2wvmj99zq2kfq1017h-blas-3-dev/lib/pkgconfig:/nix/store/s9rb0jhplgsfcnay1mp7kn1zhxyppq0n-lapack-3-dev/lib/pkgconfig:/nix/store/7ad6rfvp19sfvszii4vdzca7yrlwpm1s-fflas-ffpack-2.4.3/lib/pkgconfig:/nix/store/k9wgyjhad39xwm8bs65k9r1ggrmc26ir-givaro-4.1.1/lib/pkgconfig:/nix/store/qppdrpidm69vk2y161b7y5xsll2fcn9g-gd-2.3.0-dev/lib/pkgconfig:/nix/store/hjxqglhbc50psrdcqhprgqsx1cgyvpj2-libpng-apng-1.6.37-dev/lib/pkgconfig:/nix/store/pq1y5aidr042z0c39aaac18llz6vfdk0-zlib-1.2.11-dev/lib/pkgconfig:/nix/store/8vslsjczsgazngdvdgzfbc51h3vm7nhj-gsl-2.6/lib/pkgconfig:/nix/store/r04ajhwplvvs2rgid6s6zgzmhylc2lsd-linbox-1.6.3/lib/pkgconfig:/nix/store/ka4zgpyw8bl95arvy445ah6am0zlkxws-m4ri-20200125/lib/pkgconfig
+++ PKG_CONFIG_PATH=/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/lib/pkgconfig:/nix/store/bm0mjpbnaxixma2wvmj99zq2kfq1017h-blas-3-dev/lib/pkgconfig:/nix/store/s9rb0jhplgsfcnay1mp7kn1zhxyppq0n-lapack-3-dev/lib/pkgconfig:/nix/store/7ad6rfvp19sfvszii4vdzca7yrlwpm1s-fflas-ffpack-2.4.3/lib/pkgconfig:/nix/store/k9wgyjhad39xwm8bs65k9r1ggrmc26ir-givaro-4.1.1/lib/pkgconfig:/nix/store/qppdrpidm69vk2y161b7y5xsll2fcn9g-gd-2.3.0-dev/lib/pkgconfig:/nix/store/hjxqglhbc50psrdcqhprgqsx1cgyvpj2-libpng-apng-1.6.37-dev/lib/pkgconfig:/nix/store/pq1y5aidr042z0c39aaac18llz6vfdk0-zlib-1.2.11-dev/lib/pkgconfig:/nix/store/8vslsjczsgazngdvdgzfbc51h3vm7nhj-gsl-2.6/lib/pkgconfig:/nix/store/r04ajhwplvvs2rgid6s6zgzmhylc2lsd-linbox-1.6.3/lib/pkgconfig:/nix/store/ka4zgpyw8bl95arvy445ah6am0zlkxws-m4ri-20200125/lib/pkgconfig
+++ export SAGE_ROOT=/nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2
+++ SAGE_ROOT=/nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2
+++ export SAGE_LOCAL=/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2
+++ SAGE_LOCAL=/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2
+++ export SAGE_SHARE=/nix/store/6j4pjfirjlfd0109q546phsjm4kdi2pm-python3.8-sagelib-9.2/share
+++ SAGE_SHARE=/nix/store/6j4pjfirjlfd0109q546phsjm4kdi2pm-python3.8-sagelib-9.2/share
+++ orig_path=:/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin:/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/build/bin:/nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/bin:/nix/store/6gc212jiwlnn6y79ppqlq2qa0ks0kysq-python3-3.8.6-env/bin:/nix/store/gnhw6r1zjnw9drknq6lj2mxzidgv4fyw-gfortran-wrapper-9.3.0/bin:/nix/store/n3r351j7vfr2bv95fp6miz3l8741jdb4-gcc-wrapper-9.3.0/bin:/nix/store/y0sw8sxkr7kwlsndwixyf4s4snlfhjh1-bash-4.4-p23/bin:/nix/store/ffw9vziqw2p4rpm2zwgi5r3ymynd54d8-coreutils-8.32/bin:/nix/store/qqnjk28kc8dcl3rijmgkvb057dfzl4cn-gnused-4.8/bin:/nix/store/8i43g3cfkryp23ppgl7cllpqjdrdfcya-gnugrep-3.5/bin:/nix/store/79rshjqnibwcx468m4i31wnmasaj6nf4-binutils-2.31.1/bin:/nix/store/rkpqr0vvbc7zyr6m6sm8q2imkr40yzn4-pkg-config-wrapper-0.29.2/bin:/nix/store/jgp79nkjzckvg9j47c6ghschilnwd1dv-pari-2.11.4/bin:/nix/store/ib187709hanndgnz081lfrsqyr773nhc-gap-4.10.2/bin:/nix/store/dyzqwmq1rypcl1n68xj1r2m8z85p0vlb-ecl-20.4.24/bin:/nix/store/b4r6s7cwawr5gdci8h50snf98871c04x-maxima-5.44.0/bin:/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/bin:/nix/store/ycq1lzcbhc43h292y2d860x3ir8s3ssm-giac-1.5.0-21/bin:/nix/store/r0fv33rd5jhqidh6qxan55dswn1brbb8-palp-2.11/bin:/nix/store/igg73qaj25p3zhyr72qwdjsiq08qgfvg-R-4.0.3-wrapper/bin:/nix/store/1sc5hi28k1x1cibxgf7m9m8m9pikyc2l-gfan-0.6.2/bin:/nix/store/r1b9h29pixzsbbchpq6qipv5q3vn4yvv-cddlib-0.94l/bin:/nix/store/32hm5b43iaiv1dr9662lny7c4qw4slrx-jmol-14.31.17/bin:/nix/store/042nkhviicmbr0bz8xv1d2s1z5x7m80r-tachyon-0.99b2/bin:/nix/store/16jy91x91xdxwridiz2aji1h50z364wk-glpk-4.65/bin:/nix/store/86gmka4pysaw08aiiwipnaq03hpzhf0f-eclib-20190909/bin:/nix/store/s7s88qcagc932bisn72d0wkr0dkikvdl-sympow-2.023.6/bin:/nix/store/89dif8ikvnd4935i430cy213jasyh1jv-nauty-27r1/bin:/nix/store/79xm20f5fid4f0ajyfsp18d7v2y9m69m-sqlite-3.33.0-bin/bin:/nix/store/qrqyql39cx5zm6wxfx920f6wca2v0m89-ppl-1.2/bin:/nix/store/hr0j9ql0r9c8z1wigm75443dicv72ylk-ecm-7.0.4/bin:/nix/store/xnraylclpwkdnhcbf34l24h1d67r2h1w-lcalc-1.23/bin:/nix/store/idp8b4w9qm64i1zbk3v48vpssj29mvnr-rubiks-20070912/bin:/nix/store/qmc9rnd689asvw7838zqzb6gwas845xa-flintqs-1.0/bin:/nix/store/01qmw4qmn0gr8whh1kgjbnin7bc8n8p4-openjdk-8u272-b10/bin:/nix/store/128b5lsg0lk55g3hvjfpj9lvm7r0jd0r-less-551/bin:/nix/store/pgrvv3g7ijgfrn4hxla8v51j79ab8060-patchelf-0.12/bin:/nix/store/n3r351j7vfr2bv95fp6miz3l8741jdb4-gcc-wrapper-9.3.0/bin:/nix/store/58q0ygc01jba5cf5zghc0dlhx187mskk-gcc-9.3.0/bin:/nix/store/azv0jpirgc6kwcy3fs59jpp2mdl2k2g5-glibc-2.32-bin/bin:/nix/store/ffw9vziqw2p4rpm2zwgi5r3ymynd54d8-coreutils-8.32/bin:/nix/store/rqhvcy5zmlypr9qfa43npsyxsxjg7jxa-binutils-wrapper-2.31.1/bin:/nix/store/79rshjqnibwcx468m4i31wnmasaj6nf4-binutils-2.31.1/bin:/nix/store/azv0jpirgc6kwcy3fs59jpp2mdl2k2g5-glibc-2.32-bin/bin:/nix/store/ffw9vziqw2p4rpm2zwgi5r3ymynd54d8-coreutils-8.32/bin:/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin:/nix/store/j8j906nzsxxi80mwscy2qfngnd4qlkz8-gdb-10.1/bin:/nix/store/ns7pr4qr7l0kpj6amq8p4jssx4pf8qzl-which-2.21/bin:/nix/store/ffw9vziqw2p4rpm2zwgi5r3ymynd54d8-coreutils-8.32/bin:/nix/store/vxmv30pp7cl4mshviy4jl5bjm680mjd5-findutils-4.7.0/bin:/nix/store/lj53hvg0pdsl2r4n39lgg7pzmnnsxb0b-diffutils-3.7/bin:/nix/store/qqnjk28kc8dcl3rijmgkvb057dfzl4cn-gnused-4.8/bin:/nix/store/8i43g3cfkryp23ppgl7cllpqjdrdfcya-gnugrep-3.5/bin:/nix/store/dkkd92l7h98fn33miglvbda91365dx6q-gawk-5.1.0/bin:/nix/store/kg7i58vnbs4q877hnil4d4d2y72fa8g6-gnutar-1.32/bin:/nix/store/b0309s68b8jcx5axw2hnsmh3lwdh2kfd-gzip-1.10/bin:/nix/store/kw21b552xi7fsvgzppnd1ws6qy8q8wbl-bzip2-1.0.6.0.1-bin/bin:/nix/store/kzdxdj5lis8d9lwjhmgzdxqbnhjhg277-gnumake-4.3/bin:/nix/store/y0sw8sxkr7kwlsndwixyf4s4snlfhjh1-bash-4.4-p23/bin:/nix/store/53nwh281zm213kg505mrp3g5qwdsnjbs-patch-2.7.6/bin:/nix/store/xzyl3phpyiq43l7bc5aqg3bqzllj0zid-xz-5.2.5-bin/bin
+++ export PATH=/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin:/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/build/bin:/nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/bin:/nix/store/6gc212jiwlnn6y79ppqlq2qa0ks0kysq-python3-3.8.6-env/bin:/nix/store/gnhw6r1zjnw9drknq6lj2mxzidgv4fyw-gfortran-wrapper-9.3.0/bin:/nix/store/n3r351j7vfr2bv95fp6miz3l8741jdb4-gcc-wrapper-9.3.0/bin:/nix/store/y0sw8sxkr7kwlsndwixyf4s4snlfhjh1-bash-4.4-p23/bin:/nix/store/ffw9vziqw2p4rpm2zwgi5r3ymynd54d8-coreutils-8.32/bin:/nix/store/qqnjk28kc8dcl3rijmgkvb057dfzl4cn-gnused-4.8/bin:/nix/store/8i43g3cfkryp23ppgl7cllpqjdrdfcya-gnugrep-3.5/bin:/nix/store/79rshjqnibwcx468m4i31wnmasaj6nf4-binutils-2.31.1/bin:/nix/store/rkpqr0vvbc7zyr6m6sm8q2imkr40yzn4-pkg-config-wrapper-0.29.2/bin:/nix/store/jgp79nkjzckvg9j47c6ghschilnwd1dv-pari-2.11.4/bin:/nix/store/ib187709hanndgnz081lfrsqyr773nhc-gap-4.10.2/bin:/nix/store/dyzqwmq1rypcl1n68xj1r2m8z85p0vlb-ecl-20.4.24/bin:/nix/store/b4r6s7cwawr5gdci8h50snf98871c04x-maxima-5.44.0/bin:/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/bin:/nix/store/ycq1lzcbhc43h292y2d860x3ir8s3ssm-giac-1.5.0-21/bin:/nix/store/r0fv33rd5jhqidh6qxan55dswn1brbb8-palp-2.11/bin:/nix/store/igg73qaj25p3zhyr72qwdjsiq08qgfvg-R-4.0.3-wrapper/bin:/nix/store/1sc5hi28k1x1cibxgf7m9m8m9pikyc2l-gfan-0.6.2/bin:/nix/store/r1b9h29pixzsbbchpq6qipv5q3vn4yvv-cddlib-0.94l/bin:/nix/store/32hm5b43iaiv1dr9662lny7c4qw4slrx-jmol-14.31.17/bin:/nix/store/042nkhviicmbr0bz8xv1d2s1z5x7m80r-tachyon-0.99b2/bin:/nix/store/16jy91x91xdxwridiz2aji1h50z364wk-glpk-4.65/bin:/nix/store/86gmka4pysaw08aiiwipnaq03hpzhf0f-eclib-20190909/bin:/nix/store/s7s88qcagc932bisn72d0wkr0dkikvdl-sympow-2.023.6/bin:/nix/store/89dif8ikvnd4935i430cy213jasyh1jv-nauty-27r1/bin:/nix/store/79xm20f5fid4f0ajyfsp18d7v2y9m69m-sqlite-3.33.0-bin/bin:/nix/store/qrqyql39cx5zm6wxfx920f6wca2v0m89-ppl-1.2/bin:/nix/store/hr0j9ql0r9c8z1wigm75443dicv72ylk-ecm-7.0.4/bin:/nix/store/xnraylclpwkdnhcbf34l24h1d67r2h1w-lcalc-1.23/bin:/nix/store/idp8b4w9qm64i1zbk3v48vpssj29mvnr-rubiks-20070912/bin:/nix/store/qmc9rnd689asvw7838zqzb6gwas845xa-flintqs-1.0/bin:/nix/store/01qmw4qmn0gr8whh1kgjbnin7bc8n8p4-openjdk-8u272-b10/bin:/nix/store/128b5lsg0lk55g3hvjfpj9lvm7r0jd0r-less-551/bin
+++ PATH=/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin:/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/build/bin:/nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/bin:/nix/store/6gc212jiwlnn6y79ppqlq2qa0ks0kysq-python3-3.8.6-env/bin:/nix/store/gnhw6r1zjnw9drknq6lj2mxzidgv4fyw-gfortran-wrapper-9.3.0/bin:/nix/store/n3r351j7vfr2bv95fp6miz3l8741jdb4-gcc-wrapper-9.3.0/bin:/nix/store/y0sw8sxkr7kwlsndwixyf4s4snlfhjh1-bash-4.4-p23/bin:/nix/store/ffw9vziqw2p4rpm2zwgi5r3ymynd54d8-coreutils-8.32/bin:/nix/store/qqnjk28kc8dcl3rijmgkvb057dfzl4cn-gnused-4.8/bin:/nix/store/8i43g3cfkryp23ppgl7cllpqjdrdfcya-gnugrep-3.5/bin:/nix/store/79rshjqnibwcx468m4i31wnmasaj6nf4-binutils-2.31.1/bin:/nix/store/rkpqr0vvbc7zyr6m6sm8q2imkr40yzn4-pkg-config-wrapper-0.29.2/bin:/nix/store/jgp79nkjzckvg9j47c6ghschilnwd1dv-pari-2.11.4/bin:/nix/store/ib187709hanndgnz081lfrsqyr773nhc-gap-4.10.2/bin:/nix/store/dyzqwmq1rypcl1n68xj1r2m8z85p0vlb-ecl-20.4.24/bin:/nix/store/b4r6s7cwawr5gdci8h50snf98871c04x-maxima-5.44.0/bin:/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/bin:/nix/store/ycq1lzcbhc43h292y2d860x3ir8s3ssm-giac-1.5.0-21/bin:/nix/store/r0fv33rd5jhqidh6qxan55dswn1brbb8-palp-2.11/bin:/nix/store/igg73qaj25p3zhyr72qwdjsiq08qgfvg-R-4.0.3-wrapper/bin:/nix/store/1sc5hi28k1x1cibxgf7m9m8m9pikyc2l-gfan-0.6.2/bin:/nix/store/r1b9h29pixzsbbchpq6qipv5q3vn4yvv-cddlib-0.94l/bin:/nix/store/32hm5b43iaiv1dr9662lny7c4qw4slrx-jmol-14.31.17/bin:/nix/store/042nkhviicmbr0bz8xv1d2s1z5x7m80r-tachyon-0.99b2/bin:/nix/store/16jy91x91xdxwridiz2aji1h50z364wk-glpk-4.65/bin:/nix/store/86gmka4pysaw08aiiwipnaq03hpzhf0f-eclib-20190909/bin:/nix/store/s7s88qcagc932bisn72d0wkr0dkikvdl-sympow-2.023.6/bin:/nix/store/89dif8ikvnd4935i430cy213jasyh1jv-nauty-27r1/bin:/nix/store/79xm20f5fid4f0ajyfsp18d7v2y9m69m-sqlite-3.33.0-bin/bin:/nix/store/qrqyql39cx5zm6wxfx920f6wca2v0m89-ppl-1.2/bin:/nix/store/hr0j9ql0r9c8z1wigm75443dicv72ylk-ecm-7.0.4/bin:/nix/store/xnraylclpwkdnhcbf34l24h1d67r2h1w-lcalc-1.23/bin:/nix/store/idp8b4w9qm64i1zbk3v48vpssj29mvnr-rubiks-20070912/bin:/nix/store/qmc9rnd689asvw7838zqzb6gwas845xa-flintqs-1.0/bin:/nix/store/01qmw4qmn0gr8whh1kgjbnin7bc8n8p4-openjdk-8u272-b10/bin:/nix/store/128b5lsg0lk55g3hvjfpj9lvm7r0jd0r-less-551/bin
+++ export PYTHON_FOR_VENV=/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/bin/python3
+++ PYTHON_FOR_VENV=/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/bin/python3
+++ export SAGE_ENV_CONFIG_SOURCED=1
+++ SAGE_ENV_CONFIG_SOURCED=1
+++ source /nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2/src/bin/sage-env
++++ '[' 1 '!=' 1 ']'
++++ '[' -n /nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2 ']'
++++ NEW_SAGE_ROOT=/nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2
+++++ cd /nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2
+++++ pwd -P
++++ NEW_SAGE_ROOT=/nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2
++++ '[' /nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2 '!=' /nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2 -a -n /nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2 ']'
++++ SAGE_ENV_VERSION=4
++++ '[' 4 = 4 ']'
++++ return 0
+++ export PATH=:/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin:/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/build/bin:/nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/bin:/nix/store/6gc212jiwlnn6y79ppqlq2qa0ks0kysq-python3-3.8.6-env/bin:/nix/store/gnhw6r1zjnw9drknq6lj2mxzidgv4fyw-gfortran-wrapper-9.3.0/bin:/nix/store/n3r351j7vfr2bv95fp6miz3l8741jdb4-gcc-wrapper-9.3.0/bin:/nix/store/y0sw8sxkr7kwlsndwixyf4s4snlfhjh1-bash-4.4-p23/bin:/nix/store/ffw9vziqw2p4rpm2zwgi5r3ymynd54d8-coreutils-8.32/bin:/nix/store/qqnjk28kc8dcl3rijmgkvb057dfzl4cn-gnused-4.8/bin:/nix/store/8i43g3cfkryp23ppgl7cllpqjdrdfcya-gnugrep-3.5/bin:/nix/store/79rshjqnibwcx468m4i31wnmasaj6nf4-binutils-2.31.1/bin:/nix/store/rkpqr0vvbc7zyr6m6sm8q2imkr40yzn4-pkg-config-wrapper-0.29.2/bin:/nix/store/jgp79nkjzckvg9j47c6ghschilnwd1dv-pari-2.11.4/bin:/nix/store/ib187709hanndgnz081lfrsqyr773nhc-gap-4.10.2/bin:/nix/store/dyzqwmq1rypcl1n68xj1r2m8z85p0vlb-ecl-20.4.24/bin:/nix/store/b4r6s7cwawr5gdci8h50snf98871c04x-maxima-5.44.0/bin:/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/bin:/nix/store/ycq1lzcbhc43h292y2d860x3ir8s3ssm-giac-1.5.0-21/bin:/nix/store/r0fv33rd5jhqidh6qxan55dswn1brbb8-palp-2.11/bin:/nix/store/igg73qaj25p3zhyr72qwdjsiq08qgfvg-R-4.0.3-wrapper/bin:/nix/store/1sc5hi28k1x1cibxgf7m9m8m9pikyc2l-gfan-0.6.2/bin:/nix/store/r1b9h29pixzsbbchpq6qipv5q3vn4yvv-cddlib-0.94l/bin:/nix/store/32hm5b43iaiv1dr9662lny7c4qw4slrx-jmol-14.31.17/bin:/nix/store/042nkhviicmbr0bz8xv1d2s1z5x7m80r-tachyon-0.99b2/bin:/nix/store/16jy91x91xdxwridiz2aji1h50z364wk-glpk-4.65/bin:/nix/store/86gmka4pysaw08aiiwipnaq03hpzhf0f-eclib-20190909/bin:/nix/store/s7s88qcagc932bisn72d0wkr0dkikvdl-sympow-2.023.6/bin:/nix/store/89dif8ikvnd4935i430cy213jasyh1jv-nauty-27r1/bin:/nix/store/79xm20f5fid4f0ajyfsp18d7v2y9m69m-sqlite-3.33.0-bin/bin:/nix/store/qrqyql39cx5zm6wxfx920f6wca2v0m89-ppl-1.2/bin:/nix/store/hr0j9ql0r9c8z1wigm75443dicv72ylk-ecm-7.0.4/bin:/nix/store/xnraylclpwkdnhcbf34l24h1d67r2h1w-lcalc-1.23/bin:/nix/store/idp8b4w9qm64i1zbk3v48vpssj29mvnr-rubiks-20070912/bin:/nix/store/qmc9rnd689asvw7838zqzb6gwas845xa-flintqs-1.0/bin:/nix/store/01qmw4qmn0gr8whh1kgjbnin7bc8n8p4-openjdk-8u272-b10/bin:/nix/store/128b5lsg0lk55g3hvjfpj9lvm7r0jd0r-less-551/bin::/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin:/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/build/bin:/nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/bin:/nix/store/6gc212jiwlnn6y79ppqlq2qa0ks0kysq-python3-3.8.6-env/bin:/nix/store/gnhw6r1zjnw9drknq6lj2mxzidgv4fyw-gfortran-wrapper-9.3.0/bin:/nix/store/n3r351j7vfr2bv95fp6miz3l8741jdb4-gcc-wrapper-9.3.0/bin:/nix/store/y0sw8sxkr7kwlsndwixyf4s4snlfhjh1-bash-4.4-p23/bin:/nix/store/ffw9vziqw2p4rpm2zwgi5r3ymynd54d8-coreutils-8.32/bin:/nix/store/qqnjk28kc8dcl3rijmgkvb057dfzl4cn-gnused-4.8/bin:/nix/store/8i43g3cfkryp23ppgl7cllpqjdrdfcya-gnugrep-3.5/bin:/nix/store/79rshjqnibwcx468m4i31wnmasaj6nf4-binutils-2.31.1/bin:/nix/store/rkpqr0vvbc7zyr6m6sm8q2imkr40yzn4-pkg-config-wrapper-0.29.2/bin:/nix/store/jgp79nkjzckvg9j47c6ghschilnwd1dv-pari-2.11.4/bin:/nix/store/ib187709hanndgnz081lfrsqyr773nhc-gap-4.10.2/bin:/nix/store/dyzqwmq1rypcl1n68xj1r2m8z85p0vlb-ecl-20.4.24/bin:/nix/store/b4r6s7cwawr5gdci8h50snf98871c04x-maxima-5.44.0/bin:/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/bin:/nix/store/ycq1lzcbhc43h292y2d860x3ir8s3ssm-giac-1.5.0-21/bin:/nix/store/r0fv33rd5jhqidh6qxan55dswn1brbb8-palp-2.11/bin:/nix/store/igg73qaj25p3zhyr72qwdjsiq08qgfvg-R-4.0.3-wrapper/bin:/nix/store/1sc5hi28k1x1cibxgf7m9m8m9pikyc2l-gfan-0.6.2/bin:/nix/store/r1b9h29pixzsbbchpq6qipv5q3vn4yvv-cddlib-0.94l/bin:/nix/store/32hm5b43iaiv1dr9662lny7c4qw4slrx-jmol-14.31.17/bin:/nix/store/042nkhviicmbr0bz8xv1d2s1z5x7m80r-tachyon-0.99b2/bin:/nix/store/16jy91x91xdxwridiz2aji1h50z364wk-glpk-4.65/bin:/nix/store/86gmka4pysaw08aiiwipnaq03hpzhf0f-eclib-20190909/bin:/nix/store/s7s88qcagc932bisn72d0wkr0dkikvdl-sympow-2.023.6/bin:/nix/store/89dif8ikvnd4935i430cy213jasyh1jv-nauty-27r1/bin:/nix/store/79xm20f5fid4f0ajyfsp18d7v2y9m69m-sqlite-3.33.0-bin/bin:/nix/store/qrqyql39cx5zm6wxfx920f6wca2v0m89-ppl-1.2/bin:/nix/store/hr0j9ql0r9c8z1wigm75443dicv72ylk-ecm-7.0.4/bin:/nix/store/xnraylclpwkdnhcbf34l24h1d67r2h1w-lcalc-1.23/bin:/nix/store/idp8b4w9qm64i1zbk3v48vpssj29mvnr-rubiks-20070912/bin:/nix/store/qmc9rnd689asvw7838zqzb6gwas845xa-flintqs-1.0/bin:/nix/store/01qmw4qmn0gr8whh1kgjbnin7bc8n8p4-openjdk-8u272-b10/bin:/nix/store/128b5lsg0lk55g3hvjfpj9lvm7r0jd0r-less-551/bin:/nix/store/pgrvv3g7ijgfrn4hxla8v51j79ab8060-patchelf-0.12/bin:/nix/store/n3r351j7vfr2bv95fp6miz3l8741jdb4-gcc-wrapper-9.3.0/bin:/nix/store/58q0ygc01jba5cf5zghc0dlhx187mskk-gcc-9.3.0/bin:/nix/store/azv0jpirgc6kwcy3fs59jpp2mdl2k2g5-glibc-2.32-bin/bin:/nix/store/ffw9vziqw2p4rpm2zwgi5r3ymynd54d8-coreutils-8.32/bin:/nix/store/rqhvcy5zmlypr9qfa43npsyxsxjg7jxa-binutils-wrapper-2.31.1/bin:/nix/store/79rshjqnibwcx468m4i31wnmasaj6nf4-binutils-2.31.1/bin:/nix/store/azv0jpirgc6kwcy3fs59jpp2mdl2k2g5-glibc-2.32-bin/bin:/nix/store/ffw9vziqw2p4rpm2zwgi5r3ymynd54d8-coreutils-8.32/bin:/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin:/nix/store/j8j906nzsxxi80mwscy2qfngnd4qlkz8-gdb-10.1/bin:/nix/store/ns7pr4qr7l0kpj6amq8p4jssx4pf8qzl-which-2.21/bin:/nix/store/ffw9vziqw2p4rpm2zwgi5r3ymynd54d8-coreutils-8.32/bin:/nix/store/vxmv30pp7cl4mshviy4jl5bjm680mjd5-findutils-4.7.0/bin:/nix/store/lj53hvg0pdsl2r4n39lgg7pzmnnsxb0b-diffutils-3.7/bin:/nix/store/qqnjk28kc8dcl3rijmgkvb057dfzl4cn-gnused-4.8/bin:/nix/store/8i43g3cfkryp23ppgl7cllpqjdrdfcya-gnugrep-3.5/bin:/nix/store/dkkd92l7h98fn33miglvbda91365dx6q-gawk-5.1.0/bin:/nix/store/kg7i58vnbs4q877hnil4d4d2y72fa8g6-gnutar-1.32/bin:/nix/store/b0309s68b8jcx5axw2hnsmh3lwdh2kfd-gzip-1.10/bin:/nix/store/kw21b552xi7fsvgzppnd1ws6qy8q8wbl-bzip2-1.0.6.0.1-bin/bin:/nix/store/kzdxdj5lis8d9lwjhmgzdxqbnhjhg277-gnumake-4.3/bin:/nix/store/y0sw8sxkr7kwlsndwixyf4s4snlfhjh1-bash-4.4-p23/bin:/nix/store/53nwh281zm213kg505mrp3g5qwdsnjbs-patch-2.7.6/bin:/nix/store/xzyl3phpyiq43l7bc5aqg3bqzllj0zid-xz-5.2.5-bin/bin
+++ PATH=:/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin:/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/build/bin:/nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/bin:/nix/store/6gc212jiwlnn6y79ppqlq2qa0ks0kysq-python3-3.8.6-env/bin:/nix/store/gnhw6r1zjnw9drknq6lj2mxzidgv4fyw-gfortran-wrapper-9.3.0/bin:/nix/store/n3r351j7vfr2bv95fp6miz3l8741jdb4-gcc-wrapper-9.3.0/bin:/nix/store/y0sw8sxkr7kwlsndwixyf4s4snlfhjh1-bash-4.4-p23/bin:/nix/store/ffw9vziqw2p4rpm2zwgi5r3ymynd54d8-coreutils-8.32/bin:/nix/store/qqnjk28kc8dcl3rijmgkvb057dfzl4cn-gnused-4.8/bin:/nix/store/8i43g3cfkryp23ppgl7cllpqjdrdfcya-gnugrep-3.5/bin:/nix/store/79rshjqnibwcx468m4i31wnmasaj6nf4-binutils-2.31.1/bin:/nix/store/rkpqr0vvbc7zyr6m6sm8q2imkr40yzn4-pkg-config-wrapper-0.29.2/bin:/nix/store/jgp79nkjzckvg9j47c6ghschilnwd1dv-pari-2.11.4/bin:/nix/store/ib187709hanndgnz081lfrsqyr773nhc-gap-4.10.2/bin:/nix/store/dyzqwmq1rypcl1n68xj1r2m8z85p0vlb-ecl-20.4.24/bin:/nix/store/b4r6s7cwawr5gdci8h50snf98871c04x-maxima-5.44.0/bin:/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/bin:/nix/store/ycq1lzcbhc43h292y2d860x3ir8s3ssm-giac-1.5.0-21/bin:/nix/store/r0fv33rd5jhqidh6qxan55dswn1brbb8-palp-2.11/bin:/nix/store/igg73qaj25p3zhyr72qwdjsiq08qgfvg-R-4.0.3-wrapper/bin:/nix/store/1sc5hi28k1x1cibxgf7m9m8m9pikyc2l-gfan-0.6.2/bin:/nix/store/r1b9h29pixzsbbchpq6qipv5q3vn4yvv-cddlib-0.94l/bin:/nix/store/32hm5b43iaiv1dr9662lny7c4qw4slrx-jmol-14.31.17/bin:/nix/store/042nkhviicmbr0bz8xv1d2s1z5x7m80r-tachyon-0.99b2/bin:/nix/store/16jy91x91xdxwridiz2aji1h50z364wk-glpk-4.65/bin:/nix/store/86gmka4pysaw08aiiwipnaq03hpzhf0f-eclib-20190909/bin:/nix/store/s7s88qcagc932bisn72d0wkr0dkikvdl-sympow-2.023.6/bin:/nix/store/89dif8ikvnd4935i430cy213jasyh1jv-nauty-27r1/bin:/nix/store/79xm20f5fid4f0ajyfsp18d7v2y9m69m-sqlite-3.33.0-bin/bin:/nix/store/qrqyql39cx5zm6wxfx920f6wca2v0m89-ppl-1.2/bin:/nix/store/hr0j9ql0r9c8z1wigm75443dicv72ylk-ecm-7.0.4/bin:/nix/store/xnraylclpwkdnhcbf34l24h1d67r2h1w-lcalc-1.23/bin:/nix/store/idp8b4w9qm64i1zbk3v48vpssj29mvnr-rubiks-20070912/bin:/nix/store/qmc9rnd689asvw7838zqzb6gwas845xa-flintqs-1.0/bin:/nix/store/01qmw4qmn0gr8whh1kgjbnin7bc8n8p4-openjdk-8u272-b10/bin:/nix/store/128b5lsg0lk55g3hvjfpj9lvm7r0jd0r-less-551/bin::/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin:/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/build/bin:/nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/bin:/nix/store/6gc212jiwlnn6y79ppqlq2qa0ks0kysq-python3-3.8.6-env/bin:/nix/store/gnhw6r1zjnw9drknq6lj2mxzidgv4fyw-gfortran-wrapper-9.3.0/bin:/nix/store/n3r351j7vfr2bv95fp6miz3l8741jdb4-gcc-wrapper-9.3.0/bin:/nix/store/y0sw8sxkr7kwlsndwixyf4s4snlfhjh1-bash-4.4-p23/bin:/nix/store/ffw9vziqw2p4rpm2zwgi5r3ymynd54d8-coreutils-8.32/bin:/nix/store/qqnjk28kc8dcl3rijmgkvb057dfzl4cn-gnused-4.8/bin:/nix/store/8i43g3cfkryp23ppgl7cllpqjdrdfcya-gnugrep-3.5/bin:/nix/store/79rshjqnibwcx468m4i31wnmasaj6nf4-binutils-2.31.1/bin:/nix/store/rkpqr0vvbc7zyr6m6sm8q2imkr40yzn4-pkg-config-wrapper-0.29.2/bin:/nix/store/jgp79nkjzckvg9j47c6ghschilnwd1dv-pari-2.11.4/bin:/nix/store/ib187709hanndgnz081lfrsqyr773nhc-gap-4.10.2/bin:/nix/store/dyzqwmq1rypcl1n68xj1r2m8z85p0vlb-ecl-20.4.24/bin:/nix/store/b4r6s7cwawr5gdci8h50snf98871c04x-maxima-5.44.0/bin:/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/bin:/nix/store/ycq1lzcbhc43h292y2d860x3ir8s3ssm-giac-1.5.0-21/bin:/nix/store/r0fv33rd5jhqidh6qxan55dswn1brbb8-palp-2.11/bin:/nix/store/igg73qaj25p3zhyr72qwdjsiq08qgfvg-R-4.0.3-wrapper/bin:/nix/store/1sc5hi28k1x1cibxgf7m9m8m9pikyc2l-gfan-0.6.2/bin:/nix/store/r1b9h29pixzsbbchpq6qipv5q3vn4yvv-cddlib-0.94l/bin:/nix/store/32hm5b43iaiv1dr9662lny7c4qw4slrx-jmol-14.31.17/bin:/nix/store/042nkhviicmbr0bz8xv1d2s1z5x7m80r-tachyon-0.99b2/bin:/nix/store/16jy91x91xdxwridiz2aji1h50z364wk-glpk-4.65/bin:/nix/store/86gmka4pysaw08aiiwipnaq03hpzhf0f-eclib-20190909/bin:/nix/store/s7s88qcagc932bisn72d0wkr0dkikvdl-sympow-2.023.6/bin:/nix/store/89dif8ikvnd4935i430cy213jasyh1jv-nauty-27r1/bin:/nix/store/79xm20f5fid4f0ajyfsp18d7v2y9m69m-sqlite-3.33.0-bin/bin:/nix/store/qrqyql39cx5zm6wxfx920f6wca2v0m89-ppl-1.2/bin:/nix/store/hr0j9ql0r9c8z1wigm75443dicv72ylk-ecm-7.0.4/bin:/nix/store/xnraylclpwkdnhcbf34l24h1d67r2h1w-lcalc-1.23/bin:/nix/store/idp8b4w9qm64i1zbk3v48vpssj29mvnr-rubiks-20070912/bin:/nix/store/qmc9rnd689asvw7838zqzb6gwas845xa-flintqs-1.0/bin:/nix/store/01qmw4qmn0gr8whh1kgjbnin7bc8n8p4-openjdk-8u272-b10/bin:/nix/store/128b5lsg0lk55g3hvjfpj9lvm7r0jd0r-less-551/bin:/nix/store/pgrvv3g7ijgfrn4hxla8v51j79ab8060-patchelf-0.12/bin:/nix/store/n3r351j7vfr2bv95fp6miz3l8741jdb4-gcc-wrapper-9.3.0/bin:/nix/store/58q0ygc01jba5cf5zghc0dlhx187mskk-gcc-9.3.0/bin:/nix/store/azv0jpirgc6kwcy3fs59jpp2mdl2k2g5-glibc-2.32-bin/bin:/nix/store/ffw9vziqw2p4rpm2zwgi5r3ymynd54d8-coreutils-8.32/bin:/nix/store/rqhvcy5zmlypr9qfa43npsyxsxjg7jxa-binutils-wrapper-2.31.1/bin:/nix/store/79rshjqnibwcx468m4i31wnmasaj6nf4-binutils-2.31.1/bin:/nix/store/azv0jpirgc6kwcy3fs59jpp2mdl2k2g5-glibc-2.32-bin/bin:/nix/store/ffw9vziqw2p4rpm2zwgi5r3ymynd54d8-coreutils-8.32/bin:/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin:/nix/store/j8j906nzsxxi80mwscy2qfngnd4qlkz8-gdb-10.1/bin:/nix/store/ns7pr4qr7l0kpj6amq8p4jssx4pf8qzl-which-2.21/bin:/nix/store/ffw9vziqw2p4rpm2zwgi5r3ymynd54d8-coreutils-8.32/bin:/nix/store/vxmv30pp7cl4mshviy4jl5bjm680mjd5-findutils-4.7.0/bin:/nix/store/lj53hvg0pdsl2r4n39lgg7pzmnnsxb0b-diffutils-3.7/bin:/nix/store/qqnjk28kc8dcl3rijmgkvb057dfzl4cn-gnused-4.8/bin:/nix/store/8i43g3cfkryp23ppgl7cllpqjdrdfcya-gnugrep-3.5/bin:/nix/store/dkkd92l7h98fn33miglvbda91365dx6q-gawk-5.1.0/bin:/nix/store/kg7i58vnbs4q877hnil4d4d2y72fa8g6-gnutar-1.32/bin:/nix/store/b0309s68b8jcx5axw2hnsmh3lwdh2kfd-gzip-1.10/bin:/nix/store/kw21b552xi7fsvgzppnd1ws6qy8q8wbl-bzip2-1.0.6.0.1-bin/bin:/nix/store/kzdxdj5lis8d9lwjhmgzdxqbnhjhg277-gnumake-4.3/bin:/nix/store/y0sw8sxkr7kwlsndwixyf4s4snlfhjh1-bash-4.4-p23/bin:/nix/store/53nwh281zm213kg505mrp3g5qwdsnjbs-patch-2.7.6/bin:/nix/store/xzyl3phpyiq43l7bc5aqg3bqzllj0zid-xz-5.2.5-bin/bin
+++ export SAGE_LOGS=/build/sage-logs
+++ SAGE_LOGS=/build/sage-logs
+++ export SAGE_DOC=doc-placeholder
+++ SAGE_DOC=doc-placeholder
+++ export SAGE_DOC_SRC=/nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2/src/doc
+++ SAGE_DOC_SRC=/nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2/src/doc
+++ . /nix/store/0vmhaqa823312miynvilvq44x376hl9i-sage-env-locations/sage-env-locations
++++ export GP_DATA_DIR=/nix/store/a428jh4fq3j2wxcqh6q9cfysd95ralvk-pari_data/share/pari
++++ GP_DATA_DIR=/nix/store/a428jh4fq3j2wxcqh6q9cfysd95ralvk-pari_data/share/pari
++++ export PARI_DATA_DIR=/nix/store/a428jh4fq3j2wxcqh6q9cfysd95ralvk-pari_data
++++ PARI_DATA_DIR=/nix/store/a428jh4fq3j2wxcqh6q9cfysd95ralvk-pari_data
++++ export GPHELP=/nix/store/jgp79nkjzckvg9j47c6ghschilnwd1dv-pari-2.11.4/bin/gphelp
++++ GPHELP=/nix/store/jgp79nkjzckvg9j47c6ghschilnwd1dv-pari-2.11.4/bin/gphelp
++++ export GPDOCDIR=/nix/store/jgp79nkjzckvg9j47c6ghschilnwd1dv-pari-2.11.4/share/pari/doc
++++ GPDOCDIR=/nix/store/jgp79nkjzckvg9j47c6ghschilnwd1dv-pari-2.11.4/share/pari/doc
++++ export SINGULARPATH=/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/share/singular
++++ SINGULARPATH=/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/share/singular
++++ export SINGULAR_SO=/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/lib/libSingular.so
++++ SINGULAR_SO=/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/lib/libSingular.so
++++ export GAP_SO=/nix/store/ib187709hanndgnz081lfrsqyr773nhc-gap-4.10.2/lib/libgap.so
++++ GAP_SO=/nix/store/ib187709hanndgnz081lfrsqyr773nhc-gap-4.10.2/lib/libgap.so
++++ export SINGULAR_EXECUTABLE=/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/bin/Singular
++++ SINGULAR_EXECUTABLE=/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/bin/Singular
++++ export MAXIMA_FAS=/nix/store/b4r6s7cwawr5gdci8h50snf98871c04x-maxima-5.44.0/lib/maxima/5.44.0/binary-ecl/maxima.fas
++++ MAXIMA_FAS=/nix/store/b4r6s7cwawr5gdci8h50snf98871c04x-maxima-5.44.0/lib/maxima/5.44.0/binary-ecl/maxima.fas
++++ export MAXIMA_PREFIX=/nix/store/b4r6s7cwawr5gdci8h50snf98871c04x-maxima-5.44.0
++++ MAXIMA_PREFIX=/nix/store/b4r6s7cwawr5gdci8h50snf98871c04x-maxima-5.44.0
++++ export CONWAY_POLYNOMIALS_DATA_DIR=/nix/store/s11mmqsfr85pp1db70pm7bkbx05q77js-conway_polynomials-0.5/share/conway_polynomials
++++ CONWAY_POLYNOMIALS_DATA_DIR=/nix/store/s11mmqsfr85pp1db70pm7bkbx05q77js-conway_polynomials-0.5/share/conway_polynomials
++++ export GRAPHS_DATA_DIR=/nix/store/k6rw0248wqpc0ykc1lcml2bdbz5wvb5b-graphs-20161026/share/graphs
++++ GRAPHS_DATA_DIR=/nix/store/k6rw0248wqpc0ykc1lcml2bdbz5wvb5b-graphs-20161026/share/graphs
++++ export ELLCURVE_DATA_DIR=/nix/store/wazzvpgn5a4qnbf27hlhinpwigkaf98v-elliptic_curves-0.8/share/ellcurves
++++ ELLCURVE_DATA_DIR=/nix/store/wazzvpgn5a4qnbf27hlhinpwigkaf98v-elliptic_curves-0.8/share/ellcurves
++++ export POLYTOPE_DATA_DIR=/nix/store/vyb9i4qwzp8i889qdpdmlflhkbszl8p5-polytopes_db-20170220/share/reflexive_polytopes
++++ POLYTOPE_DATA_DIR=/nix/store/vyb9i4qwzp8i889qdpdmlflhkbszl8p5-polytopes_db-20170220/share/reflexive_polytopes
++++ export GAP_ROOT_DIR=/nix/store/ib187709hanndgnz081lfrsqyr773nhc-gap-4.10.2/share/gap/build-dir
++++ GAP_ROOT_DIR=/nix/store/ib187709hanndgnz081lfrsqyr773nhc-gap-4.10.2/share/gap/build-dir
++++ export ECLDIR=/nix/store/dyzqwmq1rypcl1n68xj1r2m8z85p0vlb-ecl-20.4.24/lib/ecl-20.4.24/
++++ ECLDIR=/nix/store/dyzqwmq1rypcl1n68xj1r2m8z85p0vlb-ecl-20.4.24/lib/ecl-20.4.24/
++++ export COMBINATORIAL_DESIGN_DATA_DIR=/nix/store/jhhdb9q800h57pn7204jaizf8dgm1w27-combinatorial_designs-20140630/share/combinatorial_designs
++++ COMBINATORIAL_DESIGN_DATA_DIR=/nix/store/jhhdb9q800h57pn7204jaizf8dgm1w27-combinatorial_designs-20140630/share/combinatorial_designs
++++ export CREMONA_MINI_DATA_DIR=/nix/store/wazzvpgn5a4qnbf27hlhinpwigkaf98v-elliptic_curves-0.8/share/cremona
++++ CREMONA_MINI_DATA_DIR=/nix/store/wazzvpgn5a4qnbf27hlhinpwigkaf98v-elliptic_curves-0.8/share/cremona
++++ export JMOL_DIR=/nix/store/32hm5b43iaiv1dr9662lny7c4qw4slrx-jmol-14.31.17/share/jmol
++++ JMOL_DIR=/nix/store/32hm5b43iaiv1dr9662lny7c4qw4slrx-jmol-14.31.17/share/jmol
++++ export JSMOL_DIR=/nix/store/32hm5b43iaiv1dr9662lny7c4qw4slrx-jmol-14.31.17/share/jsmol
++++ JSMOL_DIR=/nix/store/32hm5b43iaiv1dr9662lny7c4qw4slrx-jmol-14.31.17/share/jsmol
++++ export MATHJAX_DIR=/nix/store/zya3gpi85zmdrp2bldi399jk45k2j445-node_mathjax-3.1.2/lib/node_modules/mathjax
++++ MATHJAX_DIR=/nix/store/zya3gpi85zmdrp2bldi399jk45k2j445-node_mathjax-3.1.2/lib/node_modules/mathjax
++++ export THREEJS_DIR=/nix/store/zhdhxp1gidplnj1r074yijbwb7jivzrb-node_three-0.122.0/lib/node_modules/three
++++ THREEJS_DIR=/nix/store/zhdhxp1gidplnj1r074yijbwb7jivzrb-node_three-0.122.0/lib/node_modules/three
++++ export SAGE_INCLUDE_DIRECTORIES=/nix/store/c2a3zh4yrnyc422g0g2kgkjg92nr338w-python3.8-cysignals-1.10.2/lib/python2.7/site-packages
++++ SAGE_INCLUDE_DIRECTORIES=/nix/store/c2a3zh4yrnyc422g0g2kgkjg92nr338w-python3.8-cysignals-1.10.2/lib/python2.7/site-packages
+++ export CC=/nix/store/n3r351j7vfr2bv95fp6miz3l8741jdb4-gcc-wrapper-9.3.0/bin/cc
+++ CC=/nix/store/n3r351j7vfr2bv95fp6miz3l8741jdb4-gcc-wrapper-9.3.0/bin/cc
+++ export 'LDFLAGS=-L/nix/store/qgq9s52wyvbyyx657cb1ypph6h4yia7n-flint-2.5.2/lib -L/nix/store/ib187709hanndgnz081lfrsqyr773nhc-gap-4.10.2/lib -L/nix/store/16jy91x91xdxwridiz2aji1h50z364wk-glpk-4.65/lib -L/nix/store/04g94rdjbkn21yd8hcz90whd4krlvy6p-gmp-6.2.0/lib -L/nix/store/ywxdpbq2ghwzi4hdk0rf8cr5ybzf4yiv-mpfr-4.1.0/lib -L/nix/store/jgp79nkjzckvg9j47c6ghschilnwd1dv-pari-2.11.4/lib -L/nix/store/jrdwhgc3dcrj8l9mxwh474ikkax89rh8-pynac-0.7.26/lib -L/nix/store/fafmisbmw9pghsq722yr41j8dqpz8wla-zlib-1.2.11/lib -L/nix/store/86gmka4pysaw08aiiwipnaq03hpzhf0f-eclib-20190909/lib -L/nix/store/8vslsjczsgazngdvdgzfbc51h3vm7nhj-gsl-2.6/lib -L/nix/store/xgwdr9ngwqxhgqdvlkmm03xdppq4niag-ntl-11.4.3/lib -L/nix/store/32hm5b43iaiv1dr9662lny7c4qw4slrx-jmol-14.31.17/lib -L/nix/store/s7s88qcagc932bisn72d0wkr0dkikvdl-sympow-2.023.6/lib'
+++ LDFLAGS='-L/nix/store/qgq9s52wyvbyyx657cb1ypph6h4yia7n-flint-2.5.2/lib -L/nix/store/ib187709hanndgnz081lfrsqyr773nhc-gap-4.10.2/lib -L/nix/store/16jy91x91xdxwridiz2aji1h50z364wk-glpk-4.65/lib -L/nix/store/04g94rdjbkn21yd8hcz90whd4krlvy6p-gmp-6.2.0/lib -L/nix/store/ywxdpbq2ghwzi4hdk0rf8cr5ybzf4yiv-mpfr-4.1.0/lib -L/nix/store/jgp79nkjzckvg9j47c6ghschilnwd1dv-pari-2.11.4/lib -L/nix/store/jrdwhgc3dcrj8l9mxwh474ikkax89rh8-pynac-0.7.26/lib -L/nix/store/fafmisbmw9pghsq722yr41j8dqpz8wla-zlib-1.2.11/lib -L/nix/store/86gmka4pysaw08aiiwipnaq03hpzhf0f-eclib-20190909/lib -L/nix/store/8vslsjczsgazngdvdgzfbc51h3vm7nhj-gsl-2.6/lib -L/nix/store/xgwdr9ngwqxhgqdvlkmm03xdppq4niag-ntl-11.4.3/lib -L/nix/store/32hm5b43iaiv1dr9662lny7c4qw4slrx-jmol-14.31.17/lib -L/nix/store/s7s88qcagc932bisn72d0wkr0dkikvdl-sympow-2.023.6/lib'
+++ export 'CFLAGS=-isystem /nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/include -isystem /nix/store/y4cx8h6kcmcswfcnb7dh4lys9xhdc0gh-gmp-6.2.0-dev/include -isystem /nix/store/16jy91x91xdxwridiz2aji1h50z364wk-glpk-4.65/include -isystem /nix/store/qgq9s52wyvbyyx657cb1ypph6h4yia7n-flint-2.5.2/include -isystem /nix/store/ib187709hanndgnz081lfrsqyr773nhc-gap-4.10.2/include -isystem /nix/store/jrdwhgc3dcrj8l9mxwh474ikkax89rh8-pynac-0.7.26/include -isystem /nix/store/aag7088drcp5p55zb1nfcvvn4klr3gi8-mpfr-4.1.0-dev/include'
+++ CFLAGS='-isystem /nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/include -isystem /nix/store/y4cx8h6kcmcswfcnb7dh4lys9xhdc0gh-gmp-6.2.0-dev/include -isystem /nix/store/16jy91x91xdxwridiz2aji1h50z364wk-glpk-4.65/include -isystem /nix/store/qgq9s52wyvbyyx657cb1ypph6h4yia7n-flint-2.5.2/include -isystem /nix/store/ib187709hanndgnz081lfrsqyr773nhc-gap-4.10.2/include -isystem /nix/store/jrdwhgc3dcrj8l9mxwh474ikkax89rh8-pynac-0.7.26/include -isystem /nix/store/aag7088drcp5p55zb1nfcvvn4klr3gi8-mpfr-4.1.0-dev/include'
+++ export SAGE_LIB=/nix/store/6j4pjfirjlfd0109q546phsjm4kdi2pm-python3.8-sagelib-9.2/lib/python3.8/site-packages
+++ SAGE_LIB=/nix/store/6j4pjfirjlfd0109q546phsjm4kdi2pm-python3.8-sagelib-9.2/lib/python3.8/site-packages
+++ export SAGE_EXTCODE=/nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2/src/ext
+++ SAGE_EXTCODE=/nix/store/81xhslwkfgbx1mz1wmziaiy39ldshrb2-sage-src-9.2/src/ext
+++ export DYLD_LIBRARY_PATH=/nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib:/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/lib:/nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib:/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/lib
+++ DYLD_LIBRARY_PATH=/nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib:/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/lib:/nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib:/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/lib
++ '[' 0 -ne 0 ']'
++ '[' -z /build/sage-home/.sage/ ']'
++ '[' 8 -gt 0 ']'
++ '[' -python = -h -o -python = '-?' -o -python = -help -o -python = --help ']'
++ '[' -python = -advanced -o -python = --advanced ']'
++ '[' -python = -min -o -python = --min ']'
++ '[' -python = -q ']'
++ '[' 8 -eq 0 ']'
++ '[' -python = -c ']'
++ '[' -python = -preparse -o -python = --preparse ']'
++ '[' -python = -cleaner -o -python = --cleaner ']'
++ '[' -python = -pip -o -python = --pip ']'
++ '[' -python = --pip3 ']'
++ '[' -python = -python -o -python = --python ']'
++ shift
++ exec /nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin/python3 /nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin/sage-runtests --timeout=0 --nthreads 12 --optional=sage --long --all
+no stored timings available
+Running doctests with ID 2020-11-19-19-38-53-5734239e.
+Using --optional=memlimit,sage
+Doctesting entire Sage library.
+Sorting sources by runtime so that slower doctests are run first....
+Doctesting 3885 files using 12 threads.
+------------------------------------------------------------------------
+/nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/cysignals/signals.cpython-38-x86_64-linux-gnu.so(+0x8cbb)[0x7ffff5b1bcbb]
+/nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/cysignals/signals.cpython-38-x86_64-linux-gnu.so(+0x8d69)[0x7ffff5b1bd69]
+/nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/cysignals/signals.cpython-38-x86_64-linux-gnu.so(+0xcb4b)[0x7ffff5b1fb4b]
+/nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/libpthread.so.0(+0x12700)[0x7ffff7c29700]
+/nix/store/xdha1qdqlh9hhymxq3w79zvjmwdyxqyz-python-2.7.18/lib/libpython2.7.so.1.0(PyInt_FromLong+0x4b)[0x7fff9cd7d4ab]
+/nix/store/jrdwhgc3dcrj8l9mxwh474ikkax89rh8-pynac-0.7.26/lib/libpynac.so.18(+0xa2c87)[0x7fff9cfb4c87]
+/nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/ld-linux-x86-64.so.2(+0xf9ee)[0x7ffff7fe19ee]
+/nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/ld-linux-x86-64.so.2(+0xfad4)[0x7ffff7fe1ad4]
+/nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/libc.so.6(_dl_catch_exception+0xac)[0x7ffff796d28c]
+/nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/ld-linux-x86-64.so.2(+0x13d88)[0x7ffff7fe5d88]
+/nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/libc.so.6(_dl_catch_exception+0x65)[0x7ffff796d245]
+/nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/ld-linux-x86-64.so.2(+0x135dd)[0x7ffff7fe55dd]
+/nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/libdl.so.2(+0x1246)[0x7ffff7c13246]
+/nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/libc.so.6(_dl_catch_exception+0x65)[0x7ffff796d245]
+/nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/libc.so.6(_dl_catch_error+0x1f)[0x7ffff796d2df]
+/nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/libdl.so.2(+0x18f5)[0x7ffff7c138f5]
+/nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/libdl.so.2(dlopen+0x36)[0x7ffff7c132c6]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyImport_FindSharedFuncptr+0x85)[0x7ffff7e5a785]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyImport_LoadDynamicModuleWithSpec+0x166)[0x7ffff7e4b506]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(+0x212df5)[0x7ffff7e4adf5]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(+0x1535c7)[0x7ffff7d8b5c7]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(PyVectorcall_Call+0x70)[0x7ffff7d653e0]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x5a74)[0x7ffff7dd3014]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalCodeWithName+0x2f1)[0x7ffff7dcc991]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyFunction_Vectorcall+0x18e)[0x7ffff7d6475e]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x48f3)[0x7ffff7dd1e93]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyFunction_Vectorcall+0xfa)[0x7ffff7d646ca]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x798)[0x7ffff7dcdd38]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyFunction_Vectorcall+0xfa)[0x7ffff7d646ca]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x3a3)[0x7ffff7dcd943]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyFunction_Vectorcall+0xfa)[0x7ffff7d646ca]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x3a3)[0x7ffff7dcd943]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyFunction_Vectorcall+0xfa)[0x7ffff7d646ca]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x3a3)[0x7ffff7dcd943]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyFunction_Vectorcall+0xfa)[0x7ffff7d646ca]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(+0x12c2f8)[0x7ffff7d642f8]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyObject_CallMethodIdObjArgs+0xf1)[0x7ffff7d65611]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(PyImport_ImportModuleLevelObject+0x404)[0x7ffff7de6574]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x3e1c)[0x7ffff7dd13bc]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalCodeWithName+0x2f1)[0x7ffff7dcc991]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(PyEval_EvalCodeEx+0x43)[0x7ffff7dcc693]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(PyEval_EvalCode+0x1b)[0x7ffff7e4310b]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(+0x209ebd)[0x7ffff7e41ebd]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(+0x1535c7)[0x7ffff7d8b5c7]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(PyVectorcall_Call+0x70)[0x7ffff7d653e0]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x5a74)[0x7ffff7dd3014]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalCodeWithName+0x2f1)[0x7ffff7dcc991]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyFunction_Vectorcall+0x18e)[0x7ffff7d6475e]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x48f3)[0x7ffff7dd1e93]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyFunction_Vectorcall+0xfa)[0x7ffff7d646ca]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x798)[0x7ffff7dcdd38]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyFunction_Vectorcall+0xfa)[0x7ffff7d646ca]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x3a3)[0x7ffff7dcd943]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyFunction_Vectorcall+0xfa)[0x7ffff7d646ca]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x3a3)[0x7ffff7dcd943]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyFunction_Vectorcall+0xfa)[0x7ffff7d646ca]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(+0x12c2f8)[0x7ffff7d642f8]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyObject_CallMethodIdObjArgs+0xf1)[0x7ffff7d65611]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(PyImport_ImportModuleLevelObject+0x404)[0x7ffff7de6574]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x3e1c)[0x7ffff7dd13bc]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalCodeWithName+0x2f1)[0x7ffff7dcc991]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(PyEval_EvalCodeEx+0x43)[0x7ffff7dcc693]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(PyEval_EvalCode+0x1b)[0x7ffff7e4310b]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(+0x209ebd)[0x7ffff7e41ebd]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(+0x1535c7)[0x7ffff7d8b5c7]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(PyVectorcall_Call+0x70)[0x7ffff7d653e0]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x5a74)[0x7ffff7dd3014]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalCodeWithName+0x2f1)[0x7ffff7dcc991]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyFunction_Vectorcall+0x18e)[0x7ffff7d6475e]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x48f3)[0x7ffff7dd1e93]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyFunction_Vectorcall+0xfa)[0x7ffff7d646ca]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x798)[0x7ffff7dcdd38]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyFunction_Vectorcall+0xfa)[0x7ffff7d646ca]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x3a3)[0x7ffff7dcd943]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyFunction_Vectorcall+0xfa)[0x7ffff7d646ca]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x3a3)[0x7ffff7dcd943]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyFunction_Vectorcall+0xfa)[0x7ffff7d646ca]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(+0x12c2f8)[0x7ffff7d642f8]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyObject_CallMethodIdObjArgs+0xf1)[0x7ffff7d65611]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(PyImport_ImportModuleLevelObject+0x404)[0x7ffff7de6574]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x3e1c)[0x7ffff7dd13bc]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalCodeWithName+0x2f1)[0x7ffff7dcc991]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(PyEval_EvalCodeEx+0x43)[0x7ffff7dcc693]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(PyEval_EvalCode+0x1b)[0x7ffff7e4310b]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(+0x209ebd)[0x7ffff7e41ebd]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(+0x1535c7)[0x7ffff7d8b5c7]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(PyVectorcall_Call+0x70)[0x7ffff7d653e0]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x5a74)[0x7ffff7dd3014]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalCodeWithName+0x2f1)[0x7ffff7dcc991]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyFunction_Vectorcall+0x18e)[0x7ffff7d6475e]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x48f3)[0x7ffff7dd1e93]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyFunction_Vectorcall+0xfa)[0x7ffff7d646ca]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x798)[0x7ffff7dcdd38]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyFunction_Vectorcall+0xfa)[0x7ffff7d646ca]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x3a3)[0x7ffff7dcd943]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyFunction_Vectorcall+0xfa)[0x7ffff7d646ca]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x3a3)[0x7ffff7dcd943]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyFunction_Vectorcall+0xfa)[0x7ffff7d646ca]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(+0x12c2f8)[0x7ffff7d642f8]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyObject_CallMethodIdObjArgs+0xf1)[0x7ffff7d65611]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(PyImport_ImportModuleLevelObject+0x404)[0x7ffff7de6574]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x3e1c)[0x7ffff7dd13bc]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalCodeWithName+0x2f1)[0x7ffff7dcc991]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(PyEval_EvalCodeEx+0x43)[0x7ffff7dcc693]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(PyEval_EvalCode+0x1b)[0x7ffff7e4310b]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(+0x209ebd)[0x7ffff7e41ebd]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(+0x1535c7)[0x7ffff7d8b5c7]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(PyVectorcall_Call+0x70)[0x7ffff7d653e0]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x5a74)[0x7ffff7dd3014]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalCodeWithName+0x2f1)[0x7ffff7dcc991]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyFunction_Vectorcall+0x18e)[0x7ffff7d6475e]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x48f3)[0x7ffff7dd1e93]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyFunction_Vectorcall+0xfa)[0x7ffff7d646ca]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x798)[0x7ffff7dcdd38]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyFunction_Vectorcall+0xfa)[0x7ffff7d646ca]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x3a3)[0x7ffff7dcd943]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyFunction_Vectorcall+0xfa)[0x7ffff7d646ca]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x3a3)[0x7ffff7dcd943]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyFunction_Vectorcall+0xfa)[0x7ffff7d646ca]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x3a3)[0x7ffff7dcd943]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalCodeWithName+0x2f1)[0x7ffff7dcc991]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyFunction_Vectorcall+0x18e)[0x7ffff7d6475e]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x48f3)[0x7ffff7dd1e93]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalCodeWithName+0x2f1)[0x7ffff7dcc991]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyFunction_Vectorcall+0x18e)[0x7ffff7d6475e]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x3a3)[0x7ffff7dcd943]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyFunction_Vectorcall+0xfa)[0x7ffff7d646ca]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x798)[0x7ffff7dcdd38]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalCodeWithName+0x2f1)[0x7ffff7dcc991]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyFunction_Vectorcall+0x18e)[0x7ffff7d6475e]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x3a3)[0x7ffff7dcd943]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyObject_FastCallDict+0x14a)[0x7ffff7d63aaa]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyObject_Call_Prepend+0x65)[0x7ffff7d65055]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(+0x1677a3)[0x7ffff7d9f7a3]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(+0x1653ad)[0x7ffff7d9d3ad]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyObject_MakeTpCall+0x87)[0x7ffff7d63ec7]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x4a19)[0x7ffff7dd1fb9]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyFunction_Vectorcall+0xfa)[0x7ffff7d646ca]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x798)[0x7ffff7dcdd38]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyFunction_Vectorcall+0xfa)[0x7ffff7d646ca]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalFrameDefault+0x798)[0x7ffff7dcdd38]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(_PyEval_EvalCodeWithName+0x2f1)[0x7ffff7dcc991]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(PyEval_EvalCodeEx+0x43)[0x7ffff7dcc693]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(PyEval_EvalCode+0x1b)[0x7ffff7e4310b]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(+0x21bdc8)[0x7ffff7e53dc8]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(+0x21bd63)[0x7ffff7e53d63]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(PyRun_FileExFlags+0x96)[0x7ffff7d1f26c]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(PyRun_SimpleFileExFlags+0x381)[0x7ffff7d1f03f]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(Py_RunMain+0x506)[0x7ffff7e5bc96]
+/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0(Py_BytesMain+0x39)[0x7ffff7e5b609]
+/nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/libc.so.6(__libc_start_main+0xed)[0x7ffff7862dbd]
+/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin/python3(_start+0x2a)[0x40107a]
+------------------------------------------------------------------------
++ export NIX_PYTHONPREFIX=/nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env
++ NIX_PYTHONPREFIX=/nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env
++ export NIX_PYTHONEXECUTABLE=/nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/bin/python3.8
++ NIX_PYTHONEXECUTABLE=/nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/bin/python3.8
++ export NIX_PYTHONPATH=/nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages
++ NIX_PYTHONPATH=/nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages
++ export PYTHONNOUSERSITE=true
++ PYTHONNOUSERSITE=true
++ exec /nix/store/c2a3zh4yrnyc422g0g2kgkjg92nr338w-python3.8-cysignals-1.10.2/bin/cysignals-CSI --no-color --pid 67
++ export PATH=/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/bin:/nix/store/c2a3zh4yrnyc422g0g2kgkjg92nr338w-python3.8-cysignals-1.10.2/bin:/nix/store/v4v3i7r3rbkd4x14yck75blcd0m6gb9v-python3.8-Cython-0.29.21/bin:/nix/store/jgp79nkjzckvg9j47c6ghschilnwd1dv-pari-2.11.4/bin:/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/bin:/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/bin/../libexec/singular/MOD:/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/libexec/singular/MOD:/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin:/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/build/bin:/nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/bin:/nix/store/6gc212jiwlnn6y79ppqlq2qa0ks0kysq-python3-3.8.6-env/bin:/nix/store/gnhw6r1zjnw9drknq6lj2mxzidgv4fyw-gfortran-wrapper-9.3.0/bin:/nix/store/n3r351j7vfr2bv95fp6miz3l8741jdb4-gcc-wrapper-9.3.0/bin:/nix/store/y0sw8sxkr7kwlsndwixyf4s4snlfhjh1-bash-4.4-p23/bin:/nix/store/ffw9vziqw2p4rpm2zwgi5r3ymynd54d8-coreutils-8.32/bin:/nix/store/qqnjk28kc8dcl3rijmgkvb057dfzl4cn-gnused-4.8/bin:/nix/store/8i43g3cfkryp23ppgl7cllpqjdrdfcya-gnugrep-3.5/bin:/nix/store/79rshjqnibwcx468m4i31wnmasaj6nf4-binutils-2.31.1/bin:/nix/store/rkpqr0vvbc7zyr6m6sm8q2imkr40yzn4-pkg-config-wrapper-0.29.2/bin:/nix/store/jgp79nkjzckvg9j47c6ghschilnwd1dv-pari-2.11.4/bin:/nix/store/ib187709hanndgnz081lfrsqyr773nhc-gap-4.10.2/bin:/nix/store/dyzqwmq1rypcl1n68xj1r2m8z85p0vlb-ecl-20.4.24/bin:/nix/store/b4r6s7cwawr5gdci8h50snf98871c04x-maxima-5.44.0/bin:/nix/store/ycq1lzcbhc43h292y2d860x3ir8s3ssm-giac-1.5.0-21/bin:/nix/store/r0fv33rd5jhqidh6qxan55dswn1brbb8-palp-2.11/bin:/nix/store/igg73qaj25p3zhyr72qwdjsiq08qgfvg-R-4.0.3-wrapper/bin:/nix/store/1sc5hi28k1x1cibxgf7m9m8m9pikyc2l-gfan-0.6.2/bin:/nix/store/r1b9h29pixzsbbchpq6qipv5q3vn4yvv-cddlib-0.94l/bin:/nix/store/32hm5b43iaiv1dr9662lny7c4qw4slrx-jmol-14.31.17/bin:/nix/store/042nkhviicmbr0bz8xv1d2s1z5x7m80r-tachyon-0.99b2/bin:/nix/store/16jy91x91xdxwridiz2aji1h50z364wk-glpk-4.65/bin:/nix/store/86gmka4pysaw08aiiwipnaq03hpzhf0f-eclib-20190909/bin:/nix/store/s7s88qcagc932bisn72d0wkr0dkikvdl-sympow-2.023.6/bin:/nix/store/89dif8ikvnd4935i430cy213jasyh1jv-nauty-27r1/bin:/nix/store/79xm20f5fid4f0ajyfsp18d7v2y9m69m-sqlite-3.33.0-bin/bin:/nix/store/qrqyql39cx5zm6wxfx920f6wca2v0m89-ppl-1.2/bin:/nix/store/hr0j9ql0r9c8z1wigm75443dicv72ylk-ecm-7.0.4/bin:/nix/store/xnraylclpwkdnhcbf34l24h1d67r2h1w-lcalc-1.23/bin:/nix/store/idp8b4w9qm64i1zbk3v48vpssj29mvnr-rubiks-20070912/bin:/nix/store/qmc9rnd689asvw7838zqzb6gwas845xa-flintqs-1.0/bin:/nix/store/01qmw4qmn0gr8whh1kgjbnin7bc8n8p4-openjdk-8u272-b10/bin:/nix/store/128b5lsg0lk55g3hvjfpj9lvm7r0jd0r-less-551/bin:/nix/store/pgrvv3g7ijgfrn4hxla8v51j79ab8060-patchelf-0.12/bin:/nix/store/58q0ygc01jba5cf5zghc0dlhx187mskk-gcc-9.3.0/bin:/nix/store/azv0jpirgc6kwcy3fs59jpp2mdl2k2g5-glibc-2.32-bin/bin:/nix/store/rqhvcy5zmlypr9qfa43npsyxsxjg7jxa-binutils-wrapper-2.31.1/bin:/nix/store/j8j906nzsxxi80mwscy2qfngnd4qlkz8-gdb-10.1/bin:/nix/store/ns7pr4qr7l0kpj6amq8p4jssx4pf8qzl-which-2.21/bin:/nix/store/vxmv30pp7cl4mshviy4jl5bjm680mjd5-findutils-4.7.0/bin:/nix/store/lj53hvg0pdsl2r4n39lgg7pzmnnsxb0b-diffutils-3.7/bin:/nix/store/dkkd92l7h98fn33miglvbda91365dx6q-gawk-5.1.0/bin:/nix/store/kg7i58vnbs4q877hnil4d4d2y72fa8g6-gnutar-1.32/bin:/nix/store/b0309s68b8jcx5axw2hnsmh3lwdh2kfd-gzip-1.10/bin:/nix/store/kw21b552xi7fsvgzppnd1ws6qy8q8wbl-bzip2-1.0.6.0.1-bin/bin:/nix/store/kzdxdj5lis8d9lwjhmgzdxqbnhjhg277-gnumake-4.3/bin:/nix/store/53nwh281zm213kg505mrp3g5qwdsnjbs-patch-2.7.6/bin:/nix/store/xzyl3phpyiq43l7bc5aqg3bqzllj0zid-xz-5.2.5-bin/bin
++ PATH=/nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/bin:/nix/store/c2a3zh4yrnyc422g0g2kgkjg92nr338w-python3.8-cysignals-1.10.2/bin:/nix/store/v4v3i7r3rbkd4x14yck75blcd0m6gb9v-python3.8-Cython-0.29.21/bin:/nix/store/jgp79nkjzckvg9j47c6ghschilnwd1dv-pari-2.11.4/bin:/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/bin:/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/bin/../libexec/singular/MOD:/nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/libexec/singular/MOD:/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/bin:/nix/store/a4jf7jh0psbz1kv6iwwb1rr9ycn3993z-sage-with-env-9.2/build/bin:/nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/bin:/nix/store/6gc212jiwlnn6y79ppqlq2qa0ks0kysq-python3-3.8.6-env/bin:/nix/store/gnhw6r1zjnw9drknq6lj2mxzidgv4fyw-gfortran-wrapper-9.3.0/bin:/nix/store/n3r351j7vfr2bv95fp6miz3l8741jdb4-gcc-wrapper-9.3.0/bin:/nix/store/y0sw8sxkr7kwlsndwixyf4s4snlfhjh1-bash-4.4-p23/bin:/nix/store/ffw9vziqw2p4rpm2zwgi5r3ymynd54d8-coreutils-8.32/bin:/nix/store/qqnjk28kc8dcl3rijmgkvb057dfzl4cn-gnused-4.8/bin:/nix/store/8i43g3cfkryp23ppgl7cllpqjdrdfcya-gnugrep-3.5/bin:/nix/store/79rshjqnibwcx468m4i31wnmasaj6nf4-binutils-2.31.1/bin:/nix/store/rkpqr0vvbc7zyr6m6sm8q2imkr40yzn4-pkg-config-wrapper-0.29.2/bin:/nix/store/jgp79nkjzckvg9j47c6ghschilnwd1dv-pari-2.11.4/bin:/nix/store/ib187709hanndgnz081lfrsqyr773nhc-gap-4.10.2/bin:/nix/store/dyzqwmq1rypcl1n68xj1r2m8z85p0vlb-ecl-20.4.24/bin:/nix/store/b4r6s7cwawr5gdci8h50snf98871c04x-maxima-5.44.0/bin:/nix/store/ycq1lzcbhc43h292y2d860x3ir8s3ssm-giac-1.5.0-21/bin:/nix/store/r0fv33rd5jhqidh6qxan55dswn1brbb8-palp-2.11/bin:/nix/store/igg73qaj25p3zhyr72qwdjsiq08qgfvg-R-4.0.3-wrapper/bin:/nix/store/1sc5hi28k1x1cibxgf7m9m8m9pikyc2l-gfan-0.6.2/bin:/nix/store/r1b9h29pixzsbbchpq6qipv5q3vn4yvv-cddlib-0.94l/bin:/nix/store/32hm5b43iaiv1dr9662lny7c4qw4slrx-jmol-14.31.17/bin:/nix/store/042nkhviicmbr0bz8xv1d2s1z5x7m80r-tachyon-0.99b2/bin:/nix/store/16jy91x91xdxwridiz2aji1h50z364wk-glpk-4.65/bin:/nix/store/86gmka4pysaw08aiiwipnaq03hpzhf0f-eclib-20190909/bin:/nix/store/s7s88qcagc932bisn72d0wkr0dkikvdl-sympow-2.023.6/bin:/nix/store/89dif8ikvnd4935i430cy213jasyh1jv-nauty-27r1/bin:/nix/store/79xm20f5fid4f0ajyfsp18d7v2y9m69m-sqlite-3.33.0-bin/bin:/nix/store/qrqyql39cx5zm6wxfx920f6wca2v0m89-ppl-1.2/bin:/nix/store/hr0j9ql0r9c8z1wigm75443dicv72ylk-ecm-7.0.4/bin:/nix/store/xnraylclpwkdnhcbf34l24h1d67r2h1w-lcalc-1.23/bin:/nix/store/idp8b4w9qm64i1zbk3v48vpssj29mvnr-rubiks-20070912/bin:/nix/store/qmc9rnd689asvw7838zqzb6gwas845xa-flintqs-1.0/bin:/nix/store/01qmw4qmn0gr8whh1kgjbnin7bc8n8p4-openjdk-8u272-b10/bin:/nix/store/128b5lsg0lk55g3hvjfpj9lvm7r0jd0r-less-551/bin:/nix/store/pgrvv3g7ijgfrn4hxla8v51j79ab8060-patchelf-0.12/bin:/nix/store/58q0ygc01jba5cf5zghc0dlhx187mskk-gcc-9.3.0/bin:/nix/store/azv0jpirgc6kwcy3fs59jpp2mdl2k2g5-glibc-2.32-bin/bin:/nix/store/rqhvcy5zmlypr9qfa43npsyxsxjg7jxa-binutils-wrapper-2.31.1/bin:/nix/store/j8j906nzsxxi80mwscy2qfngnd4qlkz8-gdb-10.1/bin:/nix/store/ns7pr4qr7l0kpj6amq8p4jssx4pf8qzl-which-2.21/bin:/nix/store/vxmv30pp7cl4mshviy4jl5bjm680mjd5-findutils-4.7.0/bin:/nix/store/lj53hvg0pdsl2r4n39lgg7pzmnnsxb0b-diffutils-3.7/bin:/nix/store/dkkd92l7h98fn33miglvbda91365dx6q-gawk-5.1.0/bin:/nix/store/kg7i58vnbs4q877hnil4d4d2y72fa8g6-gnutar-1.32/bin:/nix/store/b0309s68b8jcx5axw2hnsmh3lwdh2kfd-gzip-1.10/bin:/nix/store/kw21b552xi7fsvgzppnd1ws6qy8q8wbl-bzip2-1.0.6.0.1-bin/bin:/nix/store/kzdxdj5lis8d9lwjhmgzdxqbnhjhg277-gnumake-4.3/bin:/nix/store/53nwh281zm213kg505mrp3g5qwdsnjbs-patch-2.7.6/bin:/nix/store/xzyl3phpyiq43l7bc5aqg3bqzllj0zid-xz-5.2.5-bin/bin
++ export PYTHONNOUSERSITE=true
++ PYTHONNOUSERSITE=true
++ exec -a /nix/store/c2a3zh4yrnyc422g0g2kgkjg92nr338w-python3.8-cysignals-1.10.2/bin/cysignals-CSI /nix/store/c2a3zh4yrnyc422g0g2kgkjg92nr338w-python3.8-cysignals-1.10.2/bin/.cysignals-CSI-wrapped --no-color --pid 67
+Attaching gdb to process id 67.
+GNU gdb (GDB) 10.1
+Copyright (C) 2020 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+Type "show copying" and "show warranty" for details.
+This GDB was configured as "x86_64-unknown-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<https://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+    <http://www.gnu.org/software/gdb/documentation/>.
+
+For help, type "help".
+Type "apropos word" to search for commands related to "word".
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/bin/python3.8)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0)
+(No debugging symbols found in /nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/libpthread.so.0)
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/libthread_db.so.1".
+(No debugging symbols found in /nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/libdl.so.2)
+(No debugging symbols found in /nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/libcrypt.so.1)
+(No debugging symbols found in /nix/store/20i4573zsrxagw7mcn5adyd5m4f6a11l-ncurses-6.2/lib/libncursesw.so.6)
+(No debugging symbols found in /nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/libutil.so.1)
+(No debugging symbols found in /nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/libm.so.6)
+(No debugging symbols found in /nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/libgcc_s.so.1)
+(No debugging symbols found in /nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/libc.so.6)
+(No debugging symbols found in /nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/ld-linux-x86-64.so.2)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/python3.8/lib-dynload/_heapq.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/python3.8/lib-dynload/resource.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/python3.8/lib-dynload/zlib.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/fafmisbmw9pghsq722yr41j8dqpz8wla-zlib-1.2.11/lib/libz.so.1)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/python3.8/lib-dynload/_opcode.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/python3.8/lib-dynload/math.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/python3.8/lib-dynload/_bisect.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/python3.8/lib-dynload/_sha512.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/python3.8/lib-dynload/_random.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/python3.8/lib-dynload/_json.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/structure/element.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/04g94rdjbkn21yd8hcz90whd4krlvy6p-gmp-6.2.0/lib/libgmp.so.10)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/structure/sage_object.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/misc/persist.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/python3.8/lib-dynload/_struct.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/python3.8/lib-dynload/_pickle.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/python3.8/lib-dynload/_bz2.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/31hnbrb3b3j6wlp43shjwa688mfzif2r-bzip2-1.0.6.0.1/lib/libbz2.so.1)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/misc/randstate.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/libs/gmp/pylong.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/python3.8/lib-dynload/binascii.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/misc/lazy_string.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/misc/lazy_import.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/python3.8/lib-dynload/_socket.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/python3.8/lib-dynload/select.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/python3.8/lib-dynload/_hashlib.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/jp3rd03hyn74aqx8aw41s4mfdw5aj7lp-openssl-1.1.1h/lib/libssl.so.1.1)
+(No debugging symbols found in /nix/store/jp3rd03hyn74aqx8aw41s4mfdw5aj7lp-openssl-1.1.1h/lib/libcrypto.so.1.1)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/python3.8/lib-dynload/_blake2.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/python3.8/lib-dynload/_sha3.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/docs/instancedoc.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/python3.8/lib-dynload/_posixsubprocess.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/python3.8/lib-dynload/_ssl.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/python3.8/lib-dynload/_contextvars.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/python3.8/lib-dynload/_asyncio.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/python3.8/lib-dynload/_lzma.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/dcwk0rwk1algm1w6yarxk6scyd3zigl5-xz-5.2.5/lib/liblzma.so.5)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/python3.8/lib-dynload/grp.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/misc/inherit_comparison.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/misc/nested_class.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/misc/classcall_metaclass.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/structure/category_object.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/cpython/getattr.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/structure/debug_options.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/misc/cachefunc.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/misc/function_mangling.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/misc/weak_dict.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/cpython/dict_del_by_value.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/misc/c3_controlled.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/misc/lazy_attribute.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/misc/fast_methods.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/misc/constant_function.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/structure/richcmp.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/cpython/builtin_types.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/categories/category_cy_helper.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/structure/coerce_dict.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/jgp79nkjzckvg9j47c6ghschilnwd1dv-pari-2.11.4/lib/libpari-gmp-tls.so.6)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/cysignals/signals.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/structure/parent.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/categories/map.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/sets/pythonclass.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/categories/category_singleton.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/categories/functor.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/categories/morphism.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/arith/power.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/structure/coerce.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/gmpy2/gmpy2.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/ywxdpbq2ghwzi4hdk0rf8cr5ybzf4yiv-mpfr-4.1.0/lib/libmpfr.so.6)
+(No debugging symbols found in /nix/store/3km99lja3z7y6883dkly5agsizfvflir-libmpc-1.2.0/lib/libmpc.so.3)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/categories/action.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/structure/coerce_actions.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/python3.8/lib-dynload/_decimal.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/structure/coerce_maps.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/cpython/type.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/cpython/string.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/Cython/Compiler/Scanning.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/Cython/Plex/Actions.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/Cython/Plex/Scanners.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/python3.8/lib-dynload/array.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/python3.8/lib-dynload/_datetime.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/python3.8/lib-dynload/_ctypes.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/khb6p98nq6j4d753mpjrl5gskgkz51cp-libffi-3.3/lib/libffi.so.7)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/python3.8/lib-dynload/mmap.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/python3.8/lib-dynload/_multiprocessing.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/python3.8/lib-dynload/_queue.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/python3.8/lib-dynload/termios.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/python3.8/lib-dynload/fcntl.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/python3.8/lib-dynload/_sqlite3.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/jnxsvhialf34nf84wj8dzz54md40nzpi-sqlite-3.33.0/lib/libsqlite3.so.0)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/python3.8/lib-dynload/unicodedata.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/python3.8/lib-dynload/_lsprof.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/cpython/atexit.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/libs/arb/arb_version.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/qgq9s52wyvbyyx657cb1ypph6h4yia7n-flint-2.5.2/lib/libflint.so.13)
+(No debugging symbols found in /nix/store/052h13b4f6k3z6j7w4419l1cmrb07m3r-arb-2.17.0/lib/libarb.so.2)
+(No debugging symbols found in /nix/store/xgwdr9ngwqxhgqdvlkmm03xdppq4niag-ntl-11.4.3/lib/libntl.so.43)
+(No debugging symbols found in /nix/store/fgd3xl7mzzijj3klgxciz2wrrv3q2pg2-gcc-9.3.0-lib/lib/libstdc++.so.6)
+(No debugging symbols found in /nix/store/3vykqs678b3qkzcqjsj9dd5gfjmm3y98-gf2x-1.3.0/lib/libgf2x.so.3)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/numpy/core/_multiarray_umath.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/w6xjrzfnxsi7jwrlvfy10qcljm6gyhss-lapack-3/lib/liblapack.so.3)
+(No debugging symbols found in /nix/store/w6xjrzfnxsi7jwrlvfy10qcljm6gyhss-lapack-3/lib/liblapacke.so.3)
+(No debugging symbols found in /nix/store/35lvfykv13mnva6sipnrqks05mvrldi0-blas-3/lib/libblas.so.3)
+(No debugging symbols found in /nix/store/35lvfykv13mnva6sipnrqks05mvrldi0-blas-3/lib/libcblas.so.3)
+(No debugging symbols found in /nix/store/f23sq7lk6xfrvz467ffkpzackyk5q8dm-gfortran-9.3.0-lib/lib/libgfortran.so.5)
+(No debugging symbols found in /nix/store/f23sq7lk6xfrvz467ffkpzackyk5q8dm-gfortran-9.3.0-lib/lib/libgomp.so.1)
+(No debugging symbols found in /nix/store/f23sq7lk6xfrvz467ffkpzackyk5q8dm-gfortran-9.3.0-lib/lib/libquadmath.so.0)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/numpy/core/_multiarray_tests.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/numpy/linalg/lapack_lite.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/numpy/linalg/_umath_linalg.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/numpy/fft/_pocketfft_internal.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/numpy/random/mtrand.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/numpy/random/bit_generator.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/numpy/random/_common.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/numpy/random/_bounded_integers.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/numpy/random/_mt19937.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/numpy/random/_philox.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/numpy/random/_pcg64.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/numpy/random/_sfc64.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/numpy/random/_generator.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/matplotlib/ft2font.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/v9p9qyfv3fnqs2b4ilk7vhf8vdd2h31b-freetype-2.10.4/lib/libfreetype.so.6)
+(No debugging symbols found in /nix/store/3w6jhg1vjp4l15rlxbhiw9i9av5ww09c-libpng-apng-1.6.37/lib/libpng16.so.16)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/kiwisolver.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/misc/misc_c.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/misc/sage_ostools.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/misc/sage_timeit_class.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/misc/session.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/misc/fpickle.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/misc/reset.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/complex_double.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/8vslsjczsgazngdvdgzfbc51h3vm7nhj-gsl-2.6/lib/libgsl.so.25)
+(No debugging symbols found in /nix/store/8vslsjczsgazngdvdgzfbc51h3vm7nhj-gsl-2.6/lib/libgslcblas.so.0)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/ring.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/structure/parent_gens.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/structure/parent_base.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/structure/parent_old.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/categories/coercion_methods.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/integer.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/rational.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/fast_arith.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/cypari2/pari_instance.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/cypari2/gen.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/cypari2/stack.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/cypari2/string_utils.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/cypari2/convert.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/cypari2/closure.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/cypari2/handle_error.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/libnss_files.so.2)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/ext/memory.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/libs/pari/convert_gmp.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/arith/rational_reconstruction.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/number_field/number_field_base.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/integer_ring.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/real_mpfr.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/real_double.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/misc/allocator.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/libs/mpmath/utils.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/complex_number.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/morphism.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/modules/module.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/structure/mutability.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/structure/element_wrapper.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/interfaces/sagespawn.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/interfaces/process.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/cysignals/pselect.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/cysignals/pysignals.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/convert/mpfi.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/wxr9xl60i87jnbcjxqfjv89z2xcb0hkc-mpfi-1.5.3/lib/libmpfi.so.0)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/real_mpfi.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/complex_interval.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/psutil/_psutil_linux.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/psutil/_psutil_posix.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/noncommutative_ideals.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/libs/flint/arith.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/arith/functions.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/arith/srange.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/misc/parser.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/libs/ntl/error.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/libs/ntl/ntl_ZZ.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/libs/ntl/convert.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/libs/ntl/ntl_ZZ_pContext.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/libs/ntl/ntl_ZZ_p.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/libs/ntl/ntl_ZZX.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/libs/ntl/ntl_ZZ_pX.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/libs/ntl/ntl_ZZ_pEContext.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/libs/ntl/ntl_ZZ_pE.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/libs/ntl/ntl_ZZ_pEX.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/libs/ntl/ntl_lzz_pContext.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/libs/ntl/ntl_lzz_p.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/finite_rings/element_base.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/finite_rings/integer_mod.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/libs/ntl/ntl_lzz_pX.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/libs/ntl/ntl_mat_ZZ.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/libs/ntl/ntl_GF2.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/libs/ntl/ntl_GF2X.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/libs/ntl/ntl_GF2EContext.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/libs/ntl/ntl_GF2E.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/libs/ntl/ntl_GF2EX.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/libs/ntl/ntl_mat_GF2E.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/libs/ntl/ntl_mat_GF2.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/libs/symmetrica/symmetrica.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/ylcy1s1qzga3pkd2iai0imgng8svmaml-symmetrica-3.0.1/lib/libsymmetrica.so.2)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/data_structures/bitset.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/ext/memory_allocator.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/data_structures/bitset_base.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/structure/factory.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/padics/padic_printing.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/padics/pow_computer.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/padics/local_generic_element.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/padics/padic_generic_element.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/padics/padic_capped_relative_element.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/padics/common_conversion.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/padics/padic_capped_absolute_element.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/padics/padic_fixed_mod_element.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/padics/padic_floating_point_element.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/finite_rings/finite_field_base.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/finite_rings/element_givaro.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/k9wgyjhad39xwm8bs65k9r1ggrmc26ir-givaro-4.1.1/lib/libgivaro.so.9)
+(No debugging symbols found in /nix/store/04g94rdjbkn21yd8hcz90whd4krlvy6p-gmp-6.2.0/lib/libgmpxx.so.4)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/finite_rings/element_pari_ffelt.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/modules/free_module_element.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/misc/derivative.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/polynomial/polynomial_element.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/misc/binary_tree.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/polynomial/polynomial_compiled.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/polynomial/polydict.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/cpython/wrapperdescr.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/fraction_field_element.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/function_field/element.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/polynomial/polynomial_rational_flint.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/libs/flint/fmpz_poly.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/polynomial/polynomial_integer_dense_flint.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/polynomial/evaluation_flint.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/polynomial/polynomial_real_mpfr_dense.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/polynomial/cyclotomic.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/polynomial/multi_polynomial_ring_base.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/combinat/integer_lists/base.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/structure/list_clone.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/combinat/integer_lists/invlex.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/semirings/tropical_semiring.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/polynomial/multi_polynomial.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/real_lazy.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/python3.8/lib-dynload/cmath.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/groups/group.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/number_field/number_field_morphisms.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/number_field/number_field_element.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/polynomial/evaluation_ntl.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/number_field/number_field_element_quadratic.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/real_arb.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/complex_arb.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/polynomial/polynomial_complex_arb.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/finite_rings/residue_field.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/padics/pow_computer_ext.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/padics/pow_computer_flint.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/padics/padic_ZZ_pX_FM_element.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/padics/padic_ZZ_pX_element.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/padics/padic_ext_element.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/padics/padic_ZZ_pX_CR_element.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/padics/padic_ZZ_pX_CA_element.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/padics/qadic_flint_CR.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/padics/qadic_flint_CA.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/padics/qadic_flint_FM.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/padics/qadic_flint_FP.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/padics/relative_ramified_FM.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/padics/pow_computer_relative.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/padics/relative_ramified_FP.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/padics/relative_ramified_CA.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/padics/relative_ramified_CR.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/polynomial/laurent_polynomial.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/matrix/args.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/matrix/matrix_generic_dense.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/matrix/matrix_dense.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/matrix/matrix2.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/matrix/matrix1.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/matrix/matrix0.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/matrix/matrix_generic_sparse.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/matrix/matrix_sparse.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/matrix/matrix_modn_sparse.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/wvvp5iscg5civyfyi7xdy7rvqpgq1pbn-linbox-1.6.3/lib/liblinbox.so.0)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/matrix/matrix_integer_sparse.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/modules/vector_integer_dense.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/matrix/matrix_integer_dense.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/matrix/matrix_rational_dense.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/modules/vector_rational_dense.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/libs/pari/convert_flint.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/arith/multi_modular.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/matrix/matrix_modn_dense_float.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/modules/vector_modn_dense.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/matrix/matrix_modn_dense_double.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/matrix/matrix_mod2_dense.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/ka4zgpyw8bl95arvy445ah6am0zlkxws-m4ri-20200125/lib/libm4ri-0.0.20200125.so)
+(No debugging symbols found in /nix/store/ylc6d5w6w7p7mib425ialhi1caz3hggn-gd-2.3.0/lib/libgd.so.3)
+(No debugging symbols found in /nix/store/g1k5c48gyd4w6vs3nj5r3ls593qlng7n-fontconfig-2.13.92-lib/lib/libfontconfig.so.1)
+(No debugging symbols found in /nix/store/8ijxch9v1d11xqvkhx5y12wqlzxa54zk-libjpeg-turbo-2.0.5/lib/libjpeg.so.62)
+(No debugging symbols found in /nix/store/21n578msancs3fvnrx31mvl4xi9acj9a-libwebp-1.1.0/lib/libwebp.so.7)
+(No debugging symbols found in /nix/store/vmw2ps6mxf3flh2ihvmpdkn4znfj5kpx-expat-2.2.10/lib/libexpat.so.1)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/modules/vector_mod2_dense.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/libs/linbox/linbox_flint_interface.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/modules/vector_integer_sparse.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/data_structures/binary_search.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/modules/vector_modn_sparse.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/matrix/matrix_gf2e_dense.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/crp5yb7jlavcidxbl8kgax4aiqv37l8y-m4rie-20200115/lib/libm4rie-0.0.20200115.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/matrix/matrix_rational_sparse.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/modules/vector_rational_sparse.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/matrix/matrix_polynomial_dense.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/matrix/matrix_mpolynomial_dense.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/lib/libSingular-4.1.1.so)
+(No debugging symbols found in /nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/lib/libpolys-4.1.1.so)
+(No debugging symbols found in /nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/lib/libfactory-4.1.1.so)
+(No debugging symbols found in /nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/lib/libomalloc-0.9.6.so)
+(No debugging symbols found in /nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/lib/libsingular_resources-4.1.1.so)
+(No debugging symbols found in /nix/store/kkp4n6x7q29483f4l90d8k8vfd7wkvbb-readline-6.3p08/lib/libreadline.so.6)
+(No debugging symbols found in /nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/librt.so.1)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/polynomial/multi_polynomial_libsingular.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/finite_rings/element_ntl_gf2e.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/libs/singular/singular.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/bin/../libexec/singular/MOD/singmathic.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/libs/singular/polynomial.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/libs/singular/ring.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/libs/singular/function.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/polynomial/plural.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/polynomial/multi_polynomial_ideal_libsingular.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/libs/singular/option.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/power_series_poly.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/power_series_ring_element.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/power_series_mpoly.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/power_series_pari.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/laurent_series_ring_element.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/ryz491605q2skiacwsxjm99jmypfkc27-singular-4.1.1p2/bin/../libexec/singular/MOD/p_Procs_FieldIndep.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/complex_mpc.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/tate_algebra_element.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/puiseux_series_ring_element.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/ext/fast_callable.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/bernoulli_mod_p.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/rings/bernmm.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/matrix/constructor.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/sage/libs/pynac/pynac.cpython-38-x86_64-linux-gnu.so)
+(No debugging symbols found in /nix/store/jrdwhgc3dcrj8l9mxwh474ikkax89rh8-pynac-0.7.26/lib/libpynac.so.18)
+(No debugging symbols found in /nix/store/xdha1qdqlh9hhymxq3w79zvjmwdyxqyz-python-2.7.18/lib/libpython2.7.so.1.0)
+0x00007ffff790505f in wait4 ()
+   from /nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/libc.so.6
+
+Stack backtrace
+---------------
+   from /nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/libc.so.6
+No symbol table info available.
+#1  0x00007ffff5b1a484 in print_enhanced_backtrace ()
+   from /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/cysignals/signals.cpython-38-x86_64-linux-gnu.so
+No symbol table info available.
+#2  0x00007ffff5b1bda6 in sigdie ()
+   from /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/cysignals/signals.cpython-38-x86_64-linux-gnu.so
+No symbol table info available.
+#3  0x00007ffff5b1fb4b in cysigs_signal_handler ()
+   from /nix/store/kbfq0vhf6kxs21visrg4kjrzx5q0wqp2-python3-3.8.6-env/lib/python3.8/site-packages/cysignals/signals.cpython-38-x86_64-linux-gnu.so
+No symbol table info available.
+#4  <signal handler called>
+No symbol table info available.
+#5  0x00007fff9cd7d4ab in PyInt_FromLong ()
+   from /nix/store/xdha1qdqlh9hhymxq3w79zvjmwdyxqyz-python-2.7.18/lib/libpython2.7.so.1.0
+No symbol table info available.
+#6  0x00007fff9cfb4c87 in _GLOBAL__sub_I_numeric.cpp ()
+   from /nix/store/jrdwhgc3dcrj8l9mxwh474ikkax89rh8-pynac-0.7.26/lib/libpynac.so.18
+No symbol table info available.
+#7  0x00007ffff7fe19ee in call_init ()
+   from /nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/ld-linux-x86-64.so.2
+No symbol table info available.
+#8  0x00007ffff7fe1ad4 in _dl_init ()
+   from /nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/ld-linux-x86-64.so.2
+No symbol table info available.
+#9  0x00007ffff796d28c in _dl_catch_exception ()
+   from /nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/libc.so.6
+No symbol table info available.
+#10 0x00007ffff7fe5d88 in dl_open_worker ()
+   from /nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/ld-linux-x86-64.so.2
+No symbol table info available.
+#11 0x00007ffff796d245 in _dl_catch_exception ()
+   from /nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/libc.so.6
+No symbol table info available.
+#12 0x00007ffff7fe55dd in _dl_open ()
+   from /nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/ld-linux-x86-64.so.2
+No symbol table info available.
+#13 0x00007ffff7c13246 in dlopen_doit ()
+   from /nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/libdl.so.2
+No symbol table info available.
+#14 0x00007ffff796d245 in _dl_catch_exception ()
+   from /nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/libc.so.6
+No symbol table info available.
+#15 0x00007ffff796d2df in _dl_catch_error ()
+   from /nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/libc.so.6
+No symbol table info available.
+#16 0x00007ffff7c138f5 in _dlerror_run ()
+   from /nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/libdl.so.2
+No symbol table info available.
+#17 0x00007ffff7c132c6 in dlopen@@GLIBC_2.2.5 ()
+   from /nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/libdl.so.2
+No symbol table info available.
+#18 0x00007ffff7e5a785 in _PyImport_FindSharedFuncptr ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#19 0x00007ffff7e4b506 in _PyImport_LoadDynamicModuleWithSpec ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#20 0x00007ffff7e4adf5 in _imp_create_dynamic ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#21 0x00007ffff7d8b5c7 in cfunction_vectorcall_FASTCALL ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#22 0x00007ffff7d653e0 in PyVectorcall_Call ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#23 0x00007ffff7dd3014 in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#24 0x00007ffff7dcc991 in _PyEval_EvalCodeWithName ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#25 0x00007ffff7d6475e in _PyFunction_Vectorcall ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#26 0x00007ffff7dd1e93 in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#27 0x00007ffff7d646ca in _PyFunction_Vectorcall ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#28 0x00007ffff7dcdd38 in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#29 0x00007ffff7d646ca in _PyFunction_Vectorcall ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#30 0x00007ffff7dcd943 in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#31 0x00007ffff7d646ca in _PyFunction_Vectorcall ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#32 0x00007ffff7dcd943 in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#33 0x00007ffff7d646ca in _PyFunction_Vectorcall ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#34 0x00007ffff7dcd943 in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#35 0x00007ffff7d646ca in _PyFunction_Vectorcall ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#36 0x00007ffff7d642f8 in object_vacall ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#37 0x00007ffff7d65611 in _PyObject_CallMethodIdObjArgs ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#38 0x00007ffff7de6574 in PyImport_ImportModuleLevelObject ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#39 0x00007ffff7dd13bc in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#40 0x00007ffff7dcc991 in _PyEval_EvalCodeWithName ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#41 0x00007ffff7dcc693 in PyEval_EvalCodeEx ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#42 0x00007ffff7e4310b in PyEval_EvalCode ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#43 0x00007ffff7e41ebd in builtin_exec ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#44 0x00007ffff7d8b5c7 in cfunction_vectorcall_FASTCALL ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#45 0x00007ffff7d653e0 in PyVectorcall_Call ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#46 0x00007ffff7dd3014 in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#47 0x00007ffff7dcc991 in _PyEval_EvalCodeWithName ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#48 0x00007ffff7d6475e in _PyFunction_Vectorcall ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#49 0x00007ffff7dd1e93 in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#50 0x00007ffff7d646ca in _PyFunction_Vectorcall ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#51 0x00007ffff7dcdd38 in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#52 0x00007ffff7d646ca in _PyFunction_Vectorcall ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#53 0x00007ffff7dcd943 in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#54 0x00007ffff7d646ca in _PyFunction_Vectorcall ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#55 0x00007ffff7dcd943 in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#56 0x00007ffff7d646ca in _PyFunction_Vectorcall ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#57 0x00007ffff7d642f8 in object_vacall ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#58 0x00007ffff7d65611 in _PyObject_CallMethodIdObjArgs ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#59 0x00007ffff7de6574 in PyImport_ImportModuleLevelObject ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#60 0x00007ffff7dd13bc in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#61 0x00007ffff7dcc991 in _PyEval_EvalCodeWithName ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#62 0x00007ffff7dcc693 in PyEval_EvalCodeEx ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#63 0x00007ffff7e4310b in PyEval_EvalCode ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#64 0x00007ffff7e41ebd in builtin_exec ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#65 0x00007ffff7d8b5c7 in cfunction_vectorcall_FASTCALL ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#66 0x00007ffff7d653e0 in PyVectorcall_Call ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#67 0x00007ffff7dd3014 in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#68 0x00007ffff7dcc991 in _PyEval_EvalCodeWithName ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#69 0x00007ffff7d6475e in _PyFunction_Vectorcall ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#70 0x00007ffff7dd1e93 in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#71 0x00007ffff7d646ca in _PyFunction_Vectorcall ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#72 0x00007ffff7dcdd38 in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#73 0x00007ffff7d646ca in _PyFunction_Vectorcall ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#74 0x00007ffff7dcd943 in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#75 0x00007ffff7d646ca in _PyFunction_Vectorcall ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#76 0x00007ffff7dcd943 in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#77 0x00007ffff7d646ca in _PyFunction_Vectorcall ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#78 0x00007ffff7d642f8 in object_vacall ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#79 0x00007ffff7d65611 in _PyObject_CallMethodIdObjArgs ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#80 0x00007ffff7de6574 in PyImport_ImportModuleLevelObject ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#81 0x00007ffff7dd13bc in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#82 0x00007ffff7dcc991 in _PyEval_EvalCodeWithName ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#83 0x00007ffff7dcc693 in PyEval_EvalCodeEx ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#84 0x00007ffff7e4310b in PyEval_EvalCode ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#85 0x00007ffff7e41ebd in builtin_exec ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#86 0x00007ffff7d8b5c7 in cfunction_vectorcall_FASTCALL ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#87 0x00007ffff7d653e0 in PyVectorcall_Call ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#88 0x00007ffff7dd3014 in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#89 0x00007ffff7dcc991 in _PyEval_EvalCodeWithName ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#90 0x00007ffff7d6475e in _PyFunction_Vectorcall ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#91 0x00007ffff7dd1e93 in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#92 0x00007ffff7d646ca in _PyFunction_Vectorcall ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#93 0x00007ffff7dcdd38 in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#94 0x00007ffff7d646ca in _PyFunction_Vectorcall ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#95 0x00007ffff7dcd943 in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#96 0x00007ffff7d646ca in _PyFunction_Vectorcall ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#97 0x00007ffff7dcd943 in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#98 0x00007ffff7d646ca in _PyFunction_Vectorcall ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#99 0x00007ffff7d642f8 in object_vacall ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#100 0x00007ffff7d65611 in _PyObject_CallMethodIdObjArgs ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#101 0x00007ffff7de6574 in PyImport_ImportModuleLevelObject ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#102 0x00007ffff7dd13bc in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#103 0x00007ffff7dcc991 in _PyEval_EvalCodeWithName ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#104 0x00007ffff7dcc693 in PyEval_EvalCodeEx ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#105 0x00007ffff7e4310b in PyEval_EvalCode ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#106 0x00007ffff7e41ebd in builtin_exec ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#107 0x00007ffff7d8b5c7 in cfunction_vectorcall_FASTCALL ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#108 0x00007ffff7d653e0 in PyVectorcall_Call ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#109 0x00007ffff7dd3014 in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#110 0x00007ffff7dcc991 in _PyEval_EvalCodeWithName ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#111 0x00007ffff7d6475e in _PyFunction_Vectorcall ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#112 0x00007ffff7dd1e93 in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#113 0x00007ffff7d646ca in _PyFunction_Vectorcall ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#114 0x00007ffff7dcdd38 in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#115 0x00007ffff7d646ca in _PyFunction_Vectorcall ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#116 0x00007ffff7dcd943 in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#117 0x00007ffff7d646ca in _PyFunction_Vectorcall ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#118 0x00007ffff7dcd943 in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#119 0x00007ffff7d646ca in _PyFunction_Vectorcall ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#120 0x00007ffff7dcd943 in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#121 0x00007ffff7dcc991 in _PyEval_EvalCodeWithName ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#122 0x00007ffff7d6475e in _PyFunction_Vectorcall ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#123 0x00007ffff7dd1e93 in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#124 0x00007ffff7dcc991 in _PyEval_EvalCodeWithName ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#125 0x00007ffff7d6475e in _PyFunction_Vectorcall ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#126 0x00007ffff7dcd943 in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#127 0x00007ffff7d646ca in _PyFunction_Vectorcall ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#128 0x00007ffff7dcdd38 in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#129 0x00007ffff7dcc991 in _PyEval_EvalCodeWithName ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#130 0x00007ffff7d6475e in _PyFunction_Vectorcall ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#131 0x00007ffff7dcd943 in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#132 0x00007ffff7d63aaa in _PyObject_FastCallDict ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#133 0x00007ffff7d65055 in _PyObject_Call_Prepend ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#134 0x00007ffff7d9f7a3 in slot_tp_init ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#135 0x00007ffff7d9d3ad in type_call ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#136 0x00007ffff7d63ec7 in _PyObject_MakeTpCall ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#137 0x00007ffff7dd1fb9 in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#138 0x00007ffff7d646ca in _PyFunction_Vectorcall ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#139 0x00007ffff7dcdd38 in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#140 0x00007ffff7d646ca in _PyFunction_Vectorcall ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#141 0x00007ffff7dcdd38 in _PyEval_EvalFrameDefault ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#142 0x00007ffff7dcc991 in _PyEval_EvalCodeWithName ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#143 0x00007ffff7dcc693 in PyEval_EvalCodeEx ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#144 0x00007ffff7e4310b in PyEval_EvalCode ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#145 0x00007ffff7e53dc8 in run_eval_code_obj ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#146 0x00007ffff7e53d63 in run_mod ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#147 0x00007ffff7d1f26c in PyRun_FileExFlags ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#148 0x00007ffff7d1f03f in PyRun_SimpleFileExFlags ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#149 0x00007ffff7e5bc96 in Py_RunMain ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#150 0x00007ffff7e5b609 in Py_BytesMain ()
+   from /nix/store/18656kvqazm74bj7k3mdkwmdlqfyf581-python3-3.8.6/lib/libpython3.8.so.1.0
+No symbol table info available.
+#151 0x00007ffff7862dbd in __libc_start_main ()
+   from /nix/store/5didcr1sjp2rlx8abbzv92rgahsarqd9-glibc-2.32/lib/libc.so.6
+No symbol table info available.
+#152 0x000000000040107a in _start ()
+No symbol table info available.
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+[Inferior 1 (process 67) detached]
+Traceback (most recent call last):
+  File "<string>", line 25, in <module>
+ModuleNotFoundError: No module named 'Cython'
+Error while executing Python code.
+Saved trace to /build/sage-home/.sage/crash_logs/crash_ww8kk5dr.log
+------------------------------------------------------------------------
+Unhandled SIGSEGV: A segmentation fault occurred.
+This probably occurred because a *compiled* module has a bug
+in it and is not properly wrapped with sig_on(), sig_off().
+Python will now terminate.
+------------------------------------------------------------------------
+/nix/store/6j4pjfirjlfd0109q546phsjm4kdi2pm-python3.8-sagelib-9.2/bin/sage-python: line 2:    67 Segmentation fault      (core dumped) sage -python "$@"
+builder for '/nix/store/xi5p3q7vis2yim857arj9mfwal1qmr81-sage-tests-9.2.drv' failed with exit code 139
+cannot build derivation '/nix/store/r5dmcigq7wb5pkpz416qvpss59bf5hqz-sage-9.2.drv': 1 dependencies couldn't be built
+error: build of '/nix/store/r5dmcigq7wb5pkpz416qvpss59bf5hqz-sage-9.2.drv' failed
