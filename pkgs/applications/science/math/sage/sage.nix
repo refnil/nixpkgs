@@ -6,6 +6,7 @@
 , jupyter-kernel
 , sagedoc
 , withDoc
+, sagelib
 }:
 
 # A wrapper that makes sure sage finds its docs (if they were build) and the
@@ -58,11 +59,12 @@ stdenv.mkDerivation rec {
     doc = sagedoc;
     lib = sage-with-env.env.lib;
     kernelspec = jupyter-kernel-definition;
+    inherit sagelib;
   };
 
   meta = with stdenv.lib; {
     description = "Open Source Mathematics Software, free alternative to Magma, Maple, Mathematica, and Matlab";
     license = licenses.gpl2;
-    maintainers = with maintainers; [ timokau ];
+    maintainers = teams.sage.members;
   };
 }

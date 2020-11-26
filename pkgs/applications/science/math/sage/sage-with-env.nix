@@ -13,13 +13,14 @@
 , pari
 , gmp
 , gfan
-, python2
+, python3
 , flintqs
 , eclib
 , ntl
 , ecm
 , pynac
 , pythonEnv
+, gdb
 }:
 
 # lots of segfaults with (64 bit) blas
@@ -47,6 +48,7 @@ let
     flintqs
     ntl
     ecm
+    python3
   ];
 
   # remove python prefix, replace "-" in the name by "_", apply patch_names
@@ -54,7 +56,7 @@ let
   pkg_to_spkg_name = pkg: patch_names: let
     parts = lib.splitString "-" pkg.name;
     # remove python2.7-
-    stripped_parts = if (builtins.head parts) == python2.libPrefix then builtins.tail parts else parts;
+    stripped_parts = if (builtins.head parts) == python3.libPrefix then builtins.tail parts else parts;
     version = lib.last stripped_parts;
     orig_pkgname = lib.init stripped_parts;
     pkgname = patch_names (lib.concatStringsSep "_" orig_pkgname);
@@ -94,6 +96,7 @@ stdenv.mkDerivation rec {
   pname = "sage-with-env";
   src = sage-env.lib.src;
 
+  #buildInputs = buildInputs2 ++ [ gdb ];
   inherit buildInputs;
 
   configurePhase = "#do nothing";
@@ -126,9 +129,12 @@ stdenv.mkDerivation rec {
     cp -r src/bin "$out/bin"
     cp -r build/bin "$out/build/bin"
 
+    ln -s "${python3}/bin/python3" "$out/bin/python3"
+
     cp -f '${sage-env}/sage-env' "$out/bin/sage-env"
     substituteInPlace "$out/bin/sage-env" \
       --subst-var-by sage-local "$out"
+
   '';
 
   passthru = {

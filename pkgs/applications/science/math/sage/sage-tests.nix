@@ -9,6 +9,9 @@
 # upstream default value.
 # https://trac.sagemath.org/ticket/25270 for details.
 , timeLimit ? null
+, gdb
+, pkgs
+, moreutils
 }:
 
 # for a quick test of some source files:
@@ -31,6 +34,8 @@ stdenv.mkDerivation {
   buildInputs = [
     makeWrapper
     sage-with-env
+    gdb
+    pkgs.which
   ];
 
   dontUnpack = true;
@@ -56,6 +61,9 @@ stdenv.mkDerivation {
     export GLIBC_TUNABLES=glibc.malloc.arena_max=4
 
     echo "Running sage tests with arguments ${timeSpecifier} ${patienceSpecifier} ${testArgs}"
-    "sage" -t --timeout=0 --nthreads "$NIX_BUILD_CORES" --optional=sage ${timeSpecifier} ${patienceSpecifier} ${testArgs}
+    #bash -x -c 'export SHELLOPTS; "$out/bin/sage" -t --timeout=0 --nthreads "$NIX_BUILD_CORES" --optional=sage ${timeSpecifier} ${patienceSpecifier} ${testArgs}'
+    #"sage" -t --timeout=0 --nthreads "$NIX_BUILD_CORES" --optional=sage ${timeSpecifier} ${patienceSpecifier} ${testArgs}
+    "sage" -t --timeout=0 --exitfirst --optional=sage ${timeSpecifier} ${patienceSpecifier} ${testArgs}
+    #"sage" -t --timeout=60 --randorder=0 --random-seed=0 --nthreads 1 --optional=sage ${timeSpecifier} ${patienceSpecifier} ${testArgs}
   '';
 }

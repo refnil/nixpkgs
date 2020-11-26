@@ -9,18 +9,15 @@
 { pkgs
 , stdenv
 , python
-, overrides ? (self: super: {})
 }:
 
 with pkgs.lib;
 
-let
-  packages = ( self:
+self:
 
 let
+  inherit (self) callPackage;
   inherit (python.passthru) isPy27 isPy35 isPy36 isPy37 isPy38 isPy39 isPy3k isPyPy pythonAtLeast pythonOlder;
-
-  callPackage = pkgs.newScope self;
 
   namePrefix = python.libPrefix + "-";
 
@@ -102,7 +99,7 @@ in {
 
   inherit (python.passthru) isPy27 isPy35 isPy36 isPy37 isPy38 isPy39 isPy3k isPyPy pythonAtLeast pythonOlder;
   inherit python bootstrapped-pip buildPythonPackage buildPythonApplication;
-  inherit fetchPypi callPackage;
+  inherit fetchPypi;
   inherit hasPythonModule requiredPythonModules makePythonPath disabledIf;
   inherit toPythonModule toPythonApplication;
   inherit buildSetupcfg;
@@ -1910,6 +1907,8 @@ in {
 
   emcee = callPackage ../development/python-modules/emcee { };
 
+  emv = callPackage ../development/python-modules/emv { };
+
   emoji = callPackage ../development/python-modules/emoji { };
 
   enaml = callPackage ../development/python-modules/enaml { };
@@ -1991,6 +1990,8 @@ in {
   ezdxf = callPackage ../development/python-modules/ezdxf { };
 
   Fabric = callPackage ../development/python-modules/Fabric { };
+
+  fabulous = callPackage ../development/python-modules/fabulous { };
 
   facebook-sdk = callPackage ../development/python-modules/facebook-sdk { };
 
@@ -2371,6 +2372,8 @@ in {
     callPackage ../development/python-modules/geopy/2.nix { };
 
   getmac = callPackage ../development/python-modules/getmac { };
+
+  getkey = callPackage ../development/python-modules/getkey { };
 
   gevent = callPackage ../development/python-modules/gevent { };
 
@@ -3520,6 +3523,8 @@ in {
 
   lirc = disabledIf isPy27 (toPythonModule (pkgs.lirc.override { python3 = python; }));
 
+  littleutils = callPackage ../development/python-modules/littleutils { };
+
   livelossplot = callPackage ../development/python-modules/livelossplot { };
 
   livereload = callPackage ../development/python-modules/livereload { };
@@ -3547,8 +3552,6 @@ in {
   locket = callPackage ../development/python-modules/locket { };
 
   lockfile = callPackage ../development/python-modules/lockfile { };
-
-  locustio = callPackage ../development/python-modules/locustio { };
 
   Logbook = callPackage ../development/python-modules/Logbook { };
 
@@ -3789,6 +3792,8 @@ in {
   mlflow = callPackage ../development/python-modules/mlflow { };
 
   mlrose = callPackage ../development/python-modules/mlrose { };
+
+  mlxtend = callPackage ../development/python-modules/mlxtend { };
 
   mmh3 = callPackage ../development/python-modules/mmh3 { };
 
@@ -4104,6 +4109,10 @@ in {
 
   nmigen-soc = callPackage ../development/python-modules/nmigen-soc { };
 
+  nocasedict = callPackage ../development/python-modules/nocasedict { };
+
+  nocaselist = callPackage ../development/python-modules/nocaselist { };
+
   nodeenv = callPackage ../development/python-modules/nodeenv { };
 
   node-semver = callPackage ../development/python-modules/node-semver { };
@@ -4359,7 +4368,10 @@ in {
 
   paperspace = callPackage ../development/python-modules/paperspace { };
 
-  paperwork-backend = callPackage ../applications/office/paperwork/backend.nix { };
+  openpaperwork-core = callPackage ../applications/office/paperwork/openpaperwork-core.nix { };
+  openpaperwork-gtk = callPackage ../applications/office/paperwork/openpaperwork-gtk.nix { };
+  paperwork-backend = callPackage ../applications/office/paperwork/paperwork-backend.nix { };
+  paperwork-shell = callPackage ../applications/office/paperwork/paperwork-shell.nix { };
 
   papis = callPackage ../development/python-modules/papis { };
 
@@ -4458,6 +4470,8 @@ in {
   pdftotext = callPackage ../development/python-modules/pdftotext { };
 
   pdfx = callPackage ../development/python-modules/pdfx { };
+
+  pdoc3 = callPackage ../development/python-modules/pdoc3 { };
 
   pecan = callPackage ../development/python-modules/pecan { };
 
@@ -4768,6 +4782,8 @@ in {
   psutil = callPackage ../development/python-modules/psutil { };
 
   psycopg2 = callPackage ../development/python-modules/psycopg2 { };
+
+  psycopg2cffi = callPackage ../development/python-modules/psycopg2cffi { };
 
   ptable = callPackage ../development/python-modules/ptable { };
 
@@ -5450,6 +5466,8 @@ in {
 
   pyroma = callPackage ../development/python-modules/pyroma { };
 
+  pyro-api = callPackage ../development/python-modules/pyro-api { };
+
   pyro-ppl = callPackage ../development/python-modules/pyro-ppl { };
 
   pyroute2 = callPackage ../development/python-modules/pyroute2 { };
@@ -5783,6 +5801,8 @@ in {
   python-binance = callPackage ../development/python-modules/python-binance { };
 
   python-constraint = callPackage ../development/python-modules/python-constraint { };
+
+  python-crontab = callPackage ../development/python-modules/python-crontab { };
 
   python-ctags3 = callPackage ../development/python-modules/python-ctags3 { };
 
@@ -6604,6 +6624,8 @@ in {
 
   shamir-mnemonic = callPackage ../development/python-modules/shamir-mnemonic { };
 
+  shap = callPackage ../development/python-modules/shap { };
+
   shapely = callPackage ../development/python-modules/shapely { };
 
   sharedmem = callPackage ../development/python-modules/sharedmem { };
@@ -6684,6 +6706,8 @@ in {
   sleekxmpp = callPackage ../development/python-modules/sleekxmpp { };
 
   slicedimage = callPackage ../development/python-modules/slicedimage { };
+
+  slicer = callPackage ../development/python-modules/slicer { };
 
   slicerator = callPackage ../development/python-modules/slicerator { };
 
@@ -6929,6 +6953,8 @@ in {
 
   sslyze = callPackage ../development/python-modules/sslyze { };
 
+  stack-data = callPackage ../development/python-modules/stack-data { };
+
   starlette = callPackage ../development/python-modules/starlette { };
 
   staticjinja = callPackage ../development/python-modules/staticjinja { };
@@ -6990,6 +7016,8 @@ in {
   suds-jurko = callPackage ../development/python-modules/suds-jurko { };
 
   sumo = callPackage ../development/python-modules/sumo { };
+
+  sumtypes = callPackage ../development/python-modules/sumtypes { };
 
   sunpy = callPackage ../development/python-modules/sunpy { };
 
@@ -7776,6 +7804,8 @@ in {
 
   xml2rfc = callPackage ../development/python-modules/xml2rfc { };
 
+  xmljson = callPackage ../development/python-modules/xmljson { };
+
   xmlschema = callPackage ../development/python-modules/xmlschema { };
 
   xmltodict = callPackage ../development/python-modules/xmltodict { };
@@ -7811,6 +7841,8 @@ in {
   yamale = callPackage ../development/python-modules/yamale { };
 
   yamllint = callPackage ../development/python-modules/yamllint { };
+
+  yamlloader = callPackage ../development/python-modules/yamlloader { };
 
   yamlordereddictloader = callPackage ../development/python-modules/yamlordereddictloader { };
 
@@ -7976,6 +8008,4 @@ in {
 
   zxcvbn = callPackage ../development/python-modules/zxcvbn { };
 
-});
-
-in fix' (extends overrides packages)
+}
