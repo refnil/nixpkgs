@@ -36,6 +36,9 @@ stdenv.mkDerivation {
   };
 
   patches = [
+    # Commit cherry picked from upstream to make sage test pass.
+    # It can probably be removed on the next ecl update.
+    ./ecl-with-lisp-fpe-macro.patch
   ];
 
   configureFlags = [
