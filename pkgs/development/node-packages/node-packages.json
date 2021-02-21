@@ -163,6 +163,7 @@
 , {"npm2nix": "git://github.com/NixOS/npm2nix.git#5.12.0"}
 , "ocaml-language-server"
 , "parcel-bundler"
+, {"parcel": "2.0.0-nightly.603"}
 , "parsoid"
 , "patch-package"
 , "peerflix"
